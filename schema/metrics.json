@@ -1,0 +1,40 @@
+{
+  "description": "Derived fields and metric rules for IPL analytics system.",
+  "delivery_level_derived_fields": {
+    "match_id": "Taken from filename (e.g., 548361)",
+    "innings_number": "Integer index of innings (1 or 2)",
+    "over_number": "Integer over index (0-based)",
+    "ball_in_over": "Ball number inside over (1–6)",
+    "ball_number_absolute": "Absolute ball count in innings (1,2,3...)",
+    "phase": "One of: powerplay (file-defined), middle (derived), death (derived)"
+  },
+  "phase_rules": {
+    "powerplay": "Use ranges provided in JSON (from-to in float notation).",
+    "middle": "From end of powerplay until over 15.6 (derived).",
+    "death": "Overs 16.0 to end of innings (derived)."
+  },
+  "bowler_metrics": {
+    "balls_bowled": "Count of legal balls delivered.",
+    "runs_conceded": "batter_runs + wides + no-balls (exclude byes/legbyes).",
+    "wickets": "Dismissals credited to bowler: bowled, lbw, caught, stumped.",
+    "overs_bowled": "balls_bowled / 6.",
+    "economy_rate": "runs_conceded / (balls_bowled/6).",
+    "bowling_strike_rate": "balls_bowled / wickets (if wickets > 0).",
+    "bowling_average": "runs_conceded / wickets (if wickets > 0).",
+    "dot_ball_percentage": "dot_balls / balls_bowled * 100.",
+    "boundary_percentage_allowed": "balls_conceded_as_boundary / balls_bowled * 100.",
+    "phase_splits": "Metrics calculated separately for PP/Middle/Death."
+  },
+  "batter_metrics": {
+    "balls_faced": "Count of legal balls faced (excluding wides).",
+    "runs_scored": "Total runs from batter.",
+    "dismissal_type": "If out, record wicket.kind (else null).",
+    "fours": "Count of balls where batter_runs = 4.",
+    "sixes": "Count of balls where batter_runs = 6.",
+    "batting_strike_rate": "(runs_scored / balls_faced) * 100.",
+    "batting_average": "runs_scored / dismissals (if dismissed at least once).",
+    "dot_ball_percentage": "dot_balls / balls_faced * 100.",
+    "boundary_percentage": "(fours + sixes) / balls_faced * 100.",
+    "phase_splits": "Metrics calculated separately for PP/Middle/Death."
+  }
+}
