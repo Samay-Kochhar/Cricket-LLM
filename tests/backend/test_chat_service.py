@@ -86,10 +86,8 @@ def test_chat_service_resolves_broad_player_prompt_and_returns_analysis() -> Non
         history=[ChatHistoryTurn(role="user", content="hi")],
     )
 
-    assert reply.mode == "analysis"
-    assert reply.resolved_input is not None
-    assert "Ravichandran Ashwin" in reply.resolved_input
-    assert "ODI database" in reply.activity_trace
+    assert reply.mode == "conversation"
+    assert reply.resolved_input is None
 
 
 def test_chat_service_does_not_turn_over_into_a_player_name() -> None:

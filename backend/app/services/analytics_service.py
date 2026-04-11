@@ -52,6 +52,9 @@ class AnalyticsService:
 
     def answer_question(self, question: str) -> QueryResponse:
         route = self.router.route(question)
+        return self.answer_route(question, route)
+
+    def answer_route(self, question: str, route: QueryRoute) -> QueryResponse:
         interpretation = QueryInterpretation(
             original_question=question,
             query_class=route.query_class.value,
@@ -391,8 +394,12 @@ class AnalyticsService:
         )
 
     def _handle_venue_context(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
-        question = interpretation.original_question.lower()
-        venue_name = self._match_venue(question)
+        venue_name = route.filters.get("venue_name") if isinstance(route.filters.get("venue_name"), str) else None
+        if venue_name is not None and venue_name not in self.available_venues:
+            venue_name = self._match_venue(venue_name.lower())
+        if venue_name is None:
+            question = interpretation.original_question.lower()
+            venue_name = self._match_venue(question)
         if venue_name is None:
             return self._insufficient(
                 interpretation,

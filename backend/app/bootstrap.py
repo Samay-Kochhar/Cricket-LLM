@@ -12,6 +12,7 @@ from backend.app.services.follow_up_suggester import suggest_follow_ups
 from backend.app.services.gemini_client import GeminiClient
 from backend.app.services.grounded_context import GroundedContextService
 from backend.app.services.metric_catalog import MetricCatalog
+from backend.app.services.query_interpreter import QueryInterpreter
 from backend.app.services.workbench_service import WorkbenchService
 
 
@@ -26,11 +27,17 @@ def get_services():
         default_model=config.gemini_default_model,
         complex_model=config.gemini_complex_model,
     )
+    query_interpreter = QueryInterpreter(
+        repository=repository,
+        gemini_client=gemini_client,
+        fallback_router=analytics_service.router,
+    )
     grounded_context = GroundedContextService(gemini_client)
     answer_composer = AnswerComposer()
 
     def query_handler(question: str):
-        response = analytics_service.answer_question(question)
+        interpreted = query_interpreter.interpret(question)
+        response = analytics_service.answer_route(question, interpreted.route)
         grounded_notes, grounded_citations = grounded_context.gather(question, response)
         query_class = QueryClass(response.interpretation.query_class)
         follow_ups = suggest_follow_ups(query_class)
@@ -50,6 +57,7 @@ def get_services():
     return {
         "config": config,
         "repository": repository,
+        "query_interpreter": query_interpreter,
         "query_handler": query_handler,
         "chat_service": chat_service,
         "workbench_service": workbench_service,

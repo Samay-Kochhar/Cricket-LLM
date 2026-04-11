@@ -75,14 +75,15 @@ class ChatService:
     gemini_client: GeminiClient
 
     def reply(self, message: str, history: list[ChatHistoryTurn]) -> ChatReply:
-        resolved_message, resolution_note = self._resolve_entities(message)
-        query_response = self.query_handler(resolved_message)
+        normalized_message = message.strip()
+        resolution_note = None
+        query_response = self.query_handler(normalized_message)
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
 
         if query_response.status.value == "supported" and entities:
             reply_text, used_gemini = self._analysis_reply(
-                message=message,
+                message=normalized_message,
                 query_response=query_response,
                 resolution_note=resolution_note,
             )
@@ -91,14 +92,14 @@ class ChatService:
                 message=reply_text,
                 query_response=query_response,
                 suggestions=suggest_follow_ups(query_class),
-                resolved_input=resolved_message if resolved_message != message else None,
+                resolved_input=None,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
             )
 
         if self._looks_like_general_chat(message) or not entities:
             conversational = self._general_conversation_reply(
-                message=message,
+                message=normalized_message,
                 history=history,
                 resolution_note=resolution_note,
                 query_response=query_response,
@@ -108,13 +109,13 @@ class ChatService:
                 message=conversational,
                 query_response=query_response if entities else None,
                 suggestions=suggest_follow_ups(query_class) if entities else [],
-                resolved_input=resolved_message if resolved_message != message else None,
+                resolved_input=None,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=self.gemini_client.is_configured()),
             )
 
         fallback, used_gemini = self._analysis_reply(
-            message=message,
+            message=normalized_message,
             query_response=query_response,
             resolution_note=resolution_note,
         )
@@ -123,7 +124,7 @@ class ChatService:
             message=fallback,
             query_response=query_response,
             suggestions=suggest_follow_ups(query_class),
-            resolved_input=resolved_message if resolved_message != message else None,
+            resolved_input=None,
             resolution_note=resolution_note,
             activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
         )
@@ -252,79 +253,6 @@ class ChatService:
             "brainstorm",
         )
         return any(token in lowered for token in conversational_markers)
-
-    def _resolve_entities(self, message: str) -> tuple[str, str | None]:
-        tokens = re.findall(r"[A-Za-z][A-Za-z'.-]+", message)
-        phrases = self._candidate_phrases(tokens)
-        replacements: dict[str, str] = {}
-        resolution_notes: list[str] = []
-
-        for phrase in phrases:
-            normalized_phrase = phrase.strip()
-            if len(normalized_phrase) < 4 or normalized_phrase.lower() in STOPWORDS:
-                continue
-            if normalized_phrase in replacements:
-                continue
-            candidates = self.repository.search_players(normalized_phrase, limit=5)
-            if not candidates:
-                continue
-            selected = candidates[0] if len(candidates) == 1 else self._choose_candidate_with_ai(message, normalized_phrase, candidates)
-            if not selected:
-                continue
-            if selected.lower() == normalized_phrase.lower():
-                continue
-            if selected.lower() in message.lower():
-                continue
-            replacements[normalized_phrase] = selected
-            resolution_notes.append(f"{normalized_phrase} -> {selected}")
-
-        if not replacements:
-            return message.strip(), None
-
-        resolved_message = message
-        for phrase, candidate in sorted(replacements.items(), key=lambda item: len(item[0]), reverse=True):
-            resolved_message = re.sub(
-                rf"\b{re.escape(phrase)}\b",
-                candidate,
-                resolved_message,
-                flags=re.IGNORECASE,
-            )
-
-        if not resolution_notes:
-            return resolved_message.strip(), None
-        if len(resolution_notes) == 1:
-            source, target = resolution_notes[0].split(" -> ", maxsplit=1)
-            return resolved_message.strip(), f"Interpreting {source} as {target}."
-        note = "; ".join(resolution_notes)
-        return resolved_message.strip(), f"Resolved player names: {note}."
-
-    @staticmethod
-    def _candidate_phrases(tokens: list[str]) -> list[str]:
-        phrases: list[str] = []
-        total = len(tokens)
-        for size in range(3, 0, -1):
-            for start in range(total - size + 1):
-                phrase = " ".join(tokens[start : start + size])
-                if phrase not in phrases:
-                    phrases.append(phrase)
-        return phrases
-
-    def _choose_candidate_with_ai(self, message: str, phrase: str, candidates: list[str]) -> str | None:
-        if self.gemini_client.is_configured():
-            prompt = (
-                "Pick the most likely ODI player referenced by the user.\n"
-                "Return only one candidate exactly as written, or NONE.\n"
-                f"User message: {message}\n"
-                f"Ambiguous phrase: {phrase}\n"
-                f"Candidates: {', '.join(candidates)}"
-            )
-            generated = self.gemini_client.generate_text(prompt, prefer_complex=False)
-            if generated:
-                cleaned = generated.strip()
-                for candidate in candidates:
-                    if cleaned.lower() == candidate.lower():
-                        return candidate
-        return candidates[0]
 
     def _build_activity_trace(self, query_response: QueryResponse, used_gemini: bool) -> list[str]:
         trace = []
