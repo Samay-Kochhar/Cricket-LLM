@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CricAtlas - Kinetic Glass Analysis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary": "#cdc5bd",
+                    "on-secondary-container": "#bbb4ac",
+                    "surface-container": "#1e2022",
+                    "tertiary-fixed": "#e2e2e2",
+                    "secondary-fixed": "#e9e1d9",
+                    "inverse-on-surface": "#2f3133",
+                    "surface": "#121416",
+                    "on-tertiary-fixed": "#1a1c1c",
+                    "on-secondary": "#34302a",
+                    "on-primary-fixed": "#3a0a00",
+                    "surface-container-highest": "#333537",
+                    "on-error": "#690005",
+                    "tertiary": "#c6c6c7",
+                    "surface-tint": "#ffb59f",
+                    "on-surface": "#e2e2e5",
+                    "outline-variant": "#59413a",
+                    "on-tertiary-container": "#313333",
+                    "on-surface-variant": "#e1bfb6",
+                    "on-secondary-fixed-variant": "#4b4640",
+                    "primary": "#ffb59f",
+                    "on-tertiary": "#2f3131",
+                    "surface-container-lowest": "#0c0e10",
+                    "on-background": "#e2e2e5",
+                    "inverse-primary": "#ad3305",
+                    "secondary-fixed-dim": "#cdc5bd",
+                    "on-secondary-fixed": "#1e1b16",
+                    "surface-variant": "#333537",
+                    "surface-container-low": "#1a1c1e",
+                    "inverse-surface": "#e2e2e5",
+                    "secondary-container": "#4b4640",
+                    "on-tertiary-fixed-variant": "#454747",
+                    "on-primary": "#5e1600",
+                    "tertiary-fixed-dim": "#c6c6c7",
+                    "surface-dim": "#121416",
+                    "on-primary-fixed-variant": "#852300",
+                    "primary-container": "#ff6d3f",
+                    "primary-fixed-dim": "#ffb59f",
+                    "on-error-container": "#ffdad6",
+                    "primary-fixed": "#ffdbd1",
+                    "tertiary-container": "#9a9b9b",
+                    "error-container": "#93000a",
+                    "surface-container-high": "#282a2c",
+                    "on-primary-container": "#621800",
+                    "outline": "#a88a81",
+                    "error": "#ffb4ab",
+                    "surface-bright": "#37393b",
+                    "background": "#121416"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "xxl": "2rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .pitch-grid {
+            background-image: radial-gradient(circle, rgba(255, 181, 159, 0.05) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .glass-card {
+            background: rgba(30, 32, 34, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+        .glass-card-light {
+            background: rgba(233, 225, 217, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-inset {
+            background: rgba(12, 14, 16, 0.4);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-[#0c0e10] text-on-surface font-body selection:bg-primary/30 min-h-screen relative overflow-x-hidden">
+<!-- Ambient Background Orbs -->
+<div class="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+<div class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-primary/10 blur-[120px] rounded-full animate-pulse"></div>
+<div class="absolute bottom-[10%] left-[-5%] w-[50vw] h-[50vw] bg-primary-container/5 blur-[100px] rounded-full"></div>
+<div class="absolute top-[30%] left-[20%] w-[30vw] h-[30vw] bg-secondary/5 blur-[120px] rounded-full"></div>
+</div>
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#121416]/40 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 py-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#FFB59F] active:scale-95 duration-150 cursor-pointer">analytics</span>
+<h1 class="text-2xl font-bold tracking-tighter text-[#FFB59F] font-['Space_Grotesk']">CricAtlas</h1>
+</div>
+<div class="flex items-center gap-6 md:flex hidden">
+<span class="text-[#FFB59F] font-['Manrope'] text-[10px] font-bold uppercase tracking-widest cursor-pointer">Analysis</span>
+<span class="text-[#E2E2E5]/60 font-['Manrope'] text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:text-[#E2E2E5] transition-colors">Matchups</span>
+<span class="text-[#E2E2E5]/60 font-['Manrope'] text-[10px] font-bold uppercase tracking-widest cursor-pointer hover:text-[#E2E2E5] transition-colors">Insights</span>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-primary/30 hover:border-primary/60 transition-colors cursor-pointer active:scale-95 duration-150">
+<img class="w-full h-full object-cover" data-alt="professional male profile portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNZ37DooUcTm0h2Oc_RlFTYhctVzVzAVcCQ00go2CbA-HfikPN0Ju0BLblIX2MouiSva9ylLEdg93qC0VR1fU6tmWmXGegNSoRFHRuu_FBu-VQYFoc9g5Y14huePUYIjWCkqcZUxE4AoqCVCGYRzlx7rWTE8q7-YfGZ6GjDGRBesP53749roItZTAQ0Y7JP4YCsvP-ymfCsgKBWAzz46bkdTu7RIZtEBVVHMtAxFbQEvORhtJjK2pgrl2i6rp3W22ZLOGBIYbWz5uw"/>
+</div>
+</header>
+<main class="pt-28 pb-32 px-4 md:px-8 max-w-7xl mx-auto relative z-10">
+<!-- Dashboard Header -->
+<section class="mb-12">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+<div>
+<span class="text-primary/80 font-headline font-medium tracking-[0.2em] uppercase text-xs mb-3 block">Advanced Metrics</span>
+<h2 class="text-4xl md:text-6xl font-headline font-bold text-on-surface tracking-tighter leading-none">Pitch &amp; Field Analysis</h2>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2.5 glass-card text-on-surface text-sm font-bold rounded-xl flex items-center gap-2 hover:bg-white/10 transition-all active:scale-95">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filter Session
+                </button>
+<button class="px-6 py-2.5 bg-gradient-to-br from-[#FF6D3F] to-[#FFB59F] text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-95 transition-all">
+                    Export Report
+                </button>
+</div>
+</div>
+</section>
+<!-- Bento Grid Analysis -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Pitch Map (Glass Overlay Style) -->
+<div class="md:col-span-8 glass-card rounded-xxl p-8 relative overflow-hidden group">
+<div class="flex justify-between items-center mb-10">
+<div class="flex items-center gap-4">
+<div class="p-2.5 bg-primary/20 rounded-xl border border-primary/20">
+<span class="material-symbols-outlined text-primary">sports_cricket</span>
+</div>
+<h3 class="font-headline font-bold text-2xl tracking-tight">Pitch Map Visualization</h3>
+</div>
+<div class="flex gap-5 text-[10px] font-bold uppercase tracking-wider">
+<span class="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(255,181,159,0.5)]"></span> Short</span>
+<span class="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> Good</span>
+<span class="flex items-center gap-2 bg-white/5 px-2 py-1 rounded-full"><span class="w-1.5 h-1.5 rounded-full bg-primary-container shadow-[0_0_8px_rgba(255,109,63,0.5)]"></span> Full</span>
+</div>
+</div>
+<!-- Pitch Surface - Integrated Aesthetic -->
+<div class="w-full aspect-[21/9] glass-inset rounded-2xl relative pitch-grid overflow-hidden group-hover:border-primary/20 transition-colors duration-500">
+<!-- Stumps Top -->
+<div class="absolute top-1/2 -translate-y-1/2 left-10 flex flex-col gap-1.5">
+<div class="w-1.5 h-10 bg-secondary/10 rounded-full"></div>
+<div class="w-1.5 h-10 bg-secondary/10 rounded-full"></div>
+<div class="w-1.5 h-10 bg-secondary/10 rounded-full"></div>
+</div>
+<!-- Crease Lines -->
+<div class="absolute inset-y-0 left-24 w-[1px] bg-white/10"></div>
+<div class="absolute inset-y-0 right-24 w-[1px] bg-white/10"></div>
+<!-- Heatmap Clusters -->
+<div class="absolute top-1/4 left-1/3 w-48 h-48 bg-primary/10 blur-[60px] rounded-full"></div>
+<div class="absolute bottom-1/3 right-1/4 w-56 h-56 bg-primary-container/10 blur-[80px] rounded-full"></div>
+<!-- Individual Ball Markers - Glow Effect -->
+<div class="absolute top-[45%] left-[40%] w-3.5 h-3.5 bg-primary rounded-full shadow-[0_0_15px_rgba(255,181,159,0.8)] border border-white/40 z-20"></div>
+<div class="absolute top-[48%] left-[41%] w-3.5 h-3.5 bg-primary rounded-full shadow-[0_0_15px_rgba(255,181,159,0.8)] border border-white/40 z-20"></div>
+<div class="absolute top-[42%] left-[42%] w-3.5 h-3.5 bg-primary-container rounded-full shadow-[0_0_15px_rgba(255,109,63,0.8)] border border-white/40 z-20"></div>
+<div class="absolute top-[55%] left-[38%] w-3 h-3 bg-secondary/80 rounded-full border border-white/20"></div>
+<div class="absolute top-[20%] left-[60%] w-3 h-3 bg-secondary/30 rounded-full border border-white/10"></div>
+<div class="absolute top-[70%] left-[55%] w-3 h-3 bg-primary/40 rounded-full border border-white/10"></div>
+</div>
+<div class="mt-8 flex justify-between items-center text-on-surface-variant/80 text-sm font-medium">
+<p>Total Deliveries: <span class="text-on-surface font-bold">142</span></p>
+<div class="h-px flex-1 mx-8 bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+<p>Dominant Length: <span class="text-primary font-bold">Good Length (42%)</span></p>
+</div>
+</div>
+<!-- Player Matchup Radar (Light Glass) -->
+<div class="md:col-span-4 glass-card-light rounded-xxl p-8 flex flex-col justify-between border-white/20">
+<div>
+<h3 class="font-headline font-bold text-xl text-white mb-1 uppercase tracking-tighter">H2H Comparison</h3>
+<p class="text-white/50 text-[10px] mb-8 font-bold uppercase tracking-[0.2em]">Top Performers Analysis</p>
+<div class="flex justify-between items-center mb-10">
+<div class="flex flex-col items-center gap-3">
+<div class="w-14 h-14 rounded-full border-2 border-primary-container p-0.5 shadow-lg shadow-black/20">
+<img class="w-full h-full object-cover rounded-full" data-alt="portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7CPAC0i2LfuCWGLcaaNJV39C237LXaKeDS-IsHdFpngFLZaN1IHIMdbZZoQOaVY0oRLdN8upB-nF0reSlndNT1NMQy45Tbh2w90X0KgaNP4YidQBUXbTOeE0FDubygSa5LryYYIPv4HOAjBmPl-uk14IFPf_MhPR_McO-F5lTHy6qWKY4NzMWbyYxJtBQUxL9MeiIpFNW_VvhvxmxbJXYkpi45yvy0SaWoLu-K792JnNsk5TYSTmSt2Dqv4rTAS5oqy1U5RCHrnIm"/>
+</div>
+<span class="text-[10px] font-black text-white/90 tracking-widest">K. RAHUL</span>
+</div>
+<div class="text-primary-container font-headline font-black italic text-lg drop-shadow-sm">VS</div>
+<div class="flex flex-col items-center gap-3">
+<div class="w-14 h-14 rounded-full border-2 border-white/30 p-0.5 shadow-lg shadow-black/20">
+<img class="w-full h-full object-cover rounded-full" data-alt="portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIR48gUd-EWhQbXtjCRrX5DWdrSiHFvWritrqH8j6-aE6UgPfrAdw76shfyVdrqsRwX8J1unvhDSkVYzBfpdOUflpWwnCb5lWH9K_7sybKOuIuSa8TeePC6Criyp4yyO3VfrN2bAzbzBR3nzXlIqD9ma8EZuvzdiuo3FfLdVQ9t6TB81sx5sWsFYZhjjaqFf_v97_pcCDHOKLhq_AFyJC_wliZ0lwB1GDn3w4Zrguvn1R_HqdFGpWa7-dmWWzI367KWHG4v-L312gr"/>
+</div>
+<span class="text-[10px] font-black text-white/90 tracking-widest">J. BUTTLER</span>
+</div>
+</div>
+<!-- Radar Graph Glass Aesthetic -->
+<div class="relative w-full aspect-square flex items-center justify-center p-4">
+<div class="absolute inset-4 border-[0.5px] border-white/10 rounded-full"></div>
+<div class="absolute inset-[25%] border-[0.5px] border-white/10 rounded-full"></div>
+<div class="absolute inset-[45%] border-[0.5px] border-white/10 rounded-full"></div>
+<!-- Hexagonal Grid -->
+<svg class="w-full h-full transform -rotate-90 drop-shadow-2xl" viewbox="0 0 100 100">
+<line class="text-white/10" stroke="currentColor" stroke-width="0.2" x1="50" x2="50" y1="50" y2="0"></line>
+<line class="text-white/10" stroke="currentColor" stroke-width="0.2" x1="50" x2="93.3" y1="50" y2="75"></line>
+<line class="text-white/10" stroke="currentColor" stroke-width="0.2" x1="50" x2="6.7" y1="50" y2="75"></line>
+<!-- Player 1 Shape (Primary) -->
+<polygon class="backdrop-blur-sm" fill="rgba(255, 109, 63, 0.4)" points="50,12 88,68 18,82" stroke="#FF6D3F" stroke-width="2"></polygon>
+<!-- Player 2 Shape (Glass White) -->
+<polygon fill="rgba(255, 255, 255, 0.15)" points="50,35 72,75 32,65" stroke="white" stroke-dasharray="2 1" stroke-width="1.5"></polygon>
+</svg>
+<!-- Labels -->
+<span class="absolute top-0 text-[8px] font-black uppercase text-white/80 tracking-widest">Strike Rate</span>
+<span class="absolute bottom-4 left-0 text-[8px] font-black uppercase text-white/80 tracking-widest">Average</span>
+<span class="absolute bottom-4 right-0 text-[8px] font-black uppercase text-white/80 tracking-widest">Boundary %</span>
+</div>
+</div>
+<div class="glass-inset p-4 rounded-2xl mt-6">
+<div class="flex justify-between items-center text-xs font-black text-white uppercase tracking-widest">
+<span>Consistency Score</span>
+<span class="text-primary-container text-lg">89.4</span>
+</div>
+</div>
+</div>
+<!-- Wagon Wheel Card -->
+<div class="md:col-span-12 lg:col-span-5 glass-card rounded-xxl p-8 border-l-4 border-primary">
+<div class="flex justify-between items-start mb-10">
+<div>
+<h3 class="font-headline font-bold text-2xl tracking-tight">Wagon Wheel</h3>
+<p class="text-on-surface-variant/60 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Scoring Zone Distribution</p>
+</div>
+<div class="p-2.5 glass-inset rounded-full">
+<span class="material-symbols-outlined text-primary-container text-xl">adjust</span>
+</div>
+</div>
+<div class="flex flex-col gap-10 items-center">
+<div class="relative w-72 h-72 glass-card-light rounded-full flex items-center justify-center p-10 overflow-hidden border-white/5">
+<!-- Pitch in center - Modernized -->
+<div class="w-14 h-24 glass-inset rounded-md z-10 border-white/10"></div>
+<!-- Scoring Lines - Sophisticated Overlay -->
+<div class="absolute inset-0">
+<!-- 4s -->
+<line class="opacity-30" stroke="#E2E2E5" stroke-width="1.5" x1="50%" x2="100%" y1="50%" y2="15%"></line>
+<line class="opacity-30" stroke="#E2E2E5" stroke-width="1.5" x1="50%" x2="95%" y1="50%" y2="85%"></line>
+<line class="opacity-30" stroke="#E2E2E5" stroke-width="1.5" x1="50%" x2="5%" y1="50%" y2="45%"></line>
+<!-- 6s (Primary) -->
+<line class="drop-shadow-[0_0_8px_rgba(255,109,63,0.5)]" stroke="#FF6D3F" stroke-width="3" x1="50%" x2="35%" y1="50%" y2="0%"></line>
+<line class="drop-shadow-[0_0_8px_rgba(255,109,63,0.5)]" stroke="#FF6D3F" stroke-width="3" x1="50%" x2="65%" y1="50%" y2="0%"></line>
+<line class="drop-shadow-[0_0_8px_rgba(255,109,63,0.5)]" stroke="#FF6D3F" stroke-width="3" x1="50%" x2="15%" y1="50%" y2="90%"></line>
+</div>
+<!-- Labels -->
+<span class="absolute top-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-white/50 uppercase tracking-widest">Off Side</span>
+<span class="absolute bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-black text-white/50 uppercase tracking-widest">Leg Side</span>
+</div>
+<div class="w-full space-y-4">
+<div class="p-4 glass-inset rounded-2xl flex justify-between items-center group hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-2.5 h-8 bg-primary-container rounded-full shadow-[0_0_12px_rgba(255,109,63,0.3)]"></div>
+<span class="text-sm font-bold tracking-tight">Long On / Mid Wicket</span>
+</div>
+<span class="text-2xl font-headline font-bold">42%</span>
+</div>
+<div class="p-4 glass-inset rounded-2xl flex justify-between items-center group hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-2.5 h-8 bg-primary rounded-full shadow-[0_0_12px_rgba(255,181,159,0.3)]"></div>
+<span class="text-sm font-bold tracking-tight">Point / Cover</span>
+</div>
+<span class="text-2xl font-headline font-bold">28%</span>
+</div>
+<div class="p-4 glass-inset rounded-2xl flex justify-between items-center group hover:bg-white/5 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-2.5 h-8 bg-white/20 rounded-full"></div>
+<span class="text-sm font-bold tracking-tight text-white/60">Third Man / Fine Leg</span>
+</div>
+<span class="text-2xl font-headline font-bold text-white/60">30%</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Matchup Insights List (Glass Overlay) -->
+<div class="md:col-span-12 lg:col-span-7 glass-card rounded-xxl p-8 relative overflow-hidden">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline font-bold text-2xl uppercase tracking-tighter">Matchup Key Findings</h3>
+<div class="p-2.5 glass-inset rounded-lg">
+<span class="material-symbols-outlined text-primary text-xl">lightbulb</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="group p-5 rounded-2xl glass-inset hover:bg-white/5 transition-all cursor-default border-transparent hover:border-white/10">
+<div class="flex gap-6 items-start">
+<span class="text-primary-container font-headline font-black text-2xl opacity-50 group-hover:opacity-100 transition-opacity">01.</span>
+<div>
+<h4 class="font-bold text-on-surface text-lg mb-2">Pace Vulnerability</h4>
+<p class="text-sm text-on-surface-variant/80 leading-relaxed font-medium">Early innings analysis shows 62% of wickets taken with deliveries moving away from the right-hander at <span class="text-primary/80">140km/h+</span>.</p>
+</div>
+</div>
+</div>
+<div class="group p-5 rounded-2xl glass-inset hover:bg-white/5 transition-all cursor-default border-transparent hover:border-white/10">
+<div class="flex gap-6 items-start">
+<span class="text-primary-container font-headline font-black text-2xl opacity-50 group-hover:opacity-100 transition-opacity">02.</span>
+<div>
+<h4 class="font-bold text-on-surface text-lg mb-2">Death Overs Efficiency</h4>
+<p class="text-sm text-on-surface-variant/80 leading-relaxed font-medium">Transition to yorker-length deliveries increases dot ball percentage by <span class="text-primary/80">22%</span> in the final 4 overs.</p>
+</div>
+</div>
+</div>
+<div class="group p-5 rounded-2xl glass-inset hover:bg-white/5 transition-all cursor-default border-transparent hover:border-white/10">
+<div class="flex gap-6 items-start">
+<span class="text-primary-container font-headline font-black text-2xl opacity-50 group-hover:opacity-100 transition-opacity">03.</span>
+<div>
+<h4 class="font-bold text-on-surface text-lg mb-2">Spin Neutralization</h4>
+<p class="text-sm text-on-surface-variant/80 leading-relaxed font-medium">High usage of the sweep shot against off-spinners in middle overs results in a <span class="text-primary/80">145.2</span> strike rate.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 rounded-t-[40px] bg-[#121416]/60 backdrop-blur-2xl border-t border-white/10 flex justify-around items-center px-4 pb-8 pt-4 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+<div class="flex flex-col items-center justify-center text-white/40 py-2 px-6 hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined mb-1.5 text-2xl">home</span>
+<span class="font-['Manrope'] text-[9px] font-black uppercase tracking-[0.2em]">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-gradient-to-br from-[#FF6D3F] to-[#FFB59F] text-white rounded-[20px] py-3 px-8 shadow-lg shadow-primary/20 scale-110 -translate-y-2 active:scale-105 duration-200 cursor-pointer">
+<span class="material-symbols-outlined mb-1 text-2xl" style="font-variation-settings: 'FILL' 1;">insights</span>
+<span class="font-['Manrope'] text-[9px] font-black uppercase tracking-[0.2em]">Analysis</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 py-2 px-6 hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined mb-1.5 text-2xl">groups</span>
+<span class="font-['Manrope'] text-[9px] font-black uppercase tracking-[0.2em]">Teams</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 py-2 px-6 hover:text-white transition-all cursor-pointer">
+<span class="material-symbols-outlined mb-1.5 text-2xl">person</span>
+<span class="font-['Manrope'] text-[9px] font-black uppercase tracking-[0.2em]">Profile</span>
+</div>
+</nav>
+</body></html>

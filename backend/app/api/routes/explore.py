@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel
 
 from backend.app.bootstrap import get_services
 from backend.app.services.player_resolution import resolve_player_name
 
 
 router = APIRouter(prefix="/api", tags=["explore"])
+
+
+class WorkbenchSearchRequest(BaseModel):
+    query: str
 
 
 @router.get("/players/search")
@@ -46,3 +51,8 @@ def compare_players(player: list[str] = Query(default=[]), services=Depends(get_
         if summary:
             summaries.append(summary)
     return {"players": summaries}
+
+
+@router.post("/workbench/search")
+def workbench_search(payload: WorkbenchSearchRequest, services=Depends(get_services)):
+    return services["workbench_service"].search(payload.query)

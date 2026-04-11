@@ -14,6 +14,7 @@ from backend.app.domain.evidence_models import (
     QueryResponse,
     SummaryBlock,
 )
+from backend.app.services.chat_service import ChatReply
 from backend.app.main import app
 
 
@@ -61,9 +62,18 @@ def client() -> Iterator[TestClient]:
             ],
         )
 
+    class FakeChatService:
+        def reply(self, message: str, history: list[dict[str, str]]) -> ChatReply:
+            return ChatReply(
+                mode="conversation",
+                message=f"Atlas heard: {message}",
+                suggestions=["Compare Virat Kohli at number 3 vs opening in ODIs"],
+            )
+
     app.dependency_overrides[get_services] = lambda: {
         "repository": FakeRepository(),
         "query_handler": fake_query_handler,
+        "chat_service": FakeChatService(),
     }
     with TestClient(app) as test_client:
         yield test_client
@@ -96,3 +106,19 @@ def test_player_profile_route_resolves_aliases(client: TestClient) -> None:
     payload = response.json()
     assert payload["player_name"] == "Steven Smith"
     assert payload["summary"]["runs_scored"] == 300
+
+
+def test_chat_route_returns_chat_payload(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "Tell me about Virat Kohli",
+            "history": [{"role": "user", "content": "Hi"}],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "conversation"
+    assert payload["message"] == "Atlas heard: Tell me about Virat Kohli"
+    assert payload["suggestions"] == ["Compare Virat Kohli at number 3 vs opening in ODIs"]

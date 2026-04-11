@@ -7,6 +7,7 @@ export function normalizeQueryResponse(payload: QueryResponse): QueryResponse {
     summaries: payload.summaries ?? [],
     tables: payload.tables ?? [],
     charts: payload.charts ?? [],
+    visuals: payload.visuals ?? null,
     metric_references: payload.metric_references ?? [],
     evidence_notes: payload.evidence_notes ?? [],
     citations: payload.citations ?? [],

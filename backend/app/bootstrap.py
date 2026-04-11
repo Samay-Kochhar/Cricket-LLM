@@ -7,10 +7,12 @@ from backend.app.db.repository import AnalyticsRepository
 from backend.app.domain.metric_models import QueryClass
 from backend.app.services.analytics_service import AnalyticsService
 from backend.app.services.answer_composer import AnswerComposer
+from backend.app.services.chat_service import ChatService
 from backend.app.services.follow_up_suggester import suggest_follow_ups
 from backend.app.services.gemini_client import GeminiClient
 from backend.app.services.grounded_context import GroundedContextService
 from backend.app.services.metric_catalog import MetricCatalog
+from backend.app.services.workbench_service import WorkbenchService
 
 
 @lru_cache
@@ -34,8 +36,21 @@ def get_services():
         follow_ups = suggest_follow_ups(query_class)
         return answer_composer.compose(response, grounded_notes, grounded_citations, follow_ups)
 
+    chat_service = ChatService(
+        repository=repository,
+        query_handler=query_handler,
+        gemini_client=gemini_client,
+    )
+    workbench_service = WorkbenchService(
+        repository=repository,
+        query_handler=query_handler,
+        gemini_client=gemini_client,
+    )
+
     return {
         "config": config,
         "repository": repository,
         "query_handler": query_handler,
+        "chat_service": chat_service,
+        "workbench_service": workbench_service,
     }

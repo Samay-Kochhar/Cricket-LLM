@@ -60,6 +60,7 @@ class GroundedContextService:
             "important",
             "context",
             "recent",
+            "news",
             "today",
             "creative",
             "metric",

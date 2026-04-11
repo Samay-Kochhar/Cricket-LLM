@@ -68,6 +68,46 @@ class GeminiClient:
 
         return self.parse_grounded_result(response.json(), selection.model_name)
 
+    def generate_text(self, prompt: str, prefer_complex: bool = False) -> str | None:
+        if not self.is_configured():
+            return None
+
+        model_name = self.complex_model if prefer_complex else self.default_model
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0.3, "maxOutputTokens": 360},
+        }
+
+        try:
+            response = httpx.post(
+                f"{self.api_base_url}/models/{model_name}:generateContent",
+                headers={"x-goog-api-key": self.api_key or "", "Content-Type": "application/json"},
+                json=payload,
+                timeout=self.timeout_seconds,
+            )
+            response.raise_for_status()
+        except httpx.HTTPError:
+            return None
+
+        candidates = response.json().get("candidates")
+        if not isinstance(candidates, list) or not candidates:
+            return None
+        candidate = candidates[0]
+        if not isinstance(candidate, dict):
+            return None
+        content = candidate.get("content")
+        if not isinstance(content, dict):
+            return None
+        parts = content.get("parts")
+        if not isinstance(parts, list):
+            return None
+        text = []
+        for part in parts:
+            if isinstance(part, dict) and isinstance(part.get("text"), str):
+                text.append(part["text"].strip())
+        joined = "\n".join(segment for segment in text if segment)
+        return joined or None
+
     @staticmethod
     def parse_grounded_result(payload: dict[str, object], model_name: str) -> GeminiGroundedResult | None:
         candidates = payload.get("candidates")
