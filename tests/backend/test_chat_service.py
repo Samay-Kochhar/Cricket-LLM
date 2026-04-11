@@ -26,6 +26,16 @@ class FakeGeminiClient:
         return "Database-backed analyst answer."
 
 
+class TruncatingGeminiClient:
+    def is_configured(self) -> bool:
+        return True
+
+    def generate_text(self, prompt: str, prefer_complex: bool = False) -> str | None:
+        if "Pick the most likely ODI player" in prompt:
+            return "Hardik Pandya"
+        return "Hardik Pandya's death over strike rate is 1"
+
+
 def fake_query_handler(question: str) -> QueryResponse:
     entities: list[str] = []
     if "Ravichandran Ashwin" in question:
@@ -42,6 +52,25 @@ def fake_query_handler(question: str) -> QueryResponse:
             entities=entities,
         ),
         summaries=[SummaryBlock(title="Snapshot", body="Player snapshot.")],
+    )
+
+
+def numeric_query_handler(question: str) -> QueryResponse:
+    entities = ["Hardik Pandya"] if "hardik pandya" in question.lower() else []
+    return QueryResponse(
+        status=EvidenceStatus.supported,
+        interpretation=QueryInterpretation(
+            original_question=question,
+            query_class="role_comparison",
+            entities=entities,
+            filters={"phase": "death"},
+        ),
+        summaries=[
+            SummaryBlock(
+                title="Snapshot",
+                body="In death overs, Hardik Pandya has 691 runs from 507 balls with a strike rate of 136.29.",
+            )
+        ],
     )
 
 
@@ -76,3 +105,21 @@ def test_chat_service_does_not_turn_over_into_a_player_name() -> None:
     )
 
     assert reply.resolved_input is None or "Brandon Glover" not in reply.resolved_input
+
+
+def test_chat_service_prefers_database_text_when_gemini_damages_numeric_reply() -> None:
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=numeric_query_handler,
+        gemini_client=TruncatingGeminiClient(),
+    )
+
+    reply = service.reply(
+        "death over strike rate of hardik pandya",
+        history=[],
+    )
+
+    assert reply.mode == "analysis"
+    assert reply.message == "In death overs, Hardik Pandya has 691 runs from 507 balls with a strike rate of 136.29."
+    assert "Gemini reasoning" not in reply.activity_trace
+    assert "ODI database" in reply.activity_trace

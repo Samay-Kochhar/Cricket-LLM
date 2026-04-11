@@ -79,10 +79,9 @@ class ChatService:
         query_response = self.query_handler(resolved_message)
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
-        activity_trace = self._build_activity_trace(query_response)
 
         if query_response.status.value == "supported" and entities:
-            reply_text = self._analysis_reply_with_gemini(
+            reply_text, used_gemini = self._analysis_reply(
                 message=message,
                 query_response=query_response,
                 resolution_note=resolution_note,
@@ -94,7 +93,7 @@ class ChatService:
                 suggestions=suggest_follow_ups(query_class),
                 resolved_input=resolved_message if resolved_message != message else None,
                 resolution_note=resolution_note,
-                activity_trace=activity_trace,
+                activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
             )
 
         if self._looks_like_general_chat(message) or not entities:
@@ -111,10 +110,10 @@ class ChatService:
                 suggestions=suggest_follow_ups(query_class) if entities else [],
                 resolved_input=resolved_message if resolved_message != message else None,
                 resolution_note=resolution_note,
-                activity_trace=activity_trace,
+                activity_trace=self._build_activity_trace(query_response, used_gemini=self.gemini_client.is_configured()),
             )
 
-        fallback = self._analysis_reply_with_gemini(
+        fallback, used_gemini = self._analysis_reply(
             message=message,
             query_response=query_response,
             resolution_note=resolution_note,
@@ -126,24 +125,27 @@ class ChatService:
             suggestions=suggest_follow_ups(query_class),
             resolved_input=resolved_message if resolved_message != message else None,
             resolution_note=resolution_note,
-            activity_trace=activity_trace,
+            activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
         )
 
-    def _analysis_reply_with_gemini(
+    def _analysis_reply(
         self,
         message: str,
         query_response: QueryResponse,
         resolution_note: str | None,
-    ) -> str:
+    ) -> tuple[str, bool]:
         fallback = self._analysis_text(query_response, resolution_note)
         if not self.gemini_client.is_configured():
-            return fallback
+            return fallback, False
+        if self._requires_exact_numeric_response(query_response):
+            return fallback, False
 
         prompt = (
             "You are Atlas, an ODI cricket analyst assistant.\n"
             "You are given a database-backed result. Rewrite it as a concise, sharp analyst answer.\n"
             "Rules:\n"
             "- Respect the database result exactly.\n"
+            "- Copy every statistic exactly if any statistics are present.\n"
             "- Do not invent statistics or entities.\n"
             "- If external context exists, treat it as secondary.\n"
             "- If a name was resolved, mention it naturally once.\n"
@@ -158,7 +160,11 @@ class ChatService:
             "Reply as Atlas."
         )
         generated = self.gemini_client.generate_text(prompt, prefer_complex=False)
-        return generated or fallback
+        if not generated:
+            return fallback, False
+        if not self._preserves_numeric_tokens(fallback, generated):
+            return fallback, False
+        return generated, True
 
     def _general_conversation_reply(
         self,
@@ -209,6 +215,27 @@ class ChatService:
         if resolution_note:
             return f"{resolution_note}\n\n{summary_text}".strip()
         return summary_text or "I analyzed the ODI data and attached the structured evidence below."
+
+    @staticmethod
+    def _requires_exact_numeric_response(query_response: QueryResponse) -> bool:
+        summary_text = " ".join(block.body for block in query_response.summaries)
+        table_values = " ".join(
+            str(cell)
+            for table in query_response.tables
+            for row in table.rows
+            for cell in row
+            if cell is not None
+        )
+        source = f"{summary_text} {table_values}".strip()
+        return bool(re.search(r"\d", source))
+
+    @staticmethod
+    def _preserves_numeric_tokens(fallback: str, generated: str) -> bool:
+        fallback_tokens = re.findall(r"\d+(?:\.\d+)?", fallback)
+        if not fallback_tokens:
+            return True
+        generated_tokens = set(re.findall(r"\d+(?:\.\d+)?", generated))
+        return all(token in generated_tokens for token in fallback_tokens)
 
     @staticmethod
     def _looks_like_general_chat(message: str) -> bool:
@@ -299,9 +326,9 @@ class ChatService:
                         return candidate
         return candidates[0]
 
-    def _build_activity_trace(self, query_response: QueryResponse) -> list[str]:
+    def _build_activity_trace(self, query_response: QueryResponse, used_gemini: bool) -> list[str]:
         trace = []
-        if self.gemini_client.is_configured():
+        if used_gemini:
             trace.append("Gemini reasoning")
         if query_response.interpretation.entities or query_response.tables or query_response.visuals:
             trace.append("ODI database")
