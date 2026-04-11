@@ -1,7 +1,7 @@
 [project]
 name = "odi-analyst-ingestion"
 version = "0.1.0"
-description = "Ingestion and profiling tools for the ODI Analyst Workbench"
+description = "Ingestion and profiling tools for CricAtlas"
 requires-python = ">=3.12"
 dependencies = [
   "duckdb>=1.1.0",

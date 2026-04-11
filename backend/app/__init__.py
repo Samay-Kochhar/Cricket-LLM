@@ -1,1 +1,1 @@
-"""Backend package for the ODI Analyst Workbench."""
+"""Backend package for CricAtlas."""

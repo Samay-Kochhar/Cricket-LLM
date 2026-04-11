@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ODI Analyst Workbench",
+  title: "CricAtlas",
   description: "An evidence-first ODI cricket analysis workbench.",
 };
 

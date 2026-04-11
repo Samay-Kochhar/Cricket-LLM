@@ -1,0 +1,42 @@
+- id: role-comparison-kohli-smith
+  question: Compare Virat Kohli and Steven Smith
+  expected_query_class: role_comparison
+  expected_status: supported
+  required_evidence:
+    - summaries
+    - tables
+    - citations
+
+- id: venue-leaderboard-chinnaswamy
+  question: Which bowler has best statistics in Chinnaswamy Stadium?
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  required_evidence:
+    - tables
+    - charts
+    - citations
+
+- id: unsupported-player-abhishek
+  question: What is the weakness of Abhishek Sharma?
+  expected_query_class: strengths_weaknesses
+  expected_status: insufficient_evidence
+  required_evidence:
+    - insufficiencies
+
+- id: matchup-smith-bumrah
+  question: Steven Smith vs Jasprit Bumrah in ODIs
+  expected_query_class: head_to_head_matchup
+  expected_status: supported
+  required_evidence:
+    - summaries
+    - tables
+    - citations
+
+- id: trend-hetmyer
+  question: Has Shimron Hetmyer become more destructive after 2020?
+  expected_query_class: trend_progression
+  expected_status: supported
+  required_evidence:
+    - tables
+    - charts
+    - citations

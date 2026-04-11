@@ -9,7 +9,7 @@ from backend.app.bootstrap import get_services
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="ODI Analyst Workbench API", version="0.2.0")
+    app = FastAPI(title="CricAtlas API", version="0.3.0")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],

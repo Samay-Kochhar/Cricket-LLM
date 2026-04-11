@@ -5,10 +5,10 @@ from backend.app.services.query_router import QueryRouter
 def test_query_router_detects_matchup_and_entities() -> None:
     router = QueryRouter(["Steven Smith", "Jasprit Bumrah", "Virat Kohli"])
 
-    route = router.route("Bumrah vs Steven Smith in ODIs")
+    route = router.route("Steven Smith vs Jasprit Bumrah in ODIs")
 
     assert route.query_class == QueryClass.head_to_head_matchup
-    assert "Steven Smith" in route.entities
+    assert route.entities == ("Steven Smith", "Jasprit Bumrah")
 
 
 def test_query_router_detects_trend_question() -> None:

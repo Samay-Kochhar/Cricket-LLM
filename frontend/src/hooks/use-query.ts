@@ -3,11 +3,11 @@
 import { useState } from "react";
 
 import type { QueryResponse } from "@/lib/api-types";
+import { getApiBaseUrl } from "@/lib/api-client";
 import { normalizeQueryResponse } from "@/lib/result-mappers";
 
 
-const DEFAULT_API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
+const DEFAULT_API_BASE_URL = getApiBaseUrl();
 
 
 type QueryState = {

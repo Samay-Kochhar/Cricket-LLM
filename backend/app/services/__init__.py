@@ -1,1 +1,1 @@
-"""Service layer primitives for the ODI Analyst Workbench."""
+"""Service layer primitives for CricAtlas."""

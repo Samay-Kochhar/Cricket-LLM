@@ -1,1 +1,1 @@
-"""Ingestion tools for the ODI Analyst Workbench."""
+"""Ingestion tools for CricAtlas."""

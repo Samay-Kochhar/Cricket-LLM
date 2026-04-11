@@ -39,13 +39,15 @@ class QueryRouter:
 
     def _extract_entities(self, question: str) -> tuple[str, ...]:
         normalized_question = normalize_name(question)
-        matched: list[str] = []
+        matched: list[tuple[int, str]] = []
         for player in self.available_players:
-            if normalize_name(player) in normalized_question:
-                matched.append(player)
+            normalized_player = normalize_name(player)
+            position = normalized_question.find(normalized_player)
+            if position >= 0:
+                matched.append((position, player))
         if matched:
             deduped: list[str] = []
-            for player in matched:
+            for _, player in sorted(matched, key=lambda item: item[0]):
                 if player not in deduped:
                     deduped.append(player)
             return tuple(deduped[:2])

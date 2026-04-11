@@ -1,6 +1,6 @@
 # ODI Metric Catalog
 
-This document describes the initial v1 metric set for the ODI Analyst Workbench.
+This document describes the initial v1 metric set for CricAtlas.
 
 ## Supported Query Classes
 - Role and position comparison

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from statistics import mean
 
 from backend.app.db.repository import AnalyticsRepository
@@ -30,6 +30,8 @@ def database_citation(label: str, locator: str) -> Citation:
 class AnalyticsService:
     repository: AnalyticsRepository
     metric_catalog: MetricCatalog
+    router: QueryRouter = field(init=False)
+    available_venues: list[str] = field(init=False)
 
     def __post_init__(self) -> None:
         self.router = QueryRouter(self.repository.list_player_names())
@@ -246,6 +248,9 @@ class AnalyticsService:
                 "A recognizable ODI venue is required for the current venue leaderboard response.",
                 ["Try naming the ground explicitly."],
             )
+        interpretation = interpretation.model_copy(
+            update={"filters": {**interpretation.filters, "venue_name": venue_name}}
+        )
         leaderboard = self.repository.get_venue_bowling_leaderboard(venue_name)
         if not leaderboard:
             return self._insufficient(

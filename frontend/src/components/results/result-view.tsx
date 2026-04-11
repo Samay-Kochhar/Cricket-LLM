@@ -1,16 +1,20 @@
+import Link from "next/link";
+
 import { CitationList } from "@/components/citations/citation-list";
 import { SimpleChart } from "@/components/charts/simple-chart";
 import type { QueryResponse } from "@/lib/api-types";
+import { deriveExplorerLinks } from "@/lib/explorer-links";
 
 
 type ResultViewProps = {
   error: string | null;
   isLoading: boolean;
+  onSaveAnalysis?: (() => void) | null;
   result: QueryResponse | null;
 };
 
 
-export function ResultView({ error, isLoading, result }: ResultViewProps) {
+export function ResultView({ error, isLoading, onSaveAnalysis, result }: ResultViewProps) {
   if (isLoading) {
     return <p className="muted-copy">Running ODI analysis...</p>;
   }
@@ -22,6 +26,8 @@ export function ResultView({ error, isLoading, result }: ResultViewProps) {
   if (!result) {
     return <p className="muted-copy">Submit a question to inspect the structured ODI evidence view.</p>;
   }
+
+  const explorerLinks = deriveExplorerLinks(result);
 
   return (
     <div className="result-stack">
@@ -35,6 +41,18 @@ export function ResultView({ error, isLoading, result }: ResultViewProps) {
             <span className="chip" key={entity}>
               {entity}
             </span>
+          ))}
+        </div>
+        <div className="action-row">
+          {onSaveAnalysis ? (
+            <button className="primary-button inline-button" onClick={onSaveAnalysis} type="button">
+              Save Analysis
+            </button>
+          ) : null}
+          {explorerLinks.map((link) => (
+            <Link className="ghost-button inline-button" href={link.href} key={link.href}>
+              {link.label}
+            </Link>
           ))}
         </div>
       </section>

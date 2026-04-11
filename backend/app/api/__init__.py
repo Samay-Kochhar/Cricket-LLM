@@ -1,1 +1,1 @@
-"""API routes for the ODI Analyst Workbench."""
+"""API routes for CricAtlas."""

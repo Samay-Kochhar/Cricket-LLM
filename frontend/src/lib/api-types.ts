@@ -70,3 +70,44 @@ export type QueryResponse = {
   citations: Citation[];
   insufficiencies: InsufficientEvidenceBlock[];
 };
+
+export type PlayerBattingSummary = {
+  player_name: string;
+  balls_faced: number;
+  runs_scored: number;
+  dismissals?: number;
+  strike_rate?: number | null;
+  boundary_percentage?: number | null;
+  control_percentage?: number | null;
+};
+
+export type PlayerTrendRow = {
+  year: number;
+  balls_faced: number;
+  runs_scored: number;
+  control_percentage?: number | null;
+};
+
+export type PlayerProfileResponse = {
+  player_name: string;
+  summary: PlayerBattingSummary | null;
+  trend: PlayerTrendRow[];
+  suggestions: string[];
+};
+
+export type VenueLeaderboardRow = {
+  player_name: string;
+  deliveries: number;
+  runs_conceded: number;
+  wickets: number;
+  economy_rate?: number | null;
+};
+
+export type VenueProfileResponse = {
+  venue_name: string;
+  bowling_leaderboard: VenueLeaderboardRow[];
+};
+
+export type CompareResponse = {
+  players: PlayerBattingSummary[];
+};

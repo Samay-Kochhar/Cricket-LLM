@@ -6,7 +6,8 @@ export type SavedSession = {
   lastPrompt?: string;
 };
 
-const STORAGE_KEY = "odi-analyst-workbench:sessions";
+const STORAGE_KEY = "cricatlas:sessions";
+const LEGACY_STORAGE_KEY = "odi-analyst-workbench:sessions";
 
 
 function nowIso() {
@@ -35,7 +36,7 @@ export function loadSessions(): SavedSession[] {
     return [];
   }
 
-  const raw = window.localStorage.getItem(STORAGE_KEY);
+  const raw = window.localStorage.getItem(STORAGE_KEY) ?? window.localStorage.getItem(LEGACY_STORAGE_KEY);
   if (!raw) {
     return [];
   }
