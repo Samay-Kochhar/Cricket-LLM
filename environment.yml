@@ -1,0 +1,11 @@
+name: odi-analyst-workbench
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - nodejs=24
+  - pip
+  - pip:
+      - duckdb>=1.1.0
+      - pydantic>=2.9.0
+      - pytest>=8.3.0

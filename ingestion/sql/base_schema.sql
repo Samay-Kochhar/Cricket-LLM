@@ -1,0 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS raw;
+CREATE SCHEMA IF NOT EXISTS analytics;
+
+DROP TABLE IF EXISTS raw.odi_bbb_raw;
+DROP TABLE IF EXISTS analytics.deliveries_v1;
