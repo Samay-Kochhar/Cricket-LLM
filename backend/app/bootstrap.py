@@ -29,7 +29,7 @@ def get_services():
 
     def query_handler(question: str):
         response = analytics_service.answer_question(question)
-        grounded_notes, grounded_citations = grounded_context.gather(question)
+        grounded_notes, grounded_citations = grounded_context.gather(question, response)
         query_class = QueryClass(response.interpretation.query_class)
         follow_ups = suggest_follow_ups(query_class)
         return answer_composer.compose(response, grounded_notes, grounded_citations, follow_ups)
