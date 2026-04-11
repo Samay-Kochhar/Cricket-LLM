@@ -202,6 +202,87 @@ a {
   line-height: 1.7;
 }
 
+.result-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.result-panel {
+  padding: 18px;
+}
+
+.card-title {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.result-table th,
+.result-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.citation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.citation-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  background: var(--surface);
+}
+
+.citation-meta {
+  margin-bottom: 10px;
+}
+
+.chart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) 2fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.chart-label,
+.chart-value {
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.chart-bar-track {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(212, 199, 181, 0.6);
+  overflow: hidden;
+}
+
+.chart-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+}
+
 @media (max-width: 960px) {
   .app-shell {
     grid-template-columns: 1fr;

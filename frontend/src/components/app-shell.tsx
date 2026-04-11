@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ChatEntry } from "@/components/chat-entry";
+import { ResultView } from "@/components/results/result-view";
 import { SessionList } from "@/components/session-list";
+import { useQueryAnalysis } from "@/hooks/use-query";
 import {
   createSession,
   loadSessions,
@@ -15,6 +17,7 @@ import {
 export function AppShell() {
   const [sessions, setSessions] = useState<SavedSession[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const { error, isLoading, result, runQuery } = useQueryAnalysis();
 
   useEffect(() => {
     const restored = loadSessions();
@@ -46,7 +49,7 @@ export function AppShell() {
     setActiveSessionId(sessionId);
   }
 
-  function handleSubmitQuestion(question: string) {
+  async function handleSubmitQuestion(question: string) {
     if (!activeSession) {
       return;
     }
@@ -63,6 +66,7 @@ export function AppShell() {
     );
     setSessions(nextSessions);
     saveSessions(nextSessions);
+    await runQuery(question);
   }
 
   return (
@@ -105,12 +109,13 @@ export function AppShell() {
             <h2 className="section-title">Question Workspace</h2>
             <ChatEntry
               defaultValue={activeSession?.lastPrompt ?? ""}
+              isLoading={isLoading}
               onSubmit={handleSubmitQuestion}
             />
           </section>
 
           <section className="panel evidence-panel">
-            <h2 className="section-title">Current Session</h2>
+            <h2 className="section-title">Evidence Workspace</h2>
             {activeSession ? (
               <>
                 <p className="muted-copy">
@@ -125,16 +130,9 @@ export function AppShell() {
               <p className="muted-copy">Create a session to begin.</p>
             )}
 
-            <h3 className="section-title" style={{ marginTop: 24 }}>
-              Evidence Rail Placeholder
-            </h3>
-            <ul className="evidence-list">
-              <li>Question interpretation</li>
-              <li>Filters applied</li>
-              <li>Metrics used</li>
-              <li>Citations</li>
-              <li>Insufficient-evidence notices</li>
-            </ul>
+            <div style={{ marginTop: 24 }}>
+              <ResultView error={error} isLoading={isLoading} result={result} />
+            </div>
           </section>
         </div>
       </section>

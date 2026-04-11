@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 type ChatEntryProps = {
   defaultValue: string;
+  isLoading?: boolean;
   onSubmit: (question: string) => void;
 };
 
@@ -16,7 +17,7 @@ const SUGGESTED_PROMPTS = [
 ];
 
 
-export function ChatEntry({ defaultValue, onSubmit }: ChatEntryProps) {
+export function ChatEntry({ defaultValue, isLoading = false, onSubmit }: ChatEntryProps) {
   const [value, setValue] = useState(defaultValue);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function ChatEntry({ defaultValue, onSubmit }: ChatEntryProps) {
   return (
     <form className="chat-entry" onSubmit={handleSubmit}>
       <textarea
+        disabled={isLoading}
         name="question"
         onChange={(event) => setValue(event.target.value)}
         placeholder="Ask an ODI analysis question..."
@@ -46,6 +48,7 @@ export function ChatEntry({ defaultValue, onSubmit }: ChatEntryProps) {
             className="ghost-button"
             key={prompt}
             onClick={() => setValue(prompt)}
+            disabled={isLoading}
             type="button"
           >
             Use prompt
@@ -53,8 +56,8 @@ export function ChatEntry({ defaultValue, onSubmit }: ChatEntryProps) {
         ))}
       </div>
       <div>
-        <button className="primary-button" type="submit">
-          Save Prompt
+        <button className="primary-button" disabled={isLoading} type="submit">
+          {isLoading ? "Running..." : "Run ODI Query"}
         </button>
       </div>
     </form>

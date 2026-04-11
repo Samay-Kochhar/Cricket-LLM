@@ -23,12 +23,12 @@ GROUP BY 1, 2;
 CREATE OR REPLACE VIEW analytics.player_lookup AS
 SELECT DISTINCT
   bat AS player_name,
-  lower(regexp_replace(bat, '[^a-z0-9]+', '', 'g')) AS normalized_name,
+  regexp_replace(lower(bat), '[^a-z0-9]+', '', 'g') AS normalized_name,
   'batter' AS player_role
 FROM analytics.deliveries_v1
 UNION
 SELECT DISTINCT
   bowl AS player_name,
-  lower(regexp_replace(bowl, '[^a-z0-9]+', '', 'g')) AS normalized_name,
+  regexp_replace(lower(bowl), '[^a-z0-9]+', '', 'g') AS normalized_name,
   'bowler' AS player_role
 FROM analytics.deliveries_v1;
