@@ -768,11 +768,15 @@ export function VisualInsights({ result }: VisualInsightsProps) {
             <MathList
               title="How the radar is calculated"
               items={[
-                "Each spoke is one ODI batting metric for the subject and the benchmark.",
-                "The benchmark is either the comparison player or the ODI baseline for the same phase.",
-                "Dismissal resistance = 100 - (dismissals / balls * 100).",
-                "Vs pace and vs spin strike rates are split directly from the bowl_kind field.",
+                "Each spoke compares the subject against either another player or the ODI baseline.",
+                "ODI baseline means the aggregate batting benchmark from the whole ODI dataset for the same filter context. If the view is filtered to death overs, the baseline is all death-over balls in the dataset. If there is no phase filter, it is the full ODI dataset benchmark.",
+                "Strike Rate = runs / balls * 100.",
+                "Boundary % = balls that scored 4 or 6 / balls * 100.",
+                "Control % = average of the dataset control field for the same sample.",
+                "Dismissal Resistance = 100 - (dismissals / balls * 100). Higher is better because it means fewer dismissals per ball.",
+                "Vs Pace SR and Vs Spin SR are strike rates calculated only against bowl_kind = pace bowler and bowl_kind = spin bowler.",
               ]}
+              note="The radar is a compact benchmark view, not a role-adjusted model. ODI baseline here is a filtered dataset aggregate, not a prediction or percentile score."
             />
           }
         />
