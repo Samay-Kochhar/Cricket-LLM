@@ -5,6 +5,7 @@ from functools import lru_cache
 from backend.app.config import AppConfig
 from backend.app.db.repository import AnalyticsRepository
 from backend.app.domain.metric_models import QueryClass
+from backend.app.cricket_analytics.semantic_service import SemanticAnalyticsService
 from backend.app.services.analytics_service import AnalyticsService
 from backend.app.services.answer_composer import AnswerComposer
 from backend.app.services.chat_service import ChatService
@@ -34,8 +35,33 @@ def get_services():
     )
     grounded_context = GroundedContextService(gemini_client)
     answer_composer = AnswerComposer()
+    semantic_service = SemanticAnalyticsService(
+        repository=repository,
+        gemini_client=gemini_client,
+        app_env=config.app_env,
+    )
 
     def query_handler(question: str):
+        if config.use_semantic_analytics_v2:
+            semantic_response = semantic_service.answer_question(question)
+            if (
+                semantic_response.status.value == "supported"
+                or config.app_env != "development"
+                or not config.semantic_v2_dev_fallback
+            ):
+                grounded_notes, grounded_citations = grounded_context.gather(question, semantic_response)
+                query_class = QueryClass(semantic_response.interpretation.query_class)
+                follow_ups = suggest_follow_ups(query_class)
+                return answer_composer.compose(semantic_response, grounded_notes, grounded_citations, follow_ups)
+
+        interpreted = query_interpreter.interpret(question)
+        response = analytics_service.answer_route(question, interpreted.route)
+        grounded_notes, grounded_citations = grounded_context.gather(question, response)
+        query_class = QueryClass(response.interpretation.query_class)
+        follow_ups = suggest_follow_ups(query_class)
+        return answer_composer.compose(response, grounded_notes, grounded_citations, follow_ups)
+
+    def legacy_query_handler(question: str):
         interpreted = query_interpreter.interpret(question)
         response = analytics_service.answer_route(question, interpreted.route)
         grounded_notes, grounded_citations = grounded_context.gather(question, response)
@@ -50,14 +76,16 @@ def get_services():
     )
     workbench_service = WorkbenchService(
         repository=repository,
-        query_handler=query_handler,
+        query_handler=legacy_query_handler,
         gemini_client=gemini_client,
     )
 
     return {
         "config": config,
         "repository": repository,
+        "analytics_service": analytics_service,
         "query_interpreter": query_interpreter,
+        "semantic_service": semantic_service,
         "query_handler": query_handler,
         "chat_service": chat_service,
         "workbench_service": workbench_service,

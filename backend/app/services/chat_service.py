@@ -52,6 +52,8 @@ STOPWORDS = {
     "with",
 }
 
+CHAT_TABLE_VISIBLE_ROWS = 5
+
 
 class ChatHistoryTurn(BaseModel):
     role: str
@@ -76,14 +78,17 @@ class ChatService:
 
     def reply(self, message: str, history: list[ChatHistoryTurn]) -> ChatReply:
         normalized_message = message.strip()
+        contextual_message = self._contextualize_follow_up(normalized_message, history)
         resolution_note = None
-        query_response = self.query_handler(normalized_message)
+        query_response = self.query_handler(contextual_message)
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
+        resolved_input = contextual_message if contextual_message != normalized_message else None
+        is_semantic_v2 = "semantic_operation" in query_response.interpretation.filters
 
-        if query_response.status.value == "supported" and entities:
+        if query_response.status.value == "supported" and (entities or query_response.tables or is_semantic_v2):
             reply_text, used_gemini = self._analysis_reply(
-                message=normalized_message,
+                message=contextual_message,
                 query_response=query_response,
                 resolution_note=resolution_note,
             )
@@ -92,7 +97,23 @@ class ChatService:
                 message=reply_text,
                 query_response=query_response,
                 suggestions=suggest_follow_ups(query_class),
-                resolved_input=None,
+                resolved_input=resolved_input,
+                resolution_note=resolution_note,
+                activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
+            )
+
+        if query_response.status.value != "supported" and (query_response.tables or query_response.evidence_queries or is_semantic_v2):
+            reply_text, used_gemini = self._analysis_reply(
+                message=contextual_message,
+                query_response=query_response,
+                resolution_note=resolution_note,
+            )
+            return ChatReply(
+                mode="analysis",
+                message=reply_text,
+                query_response=query_response,
+                suggestions=suggest_follow_ups(query_class),
+                resolved_input=resolved_input,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
             )
@@ -115,7 +136,7 @@ class ChatService:
             )
 
         fallback, used_gemini = self._analysis_reply(
-            message=normalized_message,
+            message=contextual_message,
             query_response=query_response,
             resolution_note=resolution_note,
         )
@@ -124,10 +145,76 @@ class ChatService:
             message=fallback,
             query_response=query_response,
             suggestions=suggest_follow_ups(query_class),
-            resolved_input=None,
+            resolved_input=resolved_input,
             resolution_note=resolution_note,
             activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
         )
+
+    def _contextualize_follow_up(self, message: str, history: list[ChatHistoryTurn]) -> str:
+        if not history:
+            return message
+
+        lowered = message.lower()
+        context_markers = (
+            "the player",
+            "this player",
+            "same player",
+            "his",
+            "him",
+            "year by year",
+            "role changes",
+            "over time",
+            "this trend",
+        )
+        if not any(marker in lowered for marker in context_markers):
+            return message
+
+        player = self._last_player_from_history(history)
+        if not player:
+            return message
+
+        contextual = re.sub(r"\b(?:the|this|same) player\b", player, message, flags=re.IGNORECASE)
+        contextual = re.sub(r"\bthis trend\b", f"{player} trend", contextual, flags=re.IGNORECASE)
+        contextual = re.sub(r"\bhis\b", f"{player}'s", contextual, flags=re.IGNORECASE)
+        contextual = re.sub(r"\bhim\b", player, contextual, flags=re.IGNORECASE)
+        if contextual == message:
+            contextual = self._append_context(contextual, f"for {player}")
+
+        history_text = " ".join(turn.content for turn in history[-6:]).lower()
+        contextual_lower = contextual.lower()
+        if not any(token in contextual_lower for token in ("batting", "batter", "bowling", "bowler", "economy", "wicket")):
+            if any(token in history_text for token in ("bowling", "bowler", "economy", "wicket", "bowl AS player", "where bowl")):
+                contextual = self._append_context(contextual, "as a bowler")
+            elif any(token in history_text for token in ("batting", "batter", "strike rate", "runs scored")):
+                contextual = self._append_context(contextual, "as a batter")
+
+        contextual_lower = contextual.lower()
+        if not any(token in contextual_lower for token in ("death", "powerplay", "middle overs")):
+            if "death overs" in history_text or "death-over" in history_text:
+                contextual = self._append_context(contextual, "in death overs")
+            elif "powerplay" in history_text:
+                contextual = self._append_context(contextual, "in powerplay")
+            elif "middle overs" in history_text:
+                contextual = self._append_context(contextual, "in middle overs")
+
+        return contextual
+
+    @staticmethod
+    def _append_context(message: str, suffix: str) -> str:
+        return f"{message.rstrip(' .?!,;:')} {suffix}"
+
+    def _message_mentions_player(self, message: str) -> bool:
+        lowered = message.lower()
+        return any(player.lower() in lowered for player in self.repository.list_player_names())
+
+    def _last_player_from_history(self, history: list[ChatHistoryTurn]) -> str | None:
+        players = self.repository.list_player_names()
+        for turn in reversed(history[-8:]):
+            lowered = turn.content.lower()
+            for player in players:
+                if player.lower() in lowered:
+                    return player
+        return None
 
     def _analysis_reply(
         self,
@@ -213,9 +300,34 @@ class ChatService:
         summary_text = "\n\n".join(block.body for block in query_response.summaries[:2]).strip()
         if not summary_text and query_response.insufficiencies:
             summary_text = query_response.insufficiencies[0].detail
+        evidence_text = ChatService._table_text_sections(query_response)
+        if evidence_text:
+            summary_text = f"{summary_text}\n\n{evidence_text}".strip()
         if resolution_note:
             return f"{resolution_note}\n\n{summary_text}".strip()
         return summary_text or "I analyzed the ODI data and attached the structured evidence below."
+
+    @staticmethod
+    def _table_text_sections(query_response: QueryResponse) -> str:
+        if not query_response.tables:
+            return ""
+
+        sections = []
+        for table in query_response.tables[:4]:
+            if not table.rows:
+                continue
+            header = " | ".join(table.columns)
+            rows = [
+                " | ".join(str(cell) if cell is not None else "-" for cell in row)
+                for row in table.rows[:CHAT_TABLE_VISIBLE_ROWS]
+            ]
+            extra = (
+                ""
+                if len(table.rows) <= CHAT_TABLE_VISIBLE_ROWS
+                else f"\n... {len(table.rows) - CHAT_TABLE_VISIBLE_ROWS} more rows in the evidence panel"
+            )
+            sections.append(f"{table.title}\n{header}\n" + "\n".join(rows) + extra)
+        return "\n\n".join(sections)
 
     @staticmethod
     def _requires_exact_numeric_response(query_response: QueryResponse) -> bool:

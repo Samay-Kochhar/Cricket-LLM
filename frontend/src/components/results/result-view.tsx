@@ -5,6 +5,9 @@ import { useState } from "react";
 
 import { CitationList } from "@/components/citations/citation-list";
 import { SimpleChart } from "@/components/charts/simple-chart";
+import { CompactDataTable } from "@/components/results/compact-data-table";
+import { EvidenceQueryList } from "@/components/results/evidence-query-list";
+import { SemanticDebugTrace, nonTraceEvidenceNotes } from "@/components/results/semantic-debug-trace";
 import { VisualInsights } from "@/components/results/visual-insights";
 import type { Citation, QueryResponse } from "@/lib/api-types";
 import { deriveExplorerLinks } from "@/lib/explorer-links";
@@ -77,6 +80,7 @@ export function ResultView({ error, isLoading, onSaveAnalysis, result }: ResultV
 
   const explorerLinks = deriveExplorerLinks(result);
   const visibleCitations = result.citations;
+  const visibleEvidenceNotes = nonTraceEvidenceNotes(result.evidence_notes);
 
   function handleOpenCitation(citation: Citation) {
     const index = visibleCitations.findIndex(
@@ -174,28 +178,12 @@ export function ResultView({ error, isLoading, onSaveAnalysis, result }: ResultV
                   <span className="eyebrow">Table view</span>
                   <h3 className="card-title">{table.title}</h3>
                 </div>
-                <div className="table-wrap">
-                  <table className="result-table">
-                    <thead>
-                      <tr>
-                        {table.columns.map((column) => (
-                          <th key={column}>{column}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {table.rows.map((row, index) => (
-                        <tr key={`${table.title}-${index}`}>
-                          {row.map((cell, cellIndex) => (
-                            <td key={`${table.title}-${index}-${cellIndex}`}>{cell ?? "-"}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <CompactDataTable table={table} />
               </section>
             ))}
+
+            {result.evidence_queries.length > 0 ? <EvidenceQueryList queries={result.evidence_queries} /> : null}
+            <SemanticDebugTrace result={result} />
           </div>
 
           <div className="result-column">
@@ -235,11 +223,12 @@ export function ResultView({ error, isLoading, onSaveAnalysis, result }: ResultV
                 <h3 className="card-title">Notes and caveats</h3>
               </div>
               <ul className="evidence-list">
-                {result.evidence_notes.map((note) => (
+                {visibleEvidenceNotes.map((note) => (
                   <li key={`${note.title}-${note.detail}`}>
                     <strong>{note.title}</strong>: {note.detail}
                   </li>
                 ))}
+                {visibleEvidenceNotes.length === 0 ? <li>No additional notes.</li> : null}
               </ul>
             </section>
           </div>

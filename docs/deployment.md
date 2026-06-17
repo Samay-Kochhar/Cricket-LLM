@@ -23,8 +23,8 @@ The compose stack does three things:
 - `APP_ENV`: app mode, usually `development`
 - `DUCKDB_PATH`: backend path to the generated DuckDB file
 - `GEMINI_API_KEY`: optional Gemini API key for grounded external context
-- `GEMINI_DEFAULT_MODEL`: default low-latency Gemini model
-- `GEMINI_COMPLEX_MODEL`: higher-reasoning Gemini model for harder questions
+- `GEMINI_DEFAULT_MODEL`: default Gemini model for interpretation and concise narrative; defaults to `gemini-2.5-pro`
+- `GEMINI_COMPLEX_MODEL`: higher-reasoning Gemini model for harder questions; defaults to `gemini-2.5-pro`
 - `BACKEND_INTERNAL_URL`: internal URL used by the Next.js proxy route inside the frontend container
 - `NEXT_PUBLIC_API_BASE_URL`: optional browser override for direct API calls; leave blank for same-origin proxy mode
 

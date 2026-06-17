@@ -5,6 +5,16 @@ from difflib import get_close_matches
 
 
 ALIASES = {
+    "bumrah": "Jasprit Bumrah",
+    "buttler": "Jos Buttler",
+    "klaasen": "Heinrich Klaasen",
+    "maxwell": "Glenn Maxwell",
+    "miller": "David Miller",
+    "rashid khan": "Rashid Khan",
+    "rohit": "Rohit Sharma",
+    "sky": "Suryakumar Yadav",
+    "surya": "Suryakumar Yadav",
+    "warner": "David Warner",
     "steve smith": "Steven Smith",
     "virat kohli": "Virat Kohli",
     "hardik pandya": "Hardik Pandya",

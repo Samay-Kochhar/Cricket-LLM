@@ -130,8 +130,8 @@ Find your laptop's LAN IP (`ipconfig` → IPv4, e.g. `192.168.1.42`) and open
 | `APP_ENV` | no | App mode, usually `development` |
 | `DUCKDB_PATH` | no (local) / set in Docker | Path to the generated DuckDB file; local default is `data/odi_analytics.duckdb` |
 | `GEMINI_API_KEY` | optional | Enables Gemini interpretation, grounding, and narrative; DB answers work without it |
-| `GEMINI_DEFAULT_MODEL` | no | Low-latency model (default `gemini-2.5-flash`) |
-| `GEMINI_COMPLEX_MODEL` | no | Higher-reasoning model (default `gemini-2.5-pro`) |
+| `GEMINI_DEFAULT_MODEL` | no | Default Gemini model for interpretation and concise narrative (default `gemini-2.5-pro`) |
+| `GEMINI_COMPLEX_MODEL` | no | Higher-reasoning Gemini model for harder questions (default `gemini-2.5-pro`) |
 | `BACKEND_INTERNAL_URL` | Docker only | Internal URL the Next.js proxy uses to reach the backend container |
 | `NEXT_PUBLIC_API_BASE_URL` | optional | Browser override for direct API calls; leave blank for same-origin proxy |
 

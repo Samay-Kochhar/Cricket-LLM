@@ -2,6 +2,9 @@
 
 import { CitationList } from "@/components/citations/citation-list";
 import { SimpleChart } from "@/components/charts/simple-chart";
+import { CompactDataTable } from "@/components/results/compact-data-table";
+import { EvidenceQueryList } from "@/components/results/evidence-query-list";
+import { SemanticDebugTrace, nonTraceEvidenceNotes } from "@/components/results/semantic-debug-trace";
 import { VisualInsights } from "@/components/results/visual-insights";
 import type { QueryResponse } from "@/lib/api-types";
 
@@ -10,6 +13,8 @@ type ChatResponseSectionsProps = {
 };
 
 export function ChatResponseSections({ result }: ChatResponseSectionsProps) {
+  const visibleEvidenceNotes = nonTraceEvidenceNotes(result.evidence_notes);
+
   return (
     <div className="chat-response-sections">
       <details className="chat-details" open>
@@ -26,31 +31,23 @@ export function ChatResponseSections({ result }: ChatResponseSectionsProps) {
             {result.tables.map((table) => (
               <section className="panel result-panel" key={table.title}>
                 <h3 className="card-title">{table.title}</h3>
-                <div className="table-wrap">
-                  <table className="result-table">
-                    <thead>
-                      <tr>
-                        {table.columns.map((column) => (
-                          <th key={column}>{column}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {table.rows.map((row, index) => (
-                        <tr key={`${table.title}-${index}`}>
-                          {row.map((cell, cellIndex) => (
-                            <td key={`${table.title}-${index}-${cellIndex}`}>{cell ?? "-"}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <CompactDataTable table={table} />
               </section>
             ))}
           </div>
         </details>
       ) : null}
+
+      {result.evidence_queries.length > 0 ? (
+        <details className="chat-details">
+          <summary>ODI database evidence</summary>
+          <div className="chat-details-body">
+            <EvidenceQueryList queries={result.evidence_queries} />
+          </div>
+        </details>
+      ) : null}
+
+      <SemanticDebugTrace result={result} />
 
       {result.charts.length > 0 ? (
         <details className="chat-details">
@@ -87,11 +84,11 @@ export function ChatResponseSections({ result }: ChatResponseSectionsProps) {
             </section>
           ) : null}
 
-          {result.evidence_notes.length > 0 ? (
+          {visibleEvidenceNotes.length > 0 ? (
             <section className="panel result-panel">
               <h3 className="card-title">Evidence notes</h3>
               <ul className="evidence-list">
-                {result.evidence_notes.map((note) => (
+                {visibleEvidenceNotes.map((note) => (
                   <li key={`${note.title}-${note.detail}`}>
                     <strong>{note.title}</strong>: {note.detail}
                   </li>

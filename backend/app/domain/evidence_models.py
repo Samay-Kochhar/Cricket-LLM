@@ -44,6 +44,15 @@ class TableBlock(BaseModel):
     rows: list[list[str | int | float | None]]
 
 
+class EvidenceQueryBlock(BaseModel):
+    kind: Literal["evidence_query"] = "evidence_query"
+    title: str
+    description: str
+    sql: str
+    parameters: list[str | int | float | None] = Field(default_factory=list)
+    table: TableBlock
+
+
 class ChartBlock(BaseModel):
     kind: Literal["chart"] = "chart"
     title: str
@@ -202,6 +211,7 @@ class QueryResponse(BaseModel):
     charts: list[ChartBlock] = Field(default_factory=list)
     visuals: VisualPayload | None = None
     metric_references: list[MetricReference] = Field(default_factory=list)
+    evidence_queries: list[EvidenceQueryBlock] = Field(default_factory=list)
     evidence_notes: list[EvidenceNote] = Field(default_factory=list)
     citations: list[Citation] = Field(default_factory=list)
     insufficiencies: list[InsufficientEvidenceBlock] = Field(default_factory=list)

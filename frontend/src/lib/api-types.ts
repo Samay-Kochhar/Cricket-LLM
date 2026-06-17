@@ -27,6 +27,15 @@ export type TableBlock = {
   rows: Array<Array<string | number | null>>;
 };
 
+export type EvidenceQueryBlock = {
+  kind: "evidence_query";
+  title: string;
+  description: string;
+  sql: string;
+  parameters: Array<string | number | null>;
+  table: TableBlock;
+};
+
 export type ChartPoint = {
   label: string;
   value: number;
@@ -190,6 +199,7 @@ export type QueryResponse = {
   charts: ChartBlock[];
   visuals?: VisualPayload | null;
   metric_references: MetricReference[];
+  evidence_queries: EvidenceQueryBlock[];
   evidence_notes: EvidenceNote[];
   citations: Citation[];
   insufficiencies: InsufficientEvidenceBlock[];
@@ -216,6 +226,8 @@ export type PlayerProfileResponse = {
   player_name: string;
   summary: PlayerBattingSummary | null;
   trend: PlayerTrendRow[];
+  visuals?: VisualPayload | null;
+  coverage_notes?: EvidenceNote[];
   suggestions: string[];
 };
 

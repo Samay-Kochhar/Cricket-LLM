@@ -2,6 +2,7 @@
 node_modules/
 .next/
 dist/
+*.tsbuildinfo
 
 # Python
 __pycache__/
@@ -24,3 +25,6 @@ data/*.csv
 # OS/editor
 .DS_Store
 Thumbs.db
+
+# Local scratch
+local-atlas.html

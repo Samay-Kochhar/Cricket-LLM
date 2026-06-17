@@ -4,9 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ChatResponseSections } from "@/components/results/chat-response-sections";
+import { CompactDataTable } from "@/components/results/compact-data-table";
+import { hasSemanticTrace } from "@/components/results/semantic-debug-trace";
 import { SessionList } from "@/components/session-list";
 import { useAtlasChat } from "@/hooks/use-atlas-chat";
-import type { ChatHistoryTurn } from "@/lib/api-types";
+import type { ChatHistoryTurn, QueryResponse, TableBlock } from "@/lib/api-types";
 import {
   createAtlasMessage,
   createThread,
@@ -40,12 +43,48 @@ function reorderThreads(threads: AtlasThread[], activeId: string): AtlasThread[]
   return [activeThread, ...threads.filter((thread) => thread.id !== activeId)];
 }
 
+function visibleMessageContent(message: AtlasMessage): string {
+  const firstTableTitle = message.reply?.query_response?.tables?.[0]?.title;
+  if (message.role !== "assistant" || !firstTableTitle) {
+    return message.content;
+  }
+  const tableStart = message.content.indexOf(`\n\n${firstTableTitle}\n`);
+  return tableStart >= 0 ? message.content.slice(0, tableStart) : message.content;
+}
+
+function ChatTablePreview({ result }: { result: QueryResponse }) {
+  if (!result.tables.length) {
+    return null;
+  }
+
+  return (
+    <div className="chat-table-preview">
+      {result.tables.slice(0, 4).map((table) => (
+        <ChatTableCard key={table.title} table={table} />
+      ))}
+    </div>
+  );
+}
+
+function ChatTableCard({ table }: { table: TableBlock }) {
+  return (
+    <section className="chat-table-card">
+      <div className="panel-heading">
+        <span className="eyebrow">ODI database</span>
+        <h3 className="card-title">{table.title}</h3>
+      </div>
+      <CompactDataTable table={table} />
+    </section>
+  );
+}
+
 export function AppShell() {
   const router = useRouter();
   const [threads, setThreads] = useState<AtlasThread[]>([]);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [showPolicy, setShowPolicy] = useState(false);
+  const [expandedEvidenceMessageId, setExpandedEvidenceMessageId] = useState<string | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const { error, isLoading, loadingLabel, sendMessage } = useAtlasChat();
 
@@ -87,6 +126,7 @@ export function AppShell() {
   function handleSelectThread(threadId: string) {
     setActiveThreadId(threadId);
     saveActiveThreadId(threadId);
+    setExpandedEvidenceMessageId(null);
     setInput("");
   }
 
@@ -263,14 +303,46 @@ export function AppShell() {
                 >
                   <div className="chat-bubble">
                     <div className="chat-role">{message.role === "assistant" ? "Atlas" : "You"}</div>
-                    <p>{message.content}</p>
+                    <p>{visibleMessageContent(message)}</p>
                     {message.role === "assistant" && message.reply?.activity_trace?.length ? (
                       <div className="chat-activity-row">
                         {message.reply.activity_trace.map((item) => (
-                          <span className="chip" key={`${message.id}-${item}`}>
-                            {item}
-                          </span>
+                          item === "ODI database" && message.reply?.query_response ? (
+                            <button
+                              aria-expanded={expandedEvidenceMessageId === message.id}
+                              className="chip chip-button"
+                              key={`${message.id}-${item}`}
+                              onClick={() =>
+                                setExpandedEvidenceMessageId((current) =>
+                                  current === message.id ? null : message.id,
+                                )
+                              }
+                              type="button"
+                            >
+                              {expandedEvidenceMessageId === message.id ? "Hide ODI database" : item}
+                            </button>
+                          ) : (
+                            <span className="chip" key={`${message.id}-${item}`}>
+                              {item}
+                            </span>
+                          )
                         ))}
+                      </div>
+                    ) : null}
+                    {message.role === "assistant" && hasSemanticTrace(message.reply?.query_response) ? (
+                      <div className="chat-activity-row">
+                        <button
+                          aria-expanded={expandedEvidenceMessageId === message.id}
+                          className="chip chip-button"
+                          onClick={() =>
+                            setExpandedEvidenceMessageId((current) =>
+                              current === message.id ? null : message.id,
+                            )
+                          }
+                          type="button"
+                        >
+                          {expandedEvidenceMessageId === message.id ? "Hide debug trace" : "Debug trace"}
+                        </button>
                       </div>
                     ) : null}
                   </div>
@@ -292,11 +364,15 @@ export function AppShell() {
 
                   {message.role === "assistant" && message.reply?.query_response ? (
                     <div className="chat-attachments">
+                      <ChatTablePreview result={message.reply.query_response} />
                       <div className="chat-attachment-actions">
                         <button className="ghost-button" onClick={() => handleOpenWorkbench(message)} type="button">
                           Go to Workbench
                         </button>
                       </div>
+                      {expandedEvidenceMessageId === message.id ? (
+                        <ChatResponseSections result={message.reply.query_response} />
+                      ) : null}
                     </div>
                   ) : null}
                 </article>

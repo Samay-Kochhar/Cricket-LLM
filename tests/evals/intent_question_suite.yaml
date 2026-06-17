@@ -1,0 +1,905 @@
+- id: single-metric-dhoni-balls-bowled-final
+  question: How many balls bowled by MS Dhoni in 2011 world cup final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: balls_bowled
+  expected_scope: single_match
+  expected_role: bowler
+
+- id: single-metric-dhoni-balls-faced-final
+  question: How many balls did MS Dhoni face in the 2011 World Cup final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: balls_faced
+  expected_scope: single_match
+  expected_role: batter
+
+- id: single-metric-kohli-runs-final
+  question: How many runs did Virat Kohli score in the 2023 World Cup final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: runs_scored
+  expected_scope: single_match
+  expected_role: batter
+
+- id: single-metric-bumrah-overs-death
+  question: How many overs has Jasprit Bumrah bowled at the death?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: overs_bowled
+  expected_scope: phase
+  expected_role: bowler
+
+- id: single-metric-starc-runs-conceded-final
+  question: How many runs did Mitchell Starc concede in the 2015 World Cup final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: runs_conceded
+  expected_scope: single_match
+  expected_role: bowler
+
+- id: single-metric-malinga-wickets
+  question: How many ODI wickets did Lasith Malinga take?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: wickets_taken
+  expected_scope: career
+  expected_role: bowler
+
+- id: single-metric-kohli-boundaries
+  question: How many boundaries has Virat Kohli hit in ODIs?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: boundaries
+  expected_scope: career
+  expected_role: batter
+
+- id: single-metric-bumrah-dot-balls
+  question: How many dot balls has Jasprit Bumrah bowled in ODIs?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: bowler_dot_balls
+  expected_scope: career
+  expected_role: bowler
+
+- id: leaderboard-world-cup-wickets
+  question: Who took most wickets in cricket world cup 2011?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: competition
+  expected_role: bowler
+
+- id: leaderboard-death-economy
+  question: Which bowler has the best death-over economy since 2022?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: leaderboard-powerplay-worst-economy
+  question: Which bowler has the worst economy in powerplay?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: leaderboard-powerplay-wickets
+  question: Which bowler has highest number of wickets in powerplay?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: phase
+  expected_role: bowler
+
+- id: leaderboard-yorkers
+  question: Which bowler bowls the most yorkers?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: yorker_count
+  expected_scope: career
+  expected_role: bowler
+
+- id: leaderboard-yorker-success
+  question: Which bowler has the best yorker success rate?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: yorker_success_rate
+  expected_scope: career
+  expected_role: bowler
+
+- id: leaderboard-short-ball-targets
+  question: Which batter should be targeted with short balls?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: batting_strike_rate
+  expected_scope: career
+  expected_role: batter
+
+- id: leaderboard-venue-wickets
+  question: Who has taken the most wickets at Lord's?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: venue
+  expected_role: bowler
+
+- id: leaderboard-non-english-lords
+  question: Who has most wickets at Lord's other than English cricketers?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: venue
+  expected_role: bowler
+
+- id: leaderboard-catches-world-cup
+  question: Who took most catches in 2023 world cup?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: catches_taken
+  expected_scope: competition
+  expected_role: fielder
+
+- id: leaderboard-false-shot-spin
+  question: Which spinner induces the highest false-shot percentage?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: false_shot_percentage
+  expected_scope: career
+  expected_role: bowler
+
+- id: leaderboard-boundaries-per-over
+  question: Which bowler concedes the fewest boundaries per over?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: boundaries_per_over
+  expected_scope: career
+  expected_role: bowler
+
+- id: comparison-kohli-smith
+  question: Compare Virat Kohli and Steven Smith
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_scope: career
+  expected_role: batter
+
+- id: comparison-kohli-opening-number-three
+  question: Compare Virat Kohli at number 3 vs opening in ODIs
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: runs_scored
+  expected_scope: career
+  expected_role: batter
+
+- id: comparison-bumrah-starc-death
+  question: Compare Jasprit Bumrah and Mitchell Starc in death overs
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: comparison-hardik-phase
+  question: Compare Hardik Pandya batting in powerplay vs death overs
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: batting_strike_rate
+  expected_scope: phase
+  expected_role: batter
+
+- id: comparison-left-right-batters
+  question: Compare how Jasprit Bumrah bowls to left-handers and right-handers
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: economy_rate
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: comparison-pace-spin-klaasen
+  question: Compare Heinrich Klaasen against pace and spin
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: matchup-smith-bumrah
+  question: Steven Smith vs Jasprit Bumrah in ODIs
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: matchup-maxwell-ashwin
+  question: How has Glenn Maxwell done against Ravichandran Ashwin?
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: runs_scored
+  expected_scope: matchup
+  expected_role: batter
+
+- id: matchup-bowler-dismissals
+  question: Which bowler has dismissed David Warner the most?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: matchup-batter-targets
+  question: Against which batters is Tim Southee most successful?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: matchup
+  expected_role: batter
+
+- id: trend-hetmyer-after-2020
+  question: Has Shimron Hetmyer become more destructive after 2020?
+  expected_query_type: trend
+  expected_answer_shape: trend_chart
+  expected_metric: batting_strike_rate
+  expected_scope: season
+  expected_role: batter
+
+- id: trend-bumrah-economy-year
+  question: Show Jasprit Bumrah economy rate year by year
+  expected_query_type: trend
+  expected_answer_shape: trend_chart
+  expected_metric: economy_rate
+  expected_scope: season
+  expected_role: bowler
+
+- id: trend-kohli-runs-since-2015
+  question: How have Virat Kohli's runs changed since 2015?
+  expected_query_type: trend
+  expected_answer_shape: trend_chart
+  expected_metric: runs_scored
+  expected_scope: season
+  expected_role: batter
+
+- id: trend-starc-death-economy
+  question: Mitchell Starc death-over economy trend after 2018
+  expected_query_type: trend
+  expected_answer_shape: trend_chart
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: trend-klaasen-spin
+  question: Has Heinrich Klaasen improved against spin over time?
+  expected_query_type: trend
+  expected_answer_shape: trend_chart
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: strengths-hardik-shots
+  question: Where does Hardik Pandya score the most and on which shots?
+  expected_query_type: strengths_weaknesses
+  expected_answer_shape: scouting_report
+  expected_metric: runs_scored
+  expected_scope: career
+  expected_role: batter
+
+- id: strengths-kohli-weakness
+  question: What is Virat Kohli's weakness in ODIs?
+  expected_query_type: strengths_weaknesses
+  expected_answer_shape: scouting_report
+  expected_metric: batting_strike_rate
+  expected_scope: career
+  expected_role: batter
+
+- id: strengths-bumrah-lines
+  question: Which line and length works best for Jasprit Bumrah?
+  expected_query_type: strengths_weaknesses
+  expected_answer_shape: scouting_report
+  expected_metric: wickets_taken
+  expected_scope: career
+  expected_role: bowler
+
+- id: strengths-maxwell-dismissals
+  question: On which shots does Glenn Maxwell get out the most?
+  expected_query_type: strengths_weaknesses
+  expected_answer_shape: scouting_report
+  expected_metric: dismissals
+  expected_scope: career
+  expected_role: batter
+
+- id: match-fact-player-of-match
+  question: Who was Player of the Match in 2011 world cup final?
+  expected_query_type: match_fact
+  expected_answer_shape: short_fact
+  expected_metric: player_of_match
+  expected_scope: single_match
+  expected_role: player
+
+- id: match-fact-toss
+  question: Who won the toss in the 2019 World Cup final?
+  expected_query_type: match_fact
+  expected_answer_shape: short_fact
+  expected_scope: single_match
+  expected_role: team
+
+- id: match-fact-venue
+  question: Where was the 2011 World Cup final played?
+  expected_query_type: match_fact
+  expected_answer_shape: short_fact
+  expected_scope: single_match
+  expected_role: player
+
+- id: match-fact-result
+  question: Who won India vs Sri Lanka 2011 World Cup final?
+  expected_query_type: match_fact
+  expected_answer_shape: short_fact
+  expected_scope: single_match
+  expected_role: team
+
+- id: tactical-plan-bowl-to-maxwell
+  question: How should we bowl to Glenn Maxwell at the death?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: batting_strike_rate
+  expected_scope: phase
+  expected_role: batter
+
+- id: tactical-plan-spinner-to-klaasen
+  question: Which spinner should be held back for Heinrich Klaasen?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: tactical-plan-short-ball
+  question: Should Australia use short balls against Virat Kohli?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: tactical-plan-powerplay-fields
+  question: What is a good powerplay plan to Rohit Sharma?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: batting_strike_rate
+  expected_scope: phase
+  expected_role: batter
+
+- id: venue-kohli-by-ground
+  question: Venue wise performance of Virat Kohli
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: runs_scored
+  expected_scope: venue
+  expected_role: batter
+
+- id: venue-southee-by-ground
+  question: Ground wise bowling performance of Tim Southee
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: wickets_taken
+  expected_scope: venue
+  expected_role: bowler
+
+- id: opponent-anderson
+  question: Opponent wise performance of James Anderson, sorted from most successful to least successful
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: wickets_taken
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: context-world-cup-bumrah-economy
+  question: What was Jasprit Bumrah's economy in the 2019 World Cup?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: economy_rate
+  expected_scope: competition
+  expected_role: bowler
+
+- id: context-semifinal-runs
+  question: How many runs did Kane Williamson score in the 2019 World Cup semi-final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: runs_scored
+  expected_scope: single_match
+  expected_role: batter
+
+- id: context-over-range
+  question: What is Bumrah's economy from overs 40-50?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: context-powerplay-runs
+  question: How many runs has Rohit Sharma scored in powerplays?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: batter
+
+- id: ambiguous-bowled-batter
+  question: How many balls bowled by AB de Villiers in his 149?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: balls_bowled
+  expected_scope: single_match
+  expected_role: bowler
+
+- id: ambiguous-played-balls
+  question: How many balls did Dhoni play in the final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: balls_faced
+  expected_scope: single_match
+  expected_role: batter
+
+- id: ambiguous-best-stats
+  question: Which bowler has best statistics at Chinnaswamy?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: venue
+  expected_role: bowler
+
+- id: unsupported-ipl
+  question: How many runs did MS Dhoni score in IPL 2023?
+  expected_query_type: single_metric
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: competition
+  expected_role: batter
+
+- id: unsupported-live
+  question: Who will win today's India match?
+  expected_query_type: conversation
+  expected_answer_shape: insufficient_data
+  expected_scope: single_match
+  expected_role: team
+
+- id: unsupported-biography
+  question: Tell me a biography of Virat Kohli
+  expected_query_type: conversation
+  expected_answer_shape: short_fact
+  expected_scope: career
+  expected_role: player
+
+- id: fielding-run-outs
+  question: Who has the most run outs in ODI World Cups?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: dismissals
+  expected_scope: competition
+  expected_role: fielder
+
+- id: fielding-stumpings
+  question: Which wicketkeeper has the most stumpings since 2015?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: dismissals
+  expected_scope: career
+  expected_role: fielder
+
+- id: team-runs-final
+  question: How many runs did India score in the 2011 World Cup final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: runs_scored
+  expected_scope: single_match
+  expected_role: team
+
+- id: team-wickets-final
+  question: How many wickets did Sri Lanka lose in the 2011 World Cup final?
+  expected_query_type: single_metric
+  expected_answer_shape: single_number
+  expected_metric: dismissals
+  expected_scope: single_match
+  expected_role: team
+
+- id: team-comparison-death
+  question: Compare India and Australia bowling at the death since 2019
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: team
+
+- id: team-leaderboard-powerplay
+  question: Which team has the best powerplay run rate?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: team
+
+- id: user-line-dot-balls-kohli
+  question: Which line generates the most dot balls against Virat Kohli?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: bowler_dot_balls
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-buttler-shot-runs
+  question: What shot does Jos Buttler score most runs from?
+  expected_query_type: strengths_weaknesses
+  expected_answer_shape: scouting_report
+  expected_metric: runs_scored
+  expected_scope: career
+  expected_role: batter
+
+- id: user-head-most-productive-phase
+  question: Which phase of the innings is most productive for Travis Head?
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: batter
+
+- id: user-batter-improves-after-20-balls
+  question: Which batter improves their strike rate the most after facing 20 balls?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: strike_rate_improvement_after_20
+  expected_scope: career
+  expected_role: batter
+
+- id: user-batter-vulnerable-after-milestone
+  question: Which batter is most vulnerable immediately after reaching a milestone?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: milestone_vulnerability_lift
+  expected_scope: career
+  expected_role: batter
+
+- id: user-batter-false-shot-spin
+  question: Which batter has the highest false-shot percentage against spin?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: false_shot_percentage
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-hardest-dot-balls
+  question: Which batter is hardest to bowl dot balls to?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: dot_percentage
+  expected_scope: career
+  expected_role: batter
+
+- id: user-concentrated-scoring-zones
+  question: Which batter's scoring zones are most concentrated?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: career
+  expected_role: batter
+
+- id: user-yorker-percentage
+  question: Which bowler bowls the highest percentage of yorkers?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: yorker_percentage
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-false-shots-per-over
+  question: Which bowler generates the most false shots per over?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: false_shots_per_over
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-powerplay-death-economy-difference
+  question: Which bowler has the biggest difference between powerplay and death-over economy?
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: user-bowler-after-wicket
+  question: Which bowler is most effective immediately after a wicket falls?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: economy_rate
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-fewest-boundaries-100-balls
+  question: Which bowler concedes the fewest boundaries per 100 balls?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: boundaries_per_100_balls
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-high-pressure-bowler
+  question: Which bowler improves most in high-pressure situations?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: economy_rate
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-best-bowling-control
+  question: Which bowler has the best control, with the fewest wides and no-balls?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: extras_rate
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-wicket-opportunities-no-wickets
+  question: Which bowler creates the most wicket opportunities without taking wickets?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: false_shot_percentage
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-effective-against-set-batters
+  question: Which bowler is most effective against set batters?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: economy_rate
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-wicket-taking-drops-least-death
+  question: Which bowler's wicket-taking ability drops least at the death?
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: wickets_taken
+  expected_scope: phase
+  expected_role: bowler
+
+- id: user-one-sided-matchup
+  question: Which batter-bowler matchup is most one-sided in cricket?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-matchup-false-shot
+  question: Which matchup produces the highest false-shot percentage?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: false_shot_percentage
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-dot-balls-aggressive-batters
+  question: Which bowler forces the most dot balls against aggressive batters?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: bowler_dot_balls
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-attacks-elite-bowlers
+  question: Which batter consistently attacks elite bowlers?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-left-right-bowler-split
+  question: Which bowler performs significantly better against left-handers than right-handers?
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: economy_rate
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-wrist-spin-finger-spin
+  question: Which batter dominates wrist spin but struggles against finger spin?
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-length-changes-by-batter
+  question: Which bowler's length changes the most depending on the batter faced?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: balls_bowled
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-adapts-after-repeat-dismissal
+  question: Which batter adapts best after getting dismissed by the same bowler repeatedly?
+  expected_query_type: trend
+  expected_answer_shape: insufficient_data
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-death-matchup-wickets
+  question: Which matchup has produced the most wickets in death overs?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-successful-against-finishers
+  question: Which bowler is most successful against finishers?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-team-middle-over-advantage
+  question: Which team gains the biggest advantage during middle overs?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: team
+
+- id: user-team-loses-momentum-after-powerplay
+  question: Which team loses momentum most frequently after the powerplay?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: team
+
+- id: user-phase-wicket-share
+  question: Which phase contributes the highest percentage of wickets?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: wickets_taken
+  expected_scope: phase
+  expected_role: team
+
+- id: user-team-overs-15-20
+  question: Which team accelerates most effectively between overs 15 and 20?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: batting_strike_rate
+  expected_scope: phase
+  expected_role: team
+
+- id: user-phase-dot-balls
+  question: Which phase produces the most dot balls?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: dot_balls
+  expected_scope: phase
+  expected_role: team
+
+- id: user-team-recovers-early-wickets
+  question: Which team recovers best after losing early wickets?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: team
+
+- id: user-strategic-timeouts
+  question: Which team scores fastest immediately after strategic timeouts?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: batting_strike_rate
+  expected_scope: phase
+  expected_role: team
+
+- id: user-phase-predicts-outcome
+  question: Which phase of an innings most strongly predicts match outcome?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: team
+
+- id: user-strongest-chase-death
+  question: Which teams are strongest in chases during death overs?
+  expected_query_type: leaderboard
+  expected_answer_shape: leaderboard
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: team
+
+- id: user-winning-losing-phase-gap
+  question: Which phase creates the largest difference between winning and losing teams?
+  expected_query_type: comparison
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: phase
+  expected_role: team
+
+- id: user-final-over-defender
+  question: If defending 10 runs in the final over, who should bowl?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: user-bowling-plan-miller
+  question: What is the optimal bowling plan against David Miller?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-field-placement-klaasen
+  question: What field placement would likely be most effective against Klaasen?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: runs_scored
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-death-over-bowler-held-back
+  question: Which bowler should be held back specifically for death overs?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: economy_rate
+  expected_scope: phase
+  expected_role: bowler
+
+- id: user-batting-position-impact
+  question: Which batting position maximizes a player's impact?
+  expected_query_type: comparison
+  expected_answer_shape: comparison_table
+  expected_metric: runs_scored
+  expected_scope: career
+  expected_role: batter
+
+- id: user-introduce-spin
+  question: When should a captain introduce spin against this batting lineup?
+  expected_query_type: tactical_plan
+  expected_answer_shape: insufficient_data
+  expected_metric: batting_strike_rate
+  expected_scope: matchup
+  expected_role: bowler
+
+- id: user-bowler-after-wicket-plan
+  question: Which bowler should bowl immediately after a wicket?
+  expected_query_type: tactical_plan
+  expected_answer_shape: tactical_plan
+  expected_metric: economy_rate
+  expected_scope: career
+  expected_role: bowler
+
+- id: user-ground-length-priority
+  question: What bowling length should be prioritized on this ground?
+  expected_query_type: tactical_plan
+  expected_answer_shape: insufficient_data
+  expected_metric: wickets_taken
+  expected_scope: venue
+  expected_role: bowler
+
+- id: user-partnership-break
+  question: Which batting partnership should teams try hardest to break?
+  expected_query_type: leaderboard
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: matchup
+  expected_role: batter
+
+- id: user-team-victory-factors
+  question: What are the three biggest factors contributing to this team's victories?
+  expected_query_type: tactical_plan
+  expected_answer_shape: insufficient_data
+  expected_metric: runs_scored
+  expected_scope: career
+  expected_role: team

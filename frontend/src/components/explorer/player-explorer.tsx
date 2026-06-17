@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { SimpleChart } from "@/components/charts/simple-chart";
+import { VisualInsights } from "@/components/results/visual-insights";
 import { fetchApi } from "@/lib/api-client";
-import type { PlayerProfileResponse } from "@/lib/api-types";
+import type { PlayerProfileResponse, QueryResponse } from "@/lib/api-types";
 
 
 type PlayerExplorerProps = {
@@ -50,6 +51,26 @@ export function PlayerExplorer({ playerName }: PlayerExplorerProps) {
         series: data.trend.map((item) => ({ label: String(item.year), value: item.runs_scored })),
       }
     : null;
+  const visualResult: QueryResponse | null = data
+    ? {
+        status: "supported",
+        interpretation: {
+          original_question: `Player explorer for ${data.player_name}`,
+          query_class: "player_explorer",
+          entities: [data.player_name],
+          filters: {},
+        },
+        summaries: [],
+        tables: [],
+        charts: [],
+        visuals: data.visuals ?? null,
+        metric_references: [],
+        evidence_queries: [],
+        evidence_notes: data.coverage_notes ?? [],
+        citations: [],
+        insufficiencies: [],
+      }
+    : null;
 
   return (
     <main className="explorer-page">
@@ -60,7 +81,7 @@ export function PlayerExplorer({ playerName }: PlayerExplorerProps) {
           Structured ODI evidence for a single batter profile, including high-level output and a
           year-by-year trend view.
         </p>
-        <Link className="ghost-button inline-button" href="/">
+        <Link className="ghost-button inline-button" href="/workbench">
           Back To Workbench
         </Link>
       </section>
@@ -104,8 +125,23 @@ export function PlayerExplorer({ playerName }: PlayerExplorerProps) {
             )}
           </section>
 
+          {visualResult ? (
+            <section className="player-visual-span">
+              <VisualInsights result={visualResult} />
+            </section>
+          ) : null}
+
           <section className="panel result-panel">
             <h2 className="section-title">Resolution Notes</h2>
+            {data.coverage_notes && data.coverage_notes.length > 0 ? (
+              <ul className="evidence-list">
+                {data.coverage_notes.map((note) => (
+                  <li key={`${note.title}-${note.detail}`}>
+                    <strong>{note.title}</strong>: {note.detail}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {data.suggestions.length > 0 ? (
               <ul className="evidence-list">
                 {data.suggestions.map((suggestion) => (

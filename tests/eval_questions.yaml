@@ -1,0 +1,241 @@
+- question: "Against which bowling type does Heinrich Klaasen score fastest?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: batting_strike_rate
+  expected_group_by: [bowling_style]
+  expected_filters: {batter: "Heinrich Klaasen"}
+  must_have_columns: [bowling_style, batting_strike_rate]
+  must_not_have_columns: [bowler]
+  minimum_sample_expected: {balls: 20}
+- question: "Which length dismisses David Miller most often?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: wickets
+  expected_group_by: [length]
+  expected_filters: {batter: "David Miller"}
+  must_have_columns: [length, wickets]
+- question: "What shot does Jos Buttler score most runs from?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: runs_scored
+  expected_group_by: [shot_type]
+  expected_filters: {batter: "Jos Buttler"}
+  must_have_columns: [shot_type, runs_scored]
+- question: "Which bowler bowls the highest percentage of yorkers?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: yorker_percentage
+  expected_group_by: [bowler]
+  must_have_columns: [bowler, yorker_percentage]
+- question: "Which batter is hardest to bowl dot balls to?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: dot_ball_percentage
+  expected_group_by: [batter]
+  must_have_columns: [batter, dot_ball_percentage]
+- question: "Which bowler has the best economy rate in death overs?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: economy_rate
+  expected_group_by: [bowler]
+  expected_filters: {phase: death}
+- question: "Which batter scores most runs in the powerplay?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: runs_scored
+  expected_group_by: [batter]
+  expected_filters: {phase: powerplay}
+- question: "Which line produces the most dot balls?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: dot_ball_percentage
+  expected_group_by: [line]
+- question: "Which length produces the highest false shot percentage?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: false_shot_percentage
+  expected_group_by: [length]
+- question: "Which scoring zone is most productive for Heinrich Klaasen?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: runs_scored
+  expected_group_by: [field_zone]
+  expected_filters: {batter: "Heinrich Klaasen"}
+- question: "Which phase produces the most wickets?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: wickets
+  expected_group_by: [phase]
+- question: "Which bowler has the highest wicket opportunity rate?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: wicket_opportunity_rate
+  expected_group_by: [bowler]
+- question: "Which batter has the highest boundary percentage?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: boundary_percentage
+  expected_group_by: [batter]
+- question: "Which bowler has the lowest economy rate?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: economy_rate
+  expected_group_by: [bowler]
+- question: "Which batter faced the most balls?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: balls_faced
+  expected_group_by: [batter]
+- question: "Which bowler has the biggest difference between powerplay and death-over economy?"
+  expected_operation: split_compare
+  expected_entity: bowler
+  expected_metric: economy_rate
+- question: "Which bowler performs better against left-handers than right-handers?"
+  expected_operation: split_compare
+  expected_entity: bowler
+  expected_metric: economy_rate
+- question: "Which batter dominates wrist spin but struggles against finger spin?"
+  expected_operation: split_compare
+  expected_entity: batter
+  expected_metric: batting_strike_rate
+- question: "Compare David Warner against pace and spin."
+  expected_operation: split_compare
+  expected_entity: batter
+  expected_metric: runs_scored
+  expected_filters: {batter: "David Warner"}
+- question: "Which batter improves most after 20 balls?"
+  expected_operation: split_compare
+  expected_entity: batter
+  expected_metric: batting_strike_rate
+- question: "Which batter is most vulnerable immediately after reaching a milestone?"
+  expected_operation: event_window
+  expected_entity: batter
+  expected_metric: wickets
+- question: "Which bowler is most effective immediately after a wicket falls?"
+  expected_operation: event_window
+  expected_entity: bowler
+  expected_metric: economy_rate
+- question: "Which team loses momentum after the powerplay?"
+  expected_operation: event_window
+  expected_entity: team
+  expected_metric: runs_scored
+- question: "Which team scores fastest after early wickets?"
+  expected_operation: event_window
+  expected_entity: team
+  expected_metric: batting_strike_rate
+- question: "Which batter struggles after a timeout?"
+  expected_operation: event_window
+  expected_entity: batter
+  expected_metric: batting_strike_rate
+- question: "Which batter's scoring zones are most concentrated?"
+  expected_operation: distribution_analysis
+  expected_entity: batter
+  expected_metric: runs_scored
+- question: "Which bowler's length changes most depending on the batter faced?"
+  expected_operation: distribution_analysis
+  expected_entity: bowler
+  expected_metric: balls_faced
+- question: "Which batter has the narrowest shot distribution?"
+  expected_operation: distribution_analysis
+  expected_entity: batter
+  expected_metric: runs_scored
+- question: "Which bowler varies line the most?"
+  expected_operation: distribution_analysis
+  expected_entity: bowler
+  expected_metric: balls_faced
+- question: "Which team's scoring spread is most concentrated by phase?"
+  expected_operation: distribution_analysis
+  expected_entity: team
+  expected_metric: runs_scored
+- question: "Which batter-bowler matchup is most one-sided?"
+  expected_operation: matchup
+  expected_entity: matchup
+  expected_metric: batting_strike_rate
+- question: "Which matchup produces the highest false-shot percentage?"
+  expected_operation: matchup
+  expected_entity: matchup
+  expected_metric: false_shot_percentage
+- question: "Which bowler is most successful against finishers?"
+  expected_operation: matchup
+  expected_entity: bowler
+  expected_metric: wickets
+- question: "Which batter dominates leg spin matchups?"
+  expected_operation: matchup
+  expected_entity: matchup
+  expected_metric: batting_strike_rate
+- question: "Which bowler matchup produces the most dot balls?"
+  expected_operation: matchup
+  expected_entity: matchup
+  expected_metric: dot_ball_percentage
+- question: "Which phase of an innings most strongly predicts match outcome?"
+  expected_operation: predictive_analysis
+  expected_entity: innings
+  expected_metric: runs_scored
+- question: "What are the biggest factors contributing to this team's victories?"
+  expected_operation: predictive_analysis
+  expected_entity: team
+  expected_metric: runs_scored
+- question: "Does powerplay wicket loss predict defeat?"
+  expected_operation: predictive_analysis
+  expected_entity: team
+  expected_metric: wickets
+- question: "Which batting metric best predicts successful chases?"
+  expected_operation: predictive_analysis
+  expected_entity: team
+  expected_metric: runs_scored
+- question: "Which bowling factor predicts wins most strongly?"
+  expected_operation: predictive_analysis
+  expected_entity: team
+  expected_metric: wickets
+- question: "If defending 10 runs in the final over, who should bowl?"
+  expected_operation: tactical_recommendation
+  expected_entity: bowler
+  expected_metric: economy_rate
+  expected_filters: {phase: death}
+- question: "What is the optimal bowling plan against David Miller?"
+  expected_operation: tactical_recommendation
+  expected_entity: batter
+  expected_metric: batting_strike_rate
+  expected_filters: {batter: "David Miller"}
+- question: "What field placement would likely be most effective against Heinrich Klaasen?"
+  expected_operation: tactical_recommendation
+  expected_entity: batter
+  expected_metric: runs_scored
+  expected_filters: {batter: "Heinrich Klaasen"}
+- question: "Should spin be introduced early against Jos Buttler?"
+  expected_operation: tactical_recommendation
+  expected_entity: batter
+  expected_metric: batting_strike_rate
+  expected_filters: {batter: "Jos Buttler"}
+- question: "Who should be held back for the death overs?"
+  expected_operation: tactical_recommendation
+  expected_entity: bowler
+  expected_metric: economy_rate
+  expected_filters: {phase: death}
+- question: "Which batter scores fastest against spin?"
+  expected_operation: aggregate
+  expected_entity: batter
+  expected_metric: batting_strike_rate
+  expected_group_by: [batter]
+  expected_filters: {bowling_style: spin}
+- question: "Which bowler concedes the fewest boundaries per 100 balls?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: boundary_rate_per_100_balls
+  expected_group_by: [bowler]
+- question: "Which venue has the highest boundary percentage?"
+  expected_operation: aggregate
+  expected_entity: venue
+  expected_metric: boundary_percentage
+  expected_group_by: [venue]
+- question: "Which batting team has the best control percentage?"
+  expected_operation: aggregate
+  expected_entity: team
+  expected_metric: control_percentage
+  expected_group_by: [team]
+- question: "Which bowler dismisses left-handers most often?"
+  expected_operation: aggregate
+  expected_entity: bowler
+  expected_metric: wickets
+  expected_group_by: [bowler]
+  expected_filters: {batter_hand: LHB}

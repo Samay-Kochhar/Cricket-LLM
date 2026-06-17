@@ -25,10 +25,13 @@ def player_profile(player_name: str, services=Depends(get_services)):
     repo = services["repository"]
     resolved = resolve_player_name(player_name, repo.list_player_names())
     canonical_name = resolved.canonical_name or player_name
+    visuals, coverage_notes = services["analytics_service"]._build_batter_visuals(canonical_name)
     return {
         "player_name": canonical_name,
         "summary": repo.get_player_batting_summary(canonical_name),
         "trend": repo.get_player_year_trend(canonical_name),
+        "visuals": visuals.model_dump(),
+        "coverage_notes": [note.model_dump() for note in coverage_notes],
         "suggestions": list(resolved.suggestions),
     }
 

@@ -40,3 +40,311 @@
     - tables
     - charts
     - citations
+
+- id: chat-follow-up-bumrah-starc-death-bowling-trend
+  endpoint: chat
+  message: Compare this trend against another ODI player. mitchell starc
+  history:
+    - role: user
+      content: What is Jasprit Bumrah economy rate in death overs?
+    - role: assistant
+      content: In death overs, Jasprit Bumrah economy is 5.78 runs per over.
+    - role: user
+      content: Break the player down year by year to inspect role changes over time.
+    - role: assistant
+      content: The ODI bowling trend for Jasprit Bumrah in death overs covers 7 recorded years.
+  expected_query_class: trend_progression
+  expected_status: supported
+  expected_entities:
+    - Jasprit Bumrah
+    - Mitchell Starc
+  expected_filters:
+    phase: death
+    skill: bowling
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Aggregate bowling trend comparison
+  forbidden_table_titles:
+    - Year trend
+    - Fetched bowling year trend
+    - Year-by-year bowling trend comparison
+  required_sql_fragments:
+    - bowl AS player
+    - COUNT(DISTINCT p_match) AS matches
+    - WHERE bowl IN (:players)
+    - TRY_CAST(over AS DOUBLE) > 40.0
+    - GROUP BY bowl, year
+
+- id: bowling-economy-leaderboard-death-since-2022
+  endpoint: chat
+  message: Which bowler has the best death-over economy since 2022?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_filters:
+    phase: death
+    skill: bowling
+    metric: economy_rate
+    year_mode: after
+    rank_intent: best
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Bowling economy leaderboard
+  forbidden_table_titles:
+    - Year trend
+    - Primary batting metrics
+  required_sql_fragments:
+    - WHERE NULLIF(TRIM(CAST(bowl AS VARCHAR)), '') IS NOT NULL
+    - TRY_CAST(over AS DOUBLE) > 40.0
+    - TRY_CAST(year AS INTEGER) >= :year
+    - legal_balls >= :min_legal_balls
+    - ORDER BY runs_conceded / NULLIF(legal_balls / 6.0, 0) ASC
+
+- id: bowling-economy-leaderboard-powerplay-worst
+  endpoint: chat
+  message: Which bowler has the worst economy in powerplay?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_filters:
+    phase: powerplay
+    skill: bowling
+    metric: economy_rate
+    rank_intent: worst
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Bowling economy leaderboard
+  forbidden_table_titles:
+    - Year trend
+    - Primary batting metrics
+  required_sql_fragments:
+    - WHERE NULLIF(TRIM(CAST(bowl AS VARCHAR)), '') IS NOT NULL
+    - TRY_CAST(over AS DOUBLE) <= 10.0
+    - legal_balls >= :min_legal_balls
+    - ORDER BY runs_conceded / NULLIF(legal_balls / 6.0, 0) DESC
+
+- id: bowling-wickets-leaderboard-powerplay-highest
+  endpoint: chat
+  message: Which bowler has highest number of wickets in powerplay?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_filters:
+    phase: powerplay
+    skill: bowling
+    metric: wickets_taken
+    rank_intent: best
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Bowling wickets leaderboard
+  forbidden_table_titles:
+    - Year trend
+    - Primary batting metrics
+  required_sql_fragments:
+    - WHERE NULLIF(TRIM(CAST(bowl AS VARCHAR)), '') IS NOT NULL
+    - TRY_CAST(over AS DOUBLE) <= 10.0
+    - legal_balls >= :min_legal_balls
+    - ORDER BY wickets DESC
+
+- id: bowling-wickets-world-cup-2011
+  endpoint: chat
+  message: Who took most wickets in cricket world cup 2011?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_filters:
+    competition: ICC Cricket World Cup
+    metric: wickets_taken
+    rank_intent: best
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Bowling wickets leaderboard
+  forbidden_table_titles:
+    - Primary batting metrics
+  required_sql_fragments:
+    - competition = :competition
+    - TRY_CAST(year AS INTEGER) IN (:years)
+    - ORDER BY wickets DESC
+
+- id: fielding-catches-world-cup-2023-missing-catcher
+  endpoint: chat
+  message: Who took most catches in 2023 world cup?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: insufficient_evidence
+  expected_filters:
+    competition: World Cup 2023
+    subject: fielder
+    skill: fielding
+    metric: catches_taken
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Fielding catches dataset check
+  required_sql_fragments:
+    - LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
+    - competition = :competition
+
+- id: analyst-bowling-most-yorkers
+  endpoint: chat
+  message: Which bowler bowls the most yorkers?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_filters:
+    subject: bowler
+    length: YORKER
+    metric: yorker_count
+    rank_intent: best
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Analyst bowling leaderboard
+
+- id: analyst-matchup-miller-dismissals
+  endpoint: chat
+  message: Which bowler has dismissed David Miller the most times?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_entities:
+    - David Miller
+  expected_filters:
+    subject: bowler
+    metric: wickets_taken
+    matchup_role: bowler_vs_batter
+    rank_intent: best
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Analyst matchup bowler leaderboard
+
+- id: analyst-spinner-matchup-maxwell
+  endpoint: chat
+  message: Which spinner should bowl to Maxwell?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_entities:
+    - Glenn Maxwell
+  expected_filters:
+    subject: bowler
+    bowling_kind: spin bowler
+    metric: wickets_taken
+    rank_intent: best
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Analyst matchup bowler leaderboard
+    - Spin type matchup against Glenn Maxwell
+  required_sql_fragments:
+    - GROUP BY bowl_style
+
+- id: analyst-length-miller-lowest-sr
+  endpoint: chat
+  message: Against what length does Miller score at the lowest strike rate?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_entities:
+    - David Miller
+  expected_filters:
+    group_by: length
+    metric: batting_strike_rate
+    rank_intent: worst
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - David Miller length breakdown
+
+- id: analyst-target-short-ball-batters
+  endpoint: chat
+  message: Which batter should be targeted with short-ball tactics?
+  history: []
+  expected_query_class: venue_context_leaderboard
+  expected_status: supported
+  expected_filters:
+    subject: batter
+    length: SHORT
+    metric: batting_strike_rate
+    rank_intent: worst
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Analyst batting leaderboard
+  required_sql_fragments:
+    - "average = runs / NULLIF(dismissals, 0)"
+    - "balls_per_dismissal = balls / NULLIF(dismissals, 0)"
+
+- id: analyst-bowling-plan-david-miller
+  endpoint: chat
+  message: Build a bowling plan against David Miller.
+  history: []
+  expected_query_class: role_comparison
+  expected_status: supported
+  expected_entities:
+    - David Miller
+  expected_filters:
+    plan_type: bowling_to_batter
+    subject: batter
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Bowling plan against David Miller
+    - Bowling style plan against David Miller
+  forbidden_table_titles:
+    - Fetched bowling metrics
+    - Phase batting evidence
+    - Pace/spin batting evidence
+
+- id: analyst-bowling-plan-heinrich-klaasen
+  endpoint: chat
+  message: Build a bowling plan against Heinrich Klaasen.
+  history: []
+  expected_query_class: role_comparison
+  expected_status: supported
+  expected_entities:
+    - Heinrich Klaasen
+  expected_filters:
+    plan_type: bowling_to_batter
+    subject: batter
+  required_evidence:
+    - tables
+    - evidence_queries
+    - citations
+  required_table_titles:
+    - Bowling plan against Heinrich Klaasen
+    - Bowling style plan against Heinrich Klaasen
+  forbidden_table_titles:
+    - Fetched bowling metrics
+    - Phase batting evidence
+    - Pace/spin batting evidence

@@ -18,7 +18,7 @@ FOLLOW_UPS = {
     ],
     QueryClass.venue_context_leaderboard: [
         "Compare the venue results against the country-wide ODI baseline.",
-        "Switch from bowling leaderboard to batting leaderboard.",
+        "Adjust the sample threshold and re-sort the leaderboard.",
     ],
     QueryClass.trend_progression: [
         "Split the trend before and after a specific year.",
