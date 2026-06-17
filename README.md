@@ -26,7 +26,7 @@ This is the quickest way to run it on your own machine.
 
 ### 0. Get the dataset
 `data/odi_bbb-25.csv` (~464 MB) is **not in git** (intentionally). Get the file
-from Pragnesh and place it at:
+from Samay and place it at:
 
 ```text
 data/odi_bbb-25.csv
