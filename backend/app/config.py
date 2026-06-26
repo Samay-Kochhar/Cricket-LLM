@@ -54,12 +54,19 @@ class AppConfig:
     def from_env(cls) -> "AppConfig":
         root = Path(__file__).resolve().parents[2]
         _load_repo_env(root)
+        app_env = os.getenv("APP_ENV", "development")
+        fallback_env = os.getenv("SEMANTIC_V2_DEV_FALLBACK")
+        semantic_v2_dev_fallback = (
+            fallback_env.lower() in {"1", "true", "yes", "on"}
+            if fallback_env is not None
+            else app_env.lower() != "production"
+        )
         return cls(
-            app_env=os.getenv("APP_ENV", "development"),
+            app_env=app_env,
             duckdb_path=_resolve_duckdb_path(root),
             gemini_api_key=os.getenv("GEMINI_API_KEY"),
             gemini_default_model=os.getenv("GEMINI_DEFAULT_MODEL", "gemini-2.5-pro"),
             gemini_complex_model=os.getenv("GEMINI_COMPLEX_MODEL", "gemini-2.5-pro"),
             use_semantic_analytics_v2=os.getenv("USE_SEMANTIC_ANALYTICS_V2", "false").lower() in {"1", "true", "yes", "on"},
-            semantic_v2_dev_fallback=os.getenv("SEMANTIC_V2_DEV_FALLBACK", "true").lower() in {"1", "true", "yes", "on"},
+            semantic_v2_dev_fallback=semantic_v2_dev_fallback,
         )

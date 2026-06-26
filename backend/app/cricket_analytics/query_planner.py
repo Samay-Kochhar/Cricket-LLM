@@ -24,9 +24,20 @@ class PlannerResult:
 
 
 class SemanticQueryPlanner:
-    def __init__(self, gemini_client: GeminiClient, available_players: list[str]) -> None:
+    def __init__(
+        self,
+        gemini_client: GeminiClient,
+        available_players: list[str],
+        available_venues: list[str] | None = None,
+        available_teams: list[str] | None = None,
+        *,
+        allow_dev_fallback: bool = True,
+    ) -> None:
         self.gemini_client = gemini_client
         self.available_players = available_players
+        self.available_venues = available_venues or []
+        self.available_teams = available_teams or []
+        self.allow_dev_fallback = allow_dev_fallback
 
     def plan(self, question: str, trace: QueryTrace) -> PlannerResult:
         if self.gemini_client.is_configured():
@@ -37,6 +48,15 @@ class SemanticQueryPlanner:
                 repaired = self._repair_with_gemini(question, planned.plan, planned.validation, trace)
                 if repaired.plan is not None and repaired.validation.valid:
                     return repaired
+
+        if not self.allow_dev_fallback:
+            validation = ValidationResult(
+                valid=False,
+                errors=["Semantic V2 planner could not produce a validated LLM plan."],
+            )
+            trace.validation_result = validation.model_dump(mode="json")
+            trace.final_answer_metadata = {"planner_fallback": "disabled"}
+            return PlannerResult(plan=None, validation=validation, used_gemini=self.gemini_client.is_configured())
 
         fallback = self._fallback_plan(question)
         normalized = normalize_plan(fallback)
@@ -141,6 +161,34 @@ class SemanticQueryPlanner:
         entity = self._infer_entity(lowered, metric)
         group_by = self._infer_group_by(lowered, entity)
         filters = self._infer_filters(question, lowered, metric)
+        compare_players = self._extract_players(question)
+        unsupported_reason = self._unsupported_factual_reason(lowered)
+        if operation == "player_compare":
+            filters.pop("batter", None)
+            filters.pop("bowler", None)
+            if self._comparison_looks_bowling(compare_players, lowered, metric):
+                entity = "bowler"
+                if metric in {"runs_scored", "batting_strike_rate"}:
+                    metric = "economy_rate"
+            elif self._comparison_looks_batting(compare_players, lowered, metric):
+                entity = "batter"
+            group_by = [entity]
+            filters["compare_players"] = compare_players
+            comparison_metrics = self._infer_comparison_metrics(lowered, metric)
+            if comparison_metrics:
+                filters["comparison_metrics"] = comparison_metrics
+                metric = comparison_metrics[0]
+            if not unsupported_reason and len(compare_players) < 2:
+                unsupported_reason = "Player comparison requires at least two named players."
+            if not unsupported_reason and self._comparison_has_mixed_roles(compare_players):
+                unsupported_reason = "Mixed batter-versus-bowler player comparisons are not supported in Semantic V2."
+        if operation == "match_fact":
+            entity = "team"
+            metric = "runs_scored"
+            group_by = ["team"]
+            filters.update(self._infer_match_fact_filters(lowered))
+        requested_limit = self._infer_limit(lowered)
+        requested_minimum_sample = self._infer_minimum_sample(lowered, metric)
         split_by, compare_values = self._infer_split(lowered, filters)
         event, window = self._infer_event(lowered, filters)
         default_sort = METRICS.get(metric).default_sort if metric in METRICS else "desc"
@@ -152,6 +200,16 @@ class SemanticQueryPlanner:
             "false_shot_percentage",
         }:
             default_sort = "asc"
+        if (
+            any(token in lowered for token in ("struggle", "struggles", "weakness", "vulnerable"))
+            and not any(token in lowered for token in ("dominates", "better against", "difference", "compare"))
+            and metric in {
+            "batting_strike_rate",
+            "batting_average",
+            "control_percentage",
+            }
+        ):
+            default_sort = "asc"
 
         if "hardest to bowl dot balls to" in lowered:
             entity = "batter"
@@ -159,11 +217,45 @@ class SemanticQueryPlanner:
             default_sort = "asc"
             if "batter" not in group_by:
                 group_by = ["batter"]
+        if operation == "matchup":
+            entity, metric, group_by, filters, default_sort = self._refine_matchup_plan(
+                lowered,
+                entity,
+                metric,
+                group_by,
+                filters,
+                default_sort,
+            )
+        if (
+            operation == "aggregate"
+            and "bowler" in filters
+            and "batter" not in filters
+            and metric in {
+                "dot_ball_percentage",
+                "bowler_dot_ball_percentage",
+                "economy_rate",
+                "wickets_taken",
+                "wickets",
+                "yorker_percentage",
+                "yorker_count",
+                "false_shots_per_over",
+            }
+        ):
+            entity = "bowler"
+            if group_by == ["batter"]:
+                group_by = ["bowler"]
+        if operation == "aggregate" and self._is_direct_player_metric_question(lowered, filters):
+            if "batter" in filters and "bowler" not in filters:
+                entity = "batter"
+                group_by = ["batter"]
+            elif "bowler" in filters and "batter" not in filters:
+                entity = "bowler"
+                group_by = ["bowler"]
 
         if not group_by and operation == "aggregate":
             group_by = [entity] if entity in {"batter", "bowler", "team"} else []
 
-        minimum_sample = MinimumSampleSpec(**METRICS[metric].minimum_sample.as_dict()) if metric in METRICS else None
+        minimum_sample = requested_minimum_sample or (MinimumSampleSpec(**METRICS[metric].minimum_sample.as_dict()) if metric in METRICS else None)
         return CricketQueryPlan(
             operation=operation,
             entity=entity,
@@ -175,11 +267,12 @@ class SemanticQueryPlanner:
             event=event,
             window=window,
             sort=SortSpec(by=metric, direction=default_sort),
-            limit=10,
+            limit=requested_limit,
             minimum_sample=minimum_sample,
             question_subject=self._question_subject(lowered),
             explanation_intent="deterministic semantic fallback",
             confidence=0.55,
+            unsupported_reason=unsupported_reason,
         )
 
     @staticmethod
@@ -191,6 +284,7 @@ class SemanticQueryPlanner:
             filters.pop("batter_hand", None)
             return "batter_hand", ["LHB", "RHB"]
         if "wrist spin" in lowered and "finger spin" in lowered:
+            filters.pop("bowling_style", None)
             return "bowling_style_group", ["wrist_spin", "finger_spin"]
         if "pace" in lowered and "spin" in lowered and ("compare" in lowered or "versus" in lowered or "vs" in lowered):
             return "bowling_style_group", ["pace", "spin"]
@@ -214,23 +308,91 @@ class SemanticQueryPlanner:
         return None, None
 
     @staticmethod
+    def _infer_limit(lowered: str) -> int:
+        word_numbers = {
+            "one": 1,
+            "two": 2,
+            "three": 3,
+            "four": 4,
+            "five": 5,
+            "six": 6,
+            "seven": 7,
+            "eight": 8,
+            "nine": 9,
+            "ten": 10,
+        }
+        numeric = re.search(r"\b(?:top|bottom|first|last|show|list|give me|which)\s+(?:the\s+)?(\d{1,2})\b", lowered)
+        if numeric:
+            return max(1, min(int(numeric.group(1)), 50))
+        word_match = re.search(r"\b(?:top|bottom|first|last|show|list|give me|which)\s+(?:the\s+)?([a-z]+)\b", lowered)
+        if word_match and word_match.group(1) in word_numbers:
+            return word_numbers[word_match.group(1)]
+        nested_word_match = re.search(r"\b(?:show|list|give me)\s+(?:the\s+)?(?:top|bottom)\s+([a-z]+)\b", lowered)
+        if nested_word_match and nested_word_match.group(1) in word_numbers:
+            return word_numbers[nested_word_match.group(1)]
+        return 10
+
+    @staticmethod
+    def _infer_minimum_sample(lowered: str, metric: str) -> MinimumSampleSpec | None:
+        match = re.search(r"\bminimum\s+(\d{1,7})\s+(legal balls|balls|deliveries)\b", lowered)
+        if not match:
+            return None
+        value = int(match.group(1))
+        sample_key = "legal_balls" if match.group(2) == "legal balls" else "balls"
+        if sample_key == "legal_balls":
+            return MinimumSampleSpec(legal_balls=value)
+        if METRICS.get(metric) and METRICS[metric].denominator == "legal_balls":
+            return MinimumSampleSpec(legal_balls=value)
+        return MinimumSampleSpec(balls=value)
+
+    @staticmethod
     def _infer_operation(lowered: str) -> str:
-        if any(token in lowered for token in ("should bowl", "optimal", "plan against", "field placement", "defending", "held back", "introduce spin", "introduced early")):
+        if (
+            ("world cup" in lowered or "final" in lowered or "match" in lowered)
+            and any(token in lowered for token in ("total", "score", "won", "winner", "win"))
+            and "player of the match" not in lowered
+        ):
+            return "match_fact"
+        if any(token in lowered for token in ("should bowl", "optimal", "plan against", "field placement", "defending", "held back", "introduce spin", "introduced early", "targeted", "tactics")):
             return "tactical_recommendation"
         if any(token in lowered for token in ("predict", "predicts", "factor", "factors", "outcome", "victories", "successful chases", "wins most")):
             return "predictive_analysis"
         if any(token in lowered for token in ("immediately after", "after a wicket", "milestone", "after the powerplay", "after early wickets", "losing early wickets", "lost early wickets", "after a timeout", "after timeout")):
             return "event_window"
+        if lowered.startswith("compare ") or " compare " in lowered or "who has the better" in lowered or "who scores faster" in lowered:
+            return "player_compare"
         if any(token in lowered for token in ("concentrated", "concentration", "entropy", "spread", "variation", "changes most", "changes the most", "distribution", "varies")):
             return "distribution_analysis"
-        if any(token in lowered for token in ("difference", "compare", "better against", "left-handers than right-handers", "wrist spin", "finger spin", "after 20 balls", "after facing 20 balls", "accelerates", "between overs")):
-            return "split_compare"
         if "matchup" in lowered or "batter-bowler" in lowered or "finishers" in lowered:
             return "matchup"
+        if (
+            ("which bowler" in lowered and ("dismissed" in lowered or "dismisses" in lowered or "controls" in lowered))
+            or (lowered.startswith("who ") and ("dismissed" in lowered or "dismisses" in lowered))
+            or "against wrist spin" in lowered
+            or "against left-arm pace" in lowered
+            or "against left arm pace" in lowered
+            or "dominates left-arm pace" in lowered
+            or "dominates left arm pace" in lowered
+        ):
+            return "matchup"
+        if any(token in lowered for token in ("difference", "compare", "better against", "left-handers than right-handers", "wrist spin", "finger spin", "after 20 balls", "after facing 20 balls", "accelerates", "between overs")):
+            return "split_compare"
         return "aggregate"
 
     @staticmethod
     def _infer_metric(lowered: str) -> str:
+        if "dismissal count" in lowered or "dismissals" in lowered:
+            return "dismissals"
+        if "overs bowled" in lowered or "bowled the most overs" in lowered or "most overs" in lowered:
+            return "overs_bowled"
+        if "how many dot balls" in lowered or "dot ball count" in lowered:
+            return "dot_balls"
+        if "legal balls" in lowered and "minimum" not in lowered:
+            return "legal_balls"
+        if "balls has" in lowered or "balls did" in lowered or "how many balls" in lowered:
+            return "balls_faced"
+        if "bowl most" in lowered or "bowls most" in lowered or "bowled most" in lowered or "bowl most often" in lowered or "bowls most often" in lowered:
+            return "legal_balls"
         if "length changes" in lowered or "length changes the most" in lowered or "length changes most" in lowered or "varies line" in lowered:
             return "balls_faced"
         if "after a wicket" in lowered and ("effective" in lowered or "bowler" in lowered):
@@ -241,12 +403,16 @@ class SemanticQueryPlanner:
             return "wickets"
         if "left-handers than right-handers" in lowered:
             return "economy_rate"
+        if "death-over economy" in lowered or "death over economy" in lowered:
+            return "economy_rate"
         if "accelerates" in lowered or "accelerate" in lowered:
             return "run_rate"
         if "wrist spin" in lowered or "finger spin" in lowered or "leg spin matchups" in lowered:
             return "batting_strike_rate"
         if "one-sided" in lowered and "matchup" in lowered:
             return "batting_strike_rate"
+        if "controls" in lowered and "which bowler" in lowered:
+            return "dot_ball_percentage"
         if "field placement" in lowered:
             return "runs_scored"
         if "finishers" in lowered:
@@ -261,11 +427,13 @@ class SemanticQueryPlanner:
             return "wicket_opportunity_rate"
         if "yorker percentage" in lowered or "percentage of yorkers" in lowered:
             return "yorker_percentage"
+        if "how many yorkers" in lowered or "yorker count" in lowered:
+            return "yorker_count"
         if "yorker" in lowered:
             return "yorker_percentage"
         if "false shot" in lowered or "false-shot" in lowered:
             return "false_shot_percentage"
-        if "dot ball" in lowered or "dot balls" in lowered or "dots" in lowered:
+        if "dot ball" in lowered or "dot balls" in lowered or "dot-ball" in lowered or "dot-balls" in lowered or "dots" in lowered:
             return "dot_ball_percentage"
         if "boundaries per 100" in lowered or "boundary rate" in lowered:
             return "boundary_rate_per_100_balls"
@@ -275,7 +443,29 @@ class SemanticQueryPlanner:
             return "control_percentage"
         if "most balls" in lowered or "balls faced" in lowered or "faced the most balls" in lowered:
             return "balls_faced"
-        if any(token in lowered for token in ("fastest", "strike rate", "score fastest", "scores fastest", "dominates", "struggles", "improves", "vulnerable", "effective", "optimal bowling plan", "introduce spin", "introduced early")):
+        if any(
+            token in lowered
+            for token in (
+                "fastest",
+                "strike rate",
+                "scoring rate",
+                "score rate",
+                "how quickly",
+                "sr ",
+                " sr",
+                "score fastest",
+                "scores fastest",
+                "dominates",
+                "struggle",
+                "struggles",
+                "improves",
+                "vulnerable",
+                "effective",
+                "optimal bowling plan",
+                "introduce spin",
+                "introduced early",
+            )
+        ):
             return "batting_strike_rate"
         if "defending" in lowered or "held back" in lowered:
             return "economy_rate"
@@ -287,6 +477,8 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_entity(lowered: str, metric: str) -> str:
+        if metric in {"economy_rate", "wickets_per_over", "wickets_taken", "bowler_dot_ball_percentage", "false_shots_per_over", "yorker_percentage", "yorker_count"}:
+            return "bowler"
         if "which length" in lowered or "which line" in lowered:
             return "bowler"
         if "phase of an innings" in lowered:
@@ -295,17 +487,41 @@ class SemanticQueryPlanner:
             return "team"
         if any(token in lowered for token in ("victories", "successful chases", "predicts", "predict ", "factor", "wins most", "defeat")):
             return "team"
-        if "venue" in lowered or "ground" in lowered:
-            return "venue"
         if "matchup" in lowered:
             return "matchup"
-        if "who should bowl" in lowered or "should bowl" in lowered or "which bowler" in lowered or "bowler" in lowered or metric in {"economy_rate", "yorker_percentage", "wickets_per_over", "wicket_opportunity_rate", "dot_ball_percentage", "false_shots_per_over"}:
+        if "who should bowl" in lowered or "should bowl" in lowered or "which bowler" in lowered or "bowler" in lowered or metric in {"economy_rate", "yorker_percentage", "wickets_per_over", "wicket_opportunity_rate", "false_shots_per_over"}:
             return "bowler"
         if "which batter" in lowered or "batter" in lowered or metric in {"batting_strike_rate", "runs_scored", "balls_faced"}:
             return "batter"
-        if metric in {"wickets", "economy_rate", "yorker_percentage"}:
+        if metric in {"wickets", "wickets_taken", "economy_rate", "yorker_percentage", "yorker_count", "legal_balls", "overs_bowled", "false_shots_per_over", "bowler_dot_ball_percentage"}:
             return "bowler"
         return "batter"
+
+    @staticmethod
+    def _is_direct_player_metric_question(lowered: str, filters: dict[str, object]) -> bool:
+        if not (filters.get("batter") or filters.get("bowler")):
+            return False
+        if any(lowered.startswith(prefix) for prefix in ("which ", "who ")):
+            return False
+        explicit_breakdown_markers = (
+            "against which",
+            "which bowling",
+            "which type",
+            "which line",
+            "which length",
+            "what shot",
+            "which shot",
+            " by ",
+            "group by",
+            "breakdown",
+            "split",
+            "wise",
+            "per ",
+            " vs ",
+            " versus ",
+            "matchup",
+        )
+        return not any(marker in lowered for marker in explicit_breakdown_markers)
 
     @staticmethod
     def _infer_group_by(lowered: str, entity: str) -> list[str]:
@@ -323,7 +539,7 @@ class SemanticQueryPlanner:
             return ["field_zone"]
         if "phase" in lowered:
             return ["phase"]
-        if "which venue" in lowered or "which ground" in lowered:
+        if "which venue" in lowered or "which ground" in lowered or "by venue" in lowered:
             return ["venue"]
         if "batting team" in lowered or "which team" in lowered:
             return ["team"]
@@ -337,12 +553,28 @@ class SemanticQueryPlanner:
         filters: dict[str, object] = {}
         player = self._extract_player(question)
         if player:
-            if any(token in lowered for token in ("score", "scores", "scored", "batter", "batsman", "faced", "dismisses")):
+            metric_owner = METRICS[metric].owner if metric in METRICS else ""
+            if ("which bowler" in lowered or lowered.startswith("who ")) and any(token in lowered for token in ("dismissed", "dismisses", "controls")):
+                filters["batter"] = player
+            elif ("which length" in lowered or "which line" in lowered) and any(token in lowered for token in ("dismiss", "against", "to ")):
+                filters["batter"] = player
+            elif metric_owner == "bowler":
+                filters["bowler"] = player
+            elif self._is_known_bowler(player) and any(token in lowered for token in ("dot ball", "dot-ball", "economy", "wicket", "yorker")):
+                filters["bowler"] = player
+            elif any(token in lowered for token in ("score", "scores", "scored", "batter", "batsman", "faced", "dismissed", "dismisses")):
                 filters["batter"] = player
             elif any(token in lowered for token in ("bowler", "bowls", "bowled", "economy")):
                 filters["bowler"] = player
             else:
                 filters["batter"] = player
+        year_matches = [int(match) for match in re.findall(r"\b(20\d{2})\b", lowered)]
+        if year_matches:
+            filters["years"] = year_matches
+        if ("after " in lowered or "since " in lowered) and year_matches:
+            filters["year_mode"] = "after"
+        elif "before " in lowered and year_matches:
+            filters["year_mode"] = "before"
         if "powerplay" in lowered or "power play" in lowered:
             filters["phase"] = "powerplay"
         elif "middle overs" in lowered:
@@ -352,16 +584,36 @@ class SemanticQueryPlanner:
         over_range = re.search(r"between overs?\s+(\d{1,2})\s+(?:and|to|-)\s+(\d{1,2})", lowered)
         if over_range:
             filters["over_range"] = [int(over_range.group(1)), int(over_range.group(2))]
-        if "yorker" in lowered and metric != "yorker_percentage":
+        if "yorker" in lowered and metric not in {"yorker_percentage", "yorker_count"}:
             filters.setdefault("length", "YORKER")
+        elif "short ball" in lowered or "short balls" in lowered or "short-ball" in lowered or "short-balls" in lowered:
+            filters["length"] = "SHORT"
+        elif "good length" in lowered or "good-length" in lowered:
+            filters["length"] = "GOOD_LENGTH"
+        elif "full ball" in lowered or "full balls" in lowered or "full-ball" in lowered or "full-balls" in lowered:
+            filters["length"] = "FULL"
         if "against spin" in lowered or "versus spin" in lowered:
             filters["bowling_style"] = "spin"
         elif "against pace" in lowered or "versus pace" in lowered:
             filters["bowling_style"] = "pace"
+        elif "wrist spin" in lowered:
+            filters["bowling_style"] = "wrist_spin"
+        elif "leg spin" in lowered or "leg-spin" in lowered:
+            filters["bowling_style"] = "leg_spin"
+        elif "finger spin" in lowered:
+            filters["bowling_style"] = "finger_spin"
+        elif "left-arm pace" in lowered or "left arm pace" in lowered:
+            filters["bowling_style"] = "left_arm_pace"
         if "left-handers" in lowered or "left handers" in lowered or "left-hand batters" in lowered:
             filters["batter_hand"] = "LHB"
         elif "right-handers" in lowered or "right handers" in lowered or "right-hand batters" in lowered:
             filters["batter_hand"] = "RHB"
+        opposition = self._extract_opposition(lowered)
+        if opposition:
+            filters["opposition"] = opposition
+        venue = None if "by venue" in lowered else self._extract_venue(lowered)
+        if venue:
+            filters["venue"] = venue
         for key, aliases in {
             "midwicket": ("mid wicket", "mid-wicket", "midwicket", "cow corner"),
             "cover": ("cover", "covers"),
@@ -375,6 +627,201 @@ class SemanticQueryPlanner:
             if any(re.search(rf"\b{re.escape(alias)}\b", lowered) for alias in aliases):
                 filters["field_zone"] = key
         return filters
+
+    def _extract_opposition(self, lowered: str) -> str | None:
+        team_aliases = {
+            "afg": "Afghanistan",
+            "aus": "Australia",
+            "aussies": "Australia",
+            "ban": "Bangladesh",
+            "bangla": "Bangladesh",
+            "eng": "England",
+            "ind": "India",
+            "kiwis": "New Zealand",
+            "nz": "New Zealand",
+            "pak": "Pakistan",
+            "proteas": "South Africa",
+            "sa": "South Africa",
+            "sl": "Sri Lanka",
+            "sri lanka": "Sri Lanka",
+            "wi": "West Indies",
+        }
+        for alias, team in team_aliases.items():
+            if (
+                f"against {alias}" in lowered
+                or f"against the {alias}" in lowered
+                or f"versus {alias}" in lowered
+                or f"versus the {alias}" in lowered
+                or f"vs {alias}" in lowered
+                or f"v {alias}" in lowered
+            ):
+                return team
+        teams = self.available_teams or [
+            "Australia",
+            "India",
+            "England",
+            "South Africa",
+            "New Zealand",
+            "Pakistan",
+            "Sri Lanka",
+            "Bangladesh",
+            "West Indies",
+            "Afghanistan",
+        ]
+        for team in teams:
+            team_lower = team.lower()
+            if f"against {team_lower}" in lowered or f"versus {team_lower}" in lowered or f"vs {team_lower}" in lowered:
+                return team
+        return None
+
+    def _extract_venue(self, lowered: str) -> str | None:
+        aliases = {
+            "wankhede": "Wankhede Stadium, Mumbai",
+            "lord's": "Lord's, London",
+            "lord’s": "Lord's, London",
+            "lords": "Lord's, London",
+            "mcg": "Melbourne Cricket Ground",
+            "melbourne cricket ground": "Melbourne Cricket Ground",
+        }
+        for alias, venue in aliases.items():
+            if alias in lowered:
+                return venue
+        for venue in self.available_venues:
+            if venue.lower() in lowered:
+                return venue
+        return None
+
+    @staticmethod
+    def _comparison_looks_bowling(players: list[str], lowered: str, metric: str) -> bool:
+        bowler_names = {"Jasprit Bumrah", "Mitchell Starc", "Kagiso Rabada", "Pat Cummins", "Trent Boult"}
+        return (
+            metric in {"economy_rate", "wickets_taken", "wickets_per_over", "bowler_dot_ball_percentage"}
+            or any(token in lowered for token in ("economy", "wicket rate", "dot-ball percentage"))
+            or (players and all(player in bowler_names for player in players))
+        )
+
+    @staticmethod
+    def _comparison_looks_batting(players: list[str], lowered: str, metric: str) -> bool:
+        return metric in {"runs_scored", "batting_strike_rate", "batter_dot_ball_percentage", "boundary_percentage"} or any(
+            token in lowered for token in ("strike rate", "scores faster", "against spin", "short balls")
+        )
+
+    @staticmethod
+    def _comparison_has_mixed_roles(players: list[str]) -> bool:
+        batter_names = {
+            "Virat Kohli",
+            "Rohit Sharma",
+            "Shreyas Iyer",
+            "KL Rahul",
+            "Hardik Pandya",
+            "Ravindra Jadeja",
+            "Steve Smith",
+            "Jos Buttler",
+            "Glenn Maxwell",
+            "Heinrich Klaasen",
+            "David Miller",
+        }
+        bowler_names = {"Jasprit Bumrah", "Mitchell Starc", "Kagiso Rabada", "Pat Cummins", "Trent Boult"}
+        return any(player in batter_names for player in players) and any(player in bowler_names for player in players)
+
+    @staticmethod
+    def _is_known_bowler(player: str) -> bool:
+        return player in {"Jasprit Bumrah", "Mitchell Starc", "Kagiso Rabada", "Pat Cummins", "Trent Boult", "Rashid Khan"}
+
+    @staticmethod
+    def _unsupported_factual_reason(lowered: str) -> str | None:
+        if "most catches" in lowered or "catch" in lowered or "catches" in lowered:
+            return "Data limitation: fielding catcher records are missing from the available ODI ball-by-ball data."
+        if "player of the match" in lowered:
+            return "Data limitation: player-of-the-match award metadata is missing from the available ODI data."
+        if "which team" in lowered and ("economy" in lowered or "against " in lowered or "versus " in lowered or " vs " in lowered):
+            return "Team-level opposition or bowling-economy questions need explicit tested team semantics before Semantic V2 can answer them."
+        if "opposition-wise" in lowered or "opponent wise" in lowered:
+            return "Opposition-wise splits are understood, but Semantic V2 does not have a tested opposition capability yet."
+        if "record against" in lowered:
+            return "Head-to-head opposition records are not implemented in Semantic V2 yet."
+        if "best average" in lowered:
+            return "Batting average is not a production-ready Semantic V2 metric yet."
+        return None
+
+    def _infer_match_fact_filters(self, lowered: str) -> dict[str, object]:
+        filters: dict[str, object] = {}
+        if "world cup" in lowered:
+            filters["competition"] = "ICC Cricket World Cup"
+        if "final" in lowered:
+            filters["match_stage"] = "final"
+        if any(token in lowered for token in ("won", "winner", " win")):
+            filters["fact_type"] = "winner"
+        elif any(token in lowered for token in ("total", "score")):
+            filters["fact_type"] = "team_total"
+        team = self._extract_team_mention(lowered)
+        if team:
+            filters["team"] = team
+        return filters
+
+    def _extract_team_mention(self, lowered: str) -> str | None:
+        aliases = {
+            "afghanistan": "Afghanistan",
+            "australia": "Australia",
+            "aussies": "Australia",
+            "bangladesh": "Bangladesh",
+            "england": "England",
+            "india": "India",
+            "new zealand": "New Zealand",
+            "pakistan": "Pakistan",
+            "south africa": "South Africa",
+            "sri lanka": "Sri Lanka",
+            "west indies": "West Indies",
+        }
+        teams = self.available_teams or list(aliases.values())
+        for team in teams:
+            if re.search(rf"\b{re.escape(team.lower())}\b", lowered):
+                return team
+        for alias, team in aliases.items():
+            if re.search(rf"\b{re.escape(alias)}\b", lowered):
+                return team
+        return None
+
+    @staticmethod
+    def _refine_matchup_plan(
+        lowered: str,
+        entity: str,
+        metric: str,
+        group_by: list[str],
+        filters: dict[str, object],
+        default_sort: str,
+    ) -> tuple[str, str, list[str], dict[str, object], str]:
+        is_pair_matchup = "matchup" in lowered or "batter-bowler" in lowered
+        if "one-sided" in lowered and "matchup" in lowered:
+            return "matchup", "batting_strike_rate", ["matchup"], filters, "desc"
+        if is_pair_matchup:
+            entity = "matchup"
+            group_by = ["matchup"]
+        if "which bowler" in lowered and not is_pair_matchup:
+            entity = "bowler"
+            group_by = ["bowler"]
+        if "which batter" in lowered and not is_pair_matchup:
+            entity = "batter"
+            group_by = ["batter"]
+        if "highest false-shot percentage" in lowered or "highest false shot percentage" in lowered:
+            metric = "false_shot_percentage"
+            default_sort = "desc"
+        elif "controls" in lowered:
+            metric = "dot_ball_percentage"
+            default_sort = "desc"
+        elif "dismissed" in lowered or "dismisses" in lowered or "most wickets" in lowered or "successful" in lowered:
+            metric = "wickets"
+            default_sort = "desc"
+        elif "perform" in lowered or "dominates" in lowered:
+            metric = "batting_strike_rate"
+            default_sort = "desc"
+        if "finishers" in lowered:
+            entity = "bowler"
+            group_by = ["bowler"]
+            filters.setdefault("phase", "death")
+            metric = "wickets"
+            default_sort = "desc"
+        return entity, metric, group_by, filters, default_sort
 
     def _extract_player(self, question: str) -> str | None:
         normalized_question = normalize_name(question)
@@ -392,8 +839,49 @@ class SemanticQueryPlanner:
                 return result.canonical_name
         return None
 
+    def _extract_players(self, question: str) -> list[str]:
+        normalized_question = normalize_name(question)
+        found: list[str] = []
+        for player in self.available_players:
+            if normalize_name(player) in normalized_question and player not in found:
+                found.append(player)
+        for alias, canonical in ALIASES.items():
+            if normalize_name(alias) in normalized_question:
+                result = resolve_player_name(canonical, self.available_players)
+                player = result.canonical_name or canonical
+                if player not in found:
+                    found.append(player)
+        for ngram in re.findall(r"(?:[A-Z][a-z]+|[A-Z]{2,})(?:\s+(?:[A-Z][a-z]+|[A-Z]{2,})){0,3}", question):
+            result = resolve_player_name(ngram, self.available_players)
+            if result.canonical_name and result.canonical_name not in found:
+                found.append(result.canonical_name)
+        return found
+
+    @staticmethod
+    def _infer_comparison_metrics(lowered: str, primary_metric: str) -> list[str]:
+        metrics: list[str] = []
+        if "wicket rate" in lowered or "wickets per over" in lowered:
+            metrics.append("wickets_per_over")
+        if "dot-ball percentage" in lowered or "dot ball percentage" in lowered or "dot percentage" in lowered:
+            metrics.append("bowler_dot_ball_percentage" if primary_metric in {"economy_rate", "wickets_per_over"} else "batter_dot_ball_percentage")
+        if "economy" in lowered:
+            metrics.append("economy_rate")
+        if "strike rate" in lowered or "scores faster" in lowered:
+            metrics.append("batting_strike_rate")
+        if not metrics:
+            metrics.append(primary_metric if primary_metric != "runs_scored" else "batting_strike_rate")
+        deduped: list[str] = []
+        for metric in metrics:
+            if metric not in deduped:
+                deduped.append(metric)
+        return deduped
+
     @staticmethod
     def _question_subject(lowered: str) -> str | None:
+        if any(token in lowered for token in ("struggle", "struggles", "weakness", "vulnerable")):
+            return "weakness_check"
+        if "one-sided" in lowered and "matchup" in lowered:
+            return "one_sided_matchup"
         if "which bowler" in lowered:
             return "bowler"
         if "which batter" in lowered:

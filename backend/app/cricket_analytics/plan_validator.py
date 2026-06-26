@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from backend.app.cricket_analytics.capabilities import validate_capability
+from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS, OPERATION_TYPES
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, ValidationResult
 
@@ -28,6 +30,7 @@ FILTER_DIMENSIONS = {
     "batter_hand",
     "bowler_hand",
     "venue",
+    "opposition",
     "innings",
     "over_range",
     "team",
@@ -46,7 +49,10 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
     if plan.metric not in METRICS:
         errors.append(f"Unsupported metric '{plan.metric}'.")
     elif plan.operation == "aggregate":
-        owner = METRICS[plan.metric].owner
+        try:
+            owner = get_metric(plan.metric, entity=plan.entity, filters=plan.filters).owner
+        except KeyError:
+            owner = METRICS[plan.metric].owner
         if plan.entity in COMPATIBLE_OWNER and owner not in COMPATIBLE_OWNER[plan.entity]:
             errors.append(f"Metric '{plan.metric}' is owned by {owner}, not compatible with entity '{plan.entity}'.")
 
@@ -54,8 +60,11 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         if dimension not in DIMENSIONS:
             errors.append(f"Unsupported group_by dimension '{dimension}'.")
 
+    internal_filters = {"compare_players", "comparison_metrics"} if plan.operation == "player_compare" else set()
+    if plan.operation == "match_fact":
+        internal_filters |= {"match_stage", "fact_type"}
     for filter_name in plan.filters:
-        if filter_name not in FILTER_DIMENSIONS and filter_name not in {"years", "year_mode", "competition"}:
+        if filter_name not in FILTER_DIMENSIONS and filter_name not in {"years", "year_mode", "competition"} and filter_name not in internal_filters:
             errors.append(f"Unsupported filter '{filter_name}'.")
 
     if plan.sort:
@@ -92,5 +101,7 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         warnings.append("Aggregate plans usually need group_by or a leaderboard entity.")
     if plan.limit is not None and plan.limit > 50:
         warnings.append("Limit above 50 will be capped by normalization.")
+
+    errors.extend(validate_capability(plan))
 
     return ValidationResult(valid=not errors, errors=errors, warnings=warnings)

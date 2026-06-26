@@ -7,10 +7,12 @@ from pydantic import BaseModel, Field
 
 OperationType = Literal[
     "aggregate",
+    "player_compare",
     "split_compare",
     "event_window",
     "distribution_analysis",
     "matchup",
+    "match_fact",
     "predictive_analysis",
     "tactical_recommendation",
 ]

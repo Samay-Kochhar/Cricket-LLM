@@ -205,6 +205,7 @@ class QueryInterpretation(BaseModel):
 
 class QueryResponse(BaseModel):
     status: EvidenceStatus
+    failure_state: Literal["data_limitation", "unsupported_capability", "planner_uncertainty"] | None = None
     interpretation: QueryInterpretation
     summaries: list[SummaryBlock] = Field(default_factory=list)
     tables: list[TableBlock] = Field(default_factory=list)

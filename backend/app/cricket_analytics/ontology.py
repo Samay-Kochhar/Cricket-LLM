@@ -3,6 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from backend.app.cricket_analytics.metric_registry import (
+    LEGACY_METRIC_ALIASES,
+    METRIC_REGISTRY,
+    MetricRule,
+)
+
 
 EntityName = Literal["batter", "bowler", "team", "matchup", "innings", "venue"]
 SortDirection = Literal["asc", "desc"]
@@ -118,6 +124,15 @@ METRICS: dict[str, MetricDefinition] = {
         default_sort="desc",
         good_direction="desc",
         unit="wickets",
+    ),
+    "dismissals": MetricDefinition(
+        name="dismissals",
+        owner="batter_or_bowler",
+        formula="SUM(out = true)",
+        required_columns=("out", "bat", "bowl"),
+        default_sort="desc",
+        good_direction="desc",
+        unit="dismissals",
     ),
     "economy_rate": MetricDefinition(
         name="economy_rate",
@@ -239,12 +254,51 @@ METRICS: dict[str, MetricDefinition] = {
 }
 
 
+def _from_registry(rule: MetricRule) -> MetricDefinition:
+    return MetricDefinition(
+        name=rule.metric_id,
+        owner=rule.owner,
+        formula=rule.formula,
+        required_columns=tuple(sorted({rule.numerator, *(filter(None, [rule.denominator]))})),
+        default_sort=rule.default_sort,
+        good_direction="desc" if rule.higher_is_better else "asc" if rule.higher_is_better is False else None,
+        denominator=rule.denominator,
+        minimum_sample=MinimumSample(
+            balls=rule.minimum_sample.balls,
+            legal_balls=rule.minimum_sample.legal_balls,
+            innings=rule.minimum_sample.innings,
+        ),
+        unit=rule.unit,
+    )
+
+
+for _metric_id, _rule in METRIC_REGISTRY.items():
+    METRICS[_metric_id] = _from_registry(_rule)
+
+for _legacy_id, _canonical_id in LEGACY_METRIC_ALIASES.items():
+    if _legacy_id not in METRICS and _canonical_id in METRICS:
+        _canonical = METRICS[_canonical_id]
+        METRICS[_legacy_id] = MetricDefinition(
+            name=_legacy_id,
+            owner=_canonical.owner,
+            formula=f"compatibility alias for {_canonical_id}: {_canonical.formula}",
+            required_columns=_canonical.required_columns,
+            default_sort=_canonical.default_sort,
+            good_direction=_canonical.good_direction,
+            denominator=_canonical.denominator,
+            minimum_sample=_canonical.minimum_sample,
+            unit=_canonical.unit,
+        )
+
+
 OPERATION_TYPES = {
     "aggregate",
+    "player_compare",
     "split_compare",
     "event_window",
     "distribution_analysis",
     "matchup",
+    "match_fact",
     "predictive_analysis",
     "tactical_recommendation",
 }

@@ -39,20 +39,16 @@ def get_services():
         repository=repository,
         gemini_client=gemini_client,
         app_env=config.app_env,
+        allow_dev_fallback=config.semantic_v2_dev_fallback,
     )
 
     def query_handler(question: str):
         if config.use_semantic_analytics_v2:
             semantic_response = semantic_service.answer_question(question)
-            if (
-                semantic_response.status.value == "supported"
-                or config.app_env != "development"
-                or not config.semantic_v2_dev_fallback
-            ):
-                grounded_notes, grounded_citations = grounded_context.gather(question, semantic_response)
-                query_class = QueryClass(semantic_response.interpretation.query_class)
-                follow_ups = suggest_follow_ups(query_class)
-                return answer_composer.compose(semantic_response, grounded_notes, grounded_citations, follow_ups)
+            grounded_notes, grounded_citations = grounded_context.gather(question, semantic_response)
+            query_class = QueryClass(semantic_response.interpretation.query_class)
+            follow_ups = suggest_follow_ups(query_class)
+            return answer_composer.compose(semantic_response, grounded_notes, grounded_citations, follow_ups)
 
         interpreted = query_interpreter.interpret(question)
         response = analytics_service.answer_route(question, interpreted.route)
