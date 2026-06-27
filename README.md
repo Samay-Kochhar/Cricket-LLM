@@ -66,13 +66,26 @@ python ingestion/app/profile_dataset.py
 This creates `data/odi_analytics.duckdb` (gitignored) and refreshes
 `docs/data-profile.md`.
 
-### 5. Run the backend (terminal 1)
+### 5. Run both services
+
+The launcher works from a normal shell as long as the named Conda environment
+exists; it starts and stops the backend and frontend together:
+
 ```powershell
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+python scripts/run_local.py
+```
+
+Open `http://localhost:3000`. Health check: `http://localhost:8000/health`.
+
+To run the services separately, use the following commands.
+
+### 6. Run the backend (terminal 1)
+```powershell
+conda run --no-capture-output -n odi-analyst-workbench python -m uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
 ```
 Health check: open `http://localhost:8000/health`.
 
-### 6. Run the frontend (terminal 2)
+### 7. Run the frontend (terminal 2)
 ```powershell
 cd frontend
 npm run dev
@@ -87,10 +100,8 @@ conda activate odi-analyst-workbench
 cd frontend; npm install; cd ..
 python ingestion/app/load_odi_csv.py
 python ingestion/app/profile_dataset.py
-# terminal 1:
-uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
-# terminal 2:
-cd frontend; npm run dev
+# both services:
+python scripts/run_local.py
 ```
 
 ---
@@ -140,6 +151,14 @@ Template: [`.env.example`](.env.example).
 ---
 
 ## Verification
+
+Issue-resolution contracts:
+```powershell
+python scripts/verify_issues.py
+python scripts/verify_issues.py --issue 03 --issue 06
+python scripts/verify_issues.py --full
+python scripts/verify_issues.py --frontend
+```
 
 Backend and ingestion:
 ```powershell

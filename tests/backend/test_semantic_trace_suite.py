@@ -22,10 +22,10 @@ TRACE_CASES = [
         "question": "Which length dismisses David Miller most often?",
         "operation": "aggregate",
         "entity": "bowler",
-        "metric": "wickets",
+        "metric": "wickets_taken",
         "group_by": ["length"],
         "filters": {"batter": "David Miller"},
-        "columns": {"length", "wickets", "balls"},
+        "columns": {"length", "wickets_taken", "balls"},
     },
     {
         "question": "Against which bowling type does Heinrich Klaasen score fastest?",
@@ -41,10 +41,20 @@ TRACE_CASES = [
         "question": "Which line generates the most dot balls against Virat Kohli?",
         "operation": "aggregate",
         "entity": "bowler",
-        "metric": "dot_ball_percentage",
+        "metric": "bowler_dot_ball_percentage",
         "group_by": ["line"],
         "filters": {"batter": "Virat Kohli"},
-        "columns": {"line", "dot_ball_percentage", "dot_balls", "balls"},
+        "columns": {"line", "bowler_dot_ball_percentage", "bowler_dot_balls", "balls"},
+    },
+    {
+        "question": "What is dot ball percentage of Virat Kohli?",
+        "operation": "aggregate",
+        "entity": "batter",
+        "metric": "batter_dot_ball_percentage",
+        "group_by": ["batter"],
+        "filters": {"batter": "Virat Kohli"},
+        "columns": {"batter", "batter_dot_ball_percentage", "dot_balls", "balls"},
+        "must_not_columns": {"bowler"},
     },
     {
         "question": "What shot does Jos Buttler score most runs from?",
@@ -121,3 +131,62 @@ def test_legacy_yorker_percentage_leaderboard_uses_percentage_metric() -> None:
     assert table.columns[-1] == "Yorker Percentage"
     assert table.rows[0][-1] != table.rows[0][7]
     assert "%" in response.summaries[0].body
+
+
+def test_semantic_v2_answers_compound_batter_profile_question() -> None:
+    config = AppConfig.from_env()
+    service = SemanticAnalyticsService(
+        repository=AnalyticsRepository(config.duckdb_path),
+        gemini_client=FakeGeminiClient(),
+        app_env="development",
+    )
+
+    response = service.answer_question("Where does Hardik Pandya score the most and on which shots?")
+
+    assert response.status.value == "supported"
+    assert response.interpretation.filters["semantic_operation"] == "batting_profile"
+    assert response.interpretation.entities == ["Hardik Pandya"]
+    assert [table.title for table in response.tables[:2]] == [
+        "Hardik Pandya scoring areas",
+        "Hardik Pandya scoring shots",
+    ]
+    assert response.tables[0].rows[0][0] == "Long Off"
+    assert response.tables[1].rows[0][0] == "on drive"
+    assert response.visuals is not None
+    assert response.visuals.shot_profile is not None
+    assert response.visuals.field_zones is not None
+
+
+def test_semantic_v2_short_ball_weakness_preserves_filter_and_year_mode() -> None:
+    config = AppConfig.from_env()
+    service = SemanticAnalyticsService(
+        repository=AnalyticsRepository(config.duckdb_path),
+        gemini_client=FakeGeminiClient(),
+        app_env="development",
+    )
+
+    response = service.answer_question("Does Shreyas Iyer still struggle against the short ball after 2023?")
+
+    assert response.status.value == "supported"
+    filters = response.interpretation.filters
+    assert filters["batter"] == "Shreyas Iyer"
+    assert filters["length"] == "short"
+    assert filters["years"] == [2023]
+    assert filters["year_mode"] == "after"
+    assert "short balls since 2023" in response.summaries[0].body
+
+
+def test_semantic_v2_batting_position_comparison_stays_supported() -> None:
+    config = AppConfig.from_env()
+    service = SemanticAnalyticsService(
+        repository=AnalyticsRepository(config.duckdb_path),
+        gemini_client=FakeGeminiClient(),
+        app_env="development",
+    )
+
+    response = service.answer_question("Compare Virat Kohli at number 3 vs opening in ODIs")
+
+    assert response.status.value == "supported"
+    assert response.interpretation.filters["semantic_operation"] == "batting_position_compare"
+    assert response.tables[0].title == "Derived batting-position metrics"
+    assert [row[0] for row in response.tables[0].rows] == ["No. 3", "Opening"]

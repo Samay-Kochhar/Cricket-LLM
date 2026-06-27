@@ -59,7 +59,7 @@ class SemanticQueryPlanner:
             return PlannerResult(plan=None, validation=validation, used_gemini=self.gemini_client.is_configured())
 
         fallback = self._fallback_plan(question)
-        normalized = normalize_plan(fallback)
+        normalized = self._normalize_and_resolve_players(fallback, question)
         validation = validate_plan(normalized, question)
         trace.parsed_json_plan = fallback.model_dump(mode="json")
         trace.normalized_plan = normalized.model_dump(mode="json")
@@ -94,7 +94,7 @@ class SemanticQueryPlanner:
                 validation=ValidationResult(valid=False, errors=[f"Plan schema validation failed: {exc}"]),
                 used_gemini=True,
             )
-        normalized = normalize_plan(plan)
+        normalized = self._normalize_and_resolve_players(plan, question)
         validation = validate_plan(normalized, question)
         trace.normalized_plan = normalized.model_dump(mode="json")
         trace.validation_result = validation.model_dump(mode="json")
@@ -124,7 +124,7 @@ class SemanticQueryPlanner:
         if not isinstance(payload, dict):
             return PlannerResult(plan=invalid_plan, validation=validation, used_gemini=True)
         try:
-            repaired = normalize_plan(CricketQueryPlan.model_validate(payload))
+            repaired = self._normalize_and_resolve_players(CricketQueryPlan.model_validate(payload), question)
         except ValidationError:
             return PlannerResult(plan=invalid_plan, validation=validation, used_gemini=True)
         repaired_validation = validate_plan(repaired, question)
@@ -133,6 +133,77 @@ class SemanticQueryPlanner:
         trace.validation_result = repaired_validation.model_dump(mode="json")
         trace.operation_type = repaired.operation
         return PlannerResult(plan=repaired, validation=repaired_validation, used_gemini=True)
+
+    def _normalize_and_resolve_players(self, plan: CricketQueryPlan, question: str) -> CricketQueryPlan:
+        normalized = normalize_plan(plan)
+        filters = dict(normalized.filters)
+
+        for key in ("batter", "bowler", "player"):
+            value = filters.get(key)
+            if not isinstance(value, str):
+                continue
+            resolution = resolve_player_name(value, self.available_players)
+            if resolution.canonical_name:
+                filters[key] = resolution.canonical_name
+
+        compare_players = filters.get("compare_players")
+        if isinstance(compare_players, list):
+            resolved_players: list[object] = []
+            for value in compare_players:
+                if not isinstance(value, str):
+                    resolved_players.append(value)
+                    continue
+                resolution = resolve_player_name(value, self.available_players)
+                resolved_players.append(resolution.canonical_name or value)
+            filters["compare_players"] = resolved_players
+
+        normalized = normalized.model_copy(update={"filters": filters})
+        return self._apply_question_guardrails(normalized, question)
+
+    @staticmethod
+    def _apply_question_guardrails(plan: CricketQueryPlan, question: str) -> CricketQueryPlan:
+        lowered = question.lower()
+        filters = dict(plan.filters)
+        compare_players = filters.get("compare_players")
+        has_comparison_pair = isinstance(compare_players, list) and len(compare_players) >= 2
+        leaderboard_wording = (
+            any(prefix in lowered for prefix in ("who has", "which batter", "which bowler", "which player"))
+            and any(
+                token in lowered
+                for token in ("best", "worst", "highest", "lowest", "most", "least", "fewest")
+            )
+        )
+
+        operation = plan.operation
+        group_by = plan.group_by
+        if operation == "player_compare" and leaderboard_wording and not has_comparison_pair:
+            operation = "aggregate"
+            group_by = [plan.entity] if plan.entity in {"batter", "bowler", "team"} else group_by
+            filters.pop("compare_players", None)
+            filters.pop("comparison_metrics", None)
+
+        minimum_sample = plan.minimum_sample or MinimumSampleSpec()
+        explicit_minimum = re.search(
+            r"\b(?:minimum|min\.?|at least)\s+\d{1,7}\s+(?:legal balls|balls|deliveries|innings)\b",
+            lowered,
+        )
+        if not explicit_minimum and plan.metric in METRICS:
+            defaults = METRICS[plan.metric].minimum_sample
+            minimum_sample = MinimumSampleSpec(
+                balls=max(minimum_sample.balls or 0, defaults.balls or 0) or None,
+                legal_balls=max(minimum_sample.legal_balls or 0, defaults.legal_balls or 0) or None,
+                innings=max(minimum_sample.innings or 0, defaults.innings or 0) or None,
+            )
+
+        return plan.model_copy(
+            update={
+                "operation": operation,
+                "group_by": group_by,
+                "filters": filters,
+                "minimum_sample": minimum_sample,
+                "minimum_sample_explicit": plan.minimum_sample_explicit or bool(explicit_minimum),
+            }
+        )
 
     def _planner_prompt(self, question: str) -> str:
         schema = CricketQueryPlan.model_json_schema()
@@ -174,7 +245,7 @@ class SemanticQueryPlanner:
                 entity = "batter"
             group_by = [entity]
             filters["compare_players"] = compare_players
-            comparison_metrics = self._infer_comparison_metrics(lowered, metric)
+            comparison_metrics = self._infer_comparison_metrics(lowered, metric, entity)
             if comparison_metrics:
                 filters["comparison_metrics"] = comparison_metrics
                 metric = comparison_metrics[0]
@@ -192,6 +263,16 @@ class SemanticQueryPlanner:
         split_by, compare_values = self._infer_split(lowered, filters)
         event, window = self._infer_event(lowered, filters)
         default_sort = METRICS.get(metric).default_sort if metric in METRICS else "desc"
+        if (
+            metric == "runs_scored"
+            and "which length" in lowered
+            and any(token in lowered for token in ("best", "effective", "against"))
+        ):
+            entity = "batter"
+            metric = "batting_strike_rate"
+            default_sort = "asc"
+        if "worst" in lowered and metric == "bowling_average":
+            default_sort = "desc"
         if any(token in lowered for token in ("fewest", "lowest", "least")) and metric in {
             "boundary_rate_per_100_balls",
             "boundary_percentage",
@@ -244,7 +325,11 @@ class SemanticQueryPlanner:
             entity = "bowler"
             if group_by == ["batter"]:
                 group_by = ["bowler"]
-        if operation == "aggregate" and self._is_direct_player_metric_question(lowered, filters):
+        if (
+            operation == "aggregate"
+            and (not group_by or group_by == [entity])
+            and self._is_direct_player_metric_question(lowered, filters)
+        ):
             if "batter" in filters and "bowler" not in filters:
                 entity = "batter"
                 group_by = ["batter"]
@@ -269,6 +354,7 @@ class SemanticQueryPlanner:
             sort=SortSpec(by=metric, direction=default_sort),
             limit=requested_limit,
             minimum_sample=minimum_sample,
+            minimum_sample_explicit=requested_minimum_sample is not None,
             question_subject=self._question_subject(lowered),
             explanation_intent="deterministic semantic fallback",
             confidence=0.55,
@@ -381,6 +467,8 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_metric(lowered: str) -> str:
+        if "average" in lowered or re.search(r"\bavg\b", lowered):
+            return "bowling_average" if "bowler" in lowered or "bowling" in lowered else "batting_average"
         if "dismissal count" in lowered or "dismissals" in lowered:
             return "dismissals"
         if "overs bowled" in lowered or "bowled the most overs" in lowered or "most overs" in lowered:
@@ -477,7 +565,7 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_entity(lowered: str, metric: str) -> str:
-        if metric in {"economy_rate", "wickets_per_over", "wickets_taken", "bowler_dot_ball_percentage", "false_shots_per_over", "yorker_percentage", "yorker_count"}:
+        if metric in {"economy_rate", "bowling_average", "wickets_per_over", "wickets_taken", "bowler_dot_ball_percentage", "false_shots_per_over", "yorker_percentage", "yorker_count"}:
             return "bowler"
         if "which length" in lowered or "which line" in lowered:
             return "bowler"
@@ -554,7 +642,7 @@ class SemanticQueryPlanner:
         player = self._extract_player(question)
         if player:
             metric_owner = METRICS[metric].owner if metric in METRICS else ""
-            if ("which bowler" in lowered or lowered.startswith("who ")) and any(token in lowered for token in ("dismissed", "dismisses", "controls")):
+            if ("which bowler" in lowered or lowered.startswith("who ")) and any(token in lowered for token in ("dismissed", "dismisses", "controls", "against")):
                 filters["batter"] = player
             elif ("which length" in lowered or "which line" in lowered) and any(token in lowered for token in ("dismiss", "against", "to ")):
                 filters["batter"] = player
@@ -602,8 +690,12 @@ class SemanticQueryPlanner:
             filters["bowling_style"] = "leg_spin"
         elif "finger spin" in lowered:
             filters["bowling_style"] = "finger_spin"
+        elif "off spin" in lowered or "off-spin" in lowered or "off spinner" in lowered:
+            filters["bowling_style"] = "off_spin"
         elif "left-arm pace" in lowered or "left arm pace" in lowered:
             filters["bowling_style"] = "left_arm_pace"
+        elif "left-arm spin" in lowered or "left arm spin" in lowered:
+            filters["bowling_style"] = "left_arm_spin"
         if "left-handers" in lowered or "left handers" in lowered or "left-hand batters" in lowered:
             filters["batter_hand"] = "LHB"
         elif "right-handers" in lowered or "right handers" in lowered or "right-hand batters" in lowered:
@@ -682,6 +774,8 @@ class SemanticQueryPlanner:
             "lords": "Lord's, London",
             "mcg": "Melbourne Cricket Ground",
             "melbourne cricket ground": "Melbourne Cricket Ground",
+            "the oval": "Kennington Oval, London",
+            "kennington oval": "Kennington Oval, London",
         }
         for alias, venue in aliases.items():
             if alias in lowered:
@@ -740,8 +834,6 @@ class SemanticQueryPlanner:
             return "Opposition-wise splits are understood, but Semantic V2 does not have a tested opposition capability yet."
         if "record against" in lowered:
             return "Head-to-head opposition records are not implemented in Semantic V2 yet."
-        if "best average" in lowered:
-            return "Batting average is not a production-ready Semantic V2 metric yet."
         return None
 
     def _infer_match_fact_filters(self, lowered: str) -> dict[str, object]:
@@ -858,7 +950,7 @@ class SemanticQueryPlanner:
         return found
 
     @staticmethod
-    def _infer_comparison_metrics(lowered: str, primary_metric: str) -> list[str]:
+    def _infer_comparison_metrics(lowered: str, primary_metric: str, entity: str) -> list[str]:
         metrics: list[str] = []
         if "wicket rate" in lowered or "wickets per over" in lowered:
             metrics.append("wickets_per_over")
@@ -869,7 +961,11 @@ class SemanticQueryPlanner:
         if "strike rate" in lowered or "scores faster" in lowered:
             metrics.append("batting_strike_rate")
         if not metrics:
-            metrics.append(primary_metric if primary_metric != "runs_scored" else "batting_strike_rate")
+            metrics.extend(
+                ["economy_rate", "bowling_average", "wickets_taken", "bowler_dot_ball_percentage", "boundary_percentage"]
+                if entity == "bowler"
+                else ["batting_strike_rate", "runs_scored", "batting_average", "batter_dot_ball_percentage", "boundary_percentage"]
+            )
         deduped: list[str] = []
         for metric in metrics:
             if metric not in deduped:

@@ -234,7 +234,7 @@
   expected_metric: control_percentage
   expected_group_by: [team]
 - question: "Which bowler dismisses left-handers most often?"
-  expected_operation: aggregate
+  expected_operation: matchup
   expected_entity: bowler
   expected_metric: wickets
   expected_group_by: [bowler]

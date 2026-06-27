@@ -3,15 +3,19 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from backend.app.cricket_analytics.cricket_definitions import (
+    BOWLER_WICKET_PREDICATE,
+    LEGAL_BALL_PREDICATE,
+    phase_case_expression,
+    phase_filter_clause,
+)
+from backend.app.cricket_analytics.metric_registry import metric_sql_expression
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, QueryBuildResult
 
 
-LEGAL_BALL = "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 AND COALESCE(TRY_CAST(noball AS INTEGER), 0) = 0"
-BOWLER_WICKET = (
-    "LOWER(CAST(dismissal AS VARCHAR)) IN "
-    "('caught', 'bowled', 'leg before wicket', 'stumped', 'hit wicket', 'caught and bowled')"
-)
+LEGAL_BALL = LEGAL_BALL_PREDICATE
+BOWLER_WICKET = BOWLER_WICKET_PREDICATE
 
 
 @dataclass(frozen=True, slots=True)
@@ -35,8 +39,7 @@ DIMENSION_SQL: dict[str, DimensionSql] = {
     "venue": DimensionSql("ground", "venue", "ground"),
     "innings": DimensionSql("inns", "innings", "inns"),
     "phase": DimensionSql(
-        "CASE WHEN TRY_CAST(over AS DOUBLE) <= 10 THEN 'powerplay' "
-        "WHEN TRY_CAST(over AS DOUBLE) <= 40 THEN 'middle' ELSE 'death' END",
+        phase_case_expression(),
         "phase",
         "over",
     ),
@@ -64,22 +67,10 @@ DIMENSION_SQL: dict[str, DimensionSql] = {
 }
 
 
-METRIC_SQL = {
-    "runs_scored": "runs_scored",
-    "balls_faced": "balls_faced",
-    "batting_strike_rate": "runs_scored / NULLIF(balls_faced, 0) * 100.0",
+NON_MIGRATED_METRIC_SQL = {
     "run_rate": "runs_scored / NULLIF(legal_balls / 6.0, 0)",
-    "wickets": "wickets",
-    "economy_rate": "runs_conceded / NULLIF(legal_balls / 6.0, 0)",
-    "dot_ball_percentage": "dot_balls / NULLIF(sample_balls, 0) * 100.0",
-    "boundary_percentage": "boundary_balls / NULLIF(sample_balls, 0) * 100.0",
-    "false_shot_percentage": "false_shots / NULLIF(sample_balls, 0) * 100.0",
-    "false_shots_per_over": "false_shots / NULLIF(legal_balls / 6.0, 0)",
-    "yorker_percentage": "yorker_balls / NULLIF(legal_balls, 0) * 100.0",
     "control_percentage": "controlled_balls / NULLIF(sample_balls, 0) * 100.0",
     "dismissal_rate": "dismissals / NULLIF(sample_balls, 0) * 100.0",
-    "boundary_rate_per_100_balls": "boundary_balls / NULLIF(sample_balls, 0) * 100.0",
-    "wickets_per_over": "wickets / NULLIF(legal_balls / 6.0, 0)",
     "wicket_opportunity_rate": "(wickets + false_shots) / NULLIF(legal_balls, 0) * 100.0",
 }
 
@@ -93,16 +84,18 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
 
     where_clauses = ["1 = 1"]
     params: list[Any] = []
-    for clause, clause_params in _filter_clauses(plan.filters):
+    for clause, clause_params in _filter_clauses(plan.filters, entity=plan.entity):
         where_clauses.append(clause)
         params.extend(clause_params)
     for definition in dimension_defs:
         if definition.not_null_expression:
             where_clauses.append(f"NULLIF(TRIM(CAST({definition.not_null_expression} AS VARCHAR)), '') IS NOT NULL")
 
-    metric_expression = METRIC_SQL[plan.metric]
-    if plan.metric == "boundary_rate_per_100_balls" and plan.entity == "bowler":
-        metric_expression = "boundary_balls / NULLIF(legal_balls, 0) * 100.0"
+    metric_expression = NON_MIGRATED_METRIC_SQL.get(plan.metric) or metric_sql_expression(
+        plan.metric,
+        entity=plan.entity,
+        filters=plan.filters,
+    )
     sort = plan.sort
     direction = sort.direction.upper() if sort else METRICS[plan.metric].default_sort.upper()
     sort_expression = plan.metric if not sort or sort.by == plan.metric else sort.by
@@ -139,6 +132,7 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
                 SUM(CASE WHEN {BOWLER_WICKET} THEN 1 ELSE 0 END) AS wickets,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
+                SUM(CASE WHEN {LEGAL_BALL} AND TRY_CAST(bowlruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS bowler_dot_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(control AS DOUBLE) = 0 THEN 1 ELSE 0 END) AS false_shots,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(control AS DOUBLE) = 1 THEN 1 ELSE 0 END) AS controlled_balls,
@@ -159,6 +153,7 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
               wickets,
               dismissals,
               dot_balls,
+              bowler_dot_balls,
               boundary_balls,
               false_shots,
               yorker_balls,
@@ -181,6 +176,7 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
         "wickets",
         "dismissals",
         "dot_balls",
+        "bowler_dot_balls",
         "boundary_balls",
         "false_shots",
         "yorker_balls",
@@ -197,7 +193,7 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
     )
 
 
-def _filter_clauses(filters: dict[str, object]) -> list[tuple[str, list[Any]]]:
+def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> list[tuple[str, list[Any]]]:
     clauses: list[tuple[str, list[Any]]] = []
     for key, value in filters.items():
         if value is None:
@@ -213,12 +209,9 @@ def _filter_clauses(filters: dict[str, object]) -> list[tuple[str, list[Any]]]:
         elif key == "bowling_team":
             clauses.append(("team_bowl = ?", [value]))
         elif key == "phase":
-            if value == "powerplay":
-                clauses.append(("TRY_CAST(over AS DOUBLE) <= ?", [10.0]))
-            elif value == "middle":
-                clauses.append(("TRY_CAST(over AS DOUBLE) > ? AND TRY_CAST(over AS DOUBLE) <= ?", [10.0, 40.0]))
-            elif value == "death":
-                clauses.append(("TRY_CAST(over AS DOUBLE) > ?", [40.0]))
+            clause, params = phase_filter_clause(str(value))
+            if clause:
+                clauses.append((clause, params))
         elif key == "over_range" and isinstance(value, list) and value:
             start = int(value[0])
             end = int(value[-1])
@@ -235,13 +228,24 @@ def _filter_clauses(filters: dict[str, object]) -> list[tuple[str, list[Any]]]:
             clauses.append(("bat_hand = ?", [value]))
         elif key == "venue":
             clauses.append(("ground = ?", [value]))
+        elif key == "opposition":
+            if entity == "bowler" or ("bowler" in filters and "batter" not in filters):
+                clauses.append(("team_bat = ?", [value]))
+            else:
+                clauses.append(("team_bowl = ?", [value]))
         elif key == "innings":
             clauses.append(("inns = ?", [value]))
         elif key == "field_zone":
             clauses.append((_field_zone_clause(str(value)), []))
         elif key == "years" and isinstance(value, list) and value:
-            placeholders = ", ".join("?" for _ in value)
-            clauses.append((f"TRY_CAST(year AS INTEGER) IN ({placeholders})", list(value)))
+            year_mode = filters.get("year_mode")
+            if year_mode == "after":
+                clauses.append(("TRY_CAST(year AS INTEGER) >= ?", [min(int(year) for year in value)]))
+            elif year_mode == "before":
+                clauses.append(("TRY_CAST(year AS INTEGER) <= ?", [max(int(year) for year in value)]))
+            else:
+                placeholders = ", ".join("?" for _ in value)
+                clauses.append((f"TRY_CAST(year AS INTEGER) IN ({placeholders})", list(value)))
         elif key == "competition":
             clauses.append(("competition = ?", [value]))
     return clauses
@@ -254,10 +258,14 @@ def _bowling_style_clause(value: str) -> tuple[str, list[Any]]:
         return ("bowl_kind = ?", ["spin bowler"])
     if value == "left_arm_pace":
         return ("bowl_style IN ('LF', 'LFM', 'LMF', 'LM')", [])
+    if value == "left_arm_spin":
+        return ("bowl_style IN ('SLA', 'LWS')", [])
     if value == "leg_spin" or value == "wrist_spin":
         return ("bowl_style IN ('LBG', 'LB', 'LWS')", [])
     if value == "finger_spin":
         return ("bowl_style IN ('OB', 'SLA', 'SLO', 'RMF')", [])
+    if value == "off_spin":
+        return ("bowl_style = 'OB'", [])
     return ("bowl_style = ?", [value])
 
 

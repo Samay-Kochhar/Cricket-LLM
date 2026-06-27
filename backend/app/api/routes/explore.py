@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from backend.app.bootstrap import get_services
+from backend.app.domain.evidence_models import VisualPayload
 from backend.app.services.player_resolution import resolve_player_name
 
 
@@ -25,7 +26,11 @@ def player_profile(player_name: str, services=Depends(get_services)):
     repo = services["repository"]
     resolved = resolve_player_name(player_name, repo.list_player_names())
     canonical_name = resolved.canonical_name or player_name
-    visuals, coverage_notes = services["analytics_service"]._build_batter_visuals(canonical_name)
+    analytics_service = services.get("analytics_service")
+    if analytics_service is not None:
+        visuals, coverage_notes = analytics_service._build_batter_visuals(canonical_name)
+    else:
+        visuals, coverage_notes = VisualPayload(), []
     return {
         "player_name": canonical_name,
         "summary": repo.get_player_batting_summary(canonical_name),

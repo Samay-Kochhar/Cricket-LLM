@@ -72,6 +72,18 @@ def test_query_router_preserves_balls_faced_metric() -> None:
     assert route.filters["metric"] == "balls_faced"
 
 
+def test_query_router_treats_named_dot_percentage_as_batting_metric() -> None:
+    router = QueryRouter(["Virat Kohli"])
+
+    route = router.route("what is dot ball percentage of Virat Kohli?")
+
+    assert route.query_class == QueryClass.role_comparison
+    assert route.entities == ("Virat Kohli",)
+    assert route.filters["subject"] == "batter"
+    assert route.filters["skill"] == "batting"
+    assert route.filters["metric"] == "dot_percentage"
+
+
 def test_query_router_detects_named_best_bowling_figures() -> None:
     router = QueryRouter(["Tim Southee"])
 

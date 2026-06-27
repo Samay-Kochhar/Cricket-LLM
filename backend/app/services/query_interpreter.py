@@ -64,7 +64,7 @@ class QueryInterpreter:
             '  "query_type": "single_metric" | "leaderboard" | "comparison" | "trend" | "match_fact" | "tactical_plan" | "strengths_weaknesses" | "conversation",\n'
             '  "answer_shape": "single_number" | "short_fact" | "leaderboard" | "comparison_table" | "trend_chart" | "scouting_report" | "tactical_plan" | "insufficient_data",\n'
             '  "query_class": "role_comparison" | "strengths_weaknesses" | "head_to_head_matchup" | "venue_context_leaderboard" | "trend_progression",\n'
-            '  "metric": "balls_bowled" | "overs_bowled" | "balls_faced" | "runs_scored" | "runs_conceded" | "wickets_taken" | "economy_rate" | "best_bowling_figures" | "balls_per_wicket" | "balls_per_boundary" | "dot_balls" | "bowler_dot_balls" | "boundaries" | "boundaries_conceded" | "boundaries_per_over" | "boundaries_per_100_balls" | "catches_taken" | "dismissals" | "batting_strike_rate" | "strike_rate_improvement_after_20" | "milestone_vulnerability_lift" | "batting_average" | "boundary_percentage" | "strike_rotation_percentage" | "false_shot_percentage" | "false_shots_per_over" | "yorker_count" | "yorker_percentage" | "yorker_success_rate" | "extras_rate" | "player_of_match",\n'
+            '  "metric": "balls_bowled" | "overs_bowled" | "balls_faced" | "runs_scored" | "runs_conceded" | "wickets_taken" | "economy_rate" | "best_bowling_figures" | "balls_per_wicket" | "balls_per_boundary" | "dot_balls" | "bowler_dot_balls" | "dot_percentage" | "bowler_dot_percentage" | "boundaries" | "boundaries_conceded" | "boundaries_per_over" | "boundaries_per_100_balls" | "catches_taken" | "dismissals" | "batting_strike_rate" | "strike_rate_improvement_after_20" | "milestone_vulnerability_lift" | "batting_average" | "boundary_percentage" | "strike_rotation_percentage" | "false_shot_percentage" | "false_shots_per_over" | "yorker_count" | "yorker_percentage" | "yorker_success_rate" | "extras_rate" | "player_of_match",\n'
             '  "subjects": [{"player": "canonical or raw player name", "team": "team if relevant", "role": "batter" | "bowler" | "fielder" | "player" | "team"}],\n'
             '  "context": {\n'
             '    "scope": "career" | "season" | "competition" | "single_match" | "phase" | "venue" | "matchup",\n'
@@ -128,6 +128,7 @@ class QueryInterpreter:
             "- For Player of the Match, Man of the Match, or POTM questions, set external_fact to player_of_match and stage to final when final is mentioned.\n"
             "- Preserve the literal metric asked by the user. If they ask balls bowled, metric must be balls_bowled, not economy_rate.\n"
             "- If they ask balls faced, metric must be balls_faced and role batter.\n"
+            "- If they ask a named batter's dot-ball percentage, use metric dot_percentage and role batter; do not turn it into a bowler leaderboard.\n"
             "- If they ask about a final, semi-final, or named match, use context.scope single_match and preserve stage/teams/year/competition when present.\n"
             "- If a literal interpretation may be cricket-ambiguous, keep the literal metric and add ambiguity.possible_alternate_metric.\n"
             "- If the question is just normal conversation, still return the best query_class and leave player_mentions empty.\n"
@@ -646,6 +647,7 @@ class QueryInterpreter:
             "yorker_count",
             "yorker_success_rate",
             "bowler_dot_balls",
+            "bowler_dot_percentage",
             "boundaries",
             "boundaries_conceded",
             "boundaries_per_over",

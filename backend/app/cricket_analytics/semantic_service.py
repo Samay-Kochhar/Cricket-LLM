@@ -121,9 +121,24 @@ class SemanticAnalyticsService:
             }
             detail = "The question was understood, but the returned data did not pass result validation."
             suggestions = result_validation.errors or ["Try a broader sample or a simpler aggregate question."]
-            if plan.minimum_sample and any("empty" in error.lower() for error in result_validation.errors):
+            empty_result = any("empty" in error.lower() for error in result_validation.errors)
+            has_minimum_sample = bool(
+                plan.minimum_sample
+                and any(
+                    value is not None
+                    for value in (
+                        plan.minimum_sample.balls,
+                        plan.minimum_sample.legal_balls,
+                        plan.minimum_sample.innings,
+                    )
+                )
+            )
+            if empty_result and has_minimum_sample:
                 detail = "No result met the requested minimum sample threshold in the available ODI data."
                 suggestions = ["Lower the minimum sample threshold or broaden the filters."]
+            elif empty_result:
+                detail = "No matching ODI records were found for the requested player and filters."
+                suggestions = ["Check the player name or broaden the filters."]
             return self._insufficient_response(
                 question=question,
                 plan=plan,
@@ -982,6 +997,9 @@ class SemanticAnalyticsService:
                 for key in ("batter", "bowler", "team")
                 if isinstance(plan.filters.get(key), str)
             ]
+            compare_players = plan.filters.get("compare_players")
+            if isinstance(compare_players, list):
+                entities.extend(str(player) for player in compare_players if isinstance(player, str))
         return QueryInterpretation(
             original_question=question,
             query_class=(
@@ -1010,8 +1028,7 @@ class SemanticAnalyticsService:
         columns = [
             *dimension_columns,
             plan.metric,
-            "balls",
-            "legal_balls",
+            *_metric_evidence_columns(plan.metric, plan.entity),
             "matches",
         ]
         table_rows: list[list[str | int | float | None]] = []
@@ -1042,13 +1059,21 @@ class SemanticAnalyticsService:
                 if top.get(column) is not None
             )
         scope = _summary_scope(plan, dimension_columns)
+        context = _summary_context(plan, scope)
         metric_value = _display_value(top.get(plan.metric))
         metric_unit = METRICS[plan.metric].unit
         metric_text = f"{metric_value}%" if metric_unit == "percent" and metric_value is not None else str(metric_value)
-        sample_key = "legal_balls" if METRICS[plan.metric].denominator == "legal_balls" else "balls"
+        denominator = METRICS[plan.metric].denominator
+        sample_key, sample_label = {
+            "legal_balls": ("legal_balls", "legal ball"),
+            "balls_faced": ("balls_faced", "ball"),
+            "balls": ("balls", "ball"),
+            "dismissals": ("dismissals", "dismissal"),
+            "wickets": ("wickets", "wicket"),
+        }.get(denominator, ("balls", "ball"))
         sample = top.get(sample_key) or top.get("balls") or top.get("legal_balls")
-        sample_label = "legal balls" if sample_key == "legal_balls" else "balls"
-        sample_text = f" from {sample} {sample_label}" if sample else ""
+        plural = "" if sample == 1 else "s"
+        sample_text = f" from {sample} {sample_label}{plural}" if sample else ""
         if plan.question_subject == "weakness_check" and dimension_columns:
             context_parts = []
             if plan.filters.get("length"):
@@ -1077,15 +1102,13 @@ class SemanticAnalyticsService:
             return SummaryBlock(
                 title="Semantic aggregate answer",
                 body=(
-                    f"Within the available ODI dataset, {scope}{subject}'s "
-                    f"{_label(plan.metric)} is {metric_text}{sample_text}."
+                    f"{context}{subject}'s {_label(plan.metric)} is {metric_text}{sample_text}."
                 ),
             )
         return SummaryBlock(
             title="Semantic aggregate answer",
             body=(
-                f"Within the available ODI dataset, {scope}{subject} ranks first for "
-                f"{_label(plan.metric)} at {metric_text}{sample_text}."
+                f"{context}{subject} ranks first for {_label(plan.metric)} at {metric_text}{sample_text}."
             ),
         )
 
@@ -1159,7 +1182,7 @@ class SemanticAnalyticsService:
             title="Semantic player comparison answer",
             body=(
                 f"Compared {players} on {metric_labels}. "
-                "Each metric is shown separately with its own sample size."
+                "The table includes the shared sample and formula inputs for verification."
             ),
         )
 
@@ -1304,6 +1327,72 @@ def _summary_scope(plan: CricketQueryPlan, dimension_columns: list[str]) -> str:
         if isinstance(value, str) and key not in dimension_columns:
             return f"for {value}, "
     return ""
+
+
+def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
+    contexts: list[str] = []
+    if scope:
+        contexts.append(scope.rstrip(" ,"))
+    phase_labels = {
+        "powerplay": "in powerplay overs",
+        "middle": "in middle overs",
+        "death": "in death overs",
+    }
+    phase = plan.filters.get("phase")
+    if isinstance(phase, str):
+        contexts.append(phase_labels.get(phase, f"in {phase.replace('_', ' ')}"))
+
+    style = plan.filters.get("bowling_style")
+    if isinstance(style, str):
+        contexts.append(f"against {style.replace('_', ' ')}")
+
+    opposition = plan.filters.get("opposition")
+    if isinstance(opposition, str):
+        contexts.append(f"against {opposition}")
+
+    venue = plan.filters.get("venue")
+    if isinstance(venue, str):
+        contexts.append(f"at {venue}")
+
+    length = plan.filters.get("length")
+    if isinstance(length, str):
+        contexts.append(f"against {length.replace('_', ' ').lower()} balls")
+
+    if plan.minimum_sample and plan.minimum_sample_explicit:
+        minimums = (
+            (plan.minimum_sample.legal_balls, "legal balls"),
+            (plan.minimum_sample.balls, "balls"),
+            (plan.minimum_sample.innings, "innings"),
+        )
+        for value, label in minimums:
+            if value is not None:
+                contexts.append(f"with a minimum sample of {value} {label}")
+
+    if not contexts:
+        return ""
+    text = ", ".join(contexts)
+    return f"{text[0].upper()}{text[1:]}, "
+
+
+def _metric_evidence_columns(metric: str, entity: str) -> list[str]:
+    columns_by_metric = {
+        "batting_strike_rate": ["runs_scored", "balls_faced"],
+        "batting_average": ["runs_scored", "dismissals"],
+        "bowling_average": ["runs_conceded", "wickets"],
+        "economy_rate": ["runs_conceded", "legal_balls"],
+        "batter_dot_ball_percentage": ["dot_balls", "balls_faced"],
+        "bowler_dot_ball_percentage": ["bowler_dot_balls", "legal_balls"],
+        "dot_ball_percentage": ["bowler_dot_balls", "legal_balls"]
+        if entity == "bowler"
+        else ["dot_balls", "balls_faced"],
+        "boundary_percentage": ["boundary_balls", "legal_balls" if entity == "bowler" else "balls_faced"],
+        "boundary_rate_per_100_balls": ["boundary_balls", "legal_balls" if entity == "bowler" else "balls_faced"],
+        "false_shot_percentage": ["false_shots", "balls_faced"],
+        "wickets_taken": ["wickets", "legal_balls"],
+        "wickets": ["wickets", "legal_balls"],
+        "yorker_percentage": ["yorker_balls", "legal_balls"],
+    }
+    return columns_by_metric.get(metric, ["legal_balls" if entity == "bowler" else "balls_faced"])
 
 
 def _display_dimension_value(value: object, column: str | None = None) -> str | int | float | None:

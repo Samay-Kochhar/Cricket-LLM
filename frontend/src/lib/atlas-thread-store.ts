@@ -24,6 +24,8 @@ type AtlasLaunchState = {
 const STORAGE_KEY = "cricatlas:atlas-threads";
 const ACTIVE_THREAD_KEY = "cricatlas:atlas-active-thread";
 const LAUNCH_KEY = "cricatlas:atlas-launch";
+const STORAGE_VERSION_KEY = "cricatlas:atlas-storage-version";
+const STORAGE_VERSION = "2026-06-25-shot-label-reset-v2";
 
 function nowIso() {
   return new Date().toISOString();
@@ -61,6 +63,7 @@ export function createAtlasMessage(
 }
 
 export function prepareAtlasLaunchState(): AtlasLaunchState {
+  resetStaleAtlasThreads();
   const restored = loadThreads().filter((thread) => thread.messages.length > 0);
   const activeThreadId = loadActiveThreadId();
 
@@ -91,6 +94,19 @@ export function prepareAtlasLaunchState(): AtlasLaunchState {
       ? activeThreadId
       : restored[0].id;
   return { threads: restored, activeThreadId: resolvedActiveId };
+}
+
+function resetStaleAtlasThreads(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  if (window.localStorage.getItem(STORAGE_VERSION_KEY) === STORAGE_VERSION) {
+    return;
+  }
+  window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(ACTIVE_THREAD_KEY);
+  window.sessionStorage.removeItem(LAUNCH_KEY);
+  window.localStorage.setItem(STORAGE_VERSION_KEY, STORAGE_VERSION);
 }
 
 export function loadThreads(): AtlasThread[] {

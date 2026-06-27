@@ -31,7 +31,7 @@ SPLIT_COMPARE_CASES = [
         "bowler",
         "economy_rate",
         "batter_hand",
-        ["LHB", "RHB"],
+        ["left-hand batter", "right-hand batter"],
         {"left_handers_value", "right_handers_value", "difference", "left_handers_sample", "right_handers_sample", "rank_value"},
     ),
     (

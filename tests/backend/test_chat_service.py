@@ -40,6 +40,14 @@ class TruncatingGeminiClient:
         return "Hardik Pandya's death over strike rate is 1"
 
 
+class UnavailableGeminiClient:
+    def is_configured(self) -> bool:
+        return True
+
+    def generate_text(self, prompt: str, prefer_complex: bool = False) -> str | None:
+        return None
+
+
 def fake_query_handler(question: str) -> QueryResponse:
     entities: list[str] = []
     if "Ravichandran Ashwin" in question:
@@ -187,6 +195,28 @@ def test_chat_service_includes_table_rows_in_numeric_analysis_message() -> None:
     assert "Primary batting metrics" in reply.message
     assert "Virat Kohli | 13950 | 15208 | 91.73" in reply.message
     assert "Steven Smith | 5674 | 6643 | 85.41" in reply.message
+
+
+def test_chat_service_coaching_prompt_does_not_query_database_leaderboard() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return leaderboard_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=UnavailableGeminiClient(),
+    )
+
+    reply = service.reply("Talk me through how to judge a batter's weakness against spin.", history=[])
+
+    assert reply.mode == "conversation"
+    assert seen_questions == []
+    assert "strike rate" in reply.message
+    assert "Virat Kohli ranks first" not in reply.message
+    assert "ODI database" not in reply.activity_trace
 
 
 def test_chat_service_contextualizes_player_follow_up() -> None:

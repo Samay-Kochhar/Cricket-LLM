@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from backend.app.cricket_analytics.ontology import METRICS
+from backend.app.cricket_analytics.metric_registry import canonical_metric_id
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec
 
 
@@ -86,8 +87,17 @@ VALUE_SYNONYMS = {
         "left-arm pace": "left_arm_pace",
         "leg spin": "leg_spin",
         "leg-spin": "leg_spin",
+        "legbreak": "leg_spin",
+        "leg break": "leg_spin",
+        "legbreak bowler": "leg_spin",
+        "leg spinner": "leg_spin",
+        "leg spinners": "leg_spin",
         "wrist spin": "wrist_spin",
         "finger spin": "finger_spin",
+        "off spin": "off_spin",
+        "off-spin": "off_spin",
+        "off spinner": "off_spin",
+        "off spinners": "off_spin",
         "pace": "pace",
         "spin": "spin",
     },
@@ -101,7 +111,7 @@ METRIC_SYNONYMS = {
     "runs": "runs_scored",
     "wickets_taken": "wickets",
     "dot_percentage": "dot_ball_percentage",
-    "bowler_dot_percentage": "dot_ball_percentage",
+    "bowler_dot_percentage": "bowler_dot_ball_percentage",
     "dots": "dot_ball_percentage",
     "boundaries": "boundary_percentage",
     "false_shots": "false_shot_percentage",
@@ -111,9 +121,10 @@ METRIC_SYNONYMS = {
 
 
 def normalize_plan(plan: CricketQueryPlan) -> CricketQueryPlan:
-    metric = METRIC_SYNONYMS.get(plan.metric, plan.metric)
     group_by = [_normalize_dimension(item) for item in plan.group_by]
     filters = _normalize_filters(plan.filters)
+    metric = METRIC_SYNONYMS.get(plan.metric, plan.metric)
+    metric = canonical_metric_id(metric, entity=plan.entity, filters=filters)
     minimum_sample = plan.minimum_sample
     if metric in METRICS:
         minimum_sample = (minimum_sample or MinimumSampleSpec()).merged_with_defaults(
@@ -124,7 +135,8 @@ def normalize_plan(plan: CricketQueryPlan) -> CricketQueryPlan:
     if sort is None and metric in METRICS:
         sort = SortSpec(by=metric, direction=METRICS[metric].default_sort)
     elif sort is not None:
-        sort = SortSpec(by=METRIC_SYNONYMS.get(sort.by, sort.by), direction=sort.direction)
+        sort_by = METRIC_SYNONYMS.get(sort.by, sort.by)
+        sort = SortSpec(by=canonical_metric_id(sort_by, entity=plan.entity, filters=filters), direction=sort.direction)
 
     limit = plan.limit if plan.limit and plan.limit > 0 else 10
     return plan.model_copy(

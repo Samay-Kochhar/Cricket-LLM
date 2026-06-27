@@ -52,7 +52,22 @@ function visibleMessageContent(message: AtlasMessage): string {
   return tableStart >= 0 ? message.content.slice(0, tableStart) : message.content;
 }
 
-function ChatTablePreview({ result }: { result: QueryResponse }) {
+function questionWithMinimumBalls(question: string, minimumBalls: number): string {
+  const withoutExistingThreshold = question
+    .replace(/\bminimum\s+\d+\s+(?:legal\s+balls|balls|deliveries)\b/gi, "")
+    .replace(/\s+([,?.!])/g, "$1")
+    .replace(/[,?.!\s]+$/, "")
+    .trim();
+  return `${withoutExistingThreshold}, minimum ${minimumBalls} balls`;
+}
+
+function ChatTablePreview({
+  result,
+  onMinimumBallsApply,
+}: {
+  result: QueryResponse;
+  onMinimumBallsApply: (minimumBalls: number) => Promise<void> | void;
+}) {
   if (!result.tables.length) {
     return null;
   }
@@ -60,20 +75,26 @@ function ChatTablePreview({ result }: { result: QueryResponse }) {
   return (
     <div className="chat-table-preview">
       {result.tables.slice(0, 4).map((table) => (
-        <ChatTableCard key={table.title} table={table} />
+        <ChatTableCard key={table.title} onMinimumBallsApply={onMinimumBallsApply} table={table} />
       ))}
     </div>
   );
 }
 
-function ChatTableCard({ table }: { table: TableBlock }) {
+function ChatTableCard({
+  table,
+  onMinimumBallsApply,
+}: {
+  table: TableBlock;
+  onMinimumBallsApply: (minimumBalls: number) => Promise<void> | void;
+}) {
   return (
     <section className="chat-table-card">
       <div className="panel-heading">
         <span className="eyebrow">ODI database</span>
         <h3 className="card-title">{table.title}</h3>
       </div>
-      <CompactDataTable table={table} />
+      <CompactDataTable onMinimumBallsApply={onMinimumBallsApply} table={table} />
     </section>
   );
 }
@@ -126,6 +147,31 @@ export function AppShell() {
   function handleSelectThread(threadId: string) {
     setActiveThreadId(threadId);
     saveActiveThreadId(threadId);
+    setExpandedEvidenceMessageId(null);
+    setInput("");
+  }
+
+  function handleDeleteThread(threadId: string) {
+    const remaining = threads.filter((thread) => thread.id !== threadId);
+    const nextThreads = remaining.length ? remaining : [createThread("New Atlas thread")];
+    const nextActiveId =
+      activeThreadId === threadId
+        ? nextThreads[0].id
+        : activeThreadId && nextThreads.some((thread) => thread.id === activeThreadId)
+          ? activeThreadId
+          : nextThreads[0].id;
+    updateThreads(nextThreads);
+    setActiveThreadId(nextActiveId);
+    saveActiveThreadId(nextActiveId);
+    setExpandedEvidenceMessageId(null);
+    setInput("");
+  }
+
+  function handleClearThreads() {
+    const fresh = createThread("New Atlas thread");
+    updateThreads([fresh]);
+    setActiveThreadId(fresh.id);
+    saveActiveThreadId(fresh.id);
     setExpandedEvidenceMessageId(null);
     setInput("");
   }
@@ -190,6 +236,35 @@ export function AppShell() {
       );
       saveActiveThreadId(finalThread.id);
     }
+  }
+
+  async function handleRefineMessage(
+    threadId: string,
+    messageId: string,
+    originalQuestion: string,
+    minimumBalls: number,
+  ) {
+    const refinedQuestion = questionWithMinimumBalls(originalQuestion, minimumBalls);
+    const reply = await sendMessage(refinedQuestion, [], { silent: true });
+
+    setThreads((currentThreads) => {
+      const nextThreads = currentThreads.map((thread) => {
+        if (thread.id !== threadId) {
+          return thread;
+        }
+        return {
+          ...thread,
+          updatedAt: new Date().toISOString(),
+          messages: thread.messages.map((message) =>
+            message.id === messageId
+              ? { ...message, content: reply.message, reply }
+              : message,
+          ),
+        };
+      });
+      saveThreads(nextThreads);
+      return nextThreads;
+    });
   }
 
   function handleComposerKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -261,12 +336,18 @@ export function AppShell() {
           <section className="panel rail-panel">
             <div className="panel-heading">
               <span className="eyebrow">History</span>
-              <button className="ghost-button" onClick={handleNewThread} type="button">
-                New
-              </button>
+              <div className="rail-actions">
+                <button className="ghost-button" onClick={handleClearThreads} type="button">
+                  Clear
+                </button>
+                <button className="ghost-button" onClick={handleNewThread} type="button">
+                  New
+                </button>
+              </div>
             </div>
             <SessionList
               activeSessionId={activeThreadId}
+              onDeleteSession={handleDeleteThread}
               onSelectSession={handleSelectThread}
               sessions={threads.map((thread) => ({
                 id: thread.id,
@@ -278,7 +359,7 @@ export function AppShell() {
           </section>
         </aside>
 
-        <section className="atlas-chat-main panel">
+        <section className={`atlas-chat-main panel ${activeThread?.messages.length ? "" : "is-empty"}`}>
           <div className="atlas-chat-header">
             <div>
               <span className="eyebrow">Atlas chat</span>
@@ -364,7 +445,20 @@ export function AppShell() {
 
                   {message.role === "assistant" && message.reply?.query_response ? (
                     <div className="chat-attachments">
-                      <ChatTablePreview result={message.reply.query_response} />
+                      <ChatTablePreview
+                        onMinimumBallsApply={async (minimumBalls) => {
+                          const question = message.reply?.query_response?.interpretation.original_question;
+                          if (question) {
+                            await handleRefineMessage(
+                              activeThread.id,
+                              message.id,
+                              question,
+                              minimumBalls,
+                            );
+                          }
+                        }}
+                        result={message.reply.query_response}
+                      />
                       <div className="chat-attachment-actions">
                         <button className="ghost-button" onClick={() => handleOpenWorkbench(message)} type="button">
                           Go to Workbench

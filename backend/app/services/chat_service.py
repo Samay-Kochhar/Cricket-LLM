@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel, Field
 
-from backend.app.domain.evidence_models import CitationSource, QueryResponse
+from backend.app.domain.evidence_models import CitationSource, EvidenceStatus, QueryInterpretation, QueryResponse
 from backend.app.services.follow_up_suggester import suggest_follow_ups
 from backend.app.services.gemini_client import GeminiClient
 from backend.app.services.query_classes import QueryClass
@@ -80,6 +80,40 @@ class ChatService:
         normalized_message = message.strip()
         contextual_message = self._contextualize_follow_up(normalized_message, history)
         resolution_note = None
+        if self._looks_like_coaching_prompt(normalized_message):
+            coaching_response = QueryResponse(
+                status=EvidenceStatus.unsupported,
+                interpretation=QueryInterpretation(
+                    original_question=normalized_message,
+                    query_class=QueryClass.strengths_weaknesses.value,
+                    entities=[],
+                    filters={"intent": "coaching_explanation"},
+                ),
+            )
+            conversational = (
+                self._general_conversation_reply(
+                    message=normalized_message,
+                    history=history,
+                    resolution_note=resolution_note,
+                    query_response=coaching_response,
+                )
+                if self.gemini_client.is_configured()
+                else self._offline_coaching_reply(normalized_message)
+            )
+            used_gemini = self.gemini_client.is_configured()
+            if conversational.startswith("I could not get the conversational model response"):
+                conversational = self._offline_coaching_reply(normalized_message)
+                used_gemini = False
+            return ChatReply(
+                mode="conversation",
+                message=conversational,
+                suggestions=[
+                    "Check a named batter's strike rate and false-shot percentage against spin.",
+                    "Compare the batter's spin numbers with their pace baseline.",
+                    "Inspect dismissal rate, dot percentage, and control percentage by bowling style.",
+                ],
+                activity_trace=["Gemini reasoning"] if used_gemini else [],
+            )
         query_response = self.query_handler(contextual_message)
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
@@ -96,7 +130,7 @@ class ChatService:
                 mode="analysis",
                 message=reply_text,
                 query_response=query_response,
-                suggestions=suggest_follow_ups(query_class),
+                suggestions=self._suggest_follow_ups(query_class, query_response),
                 resolved_input=resolved_input,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
@@ -112,7 +146,7 @@ class ChatService:
                 mode="analysis",
                 message=reply_text,
                 query_response=query_response,
-                suggestions=suggest_follow_ups(query_class),
+                suggestions=self._suggest_follow_ups(query_class, query_response),
                 resolved_input=resolved_input,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
@@ -129,7 +163,7 @@ class ChatService:
                 mode="conversation",
                 message=conversational,
                 query_response=query_response if entities else None,
-                suggestions=suggest_follow_ups(query_class) if entities else [],
+                suggestions=self._suggest_follow_ups(query_class, query_response) if entities else [],
                 resolved_input=None,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=self.gemini_client.is_configured()),
@@ -144,7 +178,7 @@ class ChatService:
             mode="analysis",
             message=fallback,
             query_response=query_response,
-            suggestions=suggest_follow_ups(query_class),
+            suggestions=self._suggest_follow_ups(query_class, query_response),
             resolved_input=resolved_input,
             resolution_note=resolution_note,
             activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
@@ -366,6 +400,37 @@ class ChatService:
         )
         return any(token in lowered for token in conversational_markers)
 
+    @staticmethod
+    def _looks_like_coaching_prompt(message: str) -> bool:
+        lowered = message.lower()
+        coaching_markers = (
+            "talk me through",
+            "how to judge",
+            "how do i judge",
+            "how should i judge",
+            "help me judge",
+            "teach me",
+            "what should i look for",
+            "walk me through",
+        )
+        return any(marker in lowered for marker in coaching_markers)
+
+    @staticmethod
+    def _offline_coaching_reply(message: str) -> str:
+        lowered = message.lower()
+        if "spin" in lowered:
+            return (
+                "To judge a batter's weakness against spin, compare their spin sample with their own pace baseline: "
+                "strike rate, dot-ball percentage, false-shot percentage, dismissal rate, and boundary percentage. "
+                "Then split by spin type if possible, because wrist spin and finger spin can expose different problems. "
+                "A real weakness usually shows up across more than one signal, not just one low-scoring innings."
+            )
+        return (
+            "Judge a batting weakness by comparing the filtered sample with the batter's normal baseline: scoring rate, "
+            "dot pressure, false shots, dismissals, boundary rate, and sample size. One metric can mislead; a good read "
+            "needs the same pattern across several signals."
+        )
+
     def _build_activity_trace(self, query_response: QueryResponse, used_gemini: bool) -> list[str]:
         trace = []
         if used_gemini:
@@ -375,3 +440,30 @@ class ChatService:
         if any(citation.source_type == CitationSource.external_web for citation in query_response.citations):
             trace.append("Web context")
         return trace
+
+    @staticmethod
+    def _suggest_follow_ups(query_class: QueryClass, query_response: QueryResponse) -> list[str]:
+        filters = query_response.interpretation.filters
+        operation = filters.get("semantic_operation")
+        if operation == "player_compare":
+            return [
+                "Compare the same players in powerplay, middle, and death overs.",
+                "Compare the same players against a specific team or bowling style.",
+            ]
+        if isinstance(filters.get("bowling_style"), str):
+            return [
+                "Compare this result with the player's overall ODI baseline.",
+                "Compare the player against pace, off spin, leg spin, and left-arm spin.",
+                "Break the result down by powerplay, middle, and death overs.",
+            ]
+        if "length" in filters.get("semantic_group_by", []):
+            return [
+                "Compare every length on strike rate, dot-ball percentage, and dismissals.",
+                "Break the length results down by powerplay, middle, and death overs.",
+            ]
+        if operation == "aggregate" and "venue" not in filters:
+            return [
+                "Adjust the minimum ball threshold and re-sort this result.",
+                "Break this result down by powerplay, middle, and death overs.",
+            ]
+        return suggest_follow_ups(query_class)

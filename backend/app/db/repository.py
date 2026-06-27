@@ -5,6 +5,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from backend.app.cricket_analytics.cricket_definitions import (
+    BOWLER_WICKET_PREDICATE,
+    LEGAL_BALL_PREDICATE,
+    phase_filter_clause,
+    public_label,
+)
 from backend.app.db.connection import get_connection
 from backend.app.services.player_resolution import normalize_name
 
@@ -90,27 +96,11 @@ class AnalyticsRepository:
 
     @staticmethod
     def _field_zone_label(field_zone: str) -> str:
-        labels = {
-            "midwicket": "mid-wicket",
-            "third_man": "third man",
-            "fine_leg": "fine leg",
-            "square_leg": "square leg",
-            "long_on": "long on",
-            "long_off": "long off",
-        }
-        return labels.get(field_zone, field_zone.replace("_", " "))
+        return str(public_label(field_zone))
 
     @staticmethod
     def _phase_clause(phase: str | None) -> tuple[str, list[Any]]:
-        if phase == "first6":
-            return " AND TRY_CAST(over AS DOUBLE) <= ?", [6.0]
-        if phase == "powerplay":
-            return " AND TRY_CAST(over AS DOUBLE) <= ?", [10.0]
-        if phase == "middle":
-            return " AND TRY_CAST(over AS DOUBLE) > ? AND TRY_CAST(over AS DOUBLE) <= ?", [10.0, 40.0]
-        if phase == "death":
-            return " AND TRY_CAST(over AS DOUBLE) > ?", [40.0]
-        return "", []
+        return phase_filter_clause(phase, prefix=" AND ")
 
     @staticmethod
     def _over_range_clause(over_range: list[int] | None) -> tuple[str, list[Any]]:
@@ -325,12 +315,12 @@ class AnalyticsRepository:
         row = self._fetchone(
             """
             SELECT
-              COUNT(*) AS balls_faced,
-              SUM(TRY_CAST(batruns AS INTEGER)) AS runs_scored,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
-              SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
-              SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
-              AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
+              SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END) AS balls_faced,
+              SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS runs_scored,
+              SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
+              SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
+              AVG(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(control AS DOUBLE) ELSE NULL END) AS avg_control
             FROM analytics.deliveries_v1
             """
             + where_clause,

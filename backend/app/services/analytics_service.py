@@ -32,7 +32,13 @@ from backend.app.domain.evidence_models import (
     ShotProfileBlock,
     ShotTypeMetric,
 )
-from backend.app.domain.intent_models import AnswerShape, ContextScope, CricketIntentPlan, CricketMetric, QueryType
+from backend.app.cricket_analytics.cricket_definitions import (
+    BOWLER_WICKET_PREDICATE,
+    LEGAL_BALL_PREDICATE,
+    phase_filter_clause,
+    public_label,
+)
+from backend.app.domain.intent_models import AnswerShape, ContextScope, CricketIntentPlan, CricketMetric, IntentSubject, MatchContext, QueryType, SubjectRole
 from backend.app.domain.metric_models import QueryClass
 from backend.app.services.metric_catalog import MetricCatalog
 from backend.app.services.query_router import QueryRoute, QueryRouter
@@ -59,6 +65,14 @@ class AnalyticsService:
 
     def answer_route(self, question: str, route: QueryRoute) -> QueryResponse:
         route = self._normalize_route_for_question(question, route)
+        inferred_single_metric = self._single_metric_plan_from_route(route)
+        if inferred_single_metric is not None:
+            route = QueryRoute(
+                query_class=route.query_class,
+                entities=route.entities,
+                filters=route.filters,
+                intent_plan=inferred_single_metric,
+            )
         filters = route.filters
         if route.intent_plan is not None:
             filters = {
@@ -83,6 +97,43 @@ class AnalyticsService:
             QueryClass.trend_progression: self._handle_trend,
         }
         return handler_map[route.query_class](interpretation, route)
+
+    @staticmethod
+    def _single_metric_plan_from_route(route: QueryRoute) -> CricketIntentPlan | None:
+        if route.intent_plan is not None:
+            return None
+        if route.filters.get("plan_type"):
+            return None
+        if len(route.entities) != 1 or route.filters.get("rank_intent") or route.filters.get("group_by"):
+            return None
+        metric = route.filters.get("metric")
+        if not isinstance(metric, str):
+            return None
+        try:
+            cricket_metric = CricketMetric(metric)
+        except ValueError:
+            return None
+        if cricket_metric not in {
+            CricketMetric.balls_faced,
+            CricketMetric.runs_scored,
+            CricketMetric.dot_balls,
+            CricketMetric.dot_percentage,
+            CricketMetric.boundaries,
+            CricketMetric.batting_strike_rate,
+            CricketMetric.batting_average,
+            CricketMetric.boundary_percentage,
+        }:
+            return None
+        if route.filters.get("subject") not in {None, "batter"}:
+            return None
+        phase = route.filters.get("phase") if isinstance(route.filters.get("phase"), str) else None
+        return CricketIntentPlan(
+            query_type=QueryType.single_metric,
+            answer_shape=AnswerShape.single_number,
+            metric=cricket_metric,
+            subjects=[IntentSubject(player=route.entities[0], role=SubjectRole.batter)],
+            context=MatchContext(scope=ContextScope.phase if phase else ContextScope.career, phase=phase),
+        )
 
     @staticmethod
     def _normalize_route_for_question(question: str, route: QueryRoute) -> QueryRoute:
@@ -181,10 +232,14 @@ class AnalyticsService:
                 CricketMetric.wickets_taken,
                 CricketMetric.dot_balls,
                 CricketMetric.bowler_dot_balls,
+                CricketMetric.dot_percentage,
+                CricketMetric.bowler_dot_percentage,
                 CricketMetric.boundaries,
                 CricketMetric.boundaries_conceded,
                 CricketMetric.economy_rate,
                 CricketMetric.batting_strike_rate,
+                CricketMetric.batting_average,
+                CricketMetric.boundary_percentage,
             }
         )
 
@@ -223,7 +278,14 @@ class AnalyticsService:
                 )
             return self._single_metric_match_response(interpretation, plan, row)
 
-        if plan.metric in {CricketMetric.balls_bowled, CricketMetric.overs_bowled, CricketMetric.runs_conceded, CricketMetric.wickets_taken}:
+        if plan.metric in {
+            CricketMetric.balls_bowled,
+            CricketMetric.overs_bowled,
+            CricketMetric.runs_conceded,
+            CricketMetric.wickets_taken,
+            CricketMetric.bowler_dot_balls,
+            CricketMetric.bowler_dot_percentage,
+        }:
             route = QueryRoute(
                 query_class=route.query_class,
                 entities=(player,),
@@ -243,15 +305,21 @@ class AnalyticsService:
             CricketMetric.balls_faced: "balls_faced",
             CricketMetric.runs_scored: "runs_scored",
             CricketMetric.dot_balls: "dot_balls",
+            CricketMetric.dot_percentage: "dot_percentage",
             CricketMetric.boundaries: "boundary_balls",
             CricketMetric.batting_strike_rate: "strike_rate",
+            CricketMetric.batting_average: "average",
+            CricketMetric.boundary_percentage: "boundary_percentage",
         }.get(plan.metric)
         value = summary.get(value_key) if value_key else None
-        body = f"{player} has {self._fmt(value)} {self._metric_unit_phrase(plan.metric)} in {self._phase_label(route.filters)}."
+        value_text = self._fmt(value)
+        if plan.metric in {CricketMetric.dot_percentage, CricketMetric.boundary_percentage} and value is not None:
+            value_text = f"{value_text}%"
+        body = f"{player} has {value_text} {self._metric_unit_phrase(plan.metric)} in {self._phase_label(route.filters)}."
         table = TableBlock(
             title="Single player metric",
             columns=["Player", "Metric", "Value", "Context"],
-            rows=[[player, self._metric_label(plan.metric), self._fmt(value), self._phase_label(route.filters)]],
+            rows=[[player, self._metric_label(plan.metric), value_text, self._phase_label(route.filters)]],
         )
         return QueryResponse(
             status=EvidenceStatus.supported,
@@ -355,10 +423,14 @@ class AnalyticsService:
             CricketMetric.wickets_taken: "Wickets",
             CricketMetric.dot_balls: "Dot Balls",
             CricketMetric.bowler_dot_balls: "Bowler Dot Balls",
+            CricketMetric.dot_percentage: "Dot Ball Percentage",
+            CricketMetric.bowler_dot_percentage: "Bowler Dot Ball Percentage",
             CricketMetric.boundaries: "Boundaries",
             CricketMetric.boundaries_conceded: "Boundaries Conceded",
             CricketMetric.economy_rate: "Economy Rate",
             CricketMetric.batting_strike_rate: "Batting Strike Rate",
+            CricketMetric.batting_average: "Batting Average",
+            CricketMetric.boundary_percentage: "Boundary Percentage",
         }.get(metric, metric.value.replace("_", " ").title())
 
     @staticmethod
@@ -372,10 +444,14 @@ class AnalyticsService:
             CricketMetric.wickets_taken: "wickets",
             CricketMetric.dot_balls: "dot balls",
             CricketMetric.bowler_dot_balls: "bowler dot balls",
+            CricketMetric.dot_percentage: "dot-ball percentage",
+            CricketMetric.bowler_dot_percentage: "bowler dot-ball percentage",
             CricketMetric.boundaries: "boundaries",
             CricketMetric.boundaries_conceded: "boundaries conceded",
             CricketMetric.economy_rate: "runs per over",
             CricketMetric.batting_strike_rate: "strike rate",
+            CricketMetric.batting_average: "batting average",
+            CricketMetric.boundary_percentage: "boundary percentage",
         }.get(metric, metric.value.replace("_", " "))
 
     @staticmethod
@@ -508,7 +584,7 @@ class AnalyticsService:
             ),
             shot_profile=ShotProfileBlock(
                 coverage=VisualCoverage(**shot_profile["coverage"]),
-                metrics=[ShotTypeMetric(**metric) for metric in shot_profile["metrics"]],
+                metrics=[ShotTypeMetric(**self._humanized_shot_metric(metric)) for metric in shot_profile["metrics"]],
             ),
             field_zones=FieldZoneBlock(
                 handedness=field_zones["handedness"],
@@ -708,13 +784,10 @@ class AnalyticsService:
 
     @staticmethod
     def _phase_sql_predicate(phase: object) -> str:
-        if phase == "powerplay":
-            return "  AND TRY_CAST(over AS DOUBLE) <= 10.0"
-        if phase == "middle":
-            return "  AND TRY_CAST(over AS DOUBLE) > 10.0 AND TRY_CAST(over AS DOUBLE) <= 40.0"
-        if phase == "death":
-            return "  AND TRY_CAST(over AS DOUBLE) > 40.0"
-        return ""
+        clause, params = phase_filter_clause(str(phase) if phase else None, prefix="  AND ")
+        for param in params:
+            clause = clause.replace("?", str(param), 1)
+        return clause
 
     @staticmethod
     def _year_filter_label(years: list[int], year_mode: str | None) -> str:
@@ -756,14 +829,8 @@ class AnalyticsService:
 
     def _bowling_evidence_query(self, summaries: list[dict[str, object]], phase: object) -> EvidenceQueryBlock:
         player_names = [str(summary["player_name"]) for summary in summaries]
-        legal_ball_predicate = (
-            "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
-            "AND COALESCE(TRY_CAST(noball AS INTEGER), 0) = 0"
-        )
-        bowler_wicket_predicate = (
-            "LOWER(CAST(dismissal AS VARCHAR)) IN "
-            "('caught', 'bowled', 'leg before wicket', 'stumped', 'hit wicket', 'caught and bowled')"
-        )
+        legal_ball_predicate = LEGAL_BALL_PREDICATE
+        bowler_wicket_predicate = BOWLER_WICKET_PREDICATE
         sql = f"""
 SELECT
   bowl AS player,
@@ -1725,26 +1792,12 @@ GROUP BY bat, bowling_type
 
     @staticmethod
     def _shot_label(shot: object) -> str:
-        labels = {
-            "ON_DRIVE": "on drive",
-            "OFF_DRIVE": "off drive",
-            "COVER_DRIVE": "cover drive",
-            "STRAIGHT_DRIVE": "straight drive",
-            "PULL": "pull",
-            "HOOK": "hook",
-            "CUT_SHOT": "cut shot",
-            "SQUARE_CUT": "square cut",
-            "LATE_CUT": "late cut",
-            "GLANCE": "glance",
-            "LEG_GLANCE": "leg glance",
-            "SWEEP": "sweep",
-            "REVERSE_SWEEP": "reverse sweep",
-            "SLOG_SWEEP": "slog sweep",
-            "FLICK": "flick",
-            "LOFTED_DRIVE": "lofted drive",
-            "NO_SHOT": "no shot",
-        }
-        return labels.get(str(shot), str(shot).replace("_", " ").lower())
+        return str(public_label(shot))
+
+    def _humanized_shot_metric(self, metric: dict[str, object]) -> dict[str, object]:
+        next_metric = dict(metric)
+        next_metric["shot"] = self._shot_label(next_metric.get("shot"))
+        return next_metric
 
     def _player_comparison_summary(
         self,

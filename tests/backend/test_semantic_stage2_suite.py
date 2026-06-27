@@ -18,7 +18,7 @@ class FakeGeminiClient:
 
 
 STAGE2_CASES = [
-    ("Which batter is hardest to bowl dot balls to?", "aggregate", "batter", "dot_ball_percentage", ["batter"], {}, "asc", "supported"),
+    ("Which batter is hardest to bowl dot balls to?", "aggregate", "batter", "batter_dot_ball_percentage", ["batter"], {}, "asc", "supported"),
     ("Which bowler has the best control?", "aggregate", "bowler", "control_percentage", ["bowler"], {}, "desc", "supported"),
     ("Which bowler concedes the fewest boundaries per 100 balls?", "aggregate", "bowler", "boundary_rate_per_100_balls", ["bowler"], {}, "asc", "supported"),
     ("Which batter has the highest false-shot percentage against spin?", "aggregate", "batter", "false_shot_percentage", ["batter"], {"bowling_style": "spin"}, "desc", "supported"),
@@ -28,16 +28,16 @@ STAGE2_CASES = [
     ("Which batter dominates wrist spin but struggles against finger spin?", "split_compare", "batter", "batting_strike_rate", ["batter"], {}, "desc", "supported"),
     ("Which batter improves their strike rate the most after facing 20 balls?", "split_compare", "batter", "batting_strike_rate", ["batter"], {}, "desc", "supported"),
     ("Which team accelerates most effectively between overs 15 and 20?", "split_compare", "team", "run_rate", ["team"], {"over_range": [15, 20]}, "desc", "supported"),
-    ("Which batter is most vulnerable immediately after reaching a milestone?", "event_window", "batter", "wickets", ["batter"], {}, "desc", "unsupported"),
+    ("Which batter is most vulnerable immediately after reaching a milestone?", "event_window", "batter", "wickets_taken", ["batter"], {}, "desc", "unsupported"),
     ("Which bowler is most effective immediately after a wicket falls?", "event_window", "bowler", "economy_rate", ["bowler"], {}, "asc", "unsupported"),
     ("Which team loses momentum most frequently after the powerplay?", "event_window", "team", "runs_scored", ["team"], {}, "desc", "unsupported"),
     ("Which team recovers best after losing early wickets?", "event_window", "team", "batting_strike_rate", ["team"], {}, "desc", "unsupported"),
     ("Which batter’s scoring zones are most concentrated?", "distribution_analysis", "batter", "runs_scored", ["field_zone"], {}, "desc", "unsupported"),
     ("Which bowler’s length changes the most depending on the batter faced?", "distribution_analysis", "bowler", "balls_faced", ["length"], {}, "desc", "unsupported"),
-    ("Which batter-bowler matchup is most one-sided?", "matchup", "matchup", "batting_strike_rate", ["matchup"], {}, "desc", "unsupported"),
-    ("Which matchup produces the highest false-shot percentage?", "matchup", "matchup", "false_shot_percentage", ["matchup"], {}, "desc", "unsupported"),
-    ("Which matchup has produced the most wickets in death overs?", "matchup", "matchup", "wickets", ["matchup"], {"phase": "death"}, "desc", "unsupported"),
-    ("Which bowler is most successful against finishers?", "matchup", "bowler", "wickets", ["bowler"], {}, "desc", "unsupported"),
+    ("Which batter-bowler matchup is most one-sided?", "matchup", "matchup", "batting_strike_rate", ["matchup"], {}, "desc", "supported"),
+    ("Which matchup produces the highest false-shot percentage?", "matchup", "matchup", "false_shot_percentage", ["matchup"], {}, "desc", "supported"),
+    ("Which matchup has produced the most wickets in death overs?", "matchup", "matchup", "wickets_taken", ["matchup"], {"phase": "death"}, "desc", "supported"),
+    ("Which bowler is most successful against finishers?", "matchup", "bowler", "wickets_taken", ["bowler"], {"phase": "death"}, "desc", "supported"),
 ]
 
 
@@ -97,6 +97,11 @@ def test_semantic_stage2_shape(
         for column in group_by:
             assert column in trace["result_columns"]
         assert any(column.endswith("_sample") for column in trace["result_columns"])
+        assert response.tables
+    elif operation == "matchup":
+        assert trace["selected_executor"] == "executors.matchup_executor.build_matchup_query"
+        assert "sample_size" in trace["result_columns"]
+        assert "low_sample" in trace["result_columns"]
         assert response.tables
     else:
         assert trace["selected_executor"] == f"executors.{operation}"

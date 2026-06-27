@@ -9,6 +9,7 @@ const DEFAULT_VISIBLE_ROWS = 5;
 type CompactDataTableProps = {
   table: TableBlock;
   initialRows?: number;
+  onMinimumBallsApply?: (minimumBalls: number) => Promise<void> | void;
 };
 
 type SortState = {
@@ -42,10 +43,15 @@ function compareCells(a: string | number | null, b: string | number | null, dire
   return String(a ?? "").localeCompare(String(b ?? ""), undefined, { numeric: true }) * multiplier;
 }
 
-export function CompactDataTable({ table, initialRows = DEFAULT_VISIBLE_ROWS }: CompactDataTableProps) {
+export function CompactDataTable({
+  table,
+  initialRows = DEFAULT_VISIBLE_ROWS,
+  onMinimumBallsApply,
+}: CompactDataTableProps) {
   const [expanded, setExpanded] = useState(false);
   const [query, setQuery] = useState("");
   const [minimumBalls, setMinimumBalls] = useState("");
+  const [isApplyingMinimum, setIsApplyingMinimum] = useState(false);
   const [sort, setSort] = useState<SortState>(null);
   const ballsColumnIndex = table.columns.findIndex((column) => column.toLowerCase() === "balls");
   const trimmedQuery = query.trim().toLowerCase();
@@ -57,6 +63,7 @@ export function CompactDataTable({ table, initialRows = DEFAULT_VISIBLE_ROWS }: 
         !trimmedQuery ||
         row.some((cell) => String(cell ?? "").toLowerCase().includes(trimmedQuery));
       const matchesMinimumBalls =
+        onMinimumBallsApply !== undefined ||
         ballsColumnIndex < 0 ||
         minimumBallsValue === null ||
         (numericValue(row[ballsColumnIndex]) ?? -Infinity) >= minimumBallsValue;
@@ -68,7 +75,7 @@ export function CompactDataTable({ table, initialRows = DEFAULT_VISIBLE_ROWS }: 
     }
 
     return [...rows].sort((a, b) => compareCells(a[sort.columnIndex], b[sort.columnIndex], sort.direction));
-  }, [ballsColumnIndex, minimumBallsValue, sort, table.rows, trimmedQuery]);
+  }, [ballsColumnIndex, minimumBallsValue, onMinimumBallsApply, sort, table.rows, trimmedQuery]);
 
   const visibleRows = expanded ? filteredRows : filteredRows.slice(0, initialRows);
   const hiddenCount = Math.max(filteredRows.length - initialRows, 0);
@@ -93,10 +100,41 @@ export function CompactDataTable({ table, initialRows = DEFAULT_VISIBLE_ROWS }: 
           <input value={query} onChange={(event) => setQuery(event.target.value)} />
         </label>
         {ballsColumnIndex >= 0 ? (
-          <label className="table-control compact-number-control">
-            <span>Min balls</span>
-            <input inputMode="numeric" min="0" type="number" value={minimumBalls} onChange={(event) => setMinimumBalls(event.target.value)} />
-          </label>
+          <div className="table-control compact-number-control">
+            <label htmlFor={`${table.title}-minimum-balls`}>
+              {onMinimumBallsApply ? "Min balls" : "Filter shown rows by balls"}
+            </label>
+            <div className="minimum-balls-row">
+              <input
+                id={`${table.title}-minimum-balls`}
+                inputMode="numeric"
+                min="0"
+                type="number"
+                value={minimumBalls}
+                onChange={(event) => setMinimumBalls(event.target.value)}
+              />
+              {onMinimumBallsApply ? (
+                <button
+                  className="ghost-button inline-button"
+                  disabled={isApplyingMinimum || minimumBallsValue === null || minimumBallsValue < 0}
+                  onClick={async () => {
+                    if (minimumBallsValue === null || minimumBallsValue < 0) {
+                      return;
+                    }
+                    setIsApplyingMinimum(true);
+                    try {
+                      await onMinimumBallsApply(minimumBallsValue);
+                    } finally {
+                      setIsApplyingMinimum(false);
+                    }
+                  }}
+                  type="button"
+                >
+                  {isApplyingMinimum ? "Applying…" : "Apply to query"}
+                </button>
+              ) : null}
+            </div>
+          </div>
         ) : null}
       </div>
       <div className="table-wrap">

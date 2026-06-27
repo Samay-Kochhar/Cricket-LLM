@@ -192,8 +192,6 @@ class QueryRouter:
             "runs conceded",
             "conceded",
             "yorker",
-            "dot ball",
-            "dot balls",
             "false shot",
             "false shots",
             "bowling figure",
@@ -257,8 +255,24 @@ class QueryRouter:
             filters["metric"] = "yorker_count"
         elif "false shot" in lowered or "false shots" in lowered or "false-shot" in lowered or "false-shots" in lowered:
             filters["metric"] = "false_shot_percentage"
+        elif "dot ball percentage" in lowered or "dot-ball percentage" in lowered or "dot percentage" in lowered:
+            if filters.get("subject") == "bowler" or any(token in lowered for token in ("bowler", "bowling", "bowled")):
+                filters["metric"] = "bowler_dot_percentage"
+                filters["subject"] = "bowler"
+                filters["skill"] = "bowling"
+            else:
+                filters["metric"] = "dot_percentage"
+                filters["subject"] = "batter"
+                filters["skill"] = "batting"
         elif "dot ball" in lowered or "dot balls" in lowered:
-            filters["metric"] = "bowler_dot_balls" if filters.get("subject") != "batter" else "dot_percentage"
+            if filters.get("subject") == "bowler" or any(token in lowered for token in ("bowler", "bowling", "bowled")):
+                filters["metric"] = "bowler_dot_balls"
+                filters["subject"] = "bowler"
+                filters["skill"] = "bowling"
+            else:
+                filters["metric"] = "dot_balls"
+                filters.setdefault("subject", "batter")
+                filters.setdefault("skill", "batting")
         elif "boundary percentage" in lowered:
             filters["metric"] = "boundary_percentage"
         elif "boundaries per over" in lowered:

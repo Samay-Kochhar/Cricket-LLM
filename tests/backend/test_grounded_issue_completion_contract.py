@@ -153,6 +153,54 @@ def test_configured_llm_plan_executes_after_validation(semantic_service: Semanti
     assert trace["normalized_plan"]["filters"]["batter"] == "Virat Kohli"
 
 
+def test_configured_llm_plan_resolves_player_alias_before_execution(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    service = SemanticAnalyticsService(
+        repository=semantic_service.repository,
+        gemini_client=ScriptedGeminiClient([
+            _plan_json(
+                metric="runs_scored",
+                filters={"batter": "Steve Smith"},
+                sort={"by": "runs_scored", "direction": "desc"},
+            )
+        ]),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+
+    response = service.answer_question("Steve Smith ODI runs?")
+    trace = _trace(response)
+
+    assert response.status.value == "supported"
+    assert response.interpretation.entities == ["Steven Smith"]
+    assert trace["normalized_plan"]["filters"]["batter"] == "Steven Smith"
+    assert response.tables[0].rows[0][0] == "Steven Smith"
+
+
+def test_empty_raw_total_result_is_not_reported_as_minimum_sample_failure(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    service = SemanticAnalyticsService(
+        repository=semantic_service.repository,
+        gemini_client=ScriptedGeminiClient([
+            _plan_json(
+                metric="runs_scored",
+                filters={"batter": "Definitely Missing Player"},
+                sort={"by": "runs_scored", "direction": "desc"},
+            )
+        ]),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+
+    response = service.answer_question("Definitely Missing Player ODI runs?")
+
+    assert response.status.value == "insufficient_evidence"
+    assert "no matching odi records" in response.insufficiencies[0].detail.lower()
+    assert "minimum sample" not in response.insufficiencies[0].detail.lower()
+
+
 def test_invalid_llm_plan_can_be_repaired_before_execution(
     semantic_service: SemanticAnalyticsService,
 ) -> None:

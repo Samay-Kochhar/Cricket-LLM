@@ -37,22 +37,25 @@ def execute_player_compare(plan: CricketQueryPlan, repository: Any) -> PlayerCom
                 continue
             row = dict(zip(build.columns, result_rows[0]))
             rows_by_player[player][metric] = row.get(metric)
-            rows_by_player[player][f"{metric}_balls"] = row.get("balls")
-            rows_by_player[player][f"{metric}_legal_balls"] = row.get("legal_balls")
-            rows_by_player[player][f"{metric}_matches"] = row.get("matches")
+            for evidence_column in (
+                "balls_faced",
+                "legal_balls",
+                "runs_scored",
+                "runs_conceded",
+                "dismissals",
+                "wickets",
+                "matches",
+            ):
+                if row.get(evidence_column) is not None:
+                    rows_by_player[player][evidence_column] = row[evidence_column]
 
-    columns = ["player"]
-    sample_columns: list[str] = []
-    for metric in metrics:
-        columns.append(metric)
-        sample_key = f"{metric}_legal_balls" if get_metric(metric, entity=plan.entity).denominator == "legal_balls" else f"{metric}_balls"
-        if sample_key not in columns:
-            columns.append(sample_key)
-        if sample_key not in sample_columns:
-            sample_columns.append(sample_key)
-        matches_key = f"{metric}_matches"
-        if matches_key not in columns:
-            columns.append(matches_key)
+    evidence_columns = (
+        ["balls_faced", "dismissals", "matches"]
+        if plan.entity == "batter"
+        else ["legal_balls", "runs_conceded", "matches"]
+    )
+    columns = ["player", *metrics, *(column for column in evidence_columns if column not in metrics)]
+    sample_columns = ["balls_faced" if plan.entity == "batter" else "legal_balls"]
     return PlayerCompareResult(
         rows=list(rows_by_player.values()),
         columns=columns,

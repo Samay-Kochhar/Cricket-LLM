@@ -49,6 +49,7 @@ class CricketQueryPlan(BaseModel):
     sort: SortSpec | None = None
     limit: int | None = 10
     minimum_sample: MinimumSampleSpec | None = None
+    minimum_sample_explicit: bool = False
     question_subject: str | None = None
     explanation_intent: str | None = None
     confidence: float | None = None

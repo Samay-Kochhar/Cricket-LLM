@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from backend.app.cricket_analytics.ontology import METRICS
+from backend.app.cricket_analytics.metric_registry import split_metric_expression
 from backend.app.cricket_analytics.query_builders.aggregate_builder import (
     BOWLER_WICKET,
     LEGAL_BALL,
@@ -20,8 +21,11 @@ SUPPORTED_METRICS = {
     "runs_scored",
     "run_rate",
     "dot_ball_percentage",
+    "batter_dot_ball_percentage",
+    "bowler_dot_ball_percentage",
     "boundary_percentage",
     "wickets",
+    "wickets_taken",
     "dismissal_rate",
 }
 
@@ -59,7 +63,7 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
     where_clauses = ["1 = 1"]
     filter_params: list[Any] = []
     skip_filters = _split_filter_keys(plan)
-    for clause, clause_params in _filter_clauses({key: value for key, value in plan.filters.items() if key not in skip_filters}):
+    for clause, clause_params in _filter_clauses({key: value for key, value in plan.filters.items() if key not in skip_filters}, entity=plan.entity):
         where_clauses.append(clause)
         filter_params.extend(clause_params)
 
@@ -79,7 +83,8 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
                 TRY_CAST(bowlruns AS INTEGER) AS runs_conceded,
                 CASE WHEN {BOWLER_WICKET} THEN 1 ELSE 0 END AS wickets,
                 CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END AS dismissals,
-                CASE WHEN {_dot_ball_condition(plan)} THEN 1 ELSE 0 END AS dot_balls,
+                CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND COALESCE(TRY_CAST(batruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END AS dot_balls,
+                CASE WHEN {LEGAL_BALL} AND COALESCE(TRY_CAST(bowlruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END AS bowler_dot_balls,
                 CASE WHEN {_boundary_condition(plan)} THEN 1 ELSE 0 END AS boundary_balls
               FROM analytics.deliveries_v1
               WHERE {' AND '.join(where_clauses)}
@@ -98,6 +103,7 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
                 SUM(wickets) AS wickets,
                 SUM(dismissals) AS dismissals,
                 SUM(dot_balls) AS dot_balls,
+                SUM(bowler_dot_balls) AS bowler_dot_balls,
                 SUM(boundary_balls) AS boundary_balls,
                 {sample_expression} AS sample_size,
                 {metric_expression} AS metric_value
@@ -233,23 +239,10 @@ def _over_range(plan: CricketQueryPlan) -> tuple[int, int]:
 
 
 def _metric_expression(plan: CricketQueryPlan) -> str:
-    if plan.metric == "batting_strike_rate":
-        return "SUM(runs_scored) / NULLIF(SUM(balls_faced), 0) * 100.0"
-    if plan.metric == "economy_rate":
-        return "SUM(runs_conceded) / NULLIF(SUM(legal_balls) / 6.0, 0)"
-    if plan.metric == "runs_scored":
-        return "SUM(runs_scored)"
-    if plan.metric == "run_rate":
-        return "SUM(runs_scored) / NULLIF(SUM(legal_balls) / 6.0, 0)"
-    if plan.metric == "dot_ball_percentage":
-        return "SUM(dot_balls) / NULLIF(" + _sample_expression(plan) + ", 0) * 100.0"
-    if plan.metric == "boundary_percentage":
-        return "SUM(boundary_balls) / NULLIF(" + _sample_expression(plan) + ", 0) * 100.0"
-    if plan.metric == "wickets":
-        return "SUM(wickets)"
-    if plan.metric == "dismissal_rate":
-        return "SUM(dismissals) / NULLIF(" + _sample_expression(plan) + ", 0) * 100.0"
-    raise ValueError(unsupported_reason(plan))
+    try:
+        return split_metric_expression(plan.metric, entity=plan.entity)
+    except KeyError as exc:
+        raise ValueError(unsupported_reason(plan)) from exc
 
 
 def _sample_expression(plan: CricketQueryPlan) -> str:

@@ -59,6 +59,7 @@ class CricketMetric(str, Enum):
     dot_balls = "dot_balls"
     bowler_dot_balls = "bowler_dot_balls"
     dot_percentage = "dot_percentage"
+    bowler_dot_percentage = "bowler_dot_percentage"
     boundaries = "boundaries"
     boundaries_conceded = "boundaries_conceded"
     boundaries_per_over = "boundaries_per_over"

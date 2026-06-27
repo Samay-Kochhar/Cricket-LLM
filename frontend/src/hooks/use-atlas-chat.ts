@@ -67,17 +67,25 @@ export function useAtlasChat() {
     loadingLabel: null,
   });
 
-  async function sendMessage(message: string, history: ChatHistoryTurn[]): Promise<ChatReply> {
+  async function sendMessage(
+    message: string,
+    history: ChatHistoryTurn[],
+    options: { silent?: boolean } = {},
+  ): Promise<ChatReply> {
     const apiCandidates = getApiCandidates();
     const loadingLabel = buildLoadingLabel(message);
-    setState({ isLoading: true, error: null, loadingLabel });
+    if (!options.silent) {
+      setState({ isLoading: true, error: null, loadingLabel });
+    }
     try {
       traceClient("chat request started", { message, apiCandidates });
       const payload = await postApi<ChatReply>("/api/chat", { message, history });
       traceClient("chat request completed", {
         mode: payload.mode,
       });
-      setState({ isLoading: false, error: null, loadingLabel: null });
+      if (!options.silent) {
+        setState({ isLoading: false, error: null, loadingLabel: null });
+      }
       return payload;
     } catch (error) {
       const messageText = error instanceof Error ? error.message : "Unknown chat failure";

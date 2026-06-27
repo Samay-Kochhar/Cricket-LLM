@@ -1,17 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Space_Grotesk } from "next/font/google";
 
 import "./globals.css";
-
-const displayFont = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
-});
-
-const bodyFont = Manrope({
-  subsets: ["latin"],
-  variable: "--font-body",
-});
 
 export const metadata: Metadata = {
   title: "CricAtlas",
@@ -29,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${displayFont.variable} ${bodyFont.variable}`}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -1274,6 +1274,19 @@ def test_hardest_to_bowl_dot_balls_uses_lowest_dot_percentage_language() -> None
     assert "ORDER BY :metric_expression_for_dot_percentage ASC" in response.evidence_queries[0].sql
 
 
+def test_named_batter_dot_percentage_returns_single_player_metric() -> None:
+    service = AnalyticsService(repository=StubRepository(), metric_catalog=MetricCatalog())
+
+    response = service.answer_question("what is dot ball percentage of Virat Kohli?")
+
+    assert response.status.value == "supported"
+    assert response.interpretation.filters["metric"] == "dot_percentage"
+    assert response.interpretation.filters["subject"] == "batter"
+    assert response.tables[0].title == "Single player metric"
+    assert response.tables[0].rows == [["Virat Kohli", "Dot Ball Percentage", "36.00%", "all phases"]]
+    assert "bowler dot balls" not in response.summaries[0].body.lower()
+
+
 def test_mid_wicket_area_question_uses_batting_field_zone_leaderboard() -> None:
     service = AnalyticsService(repository=StubRepository(), metric_catalog=MetricCatalog())
 

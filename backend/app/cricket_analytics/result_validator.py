@@ -1,18 +1,10 @@
 from __future__ import annotations
 
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, QueryBuildResult, ResultValidation
+from backend.app.cricket_analytics.metric_registry import percentage_metric_ids
 
 
-PERCENTAGE_METRICS = {
-    "dot_ball_percentage",
-    "boundary_percentage",
-    "false_shot_percentage",
-    "yorker_percentage",
-    "control_percentage",
-    "dismissal_rate",
-    "boundary_rate_per_100_balls",
-    "wicket_opportunity_rate",
-}
+PERCENTAGE_METRICS = percentage_metric_ids()
 
 
 def validate_result(
