@@ -147,6 +147,8 @@ class SemanticQueryPlanner:
                 filters[key] = resolution.canonical_name
 
         compare_players = filters.get("compare_players")
+        if normalized.operation == "player_compare" and not isinstance(compare_players, list):
+            compare_players = normalized.compare_values or self._extract_players(question)
         if isinstance(compare_players, list):
             resolved_players: list[object] = []
             for value in compare_players:
@@ -157,7 +159,30 @@ class SemanticQueryPlanner:
                 resolved_players.append(resolution.canonical_name or value)
             filters["compare_players"] = resolved_players
 
-        normalized = normalized.model_copy(update={"filters": filters})
+        updates: dict[str, object] = {"filters": filters}
+        resolved_compare_players = filters.get("compare_players")
+        if (
+            normalized.operation == "player_compare"
+            and isinstance(resolved_compare_players, list)
+            and len(resolved_compare_players) >= 2
+        ):
+            comparison_metrics = self._infer_comparison_metrics(
+                question.lower(),
+                normalized.metric,
+                normalized.entity,
+            )
+            filters["comparison_metrics"] = comparison_metrics
+            primary_metric = comparison_metrics[0]
+            updates.update(
+                {
+                    "filters": filters,
+                    "metric": primary_metric,
+                    "group_by": [normalized.entity],
+                    "sort": SortSpec(by=primary_metric, direction=METRICS[primary_metric].default_sort),
+                }
+            )
+
+        normalized = normalized.model_copy(update=updates)
         return self._apply_question_guardrails(normalized, question)
 
     @staticmethod
@@ -176,6 +201,16 @@ class SemanticQueryPlanner:
 
         operation = plan.operation
         group_by = plan.group_by
+        direct_batter_style_metric = (
+            operation == "matchup"
+            and isinstance(filters.get("batter"), str)
+            and "bowler" not in filters
+            and any(token in lowered for token in ("strike rate", "average", "dot ball", "boundary"))
+            and not any(token in lowered for token in ("matchup", "which bowler", "dismissed", "dismisses", "controls"))
+        )
+        if direct_batter_style_metric:
+            operation = "aggregate"
+            group_by = ["batter"]
         if operation == "player_compare" and leaderboard_wording and not has_comparison_pair:
             operation = "aggregate"
             group_by = [plan.entity] if plan.entity in {"batter", "bowler", "team"} else group_by
@@ -958,6 +993,8 @@ class SemanticQueryPlanner:
             metrics.append("bowler_dot_ball_percentage" if primary_metric in {"economy_rate", "wickets_per_over"} else "batter_dot_ball_percentage")
         if "economy" in lowered:
             metrics.append("economy_rate")
+        if "average" in lowered or re.search(r"\bavg\b", lowered):
+            metrics.append("bowling_average" if entity == "bowler" else "batting_average")
         if "strike rate" in lowered or "scores faster" in lowered:
             metrics.append("batting_strike_rate")
         if not metrics:

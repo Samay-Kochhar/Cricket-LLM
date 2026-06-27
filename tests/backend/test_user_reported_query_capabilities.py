@@ -233,6 +233,49 @@ def test_unqualified_batter_comparison_returns_core_metric_set(
     ]
 
 
+def test_live_gemini_compare_values_plan_is_repaired_to_core_comparison(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    service = SemanticAnalyticsService(
+        repository=semantic_service.repository,
+        gemini_client=ScriptedGeminiClient(
+            """{
+              "operation": "player_compare",
+              "entity": "batter",
+              "metric": "batting_average",
+              "compare_values": ["Virat Kohli", "Steve Smith"],
+              "sort": {"by": "batting_average", "direction": "desc"}
+            }"""
+        ),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+
+    response = service.answer_question("Compare Kohli and Steve Smith")
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["filters"]["compare_players"] == ["Virat Kohli", "Steven Smith"]
+    assert plan["filters"]["comparison_metrics"] == [
+        "batting_strike_rate",
+        "runs_scored",
+        "batting_average",
+        "batter_dot_ball_percentage",
+        "boundary_percentage",
+    ]
+    assert response.tables[0].columns == [
+        "Player",
+        "Batting Strike Rate",
+        "Runs Scored",
+        "Batting Average",
+        "Batter Dot Ball Percentage",
+        "Boundary Percentage",
+        "Balls Faced",
+        "Dismissals",
+        "Matches",
+    ]
+
+
 def test_maxwell_strike_rate_against_off_spin_preserves_style_scope(
     semantic_service: SemanticAnalyticsService,
 ) -> None:
@@ -243,6 +286,34 @@ def test_maxwell_strike_rate_against_off_spin_preserves_style_scope(
     assert trace["normalized_plan"]["filters"]["batter"] == "Glenn Maxwell"
     assert trace["normalized_plan"]["filters"]["bowling_style"] == "off_spin"
     assert "against off spin" in response.summaries[0].body.lower()
+
+
+def test_live_gemini_off_break_plan_is_repaired_to_direct_off_spin_aggregate(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    service = SemanticAnalyticsService(
+        repository=semantic_service.repository,
+        gemini_client=ScriptedGeminiClient(
+            """{
+              "operation": "matchup",
+              "entity": "batter",
+              "metric": "batting_strike_rate",
+              "filters": {"batter": "Glenn Maxwell", "bowling_style": "Off-break"},
+              "sort": {"by": "batting_strike_rate", "direction": "desc"}
+            }"""
+        ),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+
+    response = service.answer_question("what is maxwell strike rate against off spinner")
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["operation"] == "aggregate"
+    assert plan["filters"]["batter"] == "Glenn Maxwell"
+    assert plan["filters"]["bowling_style"] == "off_spin"
+    assert response.tables[0].rows[0][3] == 453
 
 
 def test_worst_bowling_average_against_named_batter_uses_bowling_formula(
