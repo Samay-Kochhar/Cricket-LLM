@@ -309,7 +309,6 @@ class SemanticQueryPlanner:
         if "worst" in lowered and metric == "bowling_average":
             default_sort = "desc"
         if any(token in lowered for token in ("fewest", "lowest", "least")) and metric in {
-            "boundary_rate_per_100_balls",
             "boundary_percentage",
             "economy_rate",
             "dot_ball_percentage",
@@ -559,7 +558,7 @@ class SemanticQueryPlanner:
         if "dot ball" in lowered or "dot balls" in lowered or "dot-ball" in lowered or "dot-balls" in lowered or "dots" in lowered:
             return "dot_ball_percentage"
         if "boundaries per 100" in lowered or "boundary rate" in lowered:
-            return "boundary_rate_per_100_balls"
+            return "boundary_percentage"
         if "boundary" in lowered:
             return "boundary_percentage"
         if "control" in lowered:

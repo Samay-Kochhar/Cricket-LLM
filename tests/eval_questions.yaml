@@ -221,7 +221,7 @@
 - question: "Which bowler concedes the fewest boundaries per 100 balls?"
   expected_operation: aggregate
   expected_entity: bowler
-  expected_metric: boundary_rate_per_100_balls
+  expected_metric: boundary_percentage
   expected_group_by: [bowler]
 - question: "Which venue has the highest boundary percentage?"
   expected_operation: aggregate

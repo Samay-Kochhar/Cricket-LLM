@@ -240,16 +240,6 @@ METRICS: dict[str, MetricDefinition] = {
         minimum_sample=MinimumSample(balls=20),
         unit="percent",
     ),
-    "boundary_rate_per_100_balls": MetricDefinition(
-        name="boundary_rate_per_100_balls",
-        owner="batter_or_bowler",
-        formula="boundary balls / balls * 100",
-        required_columns=("batruns", "ballfaced"),
-        default_sort="desc",
-        denominator="balls",
-        minimum_sample=MinimumSample(balls=20),
-        unit="per 100 balls",
-    ),
     "wickets_per_over": MetricDefinition(
         name="wickets_per_over",
         owner="bowler",

@@ -107,7 +107,6 @@ def test_golden_factual_chat_contract(semantic_service: SemanticAnalyticsService
             "false_shot_percentage",
             "yorker_percentage",
             "false_shots_per_over",
-            "boundary_rate_per_100_balls",
         }:
             assert "balls" in _public_payload(response).lower()
     elif case["status"] == "unsupported":

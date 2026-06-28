@@ -20,7 +20,7 @@ class FakeGeminiClient:
 STAGE2_CASES = [
     ("Which batter is hardest to bowl dot balls to?", "aggregate", "batter", "batter_dot_ball_percentage", ["batter"], {}, "asc", "supported"),
     ("Which bowler has the best control?", "aggregate", "bowler", "control_percentage", ["bowler"], {}, "desc", "supported"),
-    ("Which bowler concedes the fewest boundaries per 100 balls?", "aggregate", "bowler", "boundary_rate_per_100_balls", ["bowler"], {}, "asc", "supported"),
+    ("Which bowler concedes the fewest boundaries per 100 balls?", "aggregate", "bowler", "boundary_percentage", ["bowler"], {}, "asc", "supported"),
     ("Which batter has the highest false-shot percentage against spin?", "aggregate", "batter", "false_shot_percentage", ["batter"], {"bowling_style": "spin"}, "desc", "supported"),
     ("Which bowler generates the most false shots per over?", "aggregate", "bowler", "false_shots_per_over", ["bowler"], {}, "desc", "supported"),
     ("Which bowler has the biggest difference between powerplay and death-over economy?", "split_compare", "bowler", "economy_rate", ["bowler"], {}, "asc", "supported"),

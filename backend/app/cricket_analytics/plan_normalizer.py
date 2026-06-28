@@ -117,6 +117,7 @@ METRIC_SYNONYMS = {
     "bowler_dot_percentage": "bowler_dot_ball_percentage",
     "dots": "dot_ball_percentage",
     "boundaries": "boundary_percentage",
+    "boundary_rate_per_100_balls": "boundary_percentage",
     "false_shots": "false_shot_percentage",
     "yorkers": "yorker_percentage",
     "control": "control_percentage",

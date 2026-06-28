@@ -146,7 +146,6 @@ METRIC_REGISTRY: dict[str, MetricRule] = {
     "yorker_count": _rule("yorker_count", "Yorker Count", "bowler", "yorker_balls", None, "count", "desc", True, "yorker_balls", unit="balls", formula="count legal yorkers"),
     "yorker_percentage": _rule("yorker_percentage", "Yorker Percentage", "bowler", "yorker_balls", "legal_balls", "percentage", "desc", True, "yorker_balls / NULLIF(legal_balls, 0) * 100.0", minimum_sample=SamplePolicy(legal_balls=24), unit="percent", formula="legal yorkers / legal balls * 100"),
     "wickets_per_over": _rule("wickets_per_over", "Wickets Per Over", "bowler", "wickets", "legal_balls", "rate", "desc", True, "wickets / NULLIF(legal_balls / 6.0, 0)", minimum_sample=SamplePolicy(legal_balls=24), unit="wickets per over", formula="wickets / legal overs"),
-    "boundary_rate_per_100_balls": _rule("boundary_rate_per_100_balls", "Boundary Rate Per 100 Balls", "batter_or_bowler", "boundary_balls", "balls", "rate", "desc", True, "boundary_balls / NULLIF(sample_balls, 0) * 100.0", minimum_sample=SamplePolicy(balls=20), unit="per 100 balls", formula="boundary balls / sample balls * 100"),
     "false_shots_per_over": _rule("false_shots_per_over", "False Shots Per Over", "bowler", "false_shots", "legal_balls", "rate", "desc", True, "false_shots / NULLIF(legal_balls / 6.0, 0)", minimum_sample=SamplePolicy(legal_balls=24), unit="false shots per over", formula="false shots / legal overs"),
 }
 
@@ -177,8 +176,6 @@ def get_metric(metric_id: str, *, entity: str | None = None, filters: dict[str, 
 def metric_sql_expression(metric_id: str, *, entity: str | None = None, filters: dict[str, object] | None = None) -> str:
     rule = get_metric(metric_id, entity=entity, filters=filters)
     expression = rule.sql_expression
-    if rule.metric_id == "boundary_rate_per_100_balls" and entity == "bowler":
-        return "boundary_balls / NULLIF(legal_balls, 0) * 100.0"
     return expression
 
 

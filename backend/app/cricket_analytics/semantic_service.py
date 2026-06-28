@@ -1385,8 +1385,7 @@ def _metric_evidence_columns(metric: str, entity: str) -> list[str]:
         "dot_ball_percentage": ["bowler_dot_balls", "legal_balls"]
         if entity == "bowler"
         else ["dot_balls", "balls_faced"],
-        "boundary_percentage": ["boundary_balls", "legal_balls" if entity == "bowler" else "balls_faced"],
-        "boundary_rate_per_100_balls": ["boundary_balls", "legal_balls" if entity == "bowler" else "balls_faced"],
+        "boundary_percentage": ["boundary_balls", "balls_faced"],
         "false_shot_percentage": ["false_shots", "balls_faced"],
         "wickets_taken": ["wickets", "legal_balls"],
         "wickets": ["wickets", "legal_balls"],

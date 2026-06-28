@@ -39,7 +39,6 @@ EXPECTED_MIGRATED = {
     "yorker_count",
     "yorker_percentage",
     "wickets_per_over",
-    "boundary_rate_per_100_balls",
     "false_shots_per_over",
 }
 
