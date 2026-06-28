@@ -16,17 +16,20 @@ class FakeGeminiClient:
 
 
 class ScriptedGeminiClient:
-    def is_configured(self) -> bool:
-        return True
-
-    def generate_text(self, prompt: str, prefer_complex: bool = False) -> str | None:
-        return """{
+    def __init__(self, response: str | None = None) -> None:
+        self.response = response or """{
           "operation": "aggregate",
           "entity": "bowler",
           "metric": "boundary_rate_per_100_balls",
           "group_by": ["bowler"],
           "sort": {"by": "boundary_rate_per_100_balls", "direction": "asc"}
         }"""
+
+    def is_configured(self) -> bool:
+        return True
+
+    def generate_text(self, prompt: str, prefer_complex: bool = False) -> str | None:
+        return self.response
 
 
 def test_bowler_boundaries_per_100_uses_boundary_percentage_over_balls_faced() -> None:
@@ -58,6 +61,26 @@ def test_bowler_boundaries_per_100_uses_boundary_percentage_over_balls_faced() -
     assert percentage == round(boundary_balls / balls_faced * 100, 2)
 
 
+def test_boundary_percentage_conceded_by_player_uses_bowling_record() -> None:
+    service = SemanticAnalyticsService(
+        repository=AnalyticsRepository(AppConfig.from_env().duckdb_path),
+        gemini_client=FakeGeminiClient(),
+    )
+
+    response = service.answer_question(
+        "boundary percentage conceded by Jasprit Bumrah"
+    )
+    trace_note = next(
+        note for note in response.evidence_notes if note.title == "Semantic V2 trace"
+    )
+    plan = json.loads(trace_note.detail)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["entity"] == "bowler"
+    assert plan["filters"] == {"bowler": "Jasprit Bumrah"}
+    assert response.tables[0].rows[0] == ["Jasprit Bumrah", 8.81, 405, 4599, 88]
+
+
 def test_legacy_gemini_boundary_rate_plan_normalizes_to_boundary_percentage() -> None:
     service = SemanticAnalyticsService(
         repository=AnalyticsRepository(AppConfig.from_env().duckdb_path),
@@ -78,3 +101,34 @@ def test_legacy_gemini_boundary_rate_plan_normalizes_to_boundary_percentage() ->
     assert plan["metric"] == "boundary_percentage"
     assert plan["sort"] == {"by": "boundary_percentage", "direction": "asc"}
     assert response.tables[0].columns[3] == "Balls Faced"
+
+
+def test_conceded_wording_repairs_incorrect_gemini_batter_plan() -> None:
+    service = SemanticAnalyticsService(
+        repository=AnalyticsRepository(AppConfig.from_env().duckdb_path),
+        gemini_client=ScriptedGeminiClient(
+            """{
+              "operation": "aggregate",
+              "entity": "batter",
+              "metric": "boundary_percentage",
+              "filters": {"batter": "Jasprit Bumrah"},
+              "group_by": ["batter"]
+            }"""
+        ),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+
+    response = service.answer_question(
+        "boundary percentage conceded by Jasprit Bumrah"
+    )
+    trace_note = next(
+        note for note in response.evidence_notes if note.title == "Semantic V2 trace"
+    )
+    plan = json.loads(trace_note.detail)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["entity"] == "bowler"
+    assert plan["group_by"] == ["bowler"]
+    assert plan["filters"] == {"bowler": "Jasprit Bumrah"}
+    assert response.tables[0].rows[0] == ["Jasprit Bumrah", 8.81, 405, 4599, 88]

@@ -200,6 +200,7 @@ class SemanticQueryPlanner:
         )
 
         operation = plan.operation
+        entity = plan.entity
         group_by = plan.group_by
         direct_batter_style_metric = (
             operation == "matchup"
@@ -211,6 +212,14 @@ class SemanticQueryPlanner:
         if direct_batter_style_metric:
             operation = "aggregate"
             group_by = ["batter"]
+        if operation == "aggregate" and SemanticQueryPlanner._asks_for_bowling_perspective(lowered):
+            if "bowler" not in filters:
+                named_player = filters.pop("batter", None)
+                if isinstance(named_player, str):
+                    filters["bowler"] = named_player
+            entity = "bowler"
+            if not group_by or group_by in (["batter"], ["bowler"]):
+                group_by = ["bowler"]
         if operation == "player_compare" and leaderboard_wording and not has_comparison_pair:
             operation = "aggregate"
             group_by = [plan.entity] if plan.entity in {"batter", "bowler", "team"} else group_by
@@ -233,6 +242,7 @@ class SemanticQueryPlanner:
         return plan.model_copy(
             update={
                 "operation": operation,
+                "entity": entity,
                 "group_by": group_by,
                 "filters": filters,
                 "minimum_sample": minimum_sample,
@@ -599,6 +609,8 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_entity(lowered: str, metric: str) -> str:
+        if SemanticQueryPlanner._asks_for_bowling_perspective(lowered):
+            return "bowler"
         if metric in {"economy_rate", "bowling_average", "wickets_per_over", "wickets_taken", "bowler_dot_ball_percentage", "false_shots_per_over", "yorker_percentage", "yorker_count"}:
             return "bowler"
         if "which length" in lowered or "which line" in lowered:
@@ -618,6 +630,10 @@ class SemanticQueryPlanner:
         if metric in {"wickets", "wickets_taken", "economy_rate", "yorker_percentage", "yorker_count", "legal_balls", "overs_bowled", "false_shots_per_over", "bowler_dot_ball_percentage"}:
             return "bowler"
         return "batter"
+
+    @staticmethod
+    def _asks_for_bowling_perspective(lowered: str) -> bool:
+        return any(token in lowered for token in ("concede", "concedes", "conceded"))
 
     @staticmethod
     def _is_direct_player_metric_question(lowered: str, filters: dict[str, object]) -> bool:
@@ -676,7 +692,9 @@ class SemanticQueryPlanner:
         player = self._extract_player(question)
         if player:
             metric_owner = METRICS[metric].owner if metric in METRICS else ""
-            if ("which bowler" in lowered or lowered.startswith("who ")) and any(token in lowered for token in ("dismissed", "dismisses", "controls", "against")):
+            if self._asks_for_bowling_perspective(lowered):
+                filters["bowler"] = player
+            elif ("which bowler" in lowered or lowered.startswith("who ")) and any(token in lowered for token in ("dismissed", "dismisses", "controls", "against")):
                 filters["batter"] = player
             elif ("which length" in lowered or "which line" in lowered) and any(token in lowered for token in ("dismiss", "against", "to ")):
                 filters["batter"] = player
