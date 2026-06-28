@@ -123,6 +123,12 @@ METRIC_SYNONYMS = {
 }
 
 
+BOWLING_STYLE_LIST_GROUPS = {
+    frozenset({"left arm orthodox", "left arm unorthodox"}): "left_arm_spin",
+    frozenset({"left arm pace", "right arm pace"}): "pace",
+}
+
+
 def normalize_plan(plan: CricketQueryPlan) -> CricketQueryPlan:
     group_by = [_normalize_dimension(item) for item in plan.group_by]
     filters = _normalize_filters(plan.filters)
@@ -165,10 +171,25 @@ def _normalize_filters(filters: dict[str, object]) -> dict[str, object]:
         if isinstance(raw_value, str):
             normalized[key] = VALUE_SYNONYMS.get(key, {}).get(raw_value.lower(), raw_value)
         elif isinstance(raw_value, list):
-            normalized[key] = [
+            normalized_values = [
                 VALUE_SYNONYMS.get(key, {}).get(item.lower(), item) if isinstance(item, str) else item
                 for item in raw_value
             ]
+            if key == "bowling_style":
+                normalized[key] = _normalize_bowling_style_list(normalized_values)
+            else:
+                normalized[key] = normalized_values
         else:
             normalized[key] = raw_value
     return normalized
+
+
+def _normalize_bowling_style_list(values: list[object]) -> object:
+    if not all(isinstance(value, str) for value in values):
+        return values
+    style_phrases = frozenset(
+        " ".join(value.lower().replace("-", " ").replace("_", " ").split())
+        for value in values
+        if isinstance(value, str)
+    )
+    return BOWLING_STYLE_LIST_GROUPS.get(style_phrases, values)
