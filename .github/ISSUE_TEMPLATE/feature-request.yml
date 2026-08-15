@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a new evidence-backed cricket analysis capability.
+title: "feature: "
+labels: [needs-triage]
+body:
+  - type: textarea
+    attributes:
+      label: User question
+      description: Give representative questions this should answer.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Required data and metric definition
+      description: Identify fields, filters, formulae and minimum sample safeguards.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Acceptance checks
+      description: Describe supported, ambiguous and insufficient-data cases.
+    validations:
+      required: true

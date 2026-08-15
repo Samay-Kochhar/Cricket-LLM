@@ -1,0 +1,35 @@
+name: Bug report
+description: Report an incorrect answer, failure or interface problem.
+title: "bug: "
+labels: [needs-triage]
+body:
+  - type: textarea
+    attributes:
+      label: Question or action
+      description: What did you ask or do?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Actual behaviour
+      description: Include the answer/status, but remove secrets and private data.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Expected evidence-backed behaviour
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Dataset version or maximum year
+  - type: dropdown
+    attributes:
+      label: Surface
+      options:
+        - Docker / Next.js
+        - Streamlit demo
+        - Backend API
+        - Data ingestion
+    validations:
+      required: true

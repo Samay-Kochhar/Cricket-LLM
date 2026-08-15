@@ -5,7 +5,8 @@
 CricAtlas is packaged for local laptop hosting first. The official full-stack path is Docker Compose:
 
 1. Copy `.env.example` to `.env`
-2. Place the ODI CSV at `data/odi_bbb-25.csv`
+2. Set `CRICATLAS_DATA_URL` to the verified direct CSV/ZIP download, or place
+   the ODI CSV at `data/odi_bbb-25.csv`
 3. Run:
 
 ```bash
@@ -14,7 +15,8 @@ docker compose up --build
 
 The compose stack does three things:
 
-1. `ingestion` generates `data/odi_analytics.duckdb` and refreshes `docs/data-profile.md`
+1. `ingestion` reuses existing data or downloads the configured source, then
+   generates `data/odi_analytics.duckdb` and refreshes `docs/data-profile.md`
 2. `backend` serves the FastAPI API on port `8000`
 3. `frontend` serves the Next.js app on port `3000`
 
@@ -27,6 +29,9 @@ The compose stack does three things:
 - `GEMINI_COMPLEX_MODEL`: higher-reasoning Gemini model for harder questions; defaults to `gemini-2.5-pro`
 - `BACKEND_INTERNAL_URL`: internal URL used by the Next.js proxy route inside the frontend container
 - `NEXT_PUBLIC_API_BASE_URL`: optional browser override for direct API calls; leave blank for same-origin proxy mode
+- `CRICATLAS_DATA_URL`: direct CSV/ZIP download used when local data is absent
+- `CRICATLAS_DATA_SHA256`: optional checksum of the downloaded artifact
+- `CRICATLAS_DATA_ARCHIVE_MEMBER`: CSV path/name inside a multi-file ZIP
 
 ## Local Development Without Docker
 
@@ -48,6 +53,9 @@ The frontend now defaults to same-origin API proxying through Next.js, so LAN/br
 
 ## Notes
 
-- The CSV is intentionally not committed. Anyone cloning the repo must place it in `data/`.
+- The CSV is intentionally not committed. Fresh clones can download it through
+  the configured source URL; manual placement in `data/` remains supported.
 - The generated DuckDB is also local by default.
 - If ingestion fails, the backend will not become healthy because the derived DuckDB file is required.
+- The hosted Streamlit demo is separate from the full Next.js application; see
+  [streamlit-deployment.md](streamlit-deployment.md).

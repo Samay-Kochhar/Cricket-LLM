@@ -3,9 +3,13 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    command: >
-      sh -c "python ingestion/app/load_odi_csv.py &&
-             python ingestion/app/profile_dataset.py"
+    command:
+      [
+        "python",
+        "scripts/bootstrap_data.py",
+        "--profile-output",
+        "/app/docs/data-profile.md",
+      ]
     environment:
       APP_ENV: ${APP_ENV:-development}
       DUCKDB_PATH: ${DUCKDB_PATH:-/app/data/odi_analytics.duckdb}
@@ -14,6 +18,9 @@ services:
       GEMINI_COMPLEX_MODEL: ${GEMINI_COMPLEX_MODEL:-gemini-2.5-pro}
       USE_SEMANTIC_ANALYTICS_V2: ${USE_SEMANTIC_ANALYTICS_V2:-true}
       SEMANTIC_V2_DEV_FALLBACK: ${SEMANTIC_V2_DEV_FALLBACK:-false}
+      CRICATLAS_DATA_URL: ${CRICATLAS_DATA_URL:-}
+      CRICATLAS_DATA_SHA256: ${CRICATLAS_DATA_SHA256:-}
+      CRICATLAS_DATA_ARCHIVE_MEMBER: ${CRICATLAS_DATA_ARCHIVE_MEMBER:-}
     volumes:
       - ./data:/app/data
       - ./docs:/app/docs

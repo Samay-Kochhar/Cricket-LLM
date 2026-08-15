@@ -111,18 +111,34 @@ python scripts/run_local.py
 For Docker the `.env` file **is required** — `docker compose` reads it.
 
 ```powershell
-# 0. Place data/odi_bbb-25.csv first
 copy .env.example .env
-# open .env and set GEMINI_API_KEY if you have one (optional)
+# Set CRICATLAS_DATA_URL to the verified direct dataset download, or place
+# data/odi_bbb-25.csv manually. GEMINI_API_KEY remains optional.
 docker compose up --build
 ```
 
 The compose stack:
-1. `ingestion` builds `data/odi_analytics.duckdb` and refreshes `docs/data-profile.md`
+1. `ingestion` downloads/reuses the source data, builds `data/odi_analytics.duckdb`, and refreshes `docs/data-profile.md`
 2. `backend` serves the FastAPI API on port `8000`
 3. `frontend` serves the Next.js app on port `3000`
 
 Open `http://localhost:3000`.
+
+---
+
+## Share and contribute
+
+- **Open-source development:** start with [CONTRIBUTING.md](CONTRIBUTING.md).
+- **Automatic data setup:** Docker and Streamlit share
+  `python scripts/bootstrap_data.py`; see [Data setup](docs/data-setup.md).
+- **Free hosted demo:** `streamlit_app.py` reuses the Python analytics engine
+  without replacing the Next.js product UI; see
+  [Streamlit deployment](docs/streamlit-deployment.md).
+- **Licence:** CricAtlas code is available under the [MIT License](LICENSE).
+
+For a fresh clone, configure `CRICATLAS_DATA_URL` with the verified direct
+dataset download. Existing installations continue to reuse their local CSV or
+DuckDB without downloading it again.
 
 ---
 
@@ -188,7 +204,7 @@ return `insufficient_evidence`, never invented analysis), not coverage. See
 ## Notes
 - V1 is ODI-only.
 - Database-derived stats are the primary truth source.
-- The CSV and the generated DuckDB are intentionally not committed; place the CSV
-  in `data/` before running.
+- The CSV and generated DuckDB are intentionally not committed. Configure the
+  automatic source download or place the CSV in `data/` manually.
 - The preferred product name is `CricAtlas`; rename the GitHub repository
   (`Cricket-LLM`) when convenient.

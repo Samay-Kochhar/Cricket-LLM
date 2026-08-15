@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir \
 
 COPY backend /app/backend
 COPY ingestion /app/ingestion
+COPY scripts/bootstrap_data.py /app/scripts/bootstrap_data.py
 
 EXPOSE 8000
 
