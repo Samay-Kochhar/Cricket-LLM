@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import logging
 import os
 from pathlib import Path
@@ -237,15 +238,21 @@ def render_page() -> None:
     try:
         with st.spinner("Preparing the ODI evidence…"):
             services = initialize_services()
-            from backend.app.services.chat_service import ChatHistoryTurn, ConversationState
+            from backend.app.services.chat_service import ChatHistoryTurn
 
             history = [ChatHistoryTurn.model_validate(turn) for turn in st.session_state.history]
-            state = (
-                ConversationState.model_validate(st.session_state.conversation_state)
-                if st.session_state.conversation_state
-                else None
-            )
-            reply = services["chat_service"].reply(question, history, state)
+            chat_service = services["chat_service"]
+            if "conversation_state" in inspect.signature(chat_service.reply).parameters:
+                from backend.app.services.chat_service import ConversationState
+
+                state = (
+                    ConversationState.model_validate(st.session_state.conversation_state)
+                    if st.session_state.conversation_state
+                    else None
+                )
+                reply = chat_service.reply(question, history, state)
+            else:
+                reply = chat_service.reply(question, history)
     except Exception:
         LOGGER.exception("CricAtlas Streamlit data service failed to initialize")
         st.error(
@@ -261,8 +268,9 @@ def render_page() -> None:
             {"role": "assistant", "content": reply.message},
         ]
     )
+    conversation_state = getattr(reply, "conversation_state", None)
     st.session_state.conversation_state = (
-        reply.conversation_state.model_dump(mode="json") if reply.conversation_state else None
+        conversation_state.model_dump(mode="json") if conversation_state else None
     )
     st.rerun()
 
