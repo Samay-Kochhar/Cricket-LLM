@@ -146,11 +146,11 @@ def build_pitch_heatmap(
             )
             average_label = f"{average:.1f}" if average is not None else "—"
             if cell and balls < min_balls:
-                sample_label = f"<br><span style='font-size:10px'>W {dismissals} · B {balls} · Low sample</span>"
+                sample_label = f"<br>W {dismissals} · B {balls}<br><i>Low sample</i>"
             elif cell:
-                sample_label = f"<br><span style='font-size:10px'>W {dismissals} · B {balls}</span>"
+                sample_label = f"<br>W {dismissals} · B {balls}"
             else:
-                sample_label = "<br><span style='font-size:10px'>No data</span>"
+                sample_label = "<br>No data"
             annotations.append(
                 {
                     "x": _display_label(line),
@@ -189,7 +189,7 @@ def build_pitch_heatmap(
             text_colour = "#1D292E" if 0.28 <= relative_value <= 0.68 else "#F8F6F0"
         else:
             text_colour = "#1D292E" if abs(value) <= (zmax * 0.22) else "#F8F6F0"
-        annotation["font"] = {"size": 12, "color": text_colour}
+        annotation["font"] = {"size": 11, "color": text_colour}
 
     figure = go.Figure(
         go.Heatmap(
@@ -216,7 +216,7 @@ def build_pitch_heatmap(
         yaxis_title="Length",
         annotations=annotations,
     )
-    figure = _base_layout(figure, height=470)
+    figure = _base_layout(figure, height=max(560, 92 * len(lengths) + 140))
     figure.update_layout(plot_bgcolor="#EDE7DC")
     return figure
 
@@ -392,7 +392,7 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         return
 
     st.subheader(f"{player} · {phase_label}")
-    metric_columns = st.columns(7)
+    metric_columns = [*st.columns(4), *st.columns(3)]
     metrics = (
         ("Runs", f"{summary['runs_scored']:,}"),
         ("Balls", f"{summary['balls_faced']:,}"),
