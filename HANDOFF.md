@@ -68,7 +68,7 @@ data/odi_bbb-25.csv
 
 ### Step 1 — Python environment
 ```powershell
-conda env create -f environment.yml
+conda env create -f environment.local.yml
 conda activate odi-analyst-workbench
 ```
 
@@ -167,7 +167,7 @@ data/             Dataset CSV + generated DuckDB (both gitignored)
 docs/             plan.md, deployment.md, lan-usage.md, metric-catalog.md, data-profile.md
 tests/            backend pytest + evals (golden queries); frontend e2e under frontend/e2e/
 docker-compose.yml
-environment.yml   conda env (odi-analyst-workbench)
+environment.local.yml   conda env (odi-analyst-workbench)
 .env.example      environment variable template
 ```
 

@@ -53,7 +53,7 @@ def _backend_command() -> list[str]:
         ]
     raise RuntimeError(
         "Uvicorn is unavailable. Activate the odi-analyst-workbench Conda environment "
-        "or install the dependencies from environment.yml."
+        "or install the dependencies from environment.local.yml."
     )
 
 

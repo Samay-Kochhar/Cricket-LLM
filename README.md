@@ -34,7 +34,7 @@ data/odi_bbb-25.csv
 
 ### 1. Create the Conda environment
 ```powershell
-conda env create -f environment.yml
+conda env create -f environment.local.yml
 conda activate odi-analyst-workbench
 ```
 
@@ -95,7 +95,7 @@ Open `http://localhost:3000`.
 ### Copy-paste summary (local)
 ```powershell
 # 0. Place data/odi_bbb-25.csv first, then:
-conda env create -f environment.yml
+conda env create -f environment.local.yml
 conda activate odi-analyst-workbench
 cd frontend; npm install; cd ..
 python ingestion/app/load_odi_csv.py
@@ -112,8 +112,8 @@ For Docker the `.env` file **is required** — `docker compose` reads it.
 
 ```powershell
 copy .env.example .env
-# Set CRICATLAS_DATA_URL to the verified direct dataset download, or place
-# data/odi_bbb-25.csv manually. GEMINI_API_KEY remains optional.
+# Add GEMINI_API_KEY if you want Gemini narrative/interpretation. The published
+# ODI dataset downloads automatically when local data is absent.
 docker compose up --build
 ```
 
@@ -136,9 +136,9 @@ Open `http://localhost:3000`.
   [Streamlit deployment](docs/streamlit-deployment.md).
 - **Licence:** CricAtlas code is available under the [MIT License](LICENSE).
 
-For a fresh clone, configure `CRICATLAS_DATA_URL` with the verified direct
-dataset download. Existing installations continue to reuse their local CSV or
-DuckDB without downloading it again.
+For a fresh clone, the verified publisher dataset downloads automatically.
+Existing installations continue to reuse their local CSV or DuckDB without
+downloading it again. `CRICATLAS_DATA_URL` remains available as an override.
 
 ---
 
