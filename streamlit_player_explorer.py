@@ -225,7 +225,8 @@ def build_pitch_heatmap(
     )
     figure = _base_layout(figure, height=max(560, 92 * len(lengths) + 140))
     figure.update_layout(plot_bgcolor="#69737A")
-    figure.update_yaxes(autorange="reversed")
+    figure.update_xaxes(showgrid=False, zeroline=False)
+    figure.update_yaxes(autorange="reversed", showgrid=False, zeroline=False)
     return figure
 
 

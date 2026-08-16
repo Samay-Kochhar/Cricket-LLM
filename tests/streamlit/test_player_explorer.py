@@ -128,6 +128,8 @@ def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> 
         "Short",
     ]
     assert figure.layout.yaxis.autorange == "reversed"
+    assert figure.layout.xaxis.showgrid is False
+    assert figure.layout.yaxis.showgrid is False
     assert all("Avg n/a" in annotation.text for annotation in figure.layout.annotations)
     assert all("—" not in annotation.text for annotation in figure.layout.annotations)
 
