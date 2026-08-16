@@ -17,6 +17,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+DEFAULT_DATA_SOURCE_PAGE = "https://himanishganjoo.com/cricket-data/"
+DEFAULT_DATA_URL = (
+    "https://www.dropbox.com/scl/fi/ld7wj5wtyekke7h9zdtgv/odi_bbb.csv"
+    "?rlkey=a9fgdu2qrma6w3w6fpcz3s2f7&dl=1"
+)
+
 
 class DataBootstrapError(RuntimeError):
     """Raised when CricAtlas cannot prepare its local analytical data."""
@@ -147,7 +153,7 @@ def ensure_database(
         return db_path
 
     ensure_source_csv(
-        source_url,
+        source_url or DEFAULT_DATA_URL,
         csv_path,
         expected_sha256,
         archive_member,
@@ -217,7 +223,14 @@ def main() -> None:
     )
     parser.add_argument("--csv-path", type=Path, default=root / "data" / "odi_bbb-25.csv")
     parser.add_argument("--db-path", type=Path, default=root / "data" / "odi_analytics.duckdb")
-    parser.add_argument("--source-url", default=os.getenv("CRICATLAS_DATA_URL"))
+    parser.add_argument(
+        "--source-url",
+        default=os.getenv("CRICATLAS_DATA_URL") or DEFAULT_DATA_URL,
+        help=(
+            "Direct source CSV/ZIP URL. Defaults to Himanish Ganjoo's published ODI CSV; "
+            "CRICATLAS_DATA_URL overrides it."
+        ),
+    )
     parser.add_argument("--sha256", default=os.getenv("CRICATLAS_DATA_SHA256"))
     parser.add_argument("--archive-member", default=os.getenv("CRICATLAS_DATA_ARCHIVE_MEMBER"))
     parser.add_argument("--force-download", action="store_true")

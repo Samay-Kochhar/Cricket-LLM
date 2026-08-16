@@ -6,20 +6,21 @@ on the server.
 
 ## Source and attribution
 
-The enriched ODI delivery dataset used by the current development environment
-was provided by Himanshu Ganjoo. Before the first public release, add the
-verified original download URL, licence and checksum here and in the deployment
-environment. Do not substitute a similarly named dataset without validating
-the required schema, especially the `line`, `length`, `shot`, `control` and
-wagon-wheel fields.
+The enriched ODI delivery dataset is published by Himanish Ganjoo for use by
+the wider cricket community. The publisher says the stable links are updated
+periodically. CricAtlas downloads the original file directly and does not
+redistribute it in this repository or its container image.
 
-Required release metadata:
-
-- Original source page: **pending verified link**
-- Direct CSV/ZIP download: **pending verified link**
-- Licence: **pending verification**
-- SHA-256: **pending calculation from the published artifact**
-- ZIP member: `odi_bbb-25.csv` unless the published archive uses another path
+- Original source page: <https://himanishganjoo.com/cricket-data/>
+- Direct CSV: <https://www.dropbox.com/scl/fi/ld7wj5wtyekke7h9zdtgv/odi_bbb.csv?rlkey=a9fgdu2qrma6w3w6fpcz3s2f7&dl=1>
+- Publisher: Himanish Ganjoo
+- Dataset licence: no formal licence is stated on the source page as of
+  16 August 2026. The page permits community use, but that is not the same as
+  an OSI or Creative Commons licence. CricAtlas's MIT licence covers the code,
+  not this third-party dataset.
+- SHA-256: not pinned because the publisher updates the file behind the stable
+  link. A release can pin a checksum when reproducibility is more important
+  than receiving publisher updates automatically.
 
 ## Automatic bootstrap
 
@@ -33,7 +34,7 @@ It performs the following steps:
 
 1. Reuse `data/odi_analytics.duckdb` when it already exists.
 2. Reuse `data/odi_bbb-25.csv` when only the database is missing.
-3. Download `CRICATLAS_DATA_URL` when both are missing.
+3. Download Himanish Ganjoo's published ODI CSV when both are missing.
 4. Verify `CRICATLAS_DATA_SHA256` when configured.
 5. Extract the configured CSV from ZIP archives.
 6. Build DuckDB atomically from the validated CSV schema.
@@ -42,7 +43,7 @@ Supported environment variables:
 
 | Variable | Meaning |
 |---|---|
-| `CRICATLAS_DATA_URL` | Direct HTTP(S) URL for the source CSV or ZIP |
+| `CRICATLAS_DATA_URL` | Optional direct CSV/ZIP override; the published ODI CSV is the default |
 | `CRICATLAS_DATA_SHA256` | Optional checksum of the downloaded artifact |
 | `CRICATLAS_DATA_ARCHIVE_MEMBER` | CSV path/name inside a multi-file ZIP |
 

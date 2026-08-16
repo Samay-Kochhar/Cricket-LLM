@@ -5,8 +5,8 @@
 CricAtlas is packaged for local laptop hosting first. The official full-stack path is Docker Compose:
 
 1. Copy `.env.example` to `.env`
-2. Set `CRICATLAS_DATA_URL` to the verified direct CSV/ZIP download, or place
-   the ODI CSV at `data/odi_bbb-25.csv`
+2. Optionally place the ODI CSV at `data/odi_bbb-25.csv`; otherwise the verified
+   publisher file is downloaded automatically
 3. Run:
 
 ```bash
@@ -29,7 +29,7 @@ The compose stack does three things:
 - `GEMINI_COMPLEX_MODEL`: higher-reasoning Gemini model for harder questions; defaults to `gemini-2.5-pro`
 - `BACKEND_INTERNAL_URL`: internal URL used by the Next.js proxy route inside the frontend container
 - `NEXT_PUBLIC_API_BASE_URL`: optional browser override for direct API calls; leave blank for same-origin proxy mode
-- `CRICATLAS_DATA_URL`: direct CSV/ZIP download used when local data is absent
+- `CRICATLAS_DATA_URL`: optional direct CSV/ZIP override
 - `CRICATLAS_DATA_SHA256`: optional checksum of the downloaded artifact
 - `CRICATLAS_DATA_ARCHIVE_MEMBER`: CSV path/name inside a multi-file ZIP
 

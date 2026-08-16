@@ -249,8 +249,7 @@ def render_page() -> None:
     except Exception:
         LOGGER.exception("CricAtlas Streamlit data service failed to initialize")
         st.error(
-            "CricAtlas could not start its data service. Configure CRICATLAS_DATA_URL in "
-            "Streamlit Secrets or provide the local database. Check the private app logs for details."
+            "CricAtlas could not prepare its data service. Check the private app logs for details."
         )
         return
 

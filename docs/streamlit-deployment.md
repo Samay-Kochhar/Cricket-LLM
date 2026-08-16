@@ -21,8 +21,8 @@ If the local DuckDB already exists, no download occurs.
 2. In Streamlit Community Cloud, create an app from the repository.
 3. Set the entrypoint to `streamlit_app.py`.
 4. Choose a public subdomain such as `cricatlas.streamlit.app` if available.
-5. Add the contents of `.streamlit/secrets.toml.example` in the app's Secrets
-   panel, replacing placeholders with the verified data URL and new Gemini key.
+5. In **Advanced settings → Secrets**, add the new Gemini key. No data URL is
+   needed for the standard ODI dataset.
 6. Deploy and wait for the first data bootstrap to finish.
 
 The initial start can take several minutes because the server may need to
@@ -32,13 +32,14 @@ rebuild or storage reset.
 
 ## Secrets
 
-Never commit `.streamlit/secrets.toml`. Store these only in Streamlit's Secrets
-panel:
+Never commit `.streamlit/secrets.toml`. Store the Gemini key only in
+Streamlit's private Secrets panel:
 
 - `GEMINI_API_KEY`
-- `CRICATLAS_DATA_URL`
-- `CRICATLAS_DATA_SHA256`
-- `CRICATLAS_DATA_ARCHIVE_MEMBER`
+
+`CRICATLAS_DATA_URL`, `CRICATLAS_DATA_SHA256`, and
+`CRICATLAS_DATA_ARCHIVE_MEMBER` are optional developer overrides. The normal
+deployment uses the verified publisher URL built into the bootstrap script.
 
 The demo can run without Gemini, but interpretation and narrative quality will
 be reduced. Use a dedicated Gemini project with the intended spending cap.
