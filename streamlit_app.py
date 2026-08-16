@@ -171,6 +171,7 @@ def render_page() -> None:
         }
         .atlas-kicker { color:#FFB268; letter-spacing:.16em; text-transform:uppercase; font-weight:700; font-size:.72rem; }
         .atlas-title { font-size:clamp(2.4rem,4vw,4rem); line-height:.98; letter-spacing:-.05em; margin:.4rem 0 1rem; max-width:14ch; }
+        .explorer-title { max-width:18ch; }
         .atlas-copy { color:#A7B2BB; max-width:760px; font-size:1.05rem; line-height:1.7; }
         .status-pill { display:inline-block; color:#7CE2B4; background:rgba(124,226,180,.12); border:1px solid rgba(124,226,180,.28); border-radius:999px; padding:.25rem .7rem; font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; margin:.2rem 0 .8rem; }
         </style>
@@ -184,14 +185,28 @@ def render_page() -> None:
         st.markdown("### CricAtlas")
         st.caption("ODI-first · evidence-first")
         st.markdown("Database statistics remain the source of truth. Gemini assists with interpretation and explanation.")
-        if st.button("New analysis", width="stretch"):
-            st.session_state.messages = []
-            st.session_state.history = []
-            st.session_state.conversation_state = None
-            st.rerun()
+        view = st.radio("Navigate", ["Ask Atlas", "Player Explorer"], label_visibility="collapsed")
+        if view == "Ask Atlas":
+            if st.button("New analysis", width="stretch"):
+                st.session_state.messages = []
+                st.session_state.history = []
+                st.session_state.conversation_state = None
+                st.rerun()
         st.divider()
         st.caption("Private testing deployment")
-        st.caption("The full Next.js CricAtlas interface remains available in the Docker edition.")
+        st.caption("Chat and Player Explorer are hosted here. Compare and venue explorers remain in the Docker edition.")
+
+    if view == "Player Explorer":
+        try:
+            with st.spinner("Preparing the ODI player database…"):
+                services = initialize_services()
+            from streamlit_player_explorer import render_player_explorer
+
+            render_player_explorer(services)
+        except Exception:
+            LOGGER.exception("CricAtlas Streamlit player explorer failed to initialize")
+            st.error("CricAtlas could not prepare the Player Explorer. Check the private app logs for details.")
+        return
 
     st.markdown("<div class='atlas-kicker'>◆ Cricket intelligence workbench</div>", unsafe_allow_html=True)
     st.markdown("<h1 class='atlas-title'>Ask cricket questions.<br>Inspect the evidence.</h1>", unsafe_allow_html=True)
