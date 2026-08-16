@@ -133,8 +133,9 @@ def render_reply(reply_data: dict[str, Any]) -> None:
         st.caption(reply.resolution_note)
     if reply.query_response:
         render_query_response(reply.query_response)
-    if reply.clarification_options:
-        st.info("Try one of these clarified versions: " + " · ".join(item.label for item in reply.clarification_options))
+    clarification_options = getattr(reply, "clarification_options", [])
+    if clarification_options:
+        st.info("Try one of these clarified versions: " + " · ".join(item.label for item in clarification_options))
     if reply.suggestions:
         st.caption("Continue with: " + " · ".join(reply.suggestions[:3]))
 
