@@ -53,11 +53,13 @@ def test_pitch_heatmap_colours_scoring_relative_to_player_baseline() -> None:
     assert list(figure.data[0].x) == ["Outside Offstump", "On The Stumps"]
     assert figure.data[0].z[0][0] == -50.0
     assert figure.data[0].z[0][1] == 50.0
+    assert any(colour == "#F2C94C" for _, colour in figure.data[0].colorscale)
     assert "Avg 25.0" in figure.layout.annotations[0].text
     assert "W 2" in figure.layout.annotations[0].text
+    assert "· B" not in figure.layout.annotations[0].text
 
 
-def test_pitch_heatmap_colours_dismissal_rate_and_neutralises_small_samples() -> None:
+def test_pitch_heatmap_colours_dismissal_chance_and_greys_small_samples() -> None:
     figure = build_pitch_heatmap(
         {
             "cells": [
@@ -79,13 +81,55 @@ def test_pitch_heatmap_colours_dismissal_rate_and_neutralises_small_samples() ->
                 },
             ]
         },
-        colour_metric="Dismissal risk",
+        colour_metric="Dismissal chance",
         min_balls=30,
     )
 
     assert figure.data[0].z[0][0] == 1.0
     assert figure.data[0].z[0][1] is None
     assert "Low sample" in figure.layout.annotations[1].text
+    assert "· B" not in figure.layout.annotations[1].text
+    assert figure.layout.annotations[1].font.color == "#F8F6F0"
+    assert figure.layout.plot_bgcolor == "#69737A"
+    assert figure.data[0].colorbar.title.text == "Dismissal<br>chance (%)"
+
+
+def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> None:
+    lengths = [
+        "FULL_TOSS",
+        "YORKER",
+        "FULL",
+        "GOOD_LENGTH",
+        "SHORT_OF_A_GOOD_LENGTH",
+        "SHORT",
+    ]
+    figure = build_pitch_heatmap(
+        {
+            "cells": [
+                {
+                    "line": "ON_THE_STUMPS",
+                    "length": length,
+                    "balls": 40,
+                    "runs": 40,
+                    "strike_rate": 100.0,
+                    "dismissals": 0,
+                }
+                for length in lengths
+            ]
+        }
+    )
+
+    assert list(figure.data[0].y) == [
+        "Full Toss",
+        "Yorker",
+        "Full",
+        "Good Length",
+        "Short Of A Good Length",
+        "Short",
+    ]
+    assert figure.layout.yaxis.autorange == "reversed"
+    assert all("Avg n/a" in annotation.text for annotation in figure.layout.annotations)
+    assert all("—" not in annotation.text for annotation in figure.layout.annotations)
 
 
 def test_wagon_and_shot_figures_render_cricket_outcomes() -> None:

@@ -19,6 +19,7 @@ LINE_ORDER = [
     "WIDE_DOWN_LEG",
 ]
 LENGTH_ORDER = [
+    "FULL_TOSS",
     "YORKER",
     "FULL",
     "GOOD_LENGTH",
@@ -123,7 +124,7 @@ def build_pitch_heatmap(
             average = (runs / dismissals) if dismissals else None
             dismissal_rate = (dismissals / balls * 100.0) if balls else None
             is_reliable = balls >= min_balls and strike_rate is not None
-            if is_reliable and colour_metric == "Dismissal risk":
+            if is_reliable and colour_metric == "Dismissal chance":
                 colour_value = dismissal_rate
             elif is_reliable:
                 colour_value = strike_rate - baseline_strike_rate
@@ -144,22 +145,21 @@ def build_pitch_heatmap(
                     dismissal_rate,
                 ]
             )
-            average_label = f"{average:.1f}" if average is not None else "—"
-            if cell and balls < min_balls:
-                sample_label = f"<br>W {dismissals} · B {balls}<br><i>Low sample</i>"
-            elif cell:
-                sample_label = f"<br>W {dismissals} · B {balls}"
+            average_label = f"{average:.1f}" if average is not None else "n/a"
+            if not cell:
+                annotation_text = "<b>No data</b>"
+            elif balls < min_balls:
+                annotation_text = (
+                    f"<b>SR {strike_rate:.1f}</b><br>Avg {average_label}"
+                    f"<br>W {dismissals}<br><i>Low sample</i>"
+                )
             else:
-                sample_label = "<br>No data"
+                annotation_text = f"<b>SR {strike_rate:.1f}</b><br>Avg {average_label}<br>W {dismissals}"
             annotations.append(
                 {
                     "x": _display_label(line),
                     "y": _display_label(length),
-                    "text": (
-                        f"<b>SR {strike_rate:.1f}</b><br>Avg {average_label}{sample_label}"
-                        if strike_rate is not None
-                        else f"<b>SR —</b><br>Avg —{sample_label}"
-                    ),
+                    "text": annotation_text,
                     "showarrow": False,
                 }
             )
@@ -167,15 +167,22 @@ def build_pitch_heatmap(
         z.append(z_row)
         customdata.append(custom_row)
 
-    if colour_metric == "Dismissal risk":
-        colorscale = [[0, "#237A49"], [0.45, "#EEE7D8"], [1, "#B83232"]]
+    if colour_metric == "Dismissal chance":
+        colorscale = [[0, "#237A49"], [0.5, "#F2C94C"], [1, "#B83232"]]
         zmin = 0.0
         zmax = max(reliable_values, default=3.0)
-        colorbar_title = "Dismissals<br>per 100 balls"
-        chart_title = "Line × length dismissal risk"
+        colorbar_title = "Dismissal<br>chance (%)"
+        chart_title = "Line × length dismissal chance"
     else:
-        colorscale = [[0, "#B83232"], [0.5, "#EEE7D8"], [1, "#237A49"]]
         colour_extent = max((abs(value) for value in reliable_values), default=10.0)
+        yellow_band = min(0.24, 7.5 / (2 * colour_extent)) if colour_extent else 0.24
+        colorscale = [
+            [0, "#B83232"],
+            [0.5 - yellow_band, "#D9534F"],
+            [0.5, "#F2C94C"],
+            [0.5 + yellow_band, "#3FAE6A"],
+            [1, "#1F7A46"],
+        ]
         zmin = -colour_extent
         zmax = colour_extent
         colorbar_title = "SR vs<br>baseline"
@@ -183,8 +190,8 @@ def build_pitch_heatmap(
 
     for annotation, value in zip(annotations, annotation_values, strict=True):
         if value is None:
-            text_colour = "#1D292E"
-        elif colour_metric == "Dismissal risk":
+            text_colour = "#F8F6F0"
+        elif colour_metric == "Dismissal chance":
             relative_value = value / zmax if zmax else 0.0
             text_colour = "#1D292E" if 0.28 <= relative_value <= 0.68 else "#F8F6F0"
         else:
@@ -217,7 +224,8 @@ def build_pitch_heatmap(
         annotations=annotations,
     )
     figure = _base_layout(figure, height=max(560, 92 * len(lengths) + 140))
-    figure.update_layout(plot_bgcolor="#EDE7DC")
+    figure.update_layout(plot_bgcolor="#69737A")
+    figure.update_yaxes(autorange="reversed")
     return figure
 
 
@@ -436,11 +444,11 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         if pitch.get("cells"):
             colour_metric = st.radio(
                 "Colour cells by",
-                ["Scoring rate", "Dismissal risk"],
+                ["Scoring rate", "Dismissal chance"],
                 horizontal=True,
                 help=(
                     "Scoring rate compares each zone with the player's line/length baseline. "
-                    "Dismissal risk uses dismissals per 100 balls, not raw wicket totals."
+                    "Dismissal chance is the percentage of recorded balls in the cell that ended in dismissal."
                 ),
             )
             st.plotly_chart(
@@ -449,8 +457,9 @@ def render_player_explorer(services: dict[str, Any]) -> None:
                 config={"displayModeBar": False},
             )
             st.caption(
-                "Every cell shows strike rate (SR), batting average (Avg), dismissals (W) and balls (B). "
-                "Cells below 30 balls are neutral to avoid over-interpreting small samples."
+                "Cells show strike rate (SR), batting average (Avg) and dismissals (W). In scoring mode, "
+                "red is below the player's baseline, yellow is around it and green is above it. "
+                "Cells below 30 balls are grey to avoid over-interpreting small samples; ball counts remain on hover."
             )
             _coverage_caption("Line/length coverage", pitch)
             line_column, length_column = st.columns(2)
