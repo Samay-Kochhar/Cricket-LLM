@@ -1,6 +1,7 @@
 name: odi-analyst-workbench
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - python=3.12
   - nodejs=24
