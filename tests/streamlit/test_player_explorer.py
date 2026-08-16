@@ -23,37 +23,92 @@ def test_year_and_phase_figures_preserve_profile_metrics() -> None:
     assert list(phase.data[1].y) == [91.0]
 
 
-def test_pitch_heatmap_maps_line_length_cells_and_evidence() -> None:
+def test_pitch_heatmap_colours_scoring_relative_to_player_baseline() -> None:
+    pitch = {
+        "cells": [
+            {
+                "line": "OUTSIDE_OFFSTUMP",
+                "length": "GOOD_LENGTH",
+                "balls": 100,
+                "runs": 50,
+                "strike_rate": 50.0,
+                "dismissals": 2,
+                "dot_balls": 50,
+                "control_percentage": 84.0,
+            },
+            {
+                "line": "ON_THE_STUMPS",
+                "length": "GOOD_LENGTH",
+                "balls": 100,
+                "runs": 150,
+                "strike_rate": 150.0,
+                "dismissals": 5,
+                "dot_balls": 10,
+                "control_percentage": 90.0,
+            },
+        ]
+    }
+    figure = build_pitch_heatmap(pitch, colour_metric="Scoring rate")
+
+    assert list(figure.data[0].x) == ["Outside Offstump", "On The Stumps"]
+    assert figure.data[0].z[0][0] == -50.0
+    assert figure.data[0].z[0][1] == 50.0
+    assert "Avg 25.0" in figure.layout.annotations[0].text
+    assert "W 2" in figure.layout.annotations[0].text
+
+
+def test_pitch_heatmap_colours_dismissal_rate_and_neutralises_small_samples() -> None:
     figure = build_pitch_heatmap(
         {
             "cells": [
                 {
                     "line": "OUTSIDE_OFFSTUMP",
                     "length": "GOOD_LENGTH",
-                    "balls": 50,
-                    "runs": 45,
-                    "strike_rate": 90.0,
-                    "dismissals": 2,
-                    "dot_balls": 20,
-                    "control_percentage": 84.0,
-                }
+                    "balls": 100,
+                    "runs": 80,
+                    "strike_rate": 80.0,
+                    "dismissals": 1,
+                },
+                {
+                    "line": "ON_THE_STUMPS",
+                    "length": "GOOD_LENGTH",
+                    "balls": 20,
+                    "runs": 30,
+                    "strike_rate": 150.0,
+                    "dismissals": 3,
+                },
             ]
-        }
+        },
+        colour_metric="Dismissal risk",
+        min_balls=30,
     )
 
-    assert list(figure.data[0].x) == ["Outside Offstump"]
-    assert list(figure.data[0].y) == ["Good Length"]
-    assert figure.data[0].z[0][0] == 90.0
-    assert figure.data[0].customdata[0][0][0] == 50
+    assert figure.data[0].z[0][0] == 1.0
+    assert figure.data[0].z[0][1] is None
+    assert "Low sample" in figure.layout.annotations[1].text
 
 
 def test_wagon_and_shot_figures_render_cricket_outcomes() -> None:
     wagon = build_wagon_wheel(
         {
             "handedness": "RHB",
-            "points": [
-                {"x": 250, "y": 150, "runs": 4, "outcome": "four"},
-                {"x": 100, "y": 220, "runs": 1, "outcome": "single"},
+            "sectors": [
+                {
+                    "zone_id": 1,
+                    "label": "Deep Midwicket",
+                    "balls": 40,
+                    "runs": 60,
+                    "dismissals": 2,
+                    "run_share_percentage": 60.0,
+                },
+                {
+                    "zone_id": 2,
+                    "label": "Long On",
+                    "balls": 30,
+                    "runs": 40,
+                    "dismissals": 1,
+                    "run_share_percentage": 40.0,
+                },
             ],
         }
     )
@@ -72,6 +127,9 @@ def test_wagon_and_shot_figures_render_cricket_outcomes() -> None:
         }
     )
 
-    assert {trace.name for trace in wagon.data} >= {"Four", "Single", "Batter"}
+    assert wagon.data[0].type == "barpolar"
+    assert list(wagon.data[0].theta) == [22.5, 67.5]
+    assert "60 runs" in wagon.data[1].text[0]
+    assert "60.0%" in wagon.data[1].text[0]
     assert list(shots.data[0].x) == [30]
     assert list(shots.data[0].y) == ["Cover Drive"]

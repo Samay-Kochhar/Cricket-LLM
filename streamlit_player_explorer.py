@@ -10,7 +10,6 @@ PAPER_COLOR = "rgba(0,0,0,0)"
 TEXT_COLOR = "#F3EDE4"
 ORANGE = "#F28F3B"
 GREEN = "#7CE2B4"
-BLUE = "#64B5F6"
 
 LINE_ORDER = [
     "WIDE_OUTSIDE_OFFSTUMP",
@@ -91,31 +90,106 @@ def build_phase_figure(rows: list[dict[str, Any]]) -> go.Figure:
     return _base_layout(figure)
 
 
-def build_pitch_heatmap(pitch: dict[str, Any]) -> go.Figure:
+def build_pitch_heatmap(
+    pitch: dict[str, Any],
+    *,
+    colour_metric: str = "Scoring rate",
+    min_balls: int = 30,
+) -> go.Figure:
     cells = [cell for cell in pitch.get("cells", []) if isinstance(cell, dict)]
     lines = _ordered_labels({str(cell["line"]) for cell in cells}, LINE_ORDER)
     lengths = _ordered_labels({str(cell["length"]) for cell in cells}, LENGTH_ORDER)
     cell_map = {(str(cell["length"]), str(cell["line"])): cell for cell in cells}
 
+    reliable_cells = [cell for cell in cells if int(cell.get("balls", 0) or 0) >= min_balls]
+    reliable_balls = sum(int(cell.get("balls", 0) or 0) for cell in reliable_cells)
+    reliable_runs = sum(int(cell.get("runs", 0) or 0) for cell in reliable_cells)
+    baseline_strike_rate = (reliable_runs / reliable_balls * 100.0) if reliable_balls else 0.0
+
     z: list[list[float | None]] = []
     customdata: list[list[list[object]]] = []
+    annotations: list[dict[str, Any]] = []
+    annotation_values: list[float | None] = []
+    reliable_values: list[float] = []
     for length in lengths:
         z_row: list[float | None] = []
         custom_row: list[list[object]] = []
         for line in lines:
             cell = cell_map.get((length, line), {})
-            z_row.append(float(cell["strike_rate"]) if cell.get("strike_rate") is not None else None)
+            balls = int(cell.get("balls", 0) or 0)
+            runs = int(cell.get("runs", 0) or 0)
+            dismissals = int(cell.get("dismissals", 0) or 0)
+            strike_rate = float(cell["strike_rate"]) if cell.get("strike_rate") is not None else None
+            average = (runs / dismissals) if dismissals else None
+            dismissal_rate = (dismissals / balls * 100.0) if balls else None
+            is_reliable = balls >= min_balls and strike_rate is not None
+            if is_reliable and colour_metric == "Dismissal risk":
+                colour_value = dismissal_rate
+            elif is_reliable:
+                colour_value = strike_rate - baseline_strike_rate
+            else:
+                colour_value = None
+            z_row.append(colour_value)
+            if colour_value is not None:
+                reliable_values.append(float(colour_value))
             custom_row.append(
                 [
-                    cell.get("balls", 0),
-                    cell.get("runs", 0),
-                    cell.get("dismissals", 0),
+                    balls,
+                    runs,
+                    dismissals,
                     cell.get("dot_balls", 0),
                     cell.get("control_percentage"),
+                    strike_rate,
+                    average,
+                    dismissal_rate,
                 ]
             )
+            average_label = f"{average:.1f}" if average is not None else "—"
+            if cell and balls < min_balls:
+                sample_label = f"<br><span style='font-size:10px'>W {dismissals} · B {balls} · Low sample</span>"
+            elif cell:
+                sample_label = f"<br><span style='font-size:10px'>W {dismissals} · B {balls}</span>"
+            else:
+                sample_label = "<br><span style='font-size:10px'>No data</span>"
+            annotations.append(
+                {
+                    "x": _display_label(line),
+                    "y": _display_label(length),
+                    "text": (
+                        f"<b>SR {strike_rate:.1f}</b><br>Avg {average_label}{sample_label}"
+                        if strike_rate is not None
+                        else f"<b>SR —</b><br>Avg —{sample_label}"
+                    ),
+                    "showarrow": False,
+                }
+            )
+            annotation_values.append(colour_value)
         z.append(z_row)
         customdata.append(custom_row)
+
+    if colour_metric == "Dismissal risk":
+        colorscale = [[0, "#237A49"], [0.45, "#EEE7D8"], [1, "#B83232"]]
+        zmin = 0.0
+        zmax = max(reliable_values, default=3.0)
+        colorbar_title = "Dismissals<br>per 100 balls"
+        chart_title = "Line × length dismissal risk"
+    else:
+        colorscale = [[0, "#B83232"], [0.5, "#EEE7D8"], [1, "#237A49"]]
+        colour_extent = max((abs(value) for value in reliable_values), default=10.0)
+        zmin = -colour_extent
+        zmax = colour_extent
+        colorbar_title = "SR vs<br>baseline"
+        chart_title = f"Line × length scoring · baseline SR {baseline_strike_rate:.1f}"
+
+    for annotation, value in zip(annotations, annotation_values, strict=True):
+        if value is None:
+            text_colour = "#1D292E"
+        elif colour_metric == "Dismissal risk":
+            relative_value = value / zmax if zmax else 0.0
+            text_colour = "#1D292E" if 0.28 <= relative_value <= 0.68 else "#F8F6F0"
+        else:
+            text_colour = "#1D292E" if abs(value) <= (zmax * 0.22) else "#F8F6F0"
+        annotation["font"] = {"size": 12, "color": text_colour}
 
     figure = go.Figure(
         go.Heatmap(
@@ -123,62 +197,109 @@ def build_pitch_heatmap(pitch: dict[str, Any]) -> go.Figure:
             y=[_display_label(length) for length in lengths],
             z=z,
             customdata=customdata,
-            colorscale=[[0, "#17232B"], [0.5, ORANGE], [1, "#FFD166"]],
-            colorbar=dict(title="Strike rate"),
+            colorscale=colorscale,
+            zmin=zmin,
+            zmax=zmax,
+            xgap=4,
+            ygap=4,
+            colorbar=dict(title=colorbar_title),
             hovertemplate=(
-                "%{y}, %{x}<br>Strike rate: %{z:.2f}<br>Balls: %{customdata[0]}"
-                "<br>Runs: %{customdata[1]}<br>Dismissals: %{customdata[2]}"
-                "<br>Dots: %{customdata[3]}<br>Control: %{customdata[4]:.1f}%<extra></extra>"
+                "%{y}, %{x}<br>Strike rate: %{customdata[5]:.2f}<br>Average: %{customdata[6]:.2f}"
+                "<br>Dismissals: %{customdata[2]}<br>Dismissals / 100 balls: %{customdata[7]:.2f}"
+                "<br>Balls: %{customdata[0]}<br>Runs: %{customdata[1]}<extra></extra>"
             ),
         )
     )
-    figure.update_layout(title="Line × length scoring map", xaxis_title="Line", yaxis_title="Length")
-    return _base_layout(figure, height=470)
+    figure.update_layout(
+        title=chart_title,
+        xaxis_title="Line",
+        yaxis_title="Length",
+        annotations=annotations,
+    )
+    figure = _base_layout(figure, height=470)
+    figure.update_layout(plot_bgcolor="#EDE7DC")
+    return figure
 
 
 def build_wagon_wheel(wagon: dict[str, Any]) -> go.Figure:
-    points = [point for point in wagon.get("points", []) if isinstance(point, dict)]
-    colors = {
-        "dot": "#65737E",
-        "single": GREEN,
-        "double": BLUE,
-        "triple": "#B39DDB",
-        "four": ORANGE,
-        "six": "#FFD166",
-        "wicket": "#EF5350",
-    }
+    sectors = sorted(
+        [sector for sector in wagon.get("sectors", []) if isinstance(sector, dict)],
+        key=lambda sector: int(sector.get("zone_id", 0)),
+    )
+    theta = [(int(sector.get("zone_id", 1)) - 1) * 45 + 22.5 for sector in sectors]
+    shares = [float(sector.get("run_share_percentage", 0) or 0) for sector in sectors]
+    max_share = max(shares, default=1.0)
+
+    def sector_colour(share: float) -> str:
+        strength = min(max(share / max_share, 0.0), 1.0)
+        red = round(68 - 35 * strength)
+        green = round(145 + 55 * strength)
+        blue = round(86 - 25 * strength)
+        return f"rgb({red},{green},{blue})"
+
     figure = go.Figure()
-    for outcome in ("dot", "single", "double", "triple", "four", "six", "wicket"):
-        outcome_points = [point for point in points if point.get("outcome") == outcome]
-        if not outcome_points:
-            continue
-        figure.add_scatter(
-            x=[point.get("x") for point in outcome_points],
-            y=[point.get("y") for point in outcome_points],
-            mode="markers",
-            name=outcome.title(),
-            marker=dict(
-                color=colors[outcome],
-                size=[7 + int(point.get("runs", 0) or 0) * 1.5 for point in outcome_points],
-                opacity=0.72,
-                line=dict(width=0.5, color="#091015"),
-            ),
-            customdata=[[point.get("runs", 0)] for point in outcome_points],
-            hovertemplate=f"{outcome.title()} · %{{customdata[0]}} runs<extra></extra>",
-        )
-    figure.add_shape(type="circle", x0=0, y0=0, x1=300, y1=300, line=dict(color="#52616B", width=2))
-    figure.add_scatter(
-        x=[150],
-        y=[150],
-        mode="markers",
-        marker=dict(symbol="diamond", size=12, color=TEXT_COLOR),
-        name="Batter",
+    figure.add_barpolar(
+        r=[100] * len(sectors),
+        theta=theta,
+        width=[45] * len(sectors),
+        marker=dict(
+            color=[sector_colour(share) for share in shares],
+            line=dict(color="rgba(241,244,222,.72)", width=1.5),
+        ),
+        customdata=[
+            [
+                sector.get("label"),
+                sector.get("runs", 0),
+                sector.get("run_share_percentage", 0),
+                sector.get("balls", 0),
+                sector.get("strike_rate"),
+                sector.get("dismissals", 0),
+            ]
+            for sector in sectors
+        ],
+        hovertemplate=(
+            "<b>%{customdata[0]}</b><br>%{customdata[1]} runs · %{customdata[2]:.2f}% share"
+            "<br>Balls: %{customdata[3]}<br>Strike rate: %{customdata[4]:.2f}"
+            "<br>Dismissals: %{customdata[5]}<extra></extra>"
+        ),
+        name="Scoring sectors",
+    )
+    figure.add_scatterpolar(
+        r=[65] * len(sectors),
+        theta=theta,
+        mode="text",
+        text=[
+            f"<b>{int(sector.get('runs', 0) or 0):,} runs</b>"
+            f"<br>{float(sector.get('run_share_percentage', 0) or 0):.1f}%"
+            for sector in sectors
+        ],
+        textfont=dict(color="#F7F8E8", size=11),
         hoverinfo="skip",
+        showlegend=False,
     )
     figure.update_layout(
-        title=f"Wagon wheel ({wagon.get('handedness') or 'hand unknown'})",
-        xaxis=dict(visible=False, range=[-8, 308], scaleanchor="y", scaleratio=1),
-        yaxis=dict(visible=False, range=[-8, 308]),
+        title=f"Wagon-wheel scoring sectors · {wagon.get('handedness') or 'hand unknown'}",
+        showlegend=False,
+        polar=dict(
+            bgcolor="#2A6A3A",
+            radialaxis=dict(visible=False, range=[0, 100]),
+            angularaxis=dict(visible=False, direction="clockwise", rotation=90),
+        ),
+        annotations=[
+            dict(
+                x=0.5,
+                y=0.5,
+                xref="paper",
+                yref="paper",
+                text="🏏",
+                showarrow=False,
+                font=dict(size=24),
+                bgcolor="#D8BD72",
+                bordercolor="#F5E1A4",
+                borderwidth=2,
+                borderpad=8,
+            )
+        ],
     )
     return _base_layout(figure, height=560)
 
@@ -313,7 +434,24 @@ def render_player_explorer(services: dict[str, Any]) -> None:
     with pitch_tab:
         pitch = repository.get_pitch_map(player, phase=phase)
         if pitch.get("cells"):
-            st.plotly_chart(build_pitch_heatmap(pitch), width="stretch", config={"displayModeBar": False})
+            colour_metric = st.radio(
+                "Colour cells by",
+                ["Scoring rate", "Dismissal risk"],
+                horizontal=True,
+                help=(
+                    "Scoring rate compares each zone with the player's line/length baseline. "
+                    "Dismissal risk uses dismissals per 100 balls, not raw wicket totals."
+                ),
+            )
+            st.plotly_chart(
+                build_pitch_heatmap(pitch, colour_metric=colour_metric),
+                width="stretch",
+                config={"displayModeBar": False},
+            )
+            st.caption(
+                "Every cell shows strike rate (SR), batting average (Avg), dismissals (W) and balls (B). "
+                "Cells below 30 balls are neutral to avoid over-interpreting small samples."
+            )
             _coverage_caption("Line/length coverage", pitch)
             line_column, length_column = st.columns(2)
             with line_column:
@@ -328,15 +466,19 @@ def render_player_explorer(services: dict[str, Any]) -> None:
             st.info("No coded line/length evidence is available for this player and phase.")
 
     with wagon_tab:
-        wagon = repository.get_wagon_wheel(player, point_limit=240, phase=phase)
+        wagon = repository.get_wagon_wheel(player, point_limit=0, phase=phase)
         shots = repository.get_shot_type_profile(player, limit=12, phase=phase)
         wagon_column, shot_column = st.columns([1, 1])
         with wagon_column:
-            if wagon.get("points"):
+            if wagon.get("sectors"):
                 st.plotly_chart(build_wagon_wheel(wagon), width="stretch", config={"displayModeBar": False})
+                st.caption(
+                    "Each field sector shows runs and its share of wagon-covered runs. Hover for the zone name, "
+                    "balls, strike rate and dismissals."
+                )
                 _coverage_caption("Wagon-wheel coverage", wagon)
             else:
-                st.info("No wagon-wheel coordinates are available for this player and phase.")
+                st.info("No wagon-wheel sector data is available for this player and phase.")
         with shot_column:
             if shots.get("metrics"):
                 st.plotly_chart(build_shot_figure(shots), width="stretch", config={"displayModeBar": False})
