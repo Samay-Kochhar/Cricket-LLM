@@ -21,6 +21,9 @@ def test_year_and_phase_figures_preserve_profile_metrics() -> None:
     assert list(trend.data[0].y) == [100]
     assert list(phase.data[0].y) == [75.0]
     assert list(phase.data[1].y) == [91.0]
+    assert phase.layout.title.x == 0.01
+    assert phase.layout.legend.y < 0
+    assert phase.layout.margin.b >= 70
 
 
 def test_pitch_heatmap_colours_scoring_relative_to_player_baseline() -> None:
@@ -48,7 +51,7 @@ def test_pitch_heatmap_colours_scoring_relative_to_player_baseline() -> None:
             },
         ]
     }
-    figure = build_pitch_heatmap(pitch, colour_metric="Scoring rate")
+    figure = build_pitch_heatmap(pitch, colour_metric="Strike rate")
 
     assert list(figure.data[0].x) == ["Outside Offstump", "On The Stumps"]
     assert figure.data[0].z[0][0] == -50.0
@@ -59,7 +62,7 @@ def test_pitch_heatmap_colours_scoring_relative_to_player_baseline() -> None:
     assert "· B" not in figure.layout.annotations[0].text
 
 
-def test_pitch_heatmap_colours_dismissal_chance_and_greys_small_samples() -> None:
+def test_pitch_heatmap_colours_batting_average_and_greys_small_samples() -> None:
     figure = build_pitch_heatmap(
         {
             "cells": [
@@ -69,29 +72,38 @@ def test_pitch_heatmap_colours_dismissal_chance_and_greys_small_samples() -> Non
                     "balls": 100,
                     "runs": 80,
                     "strike_rate": 80.0,
-                    "dismissals": 1,
+                    "dismissals": 2,
                 },
                 {
                     "line": "ON_THE_STUMPS",
                     "length": "GOOD_LENGTH",
-                    "balls": 20,
+                    "balls": 100,
+                    "runs": 120,
+                    "strike_rate": 120.0,
+                    "dismissals": 4,
+                },
+                {
+                    "line": "DOWN_LEG",
+                    "length": "GOOD_LENGTH",
+                    "balls": 19,
                     "runs": 30,
-                    "strike_rate": 150.0,
+                    "strike_rate": 157.9,
                     "dismissals": 3,
                 },
             ]
         },
-        colour_metric="Dismissal chance",
-        min_balls=30,
+        colour_metric="Batting average",
     )
 
-    assert figure.data[0].z[0][0] == 1.0
-    assert figure.data[0].z[0][1] is None
-    assert "Low sample" in figure.layout.annotations[1].text
+    assert round(figure.data[0].z[0][0], 2) == 6.67
+    assert round(figure.data[0].z[0][1], 2) == -3.33
+    assert figure.data[0].z[0][2] is None
+    assert "Low sample" in figure.layout.annotations[2].text
     assert "· B" not in figure.layout.annotations[1].text
-    assert figure.layout.annotations[1].font.color == "#F8F6F0"
-    assert figure.layout.plot_bgcolor == "#69737A"
-    assert figure.data[0].colorbar.title.text == "Dismissal<br>chance (%)"
+    assert figure.layout.annotations[2].font.color == "#263238"
+    assert figure.layout.plot_bgcolor == "#C8CDD0"
+    assert figure.data[0].colorbar.title.text == "Avg vs<br>baseline"
+    assert "baseline Avg 33.3" in figure.layout.title.text
 
 
 def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> None:
@@ -128,10 +140,16 @@ def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> 
         "Short",
     ]
     assert figure.layout.yaxis.autorange == "reversed"
+    assert figure.layout.xaxis.side == "top"
+    assert figure.layout.xaxis.title.text is None
     assert figure.layout.xaxis.showgrid is False
     assert figure.layout.yaxis.showgrid is False
     assert all("Avg n/a" in annotation.text for annotation in figure.layout.annotations)
     assert all("—" not in annotation.text for annotation in figure.layout.annotations)
+    shape_names = {shape.name for shape in figure.layout.shapes}
+    assert {"pitch-border", "crease-batter"} <= shape_names
+    assert "crease-bowler" not in shape_names
+    assert len({name for name in shape_names if name and name.startswith("stump-")}) == 3
 
 
 def test_wagon_and_shot_figures_render_cricket_outcomes() -> None:
@@ -177,5 +195,18 @@ def test_wagon_and_shot_figures_render_cricket_outcomes() -> None:
     assert list(wagon.data[0].theta) == [22.5, 67.5]
     assert "60 runs" in wagon.data[1].text[0]
     assert "60.0%" in wagon.data[1].text[0]
+    assert wagon.layout.dragmode is False
+    assert wagon.layout.polar.angularaxis.rotation == 0
+    side_labels = {annotation.text: annotation.x for annotation in wagon.layout.annotations}
+    assert side_labels["OFF SIDE"] < 0.5
+    assert side_labels["LEG SIDE"] > 0.5
     assert list(shots.data[0].x) == [30]
     assert list(shots.data[0].y) == ["Cover Drive"]
+
+
+def test_wagon_side_labels_follow_left_handed_batter_orientation() -> None:
+    wagon = build_wagon_wheel({"handedness": "LHB", "sectors": []})
+
+    side_labels = {annotation.text: annotation.x for annotation in wagon.layout.annotations}
+    assert side_labels["LEG SIDE"] < 0.5
+    assert side_labels["OFF SIDE"] > 0.5

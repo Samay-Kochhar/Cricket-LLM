@@ -39,11 +39,11 @@ def _ordered_labels(values: set[str], preferred: list[str]) -> list[str]:
 def _base_layout(figure: go.Figure, *, height: int = 390) -> go.Figure:
     figure.update_layout(
         height=height,
-        margin=dict(l=24, r=24, t=54, b=36),
+        margin=dict(l=24, r=24, t=72, b=44),
         paper_bgcolor=PAPER_COLOR,
         plot_bgcolor=PAPER_COLOR,
         font_color=TEXT_COLOR,
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="left", x=0),
+        title=dict(x=0.01, xanchor="left", y=0.98, yanchor="top"),
     )
     return figure
 
@@ -64,7 +64,7 @@ def build_year_trend_figure(rows: list[dict[str, Any]]) -> go.Figure:
             name="Runs",
         )
     )
-    figure.update_layout(title="Runs by year", xaxis_title="Year", yaxis_title="Runs")
+    figure.update_layout(title="Runs by year", xaxis_title="Year", yaxis_title="Runs", showlegend=False)
     return _base_layout(figure)
 
 
@@ -88,14 +88,19 @@ def build_phase_figure(rows: list[dict[str, Any]]) -> go.Figure:
         barmode="group",
         yaxis_title="Rate / percentage",
     )
-    return _base_layout(figure)
+    figure = _base_layout(figure)
+    figure.update_layout(
+        margin=dict(l=24, r=24, t=72, b=82),
+        legend=dict(orientation="h", yanchor="top", y=-0.16, xanchor="left", x=0),
+    )
+    return figure
 
 
 def build_pitch_heatmap(
     pitch: dict[str, Any],
     *,
-    colour_metric: str = "Scoring rate",
-    min_balls: int = 30,
+    colour_metric: str = "Strike rate",
+    min_balls: int = 20,
 ) -> go.Figure:
     cells = [cell for cell in pitch.get("cells", []) if isinstance(cell, dict)]
     lines = _ordered_labels({str(cell["line"]) for cell in cells}, LINE_ORDER)
@@ -105,7 +110,9 @@ def build_pitch_heatmap(
     reliable_cells = [cell for cell in cells if int(cell.get("balls", 0) or 0) >= min_balls]
     reliable_balls = sum(int(cell.get("balls", 0) or 0) for cell in reliable_cells)
     reliable_runs = sum(int(cell.get("runs", 0) or 0) for cell in reliable_cells)
+    reliable_dismissals = sum(int(cell.get("dismissals", 0) or 0) for cell in reliable_cells)
     baseline_strike_rate = (reliable_runs / reliable_balls * 100.0) if reliable_balls else 0.0
+    baseline_average = (reliable_runs / reliable_dismissals) if reliable_dismissals else None
 
     z: list[list[float | None]] = []
     customdata: list[list[list[object]]] = []
@@ -122,11 +129,14 @@ def build_pitch_heatmap(
             dismissals = int(cell.get("dismissals", 0) or 0)
             strike_rate = float(cell["strike_rate"]) if cell.get("strike_rate") is not None else None
             average = (runs / dismissals) if dismissals else None
-            dismissal_rate = (dismissals / balls * 100.0) if balls else None
-            is_reliable = balls >= min_balls and strike_rate is not None
-            if is_reliable and colour_metric == "Dismissal chance":
-                colour_value = dismissal_rate
-            elif is_reliable:
+            is_reliable = balls >= min_balls
+            if colour_metric == "Batting average":
+                colour_value = (
+                    average - baseline_average
+                    if is_reliable and average is not None and baseline_average is not None
+                    else None
+                )
+            elif is_reliable and strike_rate is not None:
                 colour_value = strike_rate - baseline_strike_rate
             else:
                 colour_value = None
@@ -142,7 +152,6 @@ def build_pitch_heatmap(
                     cell.get("control_percentage"),
                     strike_rate,
                     average,
-                    dismissal_rate,
                 ]
             )
             average_label = f"{average:.1f}" if average is not None else "n/a"
@@ -167,33 +176,29 @@ def build_pitch_heatmap(
         z.append(z_row)
         customdata.append(custom_row)
 
-    if colour_metric == "Dismissal chance":
-        colorscale = [[0, "#237A49"], [0.5, "#F2C94C"], [1, "#B83232"]]
-        zmin = 0.0
-        zmax = max(reliable_values, default=3.0)
-        colorbar_title = "Dismissal<br>chance (%)"
-        chart_title = "Line × length dismissal chance"
+    colour_extent = max((abs(value) for value in reliable_values), default=10.0)
+    neutral_band = 5.0 if colour_metric == "Batting average" else 7.5
+    yellow_band = min(0.24, neutral_band / (2 * colour_extent)) if colour_extent else 0.24
+    colorscale = [
+        [0, "#B83232"],
+        [0.5 - yellow_band, "#D9534F"],
+        [0.5, "#F2C94C"],
+        [0.5 + yellow_band, "#3FAE6A"],
+        [1, "#1F7A46"],
+    ]
+    zmin = -colour_extent
+    zmax = colour_extent
+    if colour_metric == "Batting average":
+        colorbar_title = "Avg vs<br>baseline"
+        baseline_label = f"{baseline_average:.1f}" if baseline_average is not None else "n/a"
+        chart_title = f"Line × length average · baseline Avg {baseline_label}"
     else:
-        colour_extent = max((abs(value) for value in reliable_values), default=10.0)
-        yellow_band = min(0.24, 7.5 / (2 * colour_extent)) if colour_extent else 0.24
-        colorscale = [
-            [0, "#B83232"],
-            [0.5 - yellow_band, "#D9534F"],
-            [0.5, "#F2C94C"],
-            [0.5 + yellow_band, "#3FAE6A"],
-            [1, "#1F7A46"],
-        ]
-        zmin = -colour_extent
-        zmax = colour_extent
         colorbar_title = "SR vs<br>baseline"
-        chart_title = f"Line × length scoring · baseline SR {baseline_strike_rate:.1f}"
+        chart_title = f"Line × length strike rate · baseline SR {baseline_strike_rate:.1f}"
 
     for annotation, value in zip(annotations, annotation_values, strict=True):
         if value is None:
-            text_colour = "#F8F6F0"
-        elif colour_metric == "Dismissal chance":
-            relative_value = value / zmax if zmax else 0.0
-            text_colour = "#1D292E" if 0.28 <= relative_value <= 0.68 else "#F8F6F0"
+            text_colour = "#263238"
         else:
             text_colour = "#1D292E" if abs(value) <= (zmax * 0.22) else "#F8F6F0"
         annotation["font"] = {"size": 11, "color": text_colour}
@@ -212,22 +217,78 @@ def build_pitch_heatmap(
             colorbar=dict(title=colorbar_title),
             hovertemplate=(
                 "%{y}, %{x}<br>Strike rate: %{customdata[5]:.2f}<br>Average: %{customdata[6]:.2f}"
-                "<br>Dismissals: %{customdata[2]}<br>Dismissals / 100 balls: %{customdata[7]:.2f}"
-                "<br>Balls: %{customdata[0]}<br>Runs: %{customdata[1]}<extra></extra>"
+                "<br>Dismissals: %{customdata[2]}<br>Balls: %{customdata[0]}"
+                "<br>Runs: %{customdata[1]}<extra></extra>"
             ),
         )
     )
     figure.update_layout(
         title=chart_title,
-        xaxis_title="Line",
         yaxis_title="Length",
         annotations=annotations,
+        shapes=_pitch_shapes(),
     )
-    figure = _base_layout(figure, height=max(560, 92 * len(lengths) + 140))
-    figure.update_layout(plot_bgcolor="#69737A")
-    figure.update_xaxes(showgrid=False, zeroline=False)
+    figure = _base_layout(figure, height=max(660, 92 * len(lengths) + 210))
+    figure.update_layout(margin=dict(l=32, r=28, t=118, b=82), plot_bgcolor="#C8CDD0")
+    figure.update_xaxes(showgrid=False, zeroline=False, side="top")
     figure.update_yaxes(autorange="reversed", showgrid=False, zeroline=False)
     return figure
+
+
+def _pitch_shapes() -> list[dict[str, Any]]:
+    line = dict(color="#E9D9A6", width=2)
+    shapes: list[dict[str, Any]] = [
+        dict(
+            type="rect",
+            name="pitch-border",
+            xref="paper",
+            yref="paper",
+            x0=-0.015,
+            x1=1.015,
+            y0=-0.015,
+            y1=1.015,
+            line=dict(color="#CBB77C", width=3),
+        ),
+        dict(
+            type="line",
+            name="crease-batter",
+            xref="paper",
+            yref="paper",
+            x0=0,
+            x1=1,
+            y0=-0.015,
+            y1=-0.015,
+            line=line,
+        ),
+    ]
+    for index, x in enumerate((0.475, 0.5, 0.525), start=1):
+        shapes.append(
+            dict(
+                type="line",
+                name=f"stump-batter-{index}",
+                xref="paper",
+                yref="paper",
+                x0=x,
+                x1=x,
+                y0=-0.07,
+                y1=-0.015,
+                line=dict(color="#F1D68A", width=4),
+            )
+        )
+    shapes.append(
+        dict(
+            type="line",
+            name="bails-batter",
+            xref="paper",
+            yref="paper",
+            x0=0.468,
+            x1=0.532,
+            y0=-0.07,
+            y1=-0.07,
+            line=dict(color="#F1D68A", width=3),
+        )
+    )
+    return shapes
 
 
 def build_wagon_wheel(wagon: dict[str, Any]) -> go.Figure:
@@ -286,13 +347,16 @@ def build_wagon_wheel(wagon: dict[str, Any]) -> go.Figure:
         hoverinfo="skip",
         showlegend=False,
     )
+    handedness = str(wagon.get("handedness") or "hand unknown").upper()
+    left_side, right_side = ("LEG SIDE", "OFF SIDE") if handedness == "LHB" else ("OFF SIDE", "LEG SIDE")
     figure.update_layout(
         title=f"Wagon-wheel scoring sectors · {wagon.get('handedness') or 'hand unknown'}",
         showlegend=False,
+        dragmode=False,
         polar=dict(
             bgcolor="#2A6A3A",
             radialaxis=dict(visible=False, range=[0, 100]),
-            angularaxis=dict(visible=False, direction="clockwise", rotation=90),
+            angularaxis=dict(visible=False, direction="clockwise", rotation=0),
         ),
         annotations=[
             dict(
@@ -307,10 +371,32 @@ def build_wagon_wheel(wagon: dict[str, Any]) -> go.Figure:
                 bordercolor="#F5E1A4",
                 borderwidth=2,
                 borderpad=8,
-            )
+            ),
+            dict(
+                x=-0.06,
+                y=0.5,
+                xref="paper",
+                yref="paper",
+                text=left_side,
+                textangle=-90,
+                showarrow=False,
+                font=dict(size=11, color="#B7E6C4"),
+            ),
+            dict(
+                x=1.06,
+                y=0.5,
+                xref="paper",
+                yref="paper",
+                text=right_side,
+                textangle=90,
+                showarrow=False,
+                font=dict(size=11, color="#B7E6C4"),
+            ),
         ],
     )
-    return _base_layout(figure, height=560)
+    figure = _base_layout(figure, height=560)
+    figure.update_layout(margin=dict(l=64, r=64, t=76, b=42))
+    return figure
 
 
 def build_shot_figure(shot_profile: dict[str, Any]) -> go.Figure:
@@ -401,7 +487,9 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         return
 
     st.subheader(f"{player} · {phase_label}")
-    metric_columns = [*st.columns(4), *st.columns(3)]
+    top_metric_columns = st.columns(4)
+    bottom_metric_columns = st.columns(4)
+    metric_columns = [*top_metric_columns, *bottom_metric_columns[:3]]
     metrics = (
         ("Runs", f"{summary['runs_scored']:,}"),
         ("Balls", f"{summary['balls_faced']:,}"),
@@ -445,22 +533,23 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         if pitch.get("cells"):
             colour_metric = st.radio(
                 "Colour cells by",
-                ["Scoring rate", "Dismissal chance"],
+                ["Strike rate", "Batting average"],
                 horizontal=True,
                 help=(
-                    "Scoring rate compares each zone with the player's line/length baseline. "
-                    "Dismissal chance is the percentage of recorded balls in the cell that ended in dismissal."
+                    "Strike rate compares each zone with the player's weighted line/length baseline. "
+                    "Batting average compares runs per dismissal with the player's weighted baseline."
                 ),
             )
             st.plotly_chart(
                 build_pitch_heatmap(pitch, colour_metric=colour_metric),
                 width="stretch",
-                config={"displayModeBar": False},
+                config={"displayModeBar": False, "scrollZoom": False, "doubleClick": False},
             )
             st.caption(
-                "Cells show strike rate (SR), batting average (Avg) and dismissals (W). In scoring mode, "
-                "red is below the player's baseline, yellow is around it and green is above it. "
-                "Cells below 30 balls are grey to avoid over-interpreting small samples; ball counts remain on hover."
+                "Cells show strike rate (SR), batting average (Avg) and dismissals (W). Red is below the "
+                "player's weighted baseline, yellow is around it and green is above it. Cells below 20 balls "
+                "are light grey to avoid over-interpreting small samples. In average mode, zones without a "
+                "dismissal are also grey because batting average is not yet defined; ball counts remain on hover."
             )
             _coverage_caption("Line/length coverage", pitch)
             line_column, length_column = st.columns(2)
@@ -481,7 +570,11 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         wagon_column, shot_column = st.columns([1, 1])
         with wagon_column:
             if wagon.get("sectors"):
-                st.plotly_chart(build_wagon_wheel(wagon), width="stretch", config={"displayModeBar": False})
+                st.plotly_chart(
+                    build_wagon_wheel(wagon),
+                    width="stretch",
+                    config={"displayModeBar": False, "scrollZoom": False, "doubleClick": False},
+                )
                 st.caption(
                     "Each field sector shows runs and its share of wagon-covered runs. Hover for the zone name, "
                     "balls, strike rate and dismissals."
