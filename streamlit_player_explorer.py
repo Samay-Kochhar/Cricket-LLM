@@ -4,12 +4,14 @@ from typing import Any
 
 import plotly.graph_objects as go
 import streamlit as st
+from plotly.colors import sample_colorscale
 
 
 PAPER_COLOR = "rgba(0,0,0,0)"
 TEXT_COLOR = "#F3EDE4"
 ORANGE = "#F28F3B"
 GREEN = "#7CE2B4"
+LOW_SAMPLE_FILL = "#D8DCDE"
 
 LINE_ORDER = [
     "WIDE_OUTSIDE_OFFSTUMP",
@@ -30,10 +32,6 @@ LENGTH_ORDER = [
 
 def _display_label(value: object) -> str:
     return str(value).replace("_", " ").strip().title()
-
-
-def _ordered_labels(values: set[str], preferred: list[str]) -> list[str]:
-    return [value for value in preferred if value in values] + sorted(values - set(preferred))
 
 
 def _base_layout(figure: go.Figure, *, height: int = 390) -> go.Figure:
@@ -103,8 +101,10 @@ def build_pitch_heatmap(
     min_balls: int = 20,
 ) -> go.Figure:
     cells = [cell for cell in pitch.get("cells", []) if isinstance(cell, dict)]
-    lines = _ordered_labels({str(cell["line"]) for cell in cells}, LINE_ORDER)
-    lengths = _ordered_labels({str(cell["length"]) for cell in cells}, LENGTH_ORDER)
+    observed_lines = {str(cell["line"]) for cell in cells}
+    observed_lengths = {str(cell["length"]) for cell in cells}
+    lines = [*LINE_ORDER, *sorted(observed_lines - set(LINE_ORDER))]
+    lengths = [*LENGTH_ORDER, *sorted(observed_lengths - set(LENGTH_ORDER))]
     cell_map = {(str(cell["length"]), str(cell["line"])): cell for cell in cells}
 
     reliable_cells = [cell for cell in cells if int(cell.get("balls", 0) or 0) >= min_balls]
@@ -115,13 +115,11 @@ def build_pitch_heatmap(
     baseline_average = (reliable_runs / reliable_dismissals) if reliable_dismissals else None
 
     z: list[list[float | None]] = []
-    customdata: list[list[list[object]]] = []
-    annotations: list[dict[str, Any]] = []
-    annotation_values: list[float | None] = []
+    cell_records: list[list[dict[str, Any]]] = []
     reliable_values: list[float] = []
     for length in lengths:
         z_row: list[float | None] = []
-        custom_row: list[list[object]] = []
+        record_row: list[dict[str, Any]] = []
         for line in lines:
             cell = cell_map.get((length, line), {})
             balls = int(cell.get("balls", 0) or 0)
@@ -143,17 +141,6 @@ def build_pitch_heatmap(
             z_row.append(colour_value)
             if colour_value is not None:
                 reliable_values.append(float(colour_value))
-            custom_row.append(
-                [
-                    balls,
-                    runs,
-                    dismissals,
-                    cell.get("dot_balls", 0),
-                    cell.get("control_percentage"),
-                    strike_rate,
-                    average,
-                ]
-            )
             average_label = f"{average:.1f}" if average is not None else "n/a"
             if not cell:
                 annotation_text = "<b>No data</b>"
@@ -164,17 +151,21 @@ def build_pitch_heatmap(
                 )
             else:
                 annotation_text = f"<b>SR {strike_rate:.1f}</b><br>Avg {average_label}<br>W {dismissals}"
-            annotations.append(
+            record_row.append(
                 {
-                    "x": _display_label(line),
-                    "y": _display_label(length),
+                    "line": line,
+                    "length": length,
+                    "balls": balls,
+                    "runs": runs,
+                    "dismissals": dismissals,
+                    "strike_rate": strike_rate,
+                    "average": average,
+                    "colour_value": colour_value,
                     "text": annotation_text,
-                    "showarrow": False,
                 }
             )
-            annotation_values.append(colour_value)
         z.append(z_row)
-        customdata.append(custom_row)
+        cell_records.append(record_row)
 
     colour_extent = max((abs(value) for value in reliable_values), default=10.0)
     neutral_band = 5.0 if colour_metric == "Batting average" else 7.5
@@ -196,95 +187,200 @@ def build_pitch_heatmap(
         colorbar_title = "SR vs<br>baseline"
         chart_title = f"Line × length strike rate · baseline SR {baseline_strike_rate:.1f}"
 
-    for annotation, value in zip(annotations, annotation_values, strict=True):
-        if value is None:
-            text_colour = "#263238"
-        else:
-            text_colour = "#1D292E" if abs(value) <= (zmax * 0.22) else "#F8F6F0"
-        annotation["font"] = {"size": 11, "color": text_colour}
+    figure = go.Figure()
+    annotations: list[dict[str, Any]] = []
+    row_count = len(lengths)
+    column_count = len(lines)
+    for row_index, record_row in enumerate(cell_records):
+        y_top = float(row_count - row_index)
+        y_bottom = y_top - 1.0
+        for column_index, record in enumerate(record_row):
+            polygon_x, polygon_y = _pitch_cell_polygon(
+                column_index,
+                column_count,
+                y_top,
+                y_bottom,
+                row_count,
+            )
+            colour_value = record["colour_value"]
+            if colour_value is None:
+                fill_colour = LOW_SAMPLE_FILL
+                text_colour = "#263238"
+            else:
+                position = (float(colour_value) - zmin) / (zmax - zmin) if zmax != zmin else 0.5
+                fill_colour = sample_colorscale(colorscale, [max(0.0, min(1.0, position))])[0]
+                text_colour = "#1D292E" if abs(float(colour_value)) <= (zmax * 0.22) else "#F8F6F0"
+            average_hover = f"{record['average']:.2f}" if record["average"] is not None else "n/a"
+            strike_rate_hover = (
+                f"{record['strike_rate']:.2f}" if record["strike_rate"] is not None else "n/a"
+            )
+            hover_text = (
+                f"<b>{_display_label(record['length'])} · {_display_label(record['line'])}</b>"
+                f"<br>Strike rate: {strike_rate_hover}<br>Average: {average_hover}"
+                f"<br>Dismissals: {record['dismissals']}<br>Balls: {record['balls']}"
+                f"<br>Runs: {record['runs']}"
+                if record["balls"]
+                else f"<b>{_display_label(record['length'])} · {_display_label(record['line'])}</b><br>No data"
+            )
+            figure.add_trace(
+                go.Scatter(
+                    x=polygon_x,
+                    y=polygon_y,
+                    mode="lines",
+                    fill="toself",
+                    fillcolor=fill_colour,
+                    line=dict(color="rgba(239,224,184,.82)", width=2),
+                    text=[hover_text] * len(polygon_x),
+                    hoveron="fills",
+                    hovertemplate="%{text}<extra></extra>",
+                    showlegend=False,
+                    name=f"{record['length']}:{record['line']}",
+                )
+            )
+            annotations.append(
+                dict(
+                    name="pitch-cell-value",
+                    x=sum(polygon_x[:4]) / 4.0,
+                    y=(y_top + y_bottom) / 2.0,
+                    text=record["text"],
+                    showarrow=False,
+                    align="center",
+                    font=dict(size=9 if row_index < 2 else 10, color=text_colour),
+                )
+            )
 
-    figure = go.Figure(
-        go.Heatmap(
-            x=[_display_label(line) for line in lines],
-            y=[_display_label(length) for length in lengths],
-            z=z,
-            customdata=customdata,
-            colorscale=colorscale,
-            zmin=zmin,
-            zmax=zmax,
-            xgap=4,
-            ygap=4,
-            colorbar=dict(title=colorbar_title),
-            hovertemplate=(
-                "%{y}, %{x}<br>Strike rate: %{customdata[5]:.2f}<br>Average: %{customdata[6]:.2f}"
-                "<br>Dismissals: %{customdata[2]}<br>Balls: %{customdata[0]}"
-                "<br>Runs: %{customdata[1]}<extra></extra>"
+    line_labels = {
+        "WIDE_OUTSIDE_OFFSTUMP": "Wide outside off",
+        "OUTSIDE_OFFSTUMP": "Outside off",
+        "ON_THE_STUMPS": "On stumps",
+        "DOWN_LEG": "Leg side",
+        "WIDE_DOWN_LEG": "Wide leg",
+    }
+    for column_index, line in enumerate(lines):
+        left = _pitch_boundary_x(column_index, column_count, 0.0, row_count)
+        right = _pitch_boundary_x(column_index + 1, column_count, 0.0, row_count)
+        annotations.append(
+            dict(
+                name="pitch-line-label",
+                x=(left + right) / 2.0,
+                y=-0.34,
+                text=line_labels.get(line, _display_label(line)),
+                showarrow=False,
+                align="center",
+                font=dict(size=10, color="#E8E2D4"),
+            )
+        )
+    for row_index, length in enumerate(lengths):
+        y = row_count - row_index - 0.5
+        annotations.append(
+            dict(
+                name="pitch-length-label",
+                x=_pitch_half_width(y, row_count) + 0.18,
+                y=y,
+                text=_display_label(length),
+                showarrow=False,
+                xanchor="left",
+                font=dict(size=11, color="#F3EDE4"),
+            )
+        )
+
+    figure.add_trace(
+        go.Scatter(
+            x=[None, None],
+            y=[None, None],
+            mode="markers",
+            marker=dict(
+                color=[zmin, zmax],
+                colorscale=colorscale,
+                cmin=zmin,
+                cmax=zmax,
+                showscale=True,
+                colorbar=dict(title=colorbar_title, thickness=16, len=0.72),
             ),
+            hoverinfo="skip",
+            showlegend=False,
+            name="colour-scale",
         )
     )
     figure.update_layout(
         title=chart_title,
-        yaxis_title="Length",
         annotations=annotations,
-        shapes=_pitch_shapes(),
+        shapes=_pitch_shapes(row_count),
+        meta={
+            "lines": [_display_label(line) for line in lines],
+            "lengths": [_display_label(length) for length in lengths],
+            "colour_values": z,
+            "low_sample_fill": LOW_SAMPLE_FILL,
+            "perspective": {"top_half_width": 1.65, "bottom_half_width": 3.0},
+        },
+        dragmode=False,
     )
-    figure = _base_layout(figure, height=max(660, 92 * len(lengths) + 210))
-    figure.update_layout(margin=dict(l=32, r=28, t=118, b=82), plot_bgcolor="#C8CDD0")
-    figure.update_xaxes(showgrid=False, zeroline=False, side="top")
-    figure.update_yaxes(autorange="reversed", showgrid=False, zeroline=False)
+    figure = _base_layout(figure, height=max(730, 96 * len(lengths) + 170))
+    figure.update_layout(margin=dict(l=28, r=92, t=90, b=48), plot_bgcolor="#24452F")
+    figure.update_xaxes(visible=False, fixedrange=True, range=[-3.45, 4.15])
+    figure.update_yaxes(visible=False, fixedrange=True, range=[-0.62, row_count + 0.72])
     return figure
 
 
-def _pitch_shapes() -> list[dict[str, Any]]:
-    line = dict(color="#E9D9A6", width=2)
+def _pitch_half_width(y: float, row_count: int) -> float:
+    clamped_y = max(0.0, min(float(row_count), y))
+    return 3.0 - (1.35 * clamped_y / float(row_count))
+
+
+def _pitch_boundary_x(boundary: int, column_count: int, y: float, row_count: int) -> float:
+    half_width = _pitch_half_width(y, row_count)
+    return -half_width + (2.0 * half_width * boundary / column_count)
+
+
+def _pitch_cell_polygon(
+    column: int,
+    column_count: int,
+    y_top: float,
+    y_bottom: float,
+    row_count: int,
+) -> tuple[list[float], list[float]]:
+    left_top = _pitch_boundary_x(column, column_count, y_top, row_count)
+    right_top = _pitch_boundary_x(column + 1, column_count, y_top, row_count)
+    left_bottom = _pitch_boundary_x(column, column_count, y_bottom, row_count)
+    right_bottom = _pitch_boundary_x(column + 1, column_count, y_bottom, row_count)
+    return (
+        [left_top, right_top, right_bottom, left_bottom, left_top],
+        [y_top, y_top, y_bottom, y_bottom, y_top],
+    )
+
+
+def _pitch_shapes(row_count: int) -> list[dict[str, Any]]:
     shapes: list[dict[str, Any]] = [
         dict(
-            type="rect",
-            name="pitch-border",
-            xref="paper",
-            yref="paper",
-            x0=-0.015,
-            x1=1.015,
-            y0=-0.015,
-            y1=1.015,
-            line=dict(color="#CBB77C", width=3),
-        ),
-        dict(
             type="line",
-            name="crease-batter",
-            xref="paper",
-            yref="paper",
-            x0=0,
-            x1=1,
-            y0=-0.015,
-            y1=-0.015,
-            line=line,
-        ),
+            name="crease-bowler",
+            x0=-1.42,
+            x1=1.42,
+            y0=row_count + 0.03,
+            y1=row_count + 0.03,
+            line=dict(color="#F1E2B8", width=3),
+        )
     ]
-    for index, x in enumerate((0.475, 0.5, 0.525), start=1):
+    for index, x in enumerate((-0.13, 0.0, 0.13), start=1):
         shapes.append(
             dict(
                 type="line",
-                name=f"stump-batter-{index}",
-                xref="paper",
-                yref="paper",
+                name=f"stump-bowler-{index}",
                 x0=x,
                 x1=x,
-                y0=-0.07,
-                y1=-0.015,
-                line=dict(color="#F1D68A", width=4),
+                y0=row_count + 0.08,
+                y1=row_count + 0.5,
+                line=dict(color="#F1D68A", width=5),
             )
         )
     shapes.append(
         dict(
             type="line",
-            name="bails-batter",
-            xref="paper",
-            yref="paper",
-            x0=0.468,
-            x1=0.532,
-            y0=-0.07,
-            y1=-0.07,
+            name="bails-bowler",
+            x0=-0.2,
+            x1=0.2,
+            y0=row_count + 0.5,
+            y1=row_count + 0.5,
             line=dict(color="#F1D68A", width=3),
         )
     )
@@ -447,6 +543,26 @@ def _breakdown_rows(repository: Any, player: str, group_by: str, phase: str | No
     )
 
 
+def load_player_section(
+    repository: Any,
+    player: str,
+    phase: str | None,
+    section: str,
+) -> dict[str, Any]:
+    if section == "Overview":
+        return {"trend": repository.get_player_year_trend(player)}
+    if section == "Phase analysis":
+        return {"phase_rows": repository.get_player_phase_summary(player)}
+    if section == "Line & length":
+        return {"pitch": repository.get_pitch_map(player, phase=phase)}
+    if section == "Wagon wheel & shots":
+        return {
+            "wagon": repository.get_wagon_wheel(player, point_limit=0, phase=phase),
+            "shots": repository.get_shot_type_profile(player, limit=12, phase=phase),
+        }
+    raise ValueError(f"Unknown player explorer section: {section}")
+
+
 def render_player_explorer(services: dict[str, Any]) -> None:
     repository = services["repository"]
     st.markdown("<div class='atlas-kicker'>◆ CricAtlas player explorer</div>", unsafe_allow_html=True)
@@ -508,28 +624,34 @@ def render_player_explorer(services: dict[str, Any]) -> None:
     for column, (label, value) in zip(metric_columns, metrics, strict=True):
         column.metric(label, value)
 
-    overview_tab, phase_tab, pitch_tab, wagon_tab = st.tabs(
-        ["Overview", "Phase analysis", "Line & length", "Wagon wheel & shots"]
+    section = st.segmented_control(
+        "Analysis view",
+        ["Overview", "Phase analysis", "Line & length", "Wagon wheel & shots"],
+        default="Overview",
+        label_visibility="collapsed",
+        width="stretch",
     )
+    section = section or "Overview"
+    payload = load_player_section(repository, player, phase, section)
 
-    with overview_tab:
-        trend = repository.get_player_year_trend(player)
+    if section == "Overview":
+        trend = payload["trend"]
         if trend:
             st.plotly_chart(build_year_trend_figure(trend), width="stretch", config={"displayModeBar": False})
             st.dataframe(trend, width="stretch", hide_index=True)
         else:
             st.info("No year-level batting trend is available for this player.")
 
-    with phase_tab:
-        phase_rows = repository.get_player_phase_summary(player)
+    elif section == "Phase analysis":
+        phase_rows = payload["phase_rows"]
         if phase_rows:
             st.plotly_chart(build_phase_figure(phase_rows), width="stretch", config={"displayModeBar": False})
             st.dataframe(phase_rows, width="stretch", hide_index=True)
         else:
             st.info("No phase split is available for this player.")
 
-    with pitch_tab:
-        pitch = repository.get_pitch_map(player, phase=phase)
+    elif section == "Line & length":
+        pitch = payload["pitch"]
         if pitch.get("cells"):
             colour_metric = st.radio(
                 "Colour cells by",
@@ -564,9 +686,9 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         else:
             st.info("No coded line/length evidence is available for this player and phase.")
 
-    with wagon_tab:
-        wagon = repository.get_wagon_wheel(player, point_limit=0, phase=phase)
-        shots = repository.get_shot_type_profile(player, limit=12, phase=phase)
+    else:
+        wagon = payload["wagon"]
+        shots = payload["shots"]
         wagon_column, shot_column = st.columns([1, 1])
         with wagon_column:
             if wagon.get("sectors"):

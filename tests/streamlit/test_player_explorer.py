@@ -6,6 +6,7 @@ from streamlit_player_explorer import (
     build_shot_figure,
     build_wagon_wheel,
     build_year_trend_figure,
+    load_player_section,
 )
 
 
@@ -53,13 +54,15 @@ def test_pitch_heatmap_colours_scoring_relative_to_player_baseline() -> None:
     }
     figure = build_pitch_heatmap(pitch, colour_metric="Strike rate")
 
-    assert list(figure.data[0].x) == ["Outside Offstump", "On The Stumps"]
-    assert figure.data[0].z[0][0] == -50.0
-    assert figure.data[0].z[0][1] == 50.0
-    assert any(colour == "#F2C94C" for _, colour in figure.data[0].colorscale)
-    assert "Avg 25.0" in figure.layout.annotations[0].text
-    assert "W 2" in figure.layout.annotations[0].text
-    assert "· B" not in figure.layout.annotations[0].text
+    meta = figure.layout.meta
+    good_length = meta["lengths"].index("Good Length")
+    outside_off = meta["lines"].index("Outside Offstump")
+    on_stumps = meta["lines"].index("On The Stumps")
+    assert meta["colour_values"][good_length][outside_off] == -50.0
+    assert meta["colour_values"][good_length][on_stumps] == 50.0
+    assert any("Avg 25.0" in annotation.text for annotation in figure.layout.annotations)
+    assert any("W 2" in annotation.text for annotation in figure.layout.annotations)
+    assert all("· B" not in annotation.text for annotation in figure.layout.annotations)
 
 
 def test_pitch_heatmap_colours_batting_average_and_greys_small_samples() -> None:
@@ -95,14 +98,19 @@ def test_pitch_heatmap_colours_batting_average_and_greys_small_samples() -> None
         colour_metric="Batting average",
     )
 
-    assert round(figure.data[0].z[0][0], 2) == 6.67
-    assert round(figure.data[0].z[0][1], 2) == -3.33
-    assert figure.data[0].z[0][2] is None
-    assert "Low sample" in figure.layout.annotations[2].text
-    assert "· B" not in figure.layout.annotations[1].text
-    assert figure.layout.annotations[2].font.color == "#263238"
-    assert figure.layout.plot_bgcolor == "#C8CDD0"
-    assert figure.data[0].colorbar.title.text == "Avg vs<br>baseline"
+    meta = figure.layout.meta
+    good_length = meta["lengths"].index("Good Length")
+    outside_off = meta["lines"].index("Outside Offstump")
+    on_stumps = meta["lines"].index("On The Stumps")
+    down_leg = meta["lines"].index("Down Leg")
+    assert round(meta["colour_values"][good_length][outside_off], 2) == 6.67
+    assert round(meta["colour_values"][good_length][on_stumps], 2) == -3.33
+    assert meta["colour_values"][good_length][down_leg] is None
+    assert any("Low sample" in annotation.text for annotation in figure.layout.annotations)
+    assert all("· B" not in annotation.text for annotation in figure.layout.annotations)
+    assert meta["low_sample_fill"] == "#D8DCDE"
+    assert figure.layout.plot_bgcolor == "#24452F"
+    assert figure.data[-1].marker.colorbar.title.text == "Avg vs<br>baseline"
     assert "baseline Avg 33.3" in figure.layout.title.text
 
 
@@ -131,7 +139,7 @@ def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> 
         }
     )
 
-    assert list(figure.data[0].y) == [
+    assert figure.layout.meta["lengths"] == [
         "Full Toss",
         "Yorker",
         "Full",
@@ -139,17 +147,46 @@ def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> 
         "Short Of A Good Length",
         "Short",
     ]
-    assert figure.layout.yaxis.autorange == "reversed"
-    assert figure.layout.xaxis.side == "top"
-    assert figure.layout.xaxis.title.text is None
-    assert figure.layout.xaxis.showgrid is False
-    assert figure.layout.yaxis.showgrid is False
-    assert all("Avg n/a" in annotation.text for annotation in figure.layout.annotations)
+    assert figure.layout.xaxis.visible is False
+    assert figure.layout.yaxis.visible is False
+    cell_annotations = [
+        annotation for annotation in figure.layout.annotations if annotation.name == "pitch-cell-value"
+    ]
+    data_annotations = [annotation for annotation in cell_annotations if "No data" not in annotation.text]
+    assert all("Avg n/a" in annotation.text for annotation in data_annotations)
     assert all("—" not in annotation.text for annotation in figure.layout.annotations)
     shape_names = {shape.name for shape in figure.layout.shapes}
-    assert {"pitch-border", "crease-batter"} <= shape_names
-    assert "crease-bowler" not in shape_names
+    assert {"crease-bowler", "bails-bowler"} <= shape_names
     assert len({name for name in shape_names if name and name.startswith("stump-")}) == 3
+    first_cell = figure.data[0]
+    assert first_cell.fill == "toself"
+    assert (first_cell.x[1] - first_cell.x[0]) < (first_cell.x[2] - first_cell.x[3])
+
+
+def test_player_overview_does_not_eagerly_load_other_analysis_sections() -> None:
+    class RecordingRepository:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        def get_player_year_trend(self, player: str) -> list[dict[str, object]]:
+            self.calls.append("year")
+            return [{"year": 2024}]
+
+        def __getattr__(self, name: str) -> object:
+            if name.startswith("get_"):
+                def unexpected(*args: object, **kwargs: object) -> object:
+                    self.calls.append(name)
+                    return {}
+
+                return unexpected
+            raise AttributeError(name)
+
+    repository = RecordingRepository()
+
+    payload = load_player_section(repository, "Virat Kohli", None, "Overview")
+
+    assert payload == {"trend": [{"year": 2024}]}
+    assert repository.calls == ["year"]
 
 
 def test_wagon_and_shot_figures_render_cricket_outcomes() -> None:
