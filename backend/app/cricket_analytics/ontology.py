@@ -71,6 +71,7 @@ DIMENSIONS: dict[str, str] = {
     "bowler_hand": "derived from bowl_style",
     "venue": "ground",
     "innings": "inns",
+    "year": "year",
     "over_range": "derived from over",
     "matchup": "bat and bowl",
 }

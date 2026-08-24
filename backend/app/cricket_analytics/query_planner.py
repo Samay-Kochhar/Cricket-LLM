@@ -740,6 +740,8 @@ class SemanticQueryPlanner:
             return ["field_zone"]
         if "phase" in lowered:
             return ["phase"]
+        if any(token in lowered for token in ("by year", "year by year", "each year", "year-wise", "year wise")):
+            return ["year"]
         if "which venue" in lowered or "which ground" in lowered or "by venue" in lowered:
             return ["venue"]
         if "batting team" in lowered or "which team" in lowered:

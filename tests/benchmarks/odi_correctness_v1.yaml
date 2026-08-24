@@ -1,0 +1,205 @@
+version: 1
+name: ODI real-chat correctness gate
+cases:
+  - id: standalone-batting-strike-rate
+    family: standalone
+    outcome: supported
+    turns:
+      - prompt: What is Virat Kohli's batting strike rate against Australia?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: batting_strike_rate
+            group_by: [batter]
+            filters:
+              batter: Virat Kohli
+              opposition: Australia
+          result:
+            columns: [Batter, Batting Strike Rate, Runs Scored, Balls Faced, Matches]
+            rows:
+              - {Batter: Virat Kohli, Batting Strike Rate: 94.0, Runs Scored: 2367, Balls Faced: 2518, Matches: 47}
+          message_contains: ["94.0", "2518 balls"]
+          evidence: required
+
+  - id: player-comparison
+    family: comparison
+    outcome: supported
+    turns:
+      - prompt: Compare Virat Kohli and Rohit Sharma by runs scored.
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: player_compare
+            entity: batter
+            metric: batting_strike_rate
+            group_by: [batter]
+            filters:
+              compare_players: [Virat Kohli, Rohit Sharma]
+              comparison_metrics: [batting_strike_rate, runs_scored, batting_average, batter_dot_ball_percentage, boundary_percentage]
+          result:
+            columns: [Player, Runs Scored, Batting Strike Rate, Balls Faced]
+            rows:
+              - {Player: Virat Kohli, Runs Scored: 13950, Batting Strike Rate: 93.51, Balls Faced: 14918}
+              - {Player: Rohit Sharma, Runs Scored: 10970, Batting Strike Rate: 92.64, Balls Faced: 11841}
+          message_contains: ["Virat Kohli", "13950", "Rohit Sharma", "10970"]
+          evidence: required
+
+  - id: batter-bowler-matchup
+    family: matchup
+    outcome: supported
+    turns:
+      - prompt: Who has dismissed David Miller most often?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: matchup
+            entity: bowler
+            metric: wickets_taken
+            group_by: [bowler]
+            filters: {batter: David Miller}
+          result:
+            columns: [Batter, Bowler, Wickets Taken, Balls]
+            rows:
+              - {Batter: David Miller, Bowler: Suranga Lakmal, Wickets Taken: 5, Balls: 32}
+          message_contains: ["Suranga Lakmal", "5"]
+          evidence: required
+
+  - id: contextual-phase-follow-up
+    family: contextual_follow_up
+    outcome: supported
+    turns:
+      - prompt: What is Virat Kohli's batting strike rate?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: batting_strike_rate
+            filters: {batter: Virat Kohli}
+          evidence: required
+      - prompt: And in death overs?
+        expected:
+          mode: analysis
+          status: supported
+          resolved_input_contains: [Virat Kohli, batting strike rate, death overs]
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: batting_strike_rate
+            filters: {batter: Virat Kohli, phase: death}
+          result:
+            rows:
+              - {Batter: Virat Kohli, Batting Strike Rate: 149.9, Runs Scored: 1523, Balls Faced: 1016}
+          message_contains: ["149.9", "1016 balls"]
+          evidence: required
+
+  - id: batting-strike-rate-ranking
+    family: ranking
+    outcome: supported
+    turns:
+      - prompt: Which batter has the highest batting strike rate?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: batting_strike_rate
+            group_by: [batter]
+            minimum_sample: {balls: 60}
+          result:
+            rows:
+              - {Batter: Odean Smith, Batting Strike Rate: 167.23, Balls Faced: 119}
+          message_contains: ["Odean Smith", "167.23", "119 balls"]
+          evidence: required
+
+  - id: line-breakdown
+    family: breakdown
+    outcome: supported
+    turns:
+      - prompt: Which line produces the most dot balls against Virat Kohli?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: bowler
+            metric: bowler_dot_ball_percentage
+            group_by: [line]
+            filters: {batter: Virat Kohli}
+          result:
+            rows:
+              - {Line: outside offstump, Bowler Dot Ball Percentage: 47.46, Bowler Dot Balls: 2230, Legal Balls: 4699}
+          message_contains: ["outside offstump", "47.46%", "4699 legal balls"]
+          evidence: required
+
+  - id: year-by-year-trend
+    family: trend
+    outcome: supported
+    turns:
+      - prompt: Show Virat Kohli's batting strike rate year by year.
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: batting_strike_rate
+            group_by: [year]
+            filters: {batter: Virat Kohli}
+          result:
+            columns: [Year, Batting Strike Rate, Runs Scored, Balls Faced]
+            rows:
+              - {Year: 2018, Batting Strike Rate: 102.56, Runs Scored: 1202, Balls Faced: 1172}
+          message_contains: ["2018", "102.56"]
+          evidence: required
+
+  - id: ambiguous-strike-rate
+    family: ambiguity
+    outcome: ambiguous
+    turns:
+      - prompt: What is Jasprit Bumrah's strike rate?
+        expected:
+          mode: clarification
+          clarification_labels: [Batting strike rate, Bowling strike rate]
+          message_contains: ["Do you mean batting strike rate or bowling strike rate?"]
+
+  - id: unsupported-team-economy
+    family: unsupported
+    outcome: unsupported
+    turns:
+      - prompt: Which team has the best economy against India?
+        expected:
+          mode: analysis
+          status: unsupported
+          failure_state: unsupported_capability
+          message_contains: ["need explicit tested team semantics"]
+
+  - id: missing-fielding-data
+    family: missing_data
+    outcome: missing_data
+    turns:
+      - prompt: Who has taken the most catches in the 2019 World Cup?
+        expected:
+          mode: analysis
+          status: insufficient_evidence
+          failure_state: data_limitation
+          message_contains: ["fielding catcher records are missing"]
+
+  - id: planner-unavailable
+    family: planner_failure
+    outcome: planner_failure
+    planner_mode: production_unavailable
+    turns:
+      - prompt: What is Virat Kohli's batting strike rate against Australia?
+        expected:
+          mode: analysis
+          status: unsupported
+          failure_state: planner_uncertainty
+          message_contains: ["not confident"]

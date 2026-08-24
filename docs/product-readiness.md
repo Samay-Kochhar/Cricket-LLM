@@ -38,6 +38,20 @@ Rate and percentage rankings use a default minimum of 60 balls unless the user s
 
 ## Current delivery verification
 
+The versioned correctness gate is `tests/benchmarks/odi_correctness_v1.yaml`. It
+checks standalone questions, comparisons, matchups, contextual follow-ups,
+rankings, breakdowns, trends, ambiguity, unsupported capability, missing data,
+and planner uncertainty through `/api/chat` and Semantic V2. Run it with:
+
+```bash
+python scripts/odi_correctness_gate.py
+```
+
+The report groups results by question family and prints every failing prompt.
+`python scripts/verify_issues.py --issue 11` also runs the real-browser smoke
+flows for the product-ready standalone, comparison, matchup, and contextual
+follow-up families.
+
 - Canonical bowling strike rate uses legal balls per bowler-credit wicket, excludes zero-wicket rows from rankings, and retains them as unavailable in descriptive comparisons.
 - Unqualified strike-rate chat requests return separate batting and bowling clarification options before analytics execution.
 - Structured conversation state is canonical; transcript inference remains a compatibility fallback.

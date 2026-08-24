@@ -38,6 +38,7 @@ DIMENSION_SQL: dict[str, DimensionSql] = {
     "batter_hand": DimensionSql("bat_hand", "batter_hand", "bat_hand"),
     "venue": DimensionSql("ground", "venue", "ground"),
     "innings": DimensionSql("inns", "innings", "inns"),
+    "year": DimensionSql("TRY_CAST(year AS INTEGER)", "year", "year"),
     "phase": DimensionSql(
         phase_case_expression(),
         "phase",

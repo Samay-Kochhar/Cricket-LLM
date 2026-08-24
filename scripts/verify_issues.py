@@ -114,6 +114,18 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("pytest", "tests/backend/test_chat_phase2_contract.py"),
         ),
     ],
+    "11": [
+        Check(
+            "real-chat-odi-correctness-gate",
+            "Run the versioned ODI benchmark through the deployed chat and Semantic V2 contract.",
+            ("pytest", "tests/backend/test_odi_correctness_gate.py"),
+        ),
+        Check(
+            "odi-product-family-browser-smoke",
+            "Run one complete browser chat flow for every product-ready ODI question family.",
+            ("npm", "run", "test:e2e", "--", "odi-correctness-smoke.spec.ts"),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [

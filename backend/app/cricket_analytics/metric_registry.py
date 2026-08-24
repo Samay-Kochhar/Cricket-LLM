@@ -86,6 +86,7 @@ COMMON_GROUPINGS = frozenset(
         "bowler_hand",
         "venue",
         "innings",
+        "year",
         "matchup",
     }
 )

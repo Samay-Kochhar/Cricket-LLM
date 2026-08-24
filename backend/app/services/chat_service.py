@@ -170,7 +170,10 @@ class ChatService:
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
         resolved_input = contextual_message if contextual_message != normalized_message else None
-        is_semantic_v2 = "semantic_operation" in query_response.interpretation.filters
+        is_semantic_v2 = (
+            "semantic_operation" in query_response.interpretation.filters
+            or any(note.title == "Semantic V2 trace" for note in query_response.evidence_notes)
+        )
 
         if query_response.status.value == "supported" and (entities or query_response.tables or is_semantic_v2):
             reply_text, used_gemini = self._analysis_reply(
