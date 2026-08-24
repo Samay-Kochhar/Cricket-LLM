@@ -67,6 +67,34 @@ The system must distinguish data limitations from unsupported capabilities and p
 - Factual database lookups should be supported when the answer can be grounded in database match metadata.
 - Tactical prompts should eventually use a multi-query workup operation rather than a single forced query.
 - Multi-query workups should decompose broad analyst/coach prompts into evidence probes before synthesis.
+- Standalone questions, comparison questions, contextual follow-ups, and analyst workups are separate question families with separate acceptance tests.
+- A bowling-plan analyst workup is not a player comparison, even when it compares evidence across bowling styles, lines, or lengths.
+- A suggested follow-up must not be displayed unless its exact chained chat flow is verified with the preceding answer context.
+- Product readiness is judged at the real chat API and UI boundary. An executor test or direct semantic-service test alone does not establish product readiness.
+- A suggested follow-up becomes visible only after its chained backend-history test and browser click-through test both pass.
+- A contextual follow-up inherits the previous player, metric, and filters. It changes only the details explicitly replaced by the user and asks for clarification when the remaining meaning is materially ambiguous.
+- A failed or unclear question does not replace the last successful conversation context. The next short follow-up either reuses that last successful context explicitly or asks for clarification before querying.
+- A contextual follow-up asks for clarification only when two or more reasonable interpretations would produce different answers. Clear changes, such as replacing the opposition with Australia, continue without an unnecessary question.
+- A comparison follow-up inherits every compared player, comparison metric, and filter, then replaces only the detail explicitly changed by the user. For example, “What about powerplay?” changes the phase but keeps both bowlers and the comparison metrics.
+- An unqualified batter comparison defaults to runs, batting average, batting strike rate, boundary percentage, and batter dot-ball percentage.
+- An unqualified bowler comparison defaults to wickets, bowling average, economy rate, bowling strike rate, bowler dot-ball percentage, and boundary percentage.
+- Batting strike rate and bowling strike rate are separate canonical metrics. Bowling strike rate is legal balls bowled divided by bowler-credit wickets, and lower is better.
+- Any unqualified player strike-rate question asks whether the user means batting or bowling strike rate instead of guessing from the player’s likely role.
+- Strike-rate answers always use the full label “Batting Strike Rate” or “Bowling Strike Rate” so the interpretation is visible.
+- Bowling strike rate is displayed as “N/A — no wickets taken” when the filtered sample contains zero bowler-credit wickets; zero and infinity are never displayed as the metric value.
+- Bowling strike-rate rankings exclude zero-wicket rows because they have no valid metric value, and the answer states that those rows were excluded. Descriptive comparisons keep the row and show N/A.
+- The first suggested follow-up after a general player comparison should offer a phase-wise comparison. Team-wise comparison can follow after phase-wise comparison is product-ready.
+- A team-wise comparison is exploratory and includes every opposition team with available evidence. A question naming one opposition, such as Australia, filters the comparison to that team instead.
+- The exploratory team-wise view gives each compared player a separate opposition table. It does not add a third difference table or narrate every opposition row.
+- Each player’s team-wise table includes only opposition teams for which that player has recorded evidence. Missing opposition rows are omitted rather than added as “No recorded data.”
+- Deterministic code calculates differences between aligned opposition rows. The LLM may use those calculated values for a short summary of only the clearest high or low differences; it must not perform the arithmetic itself.
+- The team-wise summary contains at most three standout differences.
+- The summary uses different metrics for its highlights where possible rather than repeating the same metric three times.
+- A phase-wise comparison returns powerplay, middle overs, and death overs together in one answer rather than requiring three separate questions.
+- The phase-wise answer uses one combined table containing every compared player and all three phases.
+- Every phase-wise comparison row includes its relevant sample size, such as balls faced for batters or legal balls bowled for bowlers.
+- A descriptive comparison reports the actual statistic even for a small sample. Showing the sample size is sufficient; a low-sample warning is not required unless the answer makes a ranking, superiority, or tactical claim.
+- Rate and percentage rankings default to a minimum of 60 balls: balls faced for batters and legal balls bowled for bowlers. A user-supplied minimum replaces this default.
 - The response contract should distinguish at least three failure meanings: data limitation, unsupported capability, and planner uncertainty.
 - Data limitation means the requested cricket fact is not available in the database.
 - Unsupported capability means the data may exist, but the current semantic/query layer cannot express or execute the request safely.
@@ -91,6 +119,29 @@ The system must distinguish data limitations from unsupported capabilities and p
 - Chat contract tests are prior art and should continue to ensure normal chat does not fall back to legacy behavior when Semantic V2 is enabled.
 - Unsupported/data-limitation tests should verify that missing fielding data, unsupported external facts, mixed-role comparisons, and ambiguous prompts do not produce fabricated supported answers.
 - Tactical workup tests, when introduced, should assert the selected evidence probes and resulting synthesis contract rather than only the final recommendation text.
+- Comparison tests must cover the real chat flow, not only the comparison executor or semantic service.
+- Suggested-follow-up tests must send the displayed suggestion with the actual preceding chat history and verify that the player, metric, and filters are preserved.
+- Contextual-follow-up tests must also cover short natural replies such as “What about leg spin?”, not only replies containing explicit phrases such as “the player” or “his”.
+- Chained tests must cover a failed middle turn followed by another short follow-up and verify that the last successful context is not lost.
+- Clarification tests must distinguish genuinely ambiguous follow-ups from clear context replacements.
+- Comparison chains must verify that short follow-ups preserve all compared players and metrics while changing only the requested filter.
+- The phase-wise comparison suggestion must remain hidden until its exact chained chat flow passes end to end.
+- Suggested-follow-up release tests must cover both the backend with real preceding history and the browser action that clicks the suggestion and receives the correct answer.
+- Team-wise comparison tests must cover both the all-oppositions exploratory view and a directly requested single-opposition filter.
+- Team-wise table tests must verify that opposition teams without player evidence are omitted.
+- Team-wise summary tests must verify that every stated difference comes from deterministic comparison evidence and that the response does not narrate every opposition row.
+- Team-wise summary tests must verify that no more than three differences are narrated.
+- Team-wise summary tests must verify metric variety when the evidence contains meaningful differences across multiple metrics.
+- Phase-wise comparison tests must verify that all three ODI phases are returned together for every compared player.
+- Phase-wise comparison tests must verify the combined player-and-phase table shape.
+- Phase-wise comparison tests must verify that each row includes the correct role-specific sample size.
+- Descriptive comparison tests must not reject or hide a player’s actual phase value only because its sample is small.
+- Ranking tests must verify the 60-ball role-specific default and verify that an explicit user threshold overrides it.
+- Strike-rate tests must verify that batting questions use runs per 100 balls and bowling questions use legal balls per wicket.
+- Ambiguous strike-rate tests must verify that the system asks one clear batting-or-bowling question without executing either metric first, regardless of the named player’s likely role.
+- Strike-rate answer tests must verify that the full batting or bowling metric label is visible.
+- Bowling strike-rate tests must cover a zero-wicket sample and verify the explicit N/A explanation.
+- Bowling strike-rate ranking tests must exclude zero-wicket rows, while descriptive comparison tests must retain those rows with N/A.
 
 ## Out of Scope
 

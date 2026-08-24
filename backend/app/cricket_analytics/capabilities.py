@@ -66,6 +66,7 @@ PLAYER_METRICS = (
     "overs_bowled",
     "wickets_taken",
     "economy_rate",
+    "bowling_strike_rate",
     "batter_dot_ball_percentage",
     "bowler_dot_ball_percentage",
     "dot_balls",
@@ -127,7 +128,7 @@ CAPABILITIES: dict[str, Capability] = {
         "Player comparison",
         "player_compare",
         ("batter", "bowler"),
-        ("runs_scored", "batting_strike_rate", "economy_rate", "wickets_taken", "wickets_per_over", "batter_dot_ball_percentage", "bowler_dot_ball_percentage"),
+        ("runs_scored", "batting_strike_rate", "economy_rate", "bowling_strike_rate", "wickets_taken", "wickets_per_over", "batter_dot_ball_percentage", "bowler_dot_ball_percentage"),
         optional_filters=("phase", "years", "year_mode", "bowling_style", "length", "venue", "opposition", "line", "over_range"),
         allowed_groupings=("batter", "bowler"),
         expected_executor="executors.player_compare_executor.execute_player_compare",
@@ -377,7 +378,7 @@ def validate_capability(plan: CricketQueryPlan) -> list[str]:
             f"Metric '{metric.metric_id}' does not support group_by: {', '.join(unsupported_groupings)}."
         )
 
-    internal_filters = {"compare_players", "comparison_metrics"} if plan.operation == "player_compare" else set()
+    internal_filters = {"compare_players", "comparison_metrics", "comparison_view"} if plan.operation == "player_compare" else set()
     unsupported_filters = [key for key in plan.filters if key not in metric.allowed_filters and key not in internal_filters]
     if unsupported_filters:
         errors.append(f"Metric '{metric.metric_id}' does not support filters: {', '.join(unsupported_filters)}.")

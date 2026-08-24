@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import type { ChatHistoryTurn, ChatReply } from "@/lib/api-types";
+import type { ChatHistoryTurn, ChatReply, ConversationState } from "@/lib/api-types";
 import { getApiCandidates, postApi } from "@/lib/api-client";
 
 type AtlasChatState = {
@@ -70,7 +70,7 @@ export function useAtlasChat() {
   async function sendMessage(
     message: string,
     history: ChatHistoryTurn[],
-    options: { silent?: boolean } = {},
+    options: { silent?: boolean; conversationState?: ConversationState | null } = {},
   ): Promise<ChatReply> {
     const apiCandidates = getApiCandidates();
     const loadingLabel = buildLoadingLabel(message);
@@ -79,7 +79,11 @@ export function useAtlasChat() {
     }
     try {
       traceClient("chat request started", { message, apiCandidates });
-      const payload = await postApi<ChatReply>("/api/chat", { message, history });
+      const payload = await postApi<ChatReply>("/api/chat", {
+        message,
+        history,
+        conversation_state: options.conversationState ?? null,
+      });
       traceClient("chat request completed", {
         mode: payload.mode,
       });

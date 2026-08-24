@@ -72,6 +72,10 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
     group_by_sql = "GROUP BY " + ", ".join(group_expressions) if group_expressions else ""
     select_dimension_sql = ",\n                ".join(select_dimensions) + "," if select_dimensions else ""
     metric_projection_sql = ",\n              ".join(matchup_projection_sql())
+    tie_breakers = ", ".join(f"{column} ASC" for column in dimension_columns)
+    order_sql = f"ORDER BY rank_value {sort_direction}, sample_size DESC"
+    if tie_breakers:
+        order_sql += f", {tie_breakers}"
 
     sql = f"""
             WITH aggregate_rows AS (
@@ -104,7 +108,7 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
               balls < ? AS low_sample,
               {sort_expression} AS rank_value
             FROM aggregate_rows
-            ORDER BY rank_value {sort_direction}, sample_size DESC
+            {order_sql}
             LIMIT ?
             """
     params.extend([soft_minimum, limit])

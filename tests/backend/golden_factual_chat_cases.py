@@ -35,6 +35,7 @@ CORE_BATTER_METRICS = [
 CORE_BOWLER_METRICS = [
     "economy_rate",
     "bowling_average",
+    "bowling_strike_rate",
     "wickets_taken",
     "bowler_dot_ball_percentage",
     "boundary_percentage",

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from backend.app.domain.evidence_models import EvidenceStatus, QueryInterpretation, QueryResponse, SummaryBlock, TableBlock
-from backend.app.services.chat_service import ChatHistoryTurn, ChatService
+from backend.app.services.chat_service import ChatHistoryTurn, ChatService, ConversationState
 
 
 class FakeRepository:
     def list_player_names(self) -> list[str]:
-        return ["Ravichandran Ashwin", "Virat Kohli", "Hardik Pandya", "Jasprit Bumrah", "Mitchell Starc", "Tim Southee"]
+        return ["Ravichandran Ashwin", "Virat Kohli", "Glenn Maxwell", "Hardik Pandya", "Jasprit Bumrah", "Mitchell Starc", "Tim Southee"]
 
     def search_players(self, query: str, limit: int = 5) -> list[str]:
         mapping = {
@@ -37,7 +37,7 @@ class TruncatingGeminiClient:
     def generate_text(self, prompt: str, prefer_complex: bool = False) -> str | None:
         if "Pick the most likely ODI player" in prompt:
             return "Hardik Pandya"
-        return "Hardik Pandya's death over strike rate is 1"
+        return "Hardik Pandya's death over batting strike rate is 1"
 
 
 class UnavailableGeminiClient:
@@ -56,6 +56,8 @@ def fake_query_handler(question: str) -> QueryResponse:
         entities.append("Virat Kohli")
     if "Hardik Pandya" in question:
         entities.append("Hardik Pandya")
+    if "Glenn Maxwell" in question:
+        entities.append("Glenn Maxwell")
     if "Jasprit Bumrah" in question:
         entities.append("Jasprit Bumrah")
     if "Mitchell Starc" in question or "mitchell starc" in question.lower():
@@ -86,7 +88,7 @@ def numeric_query_handler(question: str) -> QueryResponse:
         summaries=[
             SummaryBlock(
                 title="Snapshot",
-                body="In death overs, Hardik Pandya has 691 runs from 507 balls with a strike rate of 136.29.",
+                body="In death overs, Hardik Pandya has 691 runs from 507 balls with a Batting Strike Rate of 136.29.",
             )
         ],
     )
@@ -149,6 +151,34 @@ def test_chat_service_resolves_broad_player_prompt_and_returns_analysis() -> Non
     assert reply.resolved_input is None
 
 
+def test_chat_service_asks_user_to_disambiguate_strike_rate_before_querying() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+
+    reply = service.reply("What is Jasprit Bumrah's strike rate?", history=[])
+
+    assert reply.mode == "clarification"
+    assert reply.message == "Do you mean batting strike rate or bowling strike rate?"
+    assert [option.label for option in reply.clarification_options] == [
+        "Batting strike rate",
+        "Bowling strike rate",
+    ]
+    assert [option.message for option in reply.clarification_options] == [
+        "What is Jasprit Bumrah's batting strike rate?",
+        "What is Jasprit Bumrah's bowling strike rate?",
+    ]
+    assert seen_questions == []
+
+
 def test_chat_service_does_not_turn_over_into_a_player_name() -> None:
     service = ChatService(
         repository=FakeRepository(),
@@ -172,12 +202,12 @@ def test_chat_service_prefers_database_text_when_gemini_damages_numeric_reply() 
     )
 
     reply = service.reply(
-        "death over strike rate of hardik pandya",
+        "death over batting strike rate of hardik pandya",
         history=[],
     )
 
     assert reply.mode == "analysis"
-    assert reply.message == "In death overs, Hardik Pandya has 691 runs from 507 balls with a strike rate of 136.29."
+    assert reply.message == "In death overs, Hardik Pandya has 691 runs from 507 balls with a Batting Strike Rate of 136.29."
     assert "Gemini reasoning" not in reply.activity_trace
     assert "ODI database" in reply.activity_trace
 
@@ -301,6 +331,135 @@ def test_chat_service_contextualizes_trend_comparison_with_new_player() -> None:
     assert "Jasprit Bumrah trend" in seen_questions[0]
     assert "mitchell starc" in seen_questions[0].lower()
     assert "as a bowler" in seen_questions[0]
+    assert "in death overs" in seen_questions[0]
+
+
+def test_successful_comparison_returns_structured_conversation_state() -> None:
+    def query_handler(question: str) -> QueryResponse:
+        return QueryResponse(
+            status=EvidenceStatus.supported,
+            interpretation=QueryInterpretation(
+                original_question=question,
+                query_class="venue_context_leaderboard",
+                entities=["Jasprit Bumrah", "Mitchell Starc"],
+                filters={
+                    "phase": "death",
+                    "compare_players": ["Jasprit Bumrah", "Mitchell Starc"],
+                    "comparison_metrics": ["economy_rate", "bowling_strike_rate"],
+                    "semantic_operation": "player_compare",
+                    "semantic_metric": "economy_rate",
+                    "semantic_group_by": ["bowler"],
+                },
+            ),
+            summaries=[SummaryBlock(title="Comparison", body="Comparison complete.")],
+        )
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+
+    reply = service.reply("Compare Bumrah and Starc in death overs", history=[])
+
+    assert reply.conversation_state is not None
+    assert reply.conversation_state.players == ["Jasprit Bumrah", "Mitchell Starc"]
+    assert reply.conversation_state.metric == "economy_rate"
+    assert reply.conversation_state.comparison_participants == ["Jasprit Bumrah", "Mitchell Starc"]
+    assert reply.conversation_state.comparison_metrics == ["economy_rate", "bowling_strike_rate"]
+    assert reply.conversation_state.filters == {"phase": "death"}
+
+
+def test_short_phase_follow_up_preserves_structured_comparison_context() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    state = ConversationState(
+        players=["Jasprit Bumrah", "Mitchell Starc"],
+        metric="economy_rate",
+        comparison_participants=["Jasprit Bumrah", "Mitchell Starc"],
+        comparison_metrics=["economy_rate", "bowling_strike_rate"],
+        filters={"phase": "death"},
+    )
+
+    reply = service.reply(
+        "What about powerplay?",
+        history=[],
+        conversation_state=state,
+    )
+
+    assert reply.resolved_input is not None
+    assert "Compare Jasprit Bumrah and Mitchell Starc" in seen_questions[0]
+    assert "economy rate" in seen_questions[0]
+    assert "bowling strike rate" in seen_questions[0]
+    assert "powerplay" in seen_questions[0]
+    assert "death" not in seen_questions[0]
+
+
+def test_short_style_follow_up_replaces_only_structured_bowling_style() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    state = ConversationState(
+        players=["Glenn Maxwell"],
+        metric="batting_strike_rate",
+        filters={"bowling_style": "off_spin"},
+    )
+
+    reply = service.reply(
+        "What about leg-spin?",
+        history=[],
+        conversation_state=state,
+    )
+
+    assert reply.resolved_input is not None
+    assert "Glenn Maxwell's batting strike rate" in seen_questions[0]
+    assert "against leg spin" in seen_questions[0]
+    assert "off spin" not in seen_questions[0]
+
+
+def test_short_matchup_follow_up_preserves_batter_bowler_and_metric() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    state = ConversationState(
+        players=["Virat Kohli", "Mitchell Starc"],
+        operation="matchup",
+        metric="batting_strike_rate",
+        filters={"batter": "Virat Kohli", "bowler": "Mitchell Starc"},
+    )
+
+    service.reply(
+        "What about death overs?",
+        history=[],
+        conversation_state=state,
+    )
+
+    assert "Virat Kohli's batting strike rate against Mitchell Starc" in seen_questions[0]
     assert "in death overs" in seen_questions[0]
 
 

@@ -60,7 +60,7 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         if dimension not in DIMENSIONS:
             errors.append(f"Unsupported group_by dimension '{dimension}'.")
 
-    internal_filters = {"compare_players", "comparison_metrics"} if plan.operation == "player_compare" else set()
+    internal_filters = {"compare_players", "comparison_metrics", "comparison_view"} if plan.operation == "player_compare" else set()
     if plan.operation == "match_fact":
         internal_filters |= {"match_stage", "fact_type"}
     for filter_name in plan.filters:

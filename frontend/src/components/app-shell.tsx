@@ -21,18 +21,25 @@ import {
 } from "@/lib/atlas-thread-store";
 import { consumePendingAtlasPrompt, saveWorkbenchContext } from "@/lib/workbench-context-store";
 
-const EMPTY_THREAD_SUGGESTIONS = [
-  "Compare Virat Kohli at number 3 vs opening in ODIs",
-  "Where does Hardik Pandya score the most and on which shots?",
-  "Does Shreyas Iyer still struggle against the short ball after 2023?",
-  "Talk me through how to judge a batter's weakness against spin",
-];
+const VERIFIED_FOLLOW_UPS = new Set([
+  "Compare the same players in powerplay, middle, and death overs.",
+]);
 
 function buildHistory(messages: AtlasMessage[]): ChatHistoryTurn[] {
   return messages.map((message) => ({
     role: message.role === "assistant" ? "assistant" : "user",
     content: message.content,
   }));
+}
+
+function latestConversationState(messages: AtlasMessage[]) {
+  return [...messages]
+    .reverse()
+    .find((message) => message.reply?.conversation_state)?.reply?.conversation_state ?? null;
+}
+
+function verifiedFollowUps(message: AtlasMessage): string[] {
+  return (message.reply?.suggestions ?? []).filter((suggestion) => VERIFIED_FOLLOW_UPS.has(suggestion));
 }
 
 function reorderThreads(threads: AtlasThread[], activeId: string): AtlasThread[] {
@@ -52,13 +59,17 @@ function visibleMessageContent(message: AtlasMessage): string {
   return tableStart >= 0 ? message.content.slice(0, tableStart) : message.content;
 }
 
-function questionWithMinimumBalls(question: string, minimumBalls: number): string {
+function questionWithMinimumBalls(
+  question: string,
+  minimumBalls: number,
+  sampleUnit: "balls" | "legal balls",
+): string {
   const withoutExistingThreshold = question
     .replace(/\bminimum\s+\d+\s+(?:legal\s+balls|balls|deliveries)\b/gi, "")
     .replace(/\s+([,?.!])/g, "$1")
     .replace(/[,?.!\s]+$/, "")
     .trim();
-  return `${withoutExistingThreshold}, minimum ${minimumBalls} balls`;
+  return `${withoutExistingThreshold}, minimum ${minimumBalls} ${sampleUnit}`;
 }
 
 function ChatTablePreview({
@@ -66,7 +77,10 @@ function ChatTablePreview({
   onMinimumBallsApply,
 }: {
   result: QueryResponse;
-  onMinimumBallsApply: (minimumBalls: number) => Promise<void> | void;
+  onMinimumBallsApply: (
+    minimumBalls: number,
+    sampleUnit: "balls" | "legal balls",
+  ) => Promise<void> | void;
 }) {
   if (!result.tables.length) {
     return null;
@@ -86,7 +100,10 @@ function ChatTableCard({
   onMinimumBallsApply,
 }: {
   table: TableBlock;
-  onMinimumBallsApply: (minimumBalls: number) => Promise<void> | void;
+  onMinimumBallsApply: (
+    minimumBalls: number,
+    sampleUnit: "balls" | "legal balls",
+  ) => Promise<void> | void;
 }) {
   return (
     <section className="chat-table-card">
@@ -204,7 +221,9 @@ export function AppShell() {
     setInput("");
 
     try {
-      const reply = await sendMessage(trimmed, buildHistory(activeThread.messages));
+      const reply = await sendMessage(trimmed, buildHistory(activeThread.messages), {
+        conversationState: latestConversationState(activeThread.messages),
+      });
       const assistantMessage = createAtlasMessage("assistant", reply.message, reply);
       const finalThread: AtlasThread = {
         ...updatedThread,
@@ -243,8 +262,9 @@ export function AppShell() {
     messageId: string,
     originalQuestion: string,
     minimumBalls: number,
+    sampleUnit: "balls" | "legal balls",
   ) {
-    const refinedQuestion = questionWithMinimumBalls(originalQuestion, minimumBalls);
+    const refinedQuestion = questionWithMinimumBalls(originalQuestion, minimumBalls, sampleUnit);
     const reply = await sendMessage(refinedQuestion, [], { silent: true });
 
     setThreads((currentThreads) => {
@@ -285,9 +305,6 @@ export function AppShell() {
     });
     router.push("/workbench");
   }
-
-  const suggestedPrompts =
-    activeThread && activeThread.messages.length === 0 ? EMPTY_THREAD_SUGGESTIONS : [];
 
   return (
     <main className="atlas-chat-shell">
@@ -428,13 +445,28 @@ export function AppShell() {
                     ) : null}
                   </div>
 
-                  {message.role === "assistant" && message.reply?.suggestions?.length ? (
-                    <div className="turn-suggestions">
-                      {message.reply.suggestions.map((suggestion) => (
+                  {message.role === "assistant" && message.reply?.clarification_options?.length ? (
+                    <div className="turn-suggestions" aria-label="Clarification options">
+                      {message.reply.clarification_options.map((option) => (
+                        <button
+                          className="suggestion-chip"
+                          key={option.message}
+                          onClick={() => void handleSend(option.message)}
+                          type="button"
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {message.role === "assistant" && verifiedFollowUps(message).length ? (
+                    <div className="turn-suggestions" aria-label="Suggested follow-ups">
+                      {verifiedFollowUps(message).map((suggestion) => (
                         <button
                           className="suggestion-chip"
                           key={suggestion}
-                          onClick={() => setInput(suggestion)}
+                          onClick={() => void handleSend(suggestion)}
                           type="button"
                         >
                           {suggestion}
@@ -446,7 +478,7 @@ export function AppShell() {
                   {message.role === "assistant" && message.reply?.query_response ? (
                     <div className="chat-attachments">
                       <ChatTablePreview
-                        onMinimumBallsApply={async (minimumBalls) => {
+                        onMinimumBallsApply={async (minimumBalls, sampleUnit) => {
                           const question = message.reply?.query_response?.interpretation.original_question;
                           if (question) {
                             await handleRefineMessage(
@@ -454,6 +486,7 @@ export function AppShell() {
                               message.id,
                               question,
                               minimumBalls,
+                              sampleUnit,
                             );
                           }
                         }}
@@ -493,21 +526,6 @@ export function AppShell() {
 
             {error ? <p className="muted-copy chat-error">{error}</p> : null}
           </div>
-
-          {suggestedPrompts.length > 0 ? (
-            <div className="atlas-suggestions" aria-label="Suggested prompts">
-              {suggestedPrompts.map((suggestion) => (
-                <button
-                  className="suggestion-chip"
-                  key={suggestion}
-                  onClick={() => setInput(suggestion)}
-                  type="button"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          ) : null}
 
           <form
             className="atlas-composer"

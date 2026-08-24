@@ -200,7 +200,11 @@ class SemanticAnalyticsService:
         missing_players = [
             str(row.get("player"))
             for row in compare.rows
-            if any(row.get(metric) is None for metric in compare.metrics)
+            if any(
+                row.get(metric) is None
+                for metric in compare.metrics
+                if metric != "bowling_strike_rate"
+            )
         ]
         if missing_players:
             trace.final_answer_metadata = {
@@ -215,7 +219,8 @@ class SemanticAnalyticsService:
                 detail="The comparison was understood, but at least one compared player did not meet the requested sample or filters.",
                 suggestions=["Lower the minimum sample threshold or use broader filters."],
             )
-        table = self._comparison_table_for_rows(compare)
+        tables = self._comparison_tables_for_rows(compare)
+        table = tables[0]
         summary = self._comparison_summary_for_rows(compare)
         trace.final_answer_metadata = {
             "status": "supported",
@@ -229,7 +234,7 @@ class SemanticAnalyticsService:
             status=EvidenceStatus.supported,
             interpretation=self._interpretation(question, plan),
             summaries=[summary],
-            tables=[table],
+            tables=tables,
             metric_references=[self._metric_reference(metric) for metric in compare.metrics],
             evidence_queries=[
                 EvidenceQueryBlock(
@@ -279,7 +284,7 @@ class SemanticAnalyticsService:
                 suggestions=["Try a broader phase, style, or player matchup."],
             )
 
-        table = self._matchup_table_for_rows(matchup_build, dict_rows)
+        table = self._matchup_table_for_rows(plan, matchup_build, dict_rows)
         summary = self._matchup_summary_for_rows(plan, matchup_build, dict_rows)
         metadata: dict[str, object] = {
             "status": "supported",
@@ -1074,6 +1079,11 @@ class SemanticAnalyticsService:
         sample = top.get(sample_key) or top.get("balls") or top.get("legal_balls")
         plural = "" if sample == 1 else "s"
         sample_text = f" from {sample} {sample_label}{plural}" if sample else ""
+        if plan.metric == "bowling_strike_rate":
+            sample_text = (
+                f" from {top.get('legal_balls')} legal balls and "
+                f"{top.get('wickets')} bowler-credit wickets"
+            )
         if plan.question_subject == "weakness_check" and dimension_columns:
             context_parts = []
             if plan.filters.get("length"):
@@ -1109,6 +1119,11 @@ class SemanticAnalyticsService:
             title="Semantic aggregate answer",
             body=(
                 f"{context}{subject} ranks first for {_label(plan.metric)} at {metric_text}{sample_text}."
+                + (
+                    " Bowlers with no bowler-credit wickets are excluded."
+                    if plan.metric == "bowling_strike_rate"
+                    else ""
+                )
             ),
         )
 
@@ -1167,7 +1182,11 @@ class SemanticAnalyticsService:
                 [
                     _display_dimension_value(row.get(column), "batter")
                     if column == "player"
-                    else _display_value(row.get(column))
+                    else (
+                        "N/A — no wickets taken"
+                        if column == "bowling_strike_rate" and row.get(column) is None
+                        else _display_value(row.get(column))
+                    )
                     for column in compare.columns
                 ]
                 for row in compare.rows
@@ -1175,9 +1194,90 @@ class SemanticAnalyticsService:
         )
 
     @staticmethod
+    def _comparison_tables_for_rows(
+        compare: player_compare_executor.PlayerCompareResult,
+    ) -> list[TableBlock]:
+        if compare.view != "opposition":
+            return [SemanticAnalyticsService._comparison_table_for_rows(compare)]
+
+        columns = [column for column in compare.columns if column != "player"]
+        return [
+            TableBlock(
+                title=f"{player} by opposition",
+                columns=[_label(column) for column in columns],
+                rows=[
+                    [
+                        "N/A — no wickets taken"
+                        if column == "bowling_strike_rate" and row.get(column) is None
+                        else _display_dimension_value(row.get(column), column)
+                        for column in columns
+                    ]
+                    for row in compare.rows
+                    if row.get("player") == player
+                ],
+            )
+            for player in compare.players
+        ]
+
+    @staticmethod
     def _comparison_summary_for_rows(compare: player_compare_executor.PlayerCompareResult) -> SummaryBlock:
         metric_labels = ", ".join(_label(metric) for metric in compare.metrics)
         players = " and ".join(compare.players)
+        if compare.view == "opposition" and len(compare.players) >= 2:
+            first_player, second_player = compare.players[:2]
+            first_rows = {
+                str(row.get("opposition")): row
+                for row in compare.rows
+                if row.get("player") == first_player and row.get("opposition")
+            }
+            second_rows = {
+                str(row.get("opposition")): row
+                for row in compare.rows
+                if row.get("player") == second_player and row.get("opposition")
+            }
+            candidates: list[tuple[float, str, str, dict[str, object], dict[str, object]]] = []
+            for metric in compare.metrics:
+                metric_candidates: list[
+                    tuple[float, str, str, dict[str, object], dict[str, object]]
+                ] = []
+                for opposition in first_rows.keys() & second_rows.keys():
+                    first_value = first_rows[opposition].get(metric)
+                    second_value = second_rows[opposition].get(metric)
+                    if not isinstance(first_value, int | float) or not isinstance(second_value, int | float):
+                        continue
+                    metric_candidates.append(
+                        (
+                            abs(float(first_value) - float(second_value)),
+                            metric,
+                            opposition,
+                            first_rows[opposition],
+                            second_rows[opposition],
+                        )
+                    )
+                if metric_candidates:
+                    candidates.append(max(metric_candidates, key=lambda item: item[0]))
+
+            sample_column = compare.sample_columns[0]
+            sample_label = sample_column.replace("_", " ")
+            highlights: list[str] = []
+            for gap, metric, opposition, first_row, second_row in sorted(
+                candidates,
+                key=lambda item: (-item[0], item[1], item[2]),
+            )[:3]:
+                first_value = float(first_row[metric])
+                second_value = float(second_row[metric])
+                direction = "higher" if first_value > second_value else "lower"
+                highlights.append(
+                    f"Against {opposition}, {first_player}'s {_label(metric)} "
+                    f"({_display_value(first_value)} from {first_row.get(sample_column)} {sample_label}) is "
+                    f"{_display_value(gap)} {direction} than {second_player}'s "
+                    f"({_display_value(second_value)} from {second_row.get(sample_column)} {sample_label})"
+                )
+            if highlights:
+                return SummaryBlock(
+                    title="Semantic team-wise comparison answer",
+                    body="Calculated standout differences: " + "; ".join(highlights) + ".",
+                )
         return SummaryBlock(
             title="Semantic player comparison answer",
             body=(
@@ -1188,28 +1288,39 @@ class SemanticAnalyticsService:
 
     @staticmethod
     def _matchup_table_for_rows(
+        plan: CricketQueryPlan,
         matchup_build: matchup_executor.MatchupBuild,
         rows: list[dict[str, object]],
     ) -> TableBlock:
+        balls_match_legal_balls = all(
+            row.get("balls") == row.get("legal_balls") for row in rows
+        )
+        dot_percentages_match = all(
+            row.get("dot_percentage") == row.get("bowler_dot_percentage") for row in rows
+        )
+        dot_columns = (
+            ["bowler_dot_percentage"]
+            if dot_percentages_match and plan.metric == "bowler_dot_ball_percentage"
+            else ["dot_percentage"]
+            if dot_percentages_match
+            else ["dot_percentage", "bowler_dot_percentage"]
+        )
         columns = [
             *matchup_build.dimension_columns,
             "balls",
-            "legal_balls",
+            *([] if balls_match_legal_balls else ["legal_balls"]),
             "runs",
             "dismissals",
             "wickets",
             "strike_rate",
-            "dot_percentage",
-            "bowler_dot_percentage",
+            *dot_columns,
             "boundary_percentage",
             "false_shot_percentage",
             "dismissal_rate",
-            "sample_size",
-            "low_sample",
         ]
         return TableBlock(
             title="Semantic matchup result",
-            columns=[_label(column) for column in columns],
+            columns=[_matchup_column_label(column) for column in columns],
             rows=[[_display_value(row.get(column)) for column in columns] for row in rows],
         )
 
@@ -1220,6 +1331,29 @@ class SemanticAnalyticsService:
         rows: list[dict[str, object]],
     ) -> SummaryBlock:
         top = rows[0]
+        named_batter = plan.filters.get("batter")
+        named_bowler = plan.filters.get("bowler")
+        if isinstance(named_batter, str) and isinstance(named_bowler, str):
+            metric_column = {
+                "batting_strike_rate": "strike_rate",
+                "batter_dot_ball_percentage": "dot_percentage",
+                "bowler_dot_ball_percentage": "bowler_dot_percentage",
+                "boundary_percentage": "boundary_percentage",
+                "false_shot_percentage": "false_shot_percentage",
+                "dismissal_rate": "dismissal_rate",
+                "wickets": "wickets",
+                "wickets_taken": "wickets",
+                "dismissals": "dismissals",
+                "runs_scored": "runs",
+                "balls_faced": "balls",
+            }.get(plan.metric, "rank_value")
+            return SummaryBlock(
+                title="Semantic matchup answer",
+                body=(
+                    f"{named_batter}'s {_label(plan.metric)} against {named_bowler} is "
+                    f"{_display_value(top.get(metric_column))} from {top.get('balls')} balls."
+                ),
+            )
         subject_parts = [
             str(_display_dimension_value(top.get(column), column))
             for column in matchup_build.dimension_columns
@@ -1309,6 +1443,15 @@ def _label(value: str) -> str:
         return value.replace("_", " ").title()
 
 
+def _matchup_column_label(value: str) -> str:
+    labels = {
+        "strike_rate": "Batting Strike Rate",
+        "dot_percentage": "Batter Dot Ball Percentage",
+        "bowler_dot_percentage": "Bowler Dot Ball Percentage",
+    }
+    return labels.get(value, _label(value))
+
+
 def _shot_label(value: str) -> str:
     return str(public_label(value))
 
@@ -1379,6 +1522,7 @@ def _metric_evidence_columns(metric: str, entity: str) -> list[str]:
         "batting_strike_rate": ["runs_scored", "balls_faced"],
         "batting_average": ["runs_scored", "dismissals"],
         "bowling_average": ["runs_conceded", "wickets"],
+        "bowling_strike_rate": ["legal_balls", "wickets"],
         "economy_rate": ["runs_conceded", "legal_balls"],
         "batter_dot_ball_percentage": ["dot_balls", "balls_faced"],
         "bowler_dot_ball_percentage": ["bowler_dot_balls", "legal_balls"],

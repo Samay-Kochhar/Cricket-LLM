@@ -10,6 +10,9 @@ This slice should produce a complete user-visible leaderboard answer with valida
 
 ## Acceptance criteria
 
+- [ ] Rate and percentage rankings default to at least 60 balls faced for batters or 60 legal balls bowled for bowlers.
+- [ ] A minimum sample explicitly supplied by the user replaces the 60-ball default.
+
 - [ ] Top-N and bottom-N wording normalize to the correct limit and sort direction.
 - [ ] Best/worst/highest/lowest/most/fewest wording maps correctly for metrics where lower is better, such as economy rate.
 - [ ] Explicit minimum sample wording is parsed into the semantic plan where supported.

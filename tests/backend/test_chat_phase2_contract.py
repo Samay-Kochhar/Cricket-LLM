@@ -42,7 +42,7 @@ def client() -> Iterator[TestClient]:
 @pytest.mark.parametrize(
     "message,operation,metric",
     [
-        ("What is Virat Kohli's strike rate in ODIs?", "aggregate", "batting_strike_rate"),
+        ("What is Virat Kohli's batting strike rate in ODIs?", "aggregate", "batting_strike_rate"),
         ("Which bowler has the best death-over economy?", "aggregate", "economy_rate"),
         ("Who has dismissed David Miller most often?", "matchup", "wickets_taken"),
         ("Which line generates the most dot balls against Virat Kohli?", "aggregate", "bowler_dot_ball_percentage"),

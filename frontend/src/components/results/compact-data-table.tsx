@@ -9,7 +9,10 @@ const DEFAULT_VISIBLE_ROWS = 5;
 type CompactDataTableProps = {
   table: TableBlock;
   initialRows?: number;
-  onMinimumBallsApply?: (minimumBalls: number) => Promise<void> | void;
+  onMinimumBallsApply?: (
+    minimumBalls: number,
+    sampleUnit: "balls" | "legal balls",
+  ) => Promise<void> | void;
 };
 
 type SortState = {
@@ -53,7 +56,13 @@ export function CompactDataTable({
   const [minimumBalls, setMinimumBalls] = useState("");
   const [isApplyingMinimum, setIsApplyingMinimum] = useState(false);
   const [sort, setSort] = useState<SortState>(null);
-  const ballsColumnIndex = table.columns.findIndex((column) => column.toLowerCase() === "balls");
+  const ballsColumnIndex = table.columns.findIndex((column) =>
+    ["balls", "balls faced", "legal balls"].includes(column.toLowerCase()),
+  );
+  const sampleUnit =
+    ballsColumnIndex >= 0 && table.columns[ballsColumnIndex].toLowerCase() === "legal balls"
+      ? "legal balls"
+      : "balls";
   const trimmedQuery = query.trim().toLowerCase();
   const minimumBallsValue = numericValue(minimumBalls);
 
@@ -102,7 +111,11 @@ export function CompactDataTable({
         {ballsColumnIndex >= 0 ? (
           <div className="table-control compact-number-control">
             <label htmlFor={`${table.title}-minimum-balls`}>
-              {onMinimumBallsApply ? "Min balls" : "Filter shown rows by balls"}
+              {onMinimumBallsApply
+                ? sampleUnit === "legal balls"
+                  ? "Min legal balls"
+                  : "Min balls"
+                : `Filter shown rows by ${sampleUnit}`}
             </label>
             <div className="minimum-balls-row">
               <input
@@ -123,7 +136,7 @@ export function CompactDataTable({
                     }
                     setIsApplyingMinimum(true);
                     try {
-                      await onMinimumBallsApply(minimumBallsValue);
+                      await onMinimumBallsApply(minimumBallsValue, sampleUnit);
                     } finally {
                       setIsApplyingMinimum(false);
                     }

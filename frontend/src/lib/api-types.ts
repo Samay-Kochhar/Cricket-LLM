@@ -253,11 +253,27 @@ export type ChatHistoryTurn = {
   content: string;
 };
 
+export type ClarificationOption = {
+  label: string;
+  message: string;
+};
+
+export type ConversationState = {
+  players: string[];
+  operation?: string | null;
+  metric?: string | null;
+  comparison_participants: string[];
+  comparison_metrics: string[];
+  filters: Record<string, unknown>;
+};
+
 export type ChatReply = {
   mode: string;
   message: string;
   query_response?: QueryResponse | null;
   suggestions: string[];
+  clarification_options?: ClarificationOption[];
+  conversation_state?: ConversationState | null;
   resolved_input?: string | null;
   resolution_note?: string | null;
   activity_trace: string[];

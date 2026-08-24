@@ -1,12 +1,14 @@
-# Semantic V2 Factual Capability Matrix
+# Semantic V2 Backend Capability Matrix
 
-Generated for Phase 3. Source of truth for the structured matrix is `backend/app/cricket_analytics/capabilities.py`.
+Generated for Phase 3. Source of truth for this backend matrix is `backend/app/cricket_analytics/capabilities.py`.
 
-| Capability | Operation | Entities | Status | Executor | Sample-size rule | Known limitation |
+This matrix records available semantic handlers and executors. It does **not** mean that a capability is reliable in the real chat product. User-facing status is recorded in [Product Readiness](product-readiness.md).
+
+| Capability | Operation | Entities | Backend status | Executor | Sample-size rule | Known limitation |
 |---|---|---|---|---|---|---|
-| Direct player statistic | aggregate | batter, bowler | production_ready | aggregate_builder | Registry minimum sample for rates/percentages | None known for covered metrics |
-| Global leaderboard | aggregate | batter, bowler, team, venue | production_ready | aggregate_builder | Registry minimum for rate/percentage leaderboards | None known for covered metrics |
-| Top/bottom N leaderboard | aggregate | batter, bowler, team, venue | partial | aggregate_builder | Registry default plus parsed minimum sample | Explicit natural-language minimum-sample parsing is limited |
+| Direct player statistic | aggregate | batter, bowler | production_ready | aggregate_builder | No default threshold for descriptive results; explicit user threshold is respected | None known for covered metrics |
+| Global leaderboard | aggregate | batter, bowler, team, venue | production_ready | aggregate_builder | 60 balls for rate/percentage rankings unless the user overrides it | None known for covered metrics |
+| Top/bottom N leaderboard | aggregate | batter, bowler, team, venue | partial | aggregate_builder | 60 balls for rate/percentage rankings unless the user overrides it | Explicit natural-language minimum-sample parsing is limited |
 | Player comparison | player_compare | batter, bowler | production_ready | player_compare_executor | Shows balls/legal balls where available | Mixed batter-vs-bowler comparisons are rejected |
 | Batter-versus-bowler matchup | matchup | matchup, batter, bowler | production_ready | matchup_executor | Soft low-sample flag | None known for tested shapes |
 | Which bowler against this batter | matchup | bowler | production_ready | matchup_executor | Soft low-sample flag | None known for tested shapes |

@@ -185,10 +185,13 @@ def test_default_strike_rate_sample_is_not_repeated_and_table_shows_formula_inpu
     semantic_service: SemanticAnalyticsService,
 ) -> None:
     response = semantic_service.answer_question("Who has the best ODI strike rate?")
+    plan = _trace(response)["normalized_plan"]
 
     assert response.status.value == "supported"
     assert "minimum sample" not in response.summaries[0].body.lower()
-    assert "from 20 balls" in response.summaries[0].body.lower()
+    assert plan["minimum_sample"] == {"balls": 60, "legal_balls": None, "innings": None}
+    balls_faced_index = response.tables[0].columns.index("Balls Faced")
+    assert all(row[balls_faced_index] >= 60 for row in response.tables[0].rows)
     assert response.tables[0].columns == [
         "Batter",
         "Batting Strike Rate",
@@ -217,8 +220,10 @@ def test_unqualified_batter_comparison_returns_core_metric_set(
     semantic_service: SemanticAnalyticsService,
 ) -> None:
     response = semantic_service.answer_question("Compare Kohli and Steve Smith")
+    plan = _trace(response)["normalized_plan"]
 
     assert response.status.value == "supported"
+    assert plan["minimum_sample"] is None
     assert response.interpretation.entities == ["Virat Kohli", "Steven Smith"]
     assert response.tables[0].columns == [
         "Player",
@@ -316,6 +321,36 @@ def test_live_gemini_off_break_plan_is_repaired_to_direct_off_spin_aggregate(
     assert response.tables[0].rows[0][3] == 453
 
 
+def test_live_gemini_single_player_compare_is_repaired_to_direct_off_spin_aggregate(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    service = SemanticAnalyticsService(
+        repository=semantic_service.repository,
+        gemini_client=ScriptedGeminiClient(
+            """{
+              "operation": "player_compare",
+              "entity": "batter",
+              "metric": "batting_strike_rate",
+              "filters": {"batter": "Glenn Maxwell", "bowling_style": "Offbreak"},
+              "minimum_sample": {"balls": 60}
+            }"""
+        ),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+
+    response = service.answer_question(
+        "What is Glenn Maxwell's batting strike rate against off spinners?"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["operation"] == "aggregate"
+    assert plan["filters"]["batter"] == "Glenn Maxwell"
+    assert plan["filters"]["bowling_style"] == "off_spin"
+    assert response.tables[0].rows[0][1] == 134.22
+
+
 def test_worst_bowling_average_against_named_batter_uses_bowling_formula(
     semantic_service: SemanticAnalyticsService,
 ) -> None:
@@ -374,6 +409,7 @@ def test_unqualified_death_over_bowler_comparison_returns_core_metric_set(
         "Player",
         "Economy Rate",
         "Bowling Average",
+        "Bowling Strike Rate",
         "Wickets Taken",
         "Bowler Dot Ball Percentage",
         "Boundary Percentage",
@@ -381,3 +417,212 @@ def test_unqualified_death_over_bowler_comparison_returns_core_metric_set(
         "Runs Conceded",
         "Matches",
     ]
+
+
+def test_direct_bowling_strike_rate_uses_legal_balls_per_bowler_wicket(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "What is Jasprit Bumrah's bowling strike rate in death overs?"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["entity"] == "bowler"
+    assert plan["metric"] == "bowling_strike_rate"
+    assert plan["filters"]["bowler"] == "Jasprit Bumrah"
+    assert plan["filters"]["phase"] == "death"
+    assert response.tables[0].columns == [
+        "Bowler",
+        "Bowling Strike Rate",
+        "Legal Balls",
+        "Wickets Taken",
+        "Matches",
+    ]
+    row = response.tables[0].rows[0]
+    assert row[1] == round(row[2] / row[3], 2)
+    assert "Bowling Strike Rate" in response.summaries[0].body
+
+
+def test_bowling_strike_rate_ranking_excludes_zero_wicket_rows(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Which bowler has the best bowling strike rate?"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["minimum_sample"]["legal_balls"] == 60
+    assert all(row[1] is not None for row in response.tables[0].rows)
+    assert "70 legal balls and 7 bowler-credit wickets" in response.summaries[0].body
+    assert "no bowler-credit wickets are excluded" in response.summaries[0].body
+
+
+def test_bowling_strike_rate_ranking_honors_user_legal_ball_threshold(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Which bowler has the best bowling strike rate, minimum 100 legal balls"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["minimum_sample"]["legal_balls"] == 100
+    legal_balls_index = response.tables[0].columns.index("Legal Balls")
+    assert all(row[legal_balls_index] >= 100 for row in response.tables[0].rows)
+
+
+def test_descriptive_bowling_strike_rate_comparison_keeps_zero_wicket_players(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Compare Abul Hasan and Aaron Jones by bowling strike rate"
+    )
+
+    assert response.status.value == "supported"
+    assert response.tables[0].columns == [
+        "Player",
+        "Bowling Strike Rate",
+        "Legal Balls",
+        "Wickets Taken",
+        "Runs Conceded",
+        "Matches",
+    ]
+    assert response.tables[0].rows == [
+        ["Aaron Jones", "N/A — no wickets taken", 197, 0, 189, 10],
+        ["Abul Hasan", "N/A — no wickets taken", 216, 0, 244, 7],
+    ]
+
+
+def test_phase_wise_bowler_comparison_returns_one_combined_table(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Compare Bumrah and Starc across powerplay, middle overs, and death overs"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["filters"]["comparison_view"] == "phase"
+    assert "phase" not in plan["filters"]
+    assert response.tables[0].columns[:2] == ["Player", "Phase"]
+    assert "Legal Balls" in response.tables[0].columns
+    assert len(response.tables[0].rows) == 6
+    assert {row[1] for row in response.tables[0].rows} == {"powerplay", "middle", "death"}
+    assert {row[0] for row in response.tables[0].rows} == {"Jasprit Bumrah", "Mitchell Starc"}
+
+
+def test_team_wise_comparison_returns_one_opposition_table_per_player(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question("Compare Bumrah and Starc team-wise")
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["filters"]["comparison_view"] == "opposition"
+    assert len(response.tables) == 2
+    assert [table.title for table in response.tables] == [
+        "Jasprit Bumrah by opposition",
+        "Mitchell Starc by opposition",
+    ]
+    for table in response.tables:
+        assert table.columns[0] == "Opposition"
+        assert "Legal Balls" in table.columns
+        assert table.rows
+        assert all(row[0] for row in table.rows)
+    summary = response.summaries[0].body
+    assert "Calculated standout differences:" in summary
+    assert 1 <= summary.count("Against ") <= 3
+    assert "legal balls" in summary
+    assert " higher " in summary or " lower " in summary
+
+
+def test_named_matchup_is_descriptive_and_hides_duplicate_or_internal_columns(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    service = SemanticAnalyticsService(
+        repository=semantic_service.repository,
+        gemini_client=ScriptedGeminiClient(
+            """{
+              "operation": "matchup",
+              "entity": "batter",
+              "metric": "batting_strike_rate",
+              "filters": {"batter": "Virat Kohli", "bowler": "Mitchell Starc"},
+              "group_by": ["batter", "bowler"]
+            }"""
+        ),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+    response = service.answer_question(
+        "What is Virat Kohli's batting strike rate against Mitchell Starc?"
+    )
+
+    assert response.status.value == "supported"
+    assert "ranks first" not in response.summaries[0].body
+    assert response.summaries[0].body == (
+        "Virat Kohli's Batting Strike Rate against Mitchell Starc is 100.65 from 155 balls."
+    )
+    assert response.tables[0].columns == [
+        "Batter",
+        "Bowler",
+        "Balls",
+        "Runs",
+        "Dismissals",
+        "Wickets Taken",
+        "Batting Strike Rate",
+        "Batter Dot Ball Percentage",
+        "Boundary Percentage",
+        "False Shot Percentage",
+        "Dismissal Rate",
+    ]
+    assert response.tables[0].rows == [
+        ["Virat Kohli", "Mitchell Starc", 155, 156, 1, 1, 100.65, 43.23, 9.68, 18.71, 0.65]
+    ]
+
+
+def test_named_matchup_keeps_distinct_ball_and_dot_columns_when_values_differ(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    service = SemanticAnalyticsService(
+        repository=semantic_service.repository,
+        gemini_client=ScriptedGeminiClient(
+            """{
+              "operation": "matchup",
+              "entity": "batter",
+              "metric": "batting_strike_rate",
+              "filters": {"batter": "Paul Stirling", "bowler": "Mohammad Nabi"},
+              "group_by": ["batter", "bowler"]
+            }"""
+        ),
+        app_env="production",
+        allow_dev_fallback=False,
+    )
+
+    response = service.answer_question(
+        "What is Paul Stirling's batting strike rate against Mohammad Nabi?"
+    )
+
+    assert response.status.value == "supported"
+    columns = response.tables[0].columns
+    assert "Balls" in columns
+    assert "Legal Balls" in columns
+    assert "Batter Dot Ball Percentage" in columns
+    assert "Bowler Dot Ball Percentage" in columns
+    assert "Sample Size" not in columns
+    assert "Low Sample" not in columns
+
+
+def test_offline_planner_routes_named_batter_against_named_bowler_as_matchup(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "What is Virat Kohli's batting strike rate against Mitchell Starc?"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["operation"] == "matchup"
+    assert plan["filters"]["batter"] == "Virat Kohli"
+    assert plan["filters"]["bowler"] == "Mitchell Starc"

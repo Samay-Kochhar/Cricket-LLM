@@ -65,7 +65,7 @@ def test_aggregate_builder_uses_metric_and_minimum_sample() -> None:
     assert "bowl_style AS bowling_style" in build.sql
     assert "batting_strike_rate" in build.columns
     assert "Heinrich Klaasen" in build.params
-    assert 20 in build.params
+    assert 60 in build.params
 
 
 def test_result_validator_catches_empty_result() -> None:

@@ -8,6 +8,8 @@ Build the first narrow multi-query analyst workup for a tactical prompt, prefera
 
 The goal is not full tactical intelligence. The goal is a thin, complete, verifiable workup path.
 
+This is an analyst workup, not a player comparison. Its readiness must be tracked separately from comparison questions.
+
 ## Acceptance criteria
 
 - [ ] A supported tactical prompt for a named batter selects multiple evidence probes before synthesis.

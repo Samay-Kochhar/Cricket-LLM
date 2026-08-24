@@ -112,11 +112,16 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
         if plan.minimum_sample.innings:
             having_clauses.append("innings >= ?")
             params.append(plan.minimum_sample.innings)
+    if plan.metric == "bowling_strike_rate" and "bowler" not in plan.filters:
+        having_clauses.append("wickets > 0")
 
     select_prefix = ",\n                ".join(select_dimensions) + "," if select_dimensions else ""
     group_by_sql = "GROUP BY " + ", ".join(group_expressions) if group_expressions else ""
     having_sql = "WHERE " + " AND ".join(having_clauses) if having_clauses else ""
+    tie_breakers = ", ".join(f"{column} ASC" for column in columns)
     order_sql = f"ORDER BY {sort_expression} {direction}, sample_balls DESC"
+    if tie_breakers:
+        order_sql += f", {tie_breakers}"
 
     sql = f"""
             WITH aggregate_rows AS (

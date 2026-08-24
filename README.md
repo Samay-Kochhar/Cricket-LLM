@@ -14,7 +14,9 @@ ODI-first, evidence-first cricket analysis workbench.
 > The full architecture and roadmap live in **[docs/plan.md](docs/plan.md)**.
 
 ## Current Status
-- Waves 1–4 implemented; app runs end-to-end (mostly working, polish remaining).
+- The app runs end-to-end, but several question families are still partial or experimental.
+- Comparisons and contextual follow-ups are not yet product-ready.
+- See [Product Readiness](docs/product-readiness.md) for the current user-facing support status.
 - ODI-only scope with database-first truth.
 - Source dataset expected at `data/odi_bbb-25.csv` (not committed — see below).
 

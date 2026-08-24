@@ -60,11 +60,27 @@ class ChatHistoryTurn(BaseModel):
     content: str
 
 
+class ClarificationOption(BaseModel):
+    label: str
+    message: str
+
+
+class ConversationState(BaseModel):
+    players: list[str] = Field(default_factory=list)
+    operation: str | None = None
+    metric: str | None = None
+    comparison_participants: list[str] = Field(default_factory=list)
+    comparison_metrics: list[str] = Field(default_factory=list)
+    filters: dict[str, object] = Field(default_factory=dict)
+
+
 class ChatReply(BaseModel):
     mode: str
     message: str
     query_response: QueryResponse | None = None
     suggestions: list[str] = Field(default_factory=list)
+    clarification_options: list[ClarificationOption] = Field(default_factory=list)
+    conversation_state: ConversationState | None = None
     resolved_input: str | None = None
     resolution_note: str | None = None
     activity_trace: list[str] = Field(default_factory=list)
@@ -76,9 +92,45 @@ class ChatService:
     query_handler: object
     gemini_client: GeminiClient
 
-    def reply(self, message: str, history: list[ChatHistoryTurn]) -> ChatReply:
+    def reply(
+        self,
+        message: str,
+        history: list[ChatHistoryTurn],
+        conversation_state: ConversationState | None = None,
+    ) -> ChatReply:
         normalized_message = message.strip()
-        contextual_message = self._contextualize_follow_up(normalized_message, history)
+        if self._has_ambiguous_strike_rate(normalized_message):
+            return ChatReply(
+                mode="clarification",
+                message="Do you mean batting strike rate or bowling strike rate?",
+                clarification_options=[
+                    ClarificationOption(
+                        label="Batting strike rate",
+                        message=re.sub(
+                            r"\bstrike rate\b",
+                            "batting strike rate",
+                            normalized_message,
+                            count=1,
+                            flags=re.IGNORECASE,
+                        ),
+                    ),
+                    ClarificationOption(
+                        label="Bowling strike rate",
+                        message=re.sub(
+                            r"\bstrike rate\b",
+                            "bowling strike rate",
+                            normalized_message,
+                            count=1,
+                            flags=re.IGNORECASE,
+                        ),
+                    ),
+                ],
+            )
+        contextual_message = self._contextualize_follow_up(
+            normalized_message,
+            history,
+            conversation_state,
+        )
         resolution_note = None
         if self._looks_like_coaching_prompt(normalized_message):
             coaching_response = QueryResponse(
@@ -134,6 +186,7 @@ class ChatService:
                 resolved_input=resolved_input,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
+                conversation_state=self._conversation_state_from(query_response),
             )
 
         if query_response.status.value != "supported" and (query_response.tables or query_response.evidence_queries or is_semantic_v2):
@@ -184,7 +237,62 @@ class ChatService:
             activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
         )
 
-    def _contextualize_follow_up(self, message: str, history: list[ChatHistoryTurn]) -> str:
+    @staticmethod
+    def _has_ambiguous_strike_rate(message: str) -> bool:
+        lowered = message.lower()
+        return (
+            "strike rate" in lowered
+            and "batting strike rate" not in lowered
+            and "bowling strike rate" not in lowered
+        )
+
+    @staticmethod
+    def _conversation_state_from(query_response: QueryResponse) -> ConversationState:
+        interpretation = query_response.interpretation
+        raw_filters = interpretation.filters
+        participants = raw_filters.get("compare_players")
+        comparison_metrics = raw_filters.get("comparison_metrics")
+        internal_keys = {
+            "compare_players",
+            "comparison_metrics",
+            "semantic_operation",
+            "semantic_metric",
+            "semantic_group_by",
+        }
+        return ConversationState(
+            players=list(dict.fromkeys(interpretation.entities)),
+            operation=(
+                str(raw_filters["semantic_operation"])
+                if isinstance(raw_filters.get("semantic_operation"), str)
+                else None
+            ),
+            metric=(
+                str(raw_filters["semantic_metric"])
+                if isinstance(raw_filters.get("semantic_metric"), str)
+                else None
+            ),
+            comparison_participants=(
+                [str(player) for player in participants if isinstance(player, str)]
+                if isinstance(participants, list)
+                else []
+            ),
+            comparison_metrics=(
+                [str(metric) for metric in comparison_metrics if isinstance(metric, str)]
+                if isinstance(comparison_metrics, list)
+                else []
+            ),
+            filters={key: value for key, value in raw_filters.items() if key not in internal_keys},
+        )
+
+    def _contextualize_follow_up(
+        self,
+        message: str,
+        history: list[ChatHistoryTurn],
+        conversation_state: ConversationState | None = None,
+    ) -> str:
+        structured = self._contextualize_from_state(message, conversation_state)
+        if structured != message:
+            return structured
         if not history:
             return message
 
@@ -232,6 +340,92 @@ class ChatService:
                 contextual = self._append_context(contextual, "in middle overs")
 
         return contextual
+
+    @staticmethod
+    def _contextualize_from_state(
+        message: str,
+        state: ConversationState | None,
+    ) -> str:
+        if state is None:
+            return message
+        lowered = message.lower()
+        is_short_follow_up = any(
+            marker in lowered
+            for marker in (
+                "what about",
+                "how about",
+                "and in ",
+                "now show",
+                "now in ",
+                "same ",
+            )
+        )
+        if not is_short_follow_up:
+            return message
+
+        filters = dict(state.filters)
+        all_phases = all(
+            token in lowered
+            for token in ("powerplay", "middle", "death")
+        )
+        for phase, aliases in {
+            "powerplay": ("powerplay", "power play"),
+            "middle": ("middle overs",),
+            "death": ("death overs", "death-over", "at the death"),
+        }.items():
+            if any(alias in lowered for alias in aliases):
+                filters["phase"] = phase
+                break
+        for style, aliases in {
+            "leg_spin": ("leg spin", "leg-spin"),
+            "off_spin": ("off spin", "off-spin", "off spinner"),
+            "wrist_spin": ("wrist spin", "wrist-spin"),
+            "finger_spin": ("finger spin", "finger-spin"),
+            "left_arm_spin": ("left-arm spin", "left arm spin"),
+            "left_arm_pace": ("left-arm pace", "left arm pace"),
+            "spin": ("against spin",),
+            "pace": ("against pace",),
+        }.items():
+            if any(alias in lowered for alias in aliases):
+                filters["bowling_style"] = style
+                break
+
+        filter_phrases: list[str] = []
+        phase = filters.get("phase")
+        if phase == "powerplay":
+            filter_phrases.append("in powerplay")
+        elif phase == "middle":
+            filter_phrases.append("in middle overs")
+        elif phase == "death":
+            filter_phrases.append("in death overs")
+        bowling_style = filters.get("bowling_style")
+        if isinstance(bowling_style, str):
+            filter_phrases.append(f"against {bowling_style.replace('_', ' ')}")
+
+        metrics = state.comparison_metrics or ([state.metric] if state.metric else [])
+        metric_text = " and ".join(metric.replace("_", " ") for metric in metrics)
+        if state.operation == "matchup" and len(state.players) >= 2 and state.metric:
+            batter, bowler = state.players[:2]
+            suffix = f" {' '.join(filter_phrases)}" if filter_phrases else ""
+            return (
+                f"What is {batter}'s {state.metric.replace('_', ' ')} "
+                f"against {bowler}{suffix}?"
+            )
+        if len(state.comparison_participants) >= 2:
+            players = " and ".join(state.comparison_participants)
+            metric_phrase = f" by {metric_text}" if metric_text else ""
+            suffix = (
+                " across powerplay, middle overs, and death overs"
+                if all_phases
+                else f" {' '.join(filter_phrases)}" if filter_phrases else ""
+            )
+            return f"Compare {players}{metric_phrase}{suffix}".strip()
+
+        player = state.players[-1] if state.players else None
+        if player and state.metric:
+            suffix = f" {' '.join(filter_phrases)}" if filter_phrases else ""
+            return f"What is {player}'s {state.metric.replace('_', ' ')}{suffix}?"
+        return message
 
     @staticmethod
     def _append_context(message: str, suffix: str) -> str:

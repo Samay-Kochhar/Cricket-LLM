@@ -29,6 +29,7 @@ EXPECTED_MIGRATED = {
     "wickets_taken",
     "economy_rate",
     "bowling_average",
+    "bowling_strike_rate",
     "batter_dot_ball_percentage",
     "bowler_dot_ball_percentage",
     "dot_balls",
@@ -82,6 +83,19 @@ def test_rate_and_percentage_denominators_are_explicit() -> None:
     assert METRIC_REGISTRY["bowler_dot_ball_percentage"].denominator == "legal_balls"
     assert METRIC_REGISTRY["economy_rate"].denominator == "legal_balls"
     assert METRIC_REGISTRY["yorker_percentage"].denominator == "legal_balls"
+
+
+def test_bowling_strike_rate_is_a_canonical_bowling_metric() -> None:
+    rule = METRIC_REGISTRY["bowling_strike_rate"]
+
+    assert rule.label == "Bowling Strike Rate"
+    assert rule.owner == "bowler"
+    assert rule.numerator == "legal_balls"
+    assert rule.denominator == "wickets"
+    assert rule.default_sort == "asc"
+    assert rule.higher_is_better is False
+    assert rule.minimum_sample.legal_balls == 60
+    assert rule.formula == "legal balls / bowler-credit wickets"
 
 
 def test_capability_registry_lists_phase1_factual_families() -> None:

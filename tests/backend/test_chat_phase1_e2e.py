@@ -85,7 +85,7 @@ def test_chat_false_shot_leaderboard_states_scope_and_uses_reliable_default_samp
     assert plan["bowling_style"] == "leg_spin"
 
 
-def test_style_filtered_player_answer_suggests_relevant_style_and_phase_follow_ups(
+def test_unqualified_style_filtered_strike_rate_asks_for_metric_clarification(
     client: TestClient,
 ) -> None:
     response = client.post(
@@ -94,7 +94,62 @@ def test_style_filtered_player_answer_suggests_relevant_style_and_phase_follow_u
     )
 
     assert response.status_code == 200
-    suggestions = response.json()["suggestions"]
-    assert any("leg spin" in suggestion.lower() and "pace" in suggestion.lower() for suggestion in suggestions)
-    assert any("powerplay" in suggestion.lower() and "death" in suggestion.lower() for suggestion in suggestions)
-    assert all("venue" not in suggestion.lower() for suggestion in suggestions)
+    payload = response.json()
+    assert payload["mode"] == "clarification"
+    assert payload["suggestions"] == []
+    assert [option["label"] for option in payload["clarification_options"]] == [
+        "Batting strike rate",
+        "Bowling strike rate",
+    ]
+
+    clarified = client.post(
+        "/api/chat",
+        json={
+            "message": payload["clarification_options"][0]["message"],
+            "history": [
+                {
+                    "role": "user",
+                    "content": "What is Maxwell's strike rate against off spinners?",
+                },
+                {"role": "assistant", "content": payload["message"]},
+            ],
+        },
+    )
+
+    clarified_payload = clarified.json()
+    assert clarified_payload["query_response"]["status"] == "supported"
+    filters = clarified_payload["query_response"]["interpretation"]["filters"]
+    assert filters["batter"] == "Glenn Maxwell"
+    assert filters["bowling_style"] == "off_spin"
+    assert filters["semantic_metric"] == "batting_strike_rate"
+
+
+def test_comparison_phase_suggestion_passes_as_an_exact_history_chain(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={"message": "Compare Bumrah and Starc in death overs", "history": []},
+    )
+    assert first.status_code == 200
+    first_payload = first.json()
+    suggestion = "Compare the same players in powerplay, middle, and death overs."
+    assert suggestion in first_payload["suggestions"]
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": suggestion,
+            "history": [
+                {"role": "user", "content": "Compare Bumrah and Starc in death overs"},
+                {"role": "assistant", "content": first_payload["message"]},
+            ],
+            "conversation_state": first_payload["conversation_state"],
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    assert payload["query_response"]["status"] == "supported"
+    assert payload["query_response"]["interpretation"]["filters"]["comparison_view"] == "phase"
+    assert len(payload["query_response"]["tables"][0]["rows"]) == 6

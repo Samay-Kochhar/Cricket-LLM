@@ -14,7 +14,7 @@ from backend.app.domain.evidence_models import (
     QueryResponse,
     SummaryBlock,
 )
-from backend.app.services.chat_service import ChatReply
+from backend.app.services.chat_service import ChatReply, ConversationState
 from backend.app.main import app
 
 
@@ -63,10 +63,16 @@ def client() -> Iterator[TestClient]:
         )
 
     class FakeChatService:
-        def reply(self, message: str, history: list[dict[str, str]]) -> ChatReply:
+        def reply(
+            self,
+            message: str,
+            history: list[dict[str, str]],
+            conversation_state: ConversationState | None = None,
+        ) -> ChatReply:
+            state_suffix = f" [{conversation_state.metric}]" if conversation_state else ""
             return ChatReply(
                 mode="conversation",
-                message=f"Atlas heard: {message}",
+                message=f"Atlas heard: {message}{state_suffix}",
                 suggestions=["Compare Virat Kohli at number 3 vs opening in ODIs"],
             )
 
@@ -122,3 +128,23 @@ def test_chat_route_returns_chat_payload(client: TestClient) -> None:
     assert payload["mode"] == "conversation"
     assert payload["message"] == "Atlas heard: Tell me about Virat Kohli"
     assert payload["suggestions"] == ["Compare Virat Kohli at number 3 vs opening in ODIs"]
+
+
+def test_chat_route_accepts_structured_conversation_state(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "What about powerplay?",
+            "history": [],
+            "conversation_state": {
+                "players": ["Jasprit Bumrah", "Mitchell Starc"],
+                "metric": "economy_rate",
+                "comparison_participants": ["Jasprit Bumrah", "Mitchell Starc"],
+                "comparison_metrics": ["economy_rate", "bowling_strike_rate"],
+                "filters": {"phase": "death"},
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["message"] == "Atlas heard: What about powerplay? [economy_rate]"

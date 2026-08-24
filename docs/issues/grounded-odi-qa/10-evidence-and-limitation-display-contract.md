@@ -13,6 +13,8 @@ Ensure API and UI responses display evidence, sample context, and limitation sta
 - [ ] Raw internal enum values do not appear in user-facing tables, summaries, or traces intended for display.
 - [ ] Tactical workup responses can show which evidence probes were checked.
 - [ ] API/chat contract tests cover the displayed status and evidence payload shape.
+- [ ] The UI displays only suggested follow-ups whose exact chained chat flows are verified.
+- [ ] Every visible suggested follow-up has both a backend history-chain test and a browser click-through test.
 
 ## Blocked by
 

@@ -29,3 +29,10 @@ Thumbs.db
 
 # Local scratch
 local-atlas.html
+
+# Generated browser-test diagnostics
+frontend/test-results/
+
+# Intermediate presentation exports (keep the final deck tracked)
+outputs/cricatlas-dl4nlp-presentation.pptx
+outputs/cricatlas-dl4nlp-presentation-v2.pptx
