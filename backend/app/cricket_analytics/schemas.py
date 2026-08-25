@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 OperationType = Literal[
@@ -19,11 +19,15 @@ OperationType = Literal[
 
 
 class SortSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     by: str
     direction: Literal["asc", "desc"]
 
 
 class MinimumSampleSpec(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     balls: int | None = None
     legal_balls: int | None = None
     innings: int | None = None
@@ -37,6 +41,8 @@ class MinimumSampleSpec(BaseModel):
 
 
 class CricketQueryPlan(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     operation: OperationType
     entity: str
     metric: str

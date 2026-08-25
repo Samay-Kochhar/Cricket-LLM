@@ -126,6 +126,22 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("npm", "run", "test:e2e", "--", "odi-correctness-smoke.spec.ts"),
         ),
     ],
+    "12": [
+        Check(
+            "typed-observable-gemini-planner",
+            "Verify typed Gemini plans, one repair, safe planner telemetry, and live-chat tracer questions.",
+            ("pytest", "tests/backend/test_gemini_structured_planner.py"),
+        ),
+        Check(
+            "planner-failure-state-contract",
+            "Verify planner, unsupported, ambiguity, and missing-data states remain distinct.",
+            (
+                "pytest",
+                "tests/backend/test_grounded_issue_completion_contract.py::test_failure_states_distinguish_data_limitation_unsupported_and_planner_uncertainty",
+                "tests/backend/test_chat_service.py::test_chat_service_asks_user_to_disambiguate_strike_rate_before_querying",
+            ),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [

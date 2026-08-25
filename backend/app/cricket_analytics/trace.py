@@ -25,6 +25,8 @@ def _jsonable(value: Any) -> Any:
 class QueryTrace:
     original_user_question: str
     gemini_raw_response: str | None = None
+    planner_attempts: list[dict[str, Any]] = field(default_factory=list)
+    planner_outcome: dict[str, Any] = field(default_factory=dict)
     parsed_json_plan: dict[str, Any] | None = None
     normalized_plan: dict[str, Any] | None = None
     validation_result: dict[str, Any] | None = None
@@ -39,6 +41,8 @@ class QueryTrace:
             {
                 "original_user_question": self.original_user_question,
                 "gemini_raw_response": self.gemini_raw_response,
+                "planner_attempts": self.planner_attempts,
+                "planner_outcome": self.planner_outcome,
                 "parsed_json_plan": self.parsed_json_plan,
                 "normalized_plan": self.normalized_plan,
                 "validation_result": self.validation_result,

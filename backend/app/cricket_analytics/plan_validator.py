@@ -73,6 +73,16 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         if plan.sort.by != plan.metric and plan.sort.by not in DIMENSIONS and plan.sort.by not in {"balls", "legal_balls"}:
             errors.append(f"Sort field '{plan.sort.by}' is not a known metric or dimension.")
 
+    if plan.operation == "player_compare":
+        compare_players = plan.filters.get("compare_players")
+        if not isinstance(compare_players, list) or len(compare_players) < 2:
+            errors.append("Player comparison requires at least two named players.")
+        comparison_metrics = plan.filters.get("comparison_metrics")
+        if not isinstance(comparison_metrics, list) or not comparison_metrics:
+            errors.append("Player comparison requires at least one explicit comparison metric.")
+        elif any(not isinstance(metric, str) or metric not in METRICS for metric in comparison_metrics):
+            errors.append("Player comparison contains an unsupported comparison metric.")
+
     grouped_or_filtered = set(plan.group_by) | set(plan.filters)
     if "bowling type" in lowered or "bowling style" in lowered or "type of bowling" in lowered:
         if "bowling_style" not in grouped_or_filtered:

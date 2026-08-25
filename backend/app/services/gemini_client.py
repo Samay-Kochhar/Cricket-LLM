@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from time import perf_counter
+from typing import Any
 
 import httpx
 
@@ -24,6 +26,19 @@ class GeminiGroundedResult:
     text: str
     queries: tuple[str, ...]
     chunks: tuple[GroundedChunk, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class GeminiStructuredResult:
+    text: str | None
+    selected_model: str
+    model_version: str | None
+    finish_reason: str | None
+    latency_ms: float
+    prompt_token_count: int | None = None
+    output_token_count: int | None = None
+    error_kind: str | None = None
+    schema_constrained: bool = True
 
 
 @dataclass(slots=True)
@@ -107,6 +122,100 @@ class GeminiClient:
                 text.append(part["text"].strip())
         joined = "\n".join(segment for segment in text if segment)
         return joined or None
+
+    def generate_structured(
+        self,
+        prompt: str,
+        *,
+        response_schema: dict[str, Any],
+        prefer_complex: bool = False,
+        max_output_tokens: int = 2048,
+    ) -> GeminiStructuredResult:
+        model_name = self.complex_model if prefer_complex else self.default_model
+        started_at = perf_counter()
+        if not self.is_configured():
+            return GeminiStructuredResult(
+                text=None,
+                selected_model=model_name,
+                model_version=None,
+                finish_reason=None,
+                latency_ms=(perf_counter() - started_at) * 1000,
+                error_kind="not_configured",
+            )
+
+        payload = {
+            "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": max_output_tokens,
+                "responseMimeType": "application/json",
+                "responseJsonSchema": response_schema,
+            },
+        }
+        try:
+            response = httpx.post(
+                f"{self.api_base_url}/models/{model_name}:generateContent",
+                headers={"x-goog-api-key": self.api_key or "", "Content-Type": "application/json"},
+                json=payload,
+                timeout=self.timeout_seconds,
+            )
+            response.raise_for_status()
+            response_payload = response.json()
+        except (httpx.HTTPError, ValueError):
+            return GeminiStructuredResult(
+                text=None,
+                selected_model=model_name,
+                model_version=None,
+                finish_reason=None,
+                latency_ms=(perf_counter() - started_at) * 1000,
+                error_kind="request_failed",
+            )
+
+        if not isinstance(response_payload, dict):
+            return GeminiStructuredResult(
+                text=None,
+                selected_model=model_name,
+                model_version=None,
+                finish_reason=None,
+                latency_ms=(perf_counter() - started_at) * 1000,
+                error_kind="invalid_response",
+            )
+
+        candidates = response_payload.get("candidates")
+        candidate = candidates[0] if isinstance(candidates, list) and candidates else None
+        candidate = candidate if isinstance(candidate, dict) else {}
+        content = candidate.get("content") if isinstance(candidate.get("content"), dict) else {}
+        parts = content.get("parts") if isinstance(content, dict) else []
+        parts = parts if isinstance(parts, list) else []
+        text_segments = [
+            part["text"].strip()
+            for part in parts
+            if isinstance(part, dict) and isinstance(part.get("text"), str) and part["text"].strip()
+        ]
+        usage = response_payload.get("usageMetadata")
+        usage = usage if isinstance(usage, dict) else {}
+        return GeminiStructuredResult(
+            text="\n".join(text_segments) or None,
+            selected_model=model_name,
+            model_version=(
+                response_payload.get("modelVersion")
+                if isinstance(response_payload.get("modelVersion"), str)
+                else None
+            ),
+            finish_reason=(
+                candidate.get("finishReason") if isinstance(candidate.get("finishReason"), str) else None
+            ),
+            latency_ms=(perf_counter() - started_at) * 1000,
+            prompt_token_count=(
+                usage.get("promptTokenCount") if isinstance(usage.get("promptTokenCount"), int) else None
+            ),
+            output_token_count=(
+                usage.get("candidatesTokenCount")
+                if isinstance(usage.get("candidatesTokenCount"), int)
+                else None
+            ),
+            error_kind=None if candidate else "empty_response",
+        )
 
     @staticmethod
     def parse_grounded_result(payload: dict[str, object], model_name: str) -> GeminiGroundedResult | None:

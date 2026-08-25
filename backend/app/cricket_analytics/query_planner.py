@@ -12,7 +12,7 @@ from backend.app.cricket_analytics.plan_normalizer import normalize_plan
 from backend.app.cricket_analytics.plan_validator import validate_plan
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec, ValidationResult
 from backend.app.cricket_analytics.trace import QueryTrace
-from backend.app.services.gemini_client import GeminiClient
+from backend.app.services.gemini_client import GeminiClient, GeminiStructuredResult
 from backend.app.services.player_resolution import ALIASES, normalize_name, resolve_player_name
 
 
@@ -43,11 +43,17 @@ class SemanticQueryPlanner:
         if self.gemini_client.is_configured():
             planned = self._plan_with_gemini(question, trace, prefer_complex=self._needs_complex_model(question))
             if planned.plan is not None and planned.validation.valid:
+                self._finalize_planner_trace(trace, repair_outcome="not_needed")
                 return planned
-            if planned.plan is not None:
-                repaired = self._repair_with_gemini(question, planned.plan, planned.validation, trace)
-                if repaired.plan is not None and repaired.validation.valid:
-                    return repaired
+            repaired = self._repair_with_gemini(question, planned.plan, planned.validation, trace)
+            self._finalize_planner_trace(
+                trace,
+                repair_outcome=(
+                    "succeeded" if repaired.plan is not None and repaired.validation.valid else "failed"
+                ),
+            )
+            if repaired.plan is not None and repaired.validation.valid:
+                return repaired
 
         if not self.allow_dev_fallback:
             validation = ValidationResult(
@@ -56,10 +62,20 @@ class SemanticQueryPlanner:
             )
             trace.validation_result = validation.model_dump(mode="json")
             trace.final_answer_metadata = {"planner_fallback": "disabled"}
+            if not trace.planner_outcome:
+                trace.planner_outcome = {
+                    "attempt_count": 0,
+                    "selected_model": None,
+                    "finish_reason": None,
+                    "parse_outcome": "not_attempted",
+                    "validation_outcome": "not_run",
+                    "repair_outcome": "not_attempted",
+                    "latency_ms": 0.0,
+                }
             return PlannerResult(plan=None, validation=validation, used_gemini=self.gemini_client.is_configured())
 
         fallback = self._fallback_plan(question)
-        normalized = self._normalize_and_resolve_players(fallback, question)
+        normalized = self._normalize_and_resolve_players(fallback, question, infer_meaning=True)
         validation = validate_plan(normalized, question)
         trace.parsed_json_plan = fallback.model_dump(mode="json")
         trace.normalized_plan = normalized.model_dump(mode="json")
@@ -69,42 +85,18 @@ class SemanticQueryPlanner:
 
     def _plan_with_gemini(self, question: str, trace: QueryTrace, prefer_complex: bool) -> PlannerResult:
         prompt = self._planner_prompt(question)
-        raw = self.gemini_client.generate_text(prompt, prefer_complex=prefer_complex)
-        trace.gemini_raw_response = raw
-        if not raw:
-            return PlannerResult(
-                plan=None,
-                validation=ValidationResult(valid=False, errors=["Gemini returned no planner response."]),
-                used_gemini=True,
-            )
-
-        payload = self._parse_json_object(raw)
-        trace.parsed_json_plan = payload if isinstance(payload, dict) else None
-        if not isinstance(payload, dict):
-            return PlannerResult(
-                plan=None,
-                validation=ValidationResult(valid=False, errors=["Gemini response was not valid JSON object."]),
-                used_gemini=True,
-            )
-        try:
-            plan = CricketQueryPlan.model_validate(payload)
-        except ValidationError as exc:
-            return PlannerResult(
-                plan=None,
-                validation=ValidationResult(valid=False, errors=[f"Plan schema validation failed: {exc}"]),
-                used_gemini=True,
-            )
-        normalized = self._normalize_and_resolve_players(plan, question)
-        validation = validate_plan(normalized, question)
-        trace.normalized_plan = normalized.model_dump(mode="json")
-        trace.validation_result = validation.model_dump(mode="json")
-        trace.operation_type = normalized.operation
-        return PlannerResult(plan=normalized, validation=validation, used_gemini=True)
+        return self._run_gemini_attempt(
+            question,
+            prompt,
+            trace,
+            attempt="initial",
+            prefer_complex=prefer_complex,
+        )
 
     def _repair_with_gemini(
         self,
         question: str,
-        invalid_plan: CricketQueryPlan,
+        invalid_plan: CricketQueryPlan | None,
         validation: ValidationResult,
         trace: QueryTrace,
     ) -> PlannerResult:
@@ -113,28 +105,144 @@ class SemanticQueryPlanner:
             "Do not write SQL. Use only the provided ontology and schema.\n\n"
             f"Ontology: {json.dumps(ontology_context(), sort_keys=True)}\n"
             f"Original question: {question}\n"
-            f"Invalid plan: {invalid_plan.model_dump_json()}\n"
+            f"Invalid plan or response: {invalid_plan.model_dump_json() if invalid_plan else trace.gemini_raw_response}\n"
             f"Validation errors: {validation.model_dump_json()}\n"
         )
-        raw = self.gemini_client.generate_text(prompt, prefer_complex=True)
-        if not raw:
-            return PlannerResult(plan=invalid_plan, validation=validation, used_gemini=True)
-        trace.gemini_raw_response = f"{trace.gemini_raw_response or ''}\n\nREPAIR:\n{raw}".strip()
-        payload = self._parse_json_object(raw)
-        if not isinstance(payload, dict):
-            return PlannerResult(plan=invalid_plan, validation=validation, used_gemini=True)
-        try:
-            repaired = self._normalize_and_resolve_players(CricketQueryPlan.model_validate(payload), question)
-        except ValidationError:
-            return PlannerResult(plan=invalid_plan, validation=validation, used_gemini=True)
-        repaired_validation = validate_plan(repaired, question)
-        trace.parsed_json_plan = payload
-        trace.normalized_plan = repaired.model_dump(mode="json")
-        trace.validation_result = repaired_validation.model_dump(mode="json")
-        trace.operation_type = repaired.operation
-        return PlannerResult(plan=repaired, validation=repaired_validation, used_gemini=True)
+        return self._run_gemini_attempt(
+            question,
+            prompt,
+            trace,
+            attempt="repair",
+            prefer_complex=True,
+        )
 
-    def _normalize_and_resolve_players(self, plan: CricketQueryPlan, question: str) -> CricketQueryPlan:
+    def _run_gemini_attempt(
+        self,
+        question: str,
+        prompt: str,
+        trace: QueryTrace,
+        *,
+        attempt: str,
+        prefer_complex: bool,
+    ) -> PlannerResult:
+        generated = self._generate_structured(prompt, prefer_complex=prefer_complex)
+        raw = generated.text
+        if attempt == "repair":
+            trace.gemini_raw_response = f"{trace.gemini_raw_response or ''}\n\nREPAIR:\n{raw or ''}".strip()
+        else:
+            trace.gemini_raw_response = raw
+
+        attempt_trace: dict[str, Any] = {
+            "attempt": attempt,
+            "selected_model": generated.selected_model,
+            "model_version": generated.model_version,
+            "finish_reason": generated.finish_reason,
+            "latency_ms": round(generated.latency_ms, 3),
+            "parse_outcome": "not_started",
+            "validation_outcome": "not_run",
+            "error_kind": generated.error_kind,
+            "prompt_token_count": generated.prompt_token_count,
+            "output_token_count": generated.output_token_count,
+            "schema_constrained": generated.schema_constrained,
+        }
+        trace.planner_attempts.append(attempt_trace)
+
+        if generated.finish_reason != "STOP":
+            attempt_trace["parse_outcome"] = (
+                "truncated" if generated.finish_reason == "MAX_TOKENS" else "incomplete"
+            )
+            validation = ValidationResult(
+                valid=False,
+                errors=[f"Gemini planner did not finish cleanly ({generated.finish_reason or 'unknown'})."],
+            )
+            trace.validation_result = validation.model_dump(mode="json")
+            return PlannerResult(plan=None, validation=validation, used_gemini=True)
+
+        if not raw:
+            attempt_trace["parse_outcome"] = "empty"
+            validation = ValidationResult(valid=False, errors=["Gemini returned no planner response."])
+            trace.validation_result = validation.model_dump(mode="json")
+            return PlannerResult(plan=None, validation=validation, used_gemini=True)
+
+        payload = self._parse_json_object(raw)
+        trace.parsed_json_plan = payload if isinstance(payload, dict) else None
+        if not isinstance(payload, dict):
+            attempt_trace["parse_outcome"] = "invalid_json"
+            validation = ValidationResult(
+                valid=False,
+                errors=["Gemini response was not a valid JSON object."],
+            )
+            trace.validation_result = validation.model_dump(mode="json")
+            return PlannerResult(plan=None, validation=validation, used_gemini=True)
+
+        try:
+            plan = CricketQueryPlan.model_validate(payload)
+        except ValidationError as exc:
+            attempt_trace["parse_outcome"] = "schema_invalid"
+            attempt_trace["validation_outcome"] = "invalid"
+            validation = ValidationResult(valid=False, errors=[f"Plan schema validation failed: {exc}"])
+            trace.validation_result = validation.model_dump(mode="json")
+            return PlannerResult(plan=None, validation=validation, used_gemini=True)
+
+        attempt_trace["parse_outcome"] = "parsed"
+        normalized = self._normalize_and_resolve_players(
+            plan,
+            question,
+            infer_meaning=not generated.schema_constrained,
+        )
+        validation = validate_plan(normalized, question)
+        attempt_trace["validation_outcome"] = "valid" if validation.valid else "invalid"
+        trace.normalized_plan = normalized.model_dump(mode="json")
+        trace.validation_result = validation.model_dump(mode="json")
+        trace.operation_type = normalized.operation
+        return PlannerResult(plan=normalized, validation=validation, used_gemini=True)
+
+    def _generate_structured(self, prompt: str, *, prefer_complex: bool) -> GeminiStructuredResult:
+        generator = getattr(self.gemini_client, "generate_structured", None)
+        if callable(generator):
+            return generator(
+                prompt,
+                response_schema=CricketQueryPlan.model_json_schema(),
+                prefer_complex=prefer_complex,
+                max_output_tokens=2048,
+            )
+
+        # Compatibility for existing test doubles. The production Gemini client always uses the typed path above.
+        raw = self.gemini_client.generate_text(prompt, prefer_complex=prefer_complex)
+        return GeminiStructuredResult(
+            text=raw,
+            selected_model="legacy-test-double",
+            model_version=None,
+            finish_reason="STOP" if raw else None,
+            latency_ms=0.0,
+            error_kind=None if raw else "empty_response",
+            schema_constrained=False,
+        )
+
+    @staticmethod
+    def _finalize_planner_trace(trace: QueryTrace, *, repair_outcome: str) -> None:
+        last_attempt = trace.planner_attempts[-1] if trace.planner_attempts else {}
+        trace.planner_outcome = {
+            "attempt_count": len(trace.planner_attempts),
+            "selected_model": last_attempt.get("selected_model"),
+            "model_version": last_attempt.get("model_version"),
+            "finish_reason": last_attempt.get("finish_reason"),
+            "parse_outcome": last_attempt.get("parse_outcome", "not_attempted"),
+            "validation_outcome": last_attempt.get("validation_outcome", "not_run"),
+            "repair_outcome": repair_outcome,
+            "latency_ms": round(
+                sum(float(item.get("latency_ms", 0.0)) for item in trace.planner_attempts),
+                3,
+            ),
+        }
+
+    def _normalize_and_resolve_players(
+        self,
+        plan: CricketQueryPlan,
+        question: str,
+        *,
+        infer_meaning: bool,
+    ) -> CricketQueryPlan:
         normalized = normalize_plan(plan)
         filters = dict(normalized.filters)
 
@@ -147,7 +255,7 @@ class SemanticQueryPlanner:
                 filters[key] = resolution.canonical_name
 
         compare_players = filters.get("compare_players")
-        if normalized.operation == "player_compare" and not isinstance(compare_players, list):
+        if infer_meaning and normalized.operation == "player_compare" and not isinstance(compare_players, list):
             compare_players = normalized.compare_values or self._extract_players(question)
         if isinstance(compare_players, list):
             resolved_players: list[object] = []
@@ -161,7 +269,7 @@ class SemanticQueryPlanner:
 
         updates: dict[str, object] = {"filters": filters}
         resolved_compare_players = filters.get("compare_players")
-        if (
+        if infer_meaning and (
             normalized.operation == "player_compare"
             and isinstance(resolved_compare_players, list)
             and len(resolved_compare_players) >= 2
@@ -183,7 +291,7 @@ class SemanticQueryPlanner:
             )
 
         normalized = normalized.model_copy(update=updates)
-        return self._apply_question_guardrails(normalized, question)
+        return self._apply_question_guardrails(normalized, question) if infer_meaning else normalized
 
     @staticmethod
     def _apply_question_guardrails(plan: CricketQueryPlan, question: str) -> CricketQueryPlan:
@@ -1123,18 +1231,8 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _parse_json_object(text: str) -> dict[str, Any] | None:
-        candidate = text.strip()
-        if candidate.startswith("```"):
-            candidate = re.sub(r"^```(?:json)?\s*|\s*```$", "", candidate, flags=re.IGNORECASE | re.DOTALL).strip()
         try:
-            parsed = json.loads(candidate)
+            parsed = json.loads(text.strip())
             return parsed if isinstance(parsed, dict) else None
         except json.JSONDecodeError:
-            match = re.search(r"\{.*\}", candidate, flags=re.DOTALL)
-            if not match:
-                return None
-            try:
-                parsed = json.loads(match.group(0))
-                return parsed if isinstance(parsed, dict) else None
-            except json.JSONDecodeError:
-                return None
+            return None
