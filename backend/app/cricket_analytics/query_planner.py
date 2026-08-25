@@ -426,6 +426,14 @@ class SemanticQueryPlanner:
             compare_players,
             key=lambda player: lowered.find(player.lower()),
         )
+        named_matchup = self._named_batter_bowler_matchup(lowered, ordered_players)
+        if named_matchup:
+            batter, bowler = named_matchup
+            operation = "matchup"
+            entity = "matchup"
+            metric = "batting_strike_rate"
+            group_by = []
+            filters = {"batter": batter, "bowler": bowler}
         if (
             operation == "aggregate"
             and " against " in lowered
@@ -1046,6 +1054,26 @@ class SemanticQueryPlanner:
     @staticmethod
     def _is_known_bowler(player: str) -> bool:
         return player in {"Jasprit Bumrah", "Mitchell Starc", "Kagiso Rabada", "Pat Cummins", "Trent Boult", "Rashid Khan"}
+
+    @staticmethod
+    def _named_batter_bowler_matchup(
+        lowered: str,
+        ordered_players: list[str],
+    ) -> tuple[str, str] | None:
+        has_matchup_wording = bool(
+            re.search(r"\b(?:vs\.?|versus|against|head[- ]to[- ]head)\b", lowered)
+        )
+        if not has_matchup_wording or len(ordered_players) != 2:
+            return None
+
+        known_bowlers = [
+            player for player in ordered_players if SemanticQueryPlanner._is_known_bowler(player)
+        ]
+        if len(known_bowlers) != 1:
+            return None
+        bowler = known_bowlers[0]
+        batter = next(player for player in ordered_players if player != bowler)
+        return batter, bowler
 
     @staticmethod
     def _unsupported_factual_reason(lowered: str) -> str | None:

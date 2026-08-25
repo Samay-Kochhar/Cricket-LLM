@@ -562,7 +562,8 @@ def test_named_matchup_is_descriptive_and_hides_duplicate_or_internal_columns(
     assert response.status.value == "supported"
     assert "ranks first" not in response.summaries[0].body
     assert response.summaries[0].body == (
-        "Virat Kohli's Batting Strike Rate against Mitchell Starc is 100.65 from 155 balls."
+        "Virat Kohli scored 156 runs from 155 balls against Mitchell Starc, with 1 dismissal and a "
+        "batting strike rate of 100.65. The recorded ODI sample contains 155 balls."
     )
     assert response.tables[0].columns == [
         "Batter",

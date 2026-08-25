@@ -1,0 +1,79 @@
+version: 1
+name: Named batter-bowler matchup paraphrases
+cases:
+  - id: smith-bumrah-vs
+    family: named_matchup
+    outcome: supported
+    turns:
+      - prompt: Steve Smith vs Jasprit Bumrah
+        expected: &smith_bumrah_expected
+          mode: analysis
+          status: supported
+          plan:
+            operation: matchup
+            entity: matchup
+            metric: batting_strike_rate
+            filters: {batter: Steven Smith, bowler: Jasprit Bumrah}
+          result:
+            columns: [Batter, Bowler, Balls, Runs, Dismissals, Batting Strike Rate]
+            rows:
+              - {Batter: Steven Smith, Bowler: Jasprit Bumrah, Balls: 121, Runs: 103, Dismissals: 2, Batting Strike Rate: 85.12}
+          message_contains: [Steven Smith, Jasprit Bumrah, 103 runs, 121 balls, 2 dismissals, "85.12"]
+          evidence: required
+          pitch_map: required
+
+  - id: smith-bumrah-against
+    family: named_matchup
+    outcome: supported
+    turns:
+      - prompt: Steve Smith against Jasprit Bumrah
+        expected: *smith_bumrah_expected
+
+  - id: smith-bumrah-performed-against
+    family: named_matchup
+    outcome: supported
+    turns:
+      - prompt: How did Steve Smith perform against Jasprit Bumrah?
+        expected: *smith_bumrah_expected
+
+  - id: smith-bumrah-scored-against
+    family: named_matchup
+    outcome: supported
+    turns:
+      - prompt: How many runs did Steve Smith score against Jasprit Bumrah?
+        expected: *smith_bumrah_expected
+
+  - id: smith-bumrah-head-to-head
+    family: named_matchup
+    outcome: supported
+    turns:
+      - prompt: Show me Steve Smith and Jasprit Bumrah head-to-head.
+        expected: *smith_bumrah_expected
+
+  - id: bumrah-smith-reversed-order
+    family: named_matchup
+    outcome: supported
+    turns:
+      - prompt: How did Jasprit Bumrah bowl against Steve Smith?
+        expected: *smith_bumrah_expected
+
+  - id: low-sample-smith-rashid
+    family: named_matchup
+    outcome: supported
+    turns:
+      - prompt: Steve Smith vs Rashid Khan
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: matchup
+            entity: matchup
+            metric: batting_strike_rate
+            filters: {batter: Steven Smith, bowler: Rashid Khan}
+          result:
+            rows:
+              - {Batter: Steven Smith, Bowler: Rashid Khan, Balls: 7, Runs: 5, Dismissals: 0, Batting Strike Rate: 71.43}
+          message_contains: [low sample, descriptive only, 7 balls]
+          message_not_contains: [significant]
+          evidence: required
+          pitch_map: absent

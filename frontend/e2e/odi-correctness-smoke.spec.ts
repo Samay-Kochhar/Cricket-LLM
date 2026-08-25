@@ -34,6 +34,18 @@ test.describe("ODI correctness product-family smoke", () => {
     await expect(page.getByText(/Suranga Lakmal ranks first/i).first()).toBeVisible();
   });
 
+  test("named matchup paraphrase returns evidence and a supported pitch map", async ({ page }) => {
+    await page.goto("/");
+    await chatInput(page).fill("How did Steve Smith perform against Jasprit Bumrah?");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+
+    await expect(page.getByText(/Steven Smith scored 103 runs from 121 balls/i).first()).toBeVisible();
+    await expect(page.getByText(/2 dismissals.*85\.12/i).first()).toBeVisible();
+    await expect(page.getByRole("cell", { name: "Jasprit Bumrah", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "ODI database", exact: true }).click();
+    await expect(page.getByText("Line, length, strike rate, and wicket pressure")).toBeVisible();
+  });
+
   test("contextual follow-up preserves state through the real chat API", async ({ page }) => {
     await page.goto("/");
     const input = chatInput(page);

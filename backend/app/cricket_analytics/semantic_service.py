@@ -33,6 +33,8 @@ from backend.app.domain.evidence_models import (
     FieldZoneMetric,
     InsufficientEvidenceBlock,
     MetricReference,
+    PitchMapBlock,
+    PitchMapCell,
     QueryInterpretation,
     QueryResponse,
     ShotProfileBlock,
@@ -44,6 +46,10 @@ from backend.app.domain.evidence_models import (
 )
 from backend.app.domain.metric_models import QueryClass
 from backend.app.services.gemini_client import GeminiClient
+
+
+MATCHUP_PITCH_MIN_COVERED_BALLS = 12
+MATCHUP_PITCH_MIN_COVERAGE_PERCENTAGE = 50.0
 
 
 @dataclass(slots=True)
@@ -286,6 +292,7 @@ class SemanticAnalyticsService:
 
         table = self._matchup_table_for_rows(plan, matchup_build, dict_rows)
         summary = self._matchup_summary_for_rows(plan, matchup_build, dict_rows)
+        visuals, visual_notes = self._matchup_pitch_visual(plan)
         metadata: dict[str, object] = {
             "status": "supported",
             "row_count": len(dict_rows),
@@ -301,6 +308,7 @@ class SemanticAnalyticsService:
             interpretation=self._interpretation(question, plan),
             summaries=[summary],
             tables=[table],
+            visuals=visuals,
             metric_references=[self._metric_reference(plan.metric)],
             evidence_queries=[
                 EvidenceQueryBlock(
@@ -311,7 +319,7 @@ class SemanticAnalyticsService:
                     table=table,
                 )
             ],
-            evidence_notes=self._trace_notes(trace, plan),
+            evidence_notes=[*self._trace_notes(trace, plan), *visual_notes],
             citations=[
                 Citation(
                     label="Semantic matchup source",
@@ -320,6 +328,49 @@ class SemanticAnalyticsService:
                 )
             ],
         )
+
+    def _matchup_pitch_visual(
+        self,
+        plan: CricketQueryPlan,
+    ) -> tuple[VisualPayload | None, list[EvidenceNote]]:
+        batter = plan.filters.get("batter")
+        bowler = plan.filters.get("bowler")
+        get_pitch_map = getattr(self.repository, "get_pitch_map", None)
+        if not isinstance(batter, str) or not isinstance(bowler, str) or not callable(get_pitch_map):
+            return None, []
+
+        try:
+            pitch = get_pitch_map(batter, bowler)
+        except Exception:  # Optional visuals must not turn a supported statistic into a failed answer.
+            return None, []
+        coverage = pitch.get("coverage") if isinstance(pitch, dict) else None
+        cells = pitch.get("cells") if isinstance(pitch, dict) else None
+        if not isinstance(coverage, dict) or not isinstance(cells, list):
+            return None, []
+
+        covered_balls = int(coverage.get("covered_balls") or 0)
+        coverage_percentage = float(coverage.get("coverage_percentage") or 0)
+        if (
+            covered_balls < MATCHUP_PITCH_MIN_COVERED_BALLS
+            or coverage_percentage < MATCHUP_PITCH_MIN_COVERAGE_PERCENTAGE
+            or not cells
+        ):
+            return None, []
+
+        visual = VisualPayload(
+            pitch_map=PitchMapBlock(
+                coverage=VisualCoverage(**coverage),
+                cells=[PitchMapCell(**cell) for cell in cells],
+            )
+        )
+        note = EvidenceNote(
+            title="Matchup pitch-map coverage",
+            detail=(
+                f"Line and length are available for {covered_balls} matchup balls "
+                f"({coverage_percentage:.2f}% coverage)."
+            ),
+        )
+        return visual, [note]
 
     def _answer_split_compare(self, question: str, plan: CricketQueryPlan, trace: QueryTrace) -> QueryResponse:
         trace.selected_executor = "executors.split_compare_executor.build_split_compare_query"
@@ -1334,24 +1385,22 @@ class SemanticAnalyticsService:
         named_batter = plan.filters.get("batter")
         named_bowler = plan.filters.get("bowler")
         if isinstance(named_batter, str) and isinstance(named_bowler, str):
-            metric_column = {
-                "batting_strike_rate": "strike_rate",
-                "batter_dot_ball_percentage": "dot_percentage",
-                "bowler_dot_ball_percentage": "bowler_dot_percentage",
-                "boundary_percentage": "boundary_percentage",
-                "false_shot_percentage": "false_shot_percentage",
-                "dismissal_rate": "dismissal_rate",
-                "wickets": "wickets",
-                "wickets_taken": "wickets",
-                "dismissals": "dismissals",
-                "runs_scored": "runs",
-                "balls_faced": "balls",
-            }.get(plan.metric, "rank_value")
+            balls = top.get("balls")
+            runs = top.get("runs")
+            dismissals = top.get("dismissals")
+            strike_rate = _display_value(top.get("strike_rate"))
+            dismissal_label = "dismissal" if dismissals == 1 else "dismissals"
+            sample_context = (
+                f"This is a low sample of {balls} balls, so it should be treated as descriptive only."
+                if top.get("low_sample")
+                else f"The recorded ODI sample contains {balls} balls."
+            )
             return SummaryBlock(
                 title="Semantic matchup answer",
                 body=(
-                    f"{named_batter}'s {_label(plan.metric)} against {named_bowler} is "
-                    f"{_display_value(top.get(metric_column))} from {top.get('balls')} balls."
+                    f"{named_batter} scored {runs} runs from {balls} balls against {named_bowler}, "
+                    f"with {dismissals} {dismissal_label} and a batting strike rate of {strike_rate}. "
+                    f"{sample_context}"
                 ),
             )
         subject_parts = [

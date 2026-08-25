@@ -142,6 +142,26 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "13": [
+        Check(
+            "named-matchup-real-chat-benchmark",
+            "Verify Smith-Bumrah paraphrases, role order, database truth, sample wording, and pitch-map gating.",
+            ("pytest", "tests/backend/test_named_matchup_paraphrases.py"),
+        ),
+        Check(
+            "named-matchup-browser-flow",
+            "Run the named Smith-Bumrah matchup through the browser and show its supported pitch map.",
+            (
+                "npm",
+                "run",
+                "test:e2e",
+                "--",
+                "odi-correctness-smoke.spec.ts",
+                "--grep",
+                "named matchup paraphrase",
+            ),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [
@@ -168,6 +188,13 @@ FRONTEND_CHECKS = [
 
 def command_environment(command: tuple[str, ...]) -> dict[str, str]:
     env = os.environ.copy()
+    installed_chrome = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+    workspace_runtime = Path("/opt/anaconda3/envs/odi-analyst-workbench/bin")
+    if command[0] == "npm":
+        if workspace_runtime.is_dir():
+            env["PATH"] = str(workspace_runtime) + os.pathsep + env.get("PATH", "")
+        if "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH" not in env and installed_chrome.is_file():
+            env["PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH"] = str(installed_chrome)
     if command[0] != "npm" or shutil.which("npm", path=env.get("PATH")):
         return env
 

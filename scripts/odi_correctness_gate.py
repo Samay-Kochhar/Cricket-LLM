@@ -157,6 +157,9 @@ def score_turn(payload: dict[str, Any], expected: dict[str, Any]) -> list[str]:
     for fragment in expected.get("message_contains", []):
         if str(fragment).lower() not in str(payload.get("message", "")).lower():
             errors.append(f"displayed answer does not contain {fragment!r}")
+    for fragment in expected.get("message_not_contains", []):
+        if str(fragment).lower() in str(payload.get("message", "")).lower():
+            errors.append(f"displayed answer unexpectedly contains {fragment!r}")
     for fragment in expected.get("resolved_input_contains", []):
         if str(fragment).lower() not in str(payload.get("resolved_input", "")).lower():
             errors.append(f"resolved input does not contain {fragment!r}")
@@ -180,6 +183,12 @@ def score_turn(payload: dict[str, Any], expected: dict[str, Any]) -> list[str]:
             errors.append("supported answer has no database evidence query")
         if not any(note.get("title") == "Semantic V2 trace" for note in response.get("evidence_notes", [])):
             errors.append("supported answer has no Semantic V2 evidence trace")
+    pitch_map_expectation = expected.get("pitch_map")
+    pitch_map = (response.get("visuals") or {}).get("pitch_map")
+    if pitch_map_expectation == "required" and not pitch_map:
+        errors.append("expected a useful pitch map, got none")
+    if pitch_map_expectation == "absent" and pitch_map:
+        errors.append("expected no pitch map for this sample")
     return errors
 
 
