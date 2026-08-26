@@ -627,3 +627,50 @@ def test_offline_planner_routes_named_batter_against_named_bowler_as_matchup(
     assert plan["operation"] == "matchup"
     assert plan["filters"]["batter"] == "Virat Kohli"
     assert plan["filters"]["bowler"] == "Mitchell Starc"
+
+
+def test_named_matchup_keeps_page_phase_year_and_venue_filters(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "What is Steven Smith's batting strike rate against Jasprit Bumrah in the death overs in 2023 at Sydney Cricket Ground?"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert plan["operation"] == "matchup"
+    assert plan["filters"] == {
+        "batter": "Steven Smith",
+        "bowler": "Jasprit Bumrah",
+        "phase": "death",
+        "years": [2023],
+        "venue": "Sydney Cricket Ground",
+    }
+
+
+def test_matchup_page_executes_selected_filters_without_the_language_planner(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    result = semantic_service.answer_matchup_page(
+        batter="Steven Smith",
+        bowler="Jasprit Bumrah",
+        phase="death",
+        year=2023,
+        venue="Sydney Cricket Ground",
+    )
+
+    matchup_plan = _trace(result["matchup"])["normalized_plan"]
+    baseline_plan = _trace(result["baseline"])["normalized_plan"]
+    assert result["matchup"].status.value == "insufficient_evidence"
+    assert matchup_plan["filters"] == {
+        "batter": "Steven Smith",
+        "bowler": "Jasprit Bumrah",
+        "phase": "death",
+        "years": [2023],
+        "venue": "Sydney Cricket Ground",
+    }
+    assert baseline_plan["filters"] == {
+        "batter": "Steven Smith",
+        "phase": "death",
+        "years": [2023],
+        "venue": "Sydney Cricket Ground",
+    }

@@ -20,7 +20,7 @@ from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.query_builders.aggregate_builder import build_aggregate_query
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
 from backend.app.cricket_analytics.result_validator import validate_result
-from backend.app.cricket_analytics.schemas import CricketQueryPlan, QueryBuildResult, ValidationResult
+from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, QueryBuildResult, SortSpec, ValidationResult
 from backend.app.cricket_analytics.trace import QueryTrace
 from backend.app.domain.evidence_models import (
     ChartBlock,
@@ -100,6 +100,68 @@ class SemanticAnalyticsService:
         if plan.operation != "aggregate":
             return self._unsupported_operation_response(question, plan, trace)
         return self._answer_aggregate(question, plan, trace)
+
+    def answer_matchup_page(
+        self,
+        batter: str,
+        bowler: str,
+        phase: str = "all",
+        year: int | None = None,
+        venue: str | None = None,
+    ) -> dict[str, QueryResponse]:
+        """Execute page-selected matchup filters without asking an LLM to reinterpret them."""
+        context_filters: dict[str, object] = {}
+        if phase != "all":
+            context_filters["phase"] = phase
+        if year is not None:
+            context_filters["years"] = [year]
+        if venue:
+            context_filters["venue"] = venue.strip()
+
+        context_parts = []
+        if phase != "all":
+            context_parts.append(f"in the {phase} overs")
+        if year is not None:
+            context_parts.append(f"in {year}")
+        if venue:
+            context_parts.append(f"at {venue.strip()}")
+        context = f" {' '.join(context_parts)}" if context_parts else ""
+
+        matchup_question = f"What is {batter}'s batting strike rate against {bowler}{context}?"
+        matchup_plan = CricketQueryPlan(
+            operation="matchup",
+            entity="matchup",
+            metric="batting_strike_rate",
+            filters={**context_filters, "batter": batter.strip(), "bowler": bowler.strip()},
+            sort=SortSpec(by="batting_strike_rate", direction="desc"),
+        )
+        matchup_trace = self._structured_trace(matchup_question, matchup_plan)
+
+        baseline_question = f"What is {batter}'s overall ODI batting strike rate{context}?"
+        baseline_plan = CricketQueryPlan(
+            operation="aggregate",
+            entity="batter",
+            metric="batting_strike_rate",
+            filters={**context_filters, "batter": batter.strip()},
+            sort=SortSpec(by="batting_strike_rate", direction="desc"),
+            minimum_sample=MinimumSampleSpec(balls=1),
+            minimum_sample_explicit=True,
+        )
+        baseline_trace = self._structured_trace(baseline_question, baseline_plan)
+        return {
+            "matchup": self._answer_matchup(matchup_question, matchup_plan, matchup_trace),
+            "baseline": self._answer_aggregate(baseline_question, baseline_plan, baseline_trace),
+        }
+
+    @staticmethod
+    def _structured_trace(question: str, plan: CricketQueryPlan) -> QueryTrace:
+        trace = QueryTrace(original_user_question=question)
+        trace.parsed_json_plan = plan.model_dump(mode="json")
+        trace.normalized_plan = plan.model_dump(mode="json")
+        trace.validation_result = {"valid": True, "errors": [], "warnings": []}
+        trace.operation_type = plan.operation
+        trace.planner_outcome = {"parse_outcome": "structured_page_filters", "validation_outcome": "valid"}
+        return trace
 
     def _answer_aggregate(self, question: str, plan: CricketQueryPlan, trace: QueryTrace) -> QueryResponse:
         trace.selected_executor = "query_builders.aggregate_builder.build_aggregate_query"
@@ -280,7 +342,7 @@ class SemanticAnalyticsService:
 
         dict_rows = [dict(zip(build.columns, row)) for row in rows]
         trace.result_columns = build.columns
-        if not dict_rows:
+        if not dict_rows or not any(isinstance(row.get("balls"), int | float) and row["balls"] > 0 for row in dict_rows):
             trace.final_answer_metadata = {"status": "no_matchup_rows", "columns": build.columns}
             return self._insufficient_response(
                 question=question,
@@ -340,7 +402,16 @@ class SemanticAnalyticsService:
             return None, []
 
         try:
-            pitch = get_pitch_map(batter, bowler)
+            visual_filters = {
+                key: value
+                for key, value in {
+                    "phase": plan.filters.get("phase"),
+                    "years": plan.filters.get("years"),
+                    "venue": plan.filters.get("venue"),
+                }.items()
+                if value is not None
+            }
+            pitch = get_pitch_map(batter, bowler, **visual_filters)
         except Exception:  # Optional visuals must not turn a supported statistic into a failed answer.
             return None, []
         coverage = pitch.get("coverage") if isinstance(pitch, dict) else None

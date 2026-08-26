@@ -123,12 +123,20 @@ class AnalyticsRepository:
         batter_name: str,
         bowler_name: str | None = None,
         phase: str | None = None,
+        years: list[int] | None = None,
+        venue: str | None = None,
     ) -> tuple[str, list[Any]]:
         clauses = ["bat = ?"]
         params: list[Any] = [batter_name]
         if bowler_name:
             clauses.append("bowl = ?")
             params.append(bowler_name)
+        if years:
+            clauses.append(f"TRY_CAST(year AS INTEGER) IN ({', '.join('?' for _ in years)})")
+            params.extend(years)
+        if venue:
+            clauses.append("ground = ?")
+            params.append(venue)
         where_clause = " WHERE " + " AND ".join(clauses)
         phase_clause, phase_params = self._phase_clause(phase)
         return where_clause + phase_clause, params + phase_params
@@ -2327,8 +2335,21 @@ class AnalyticsRepository:
         )
         return str(row[0]) if row and row[0] is not None else None
 
-    def get_pitch_map(self, player_name: str, bowler_name: str | None = None, phase: str | None = None) -> dict[str, Any]:
-        where_clause, params = self._batter_where_clause(player_name, bowler_name, phase=phase)
+    def get_pitch_map(
+        self,
+        player_name: str,
+        bowler_name: str | None = None,
+        phase: str | None = None,
+        years: list[int] | None = None,
+        venue: str | None = None,
+    ) -> dict[str, Any]:
+        where_clause, params = self._batter_where_clause(
+            player_name,
+            bowler_name,
+            phase=phase,
+            years=years,
+            venue=venue,
+        )
         total_row = self._fetchone(
             f"SELECT COUNT(*) FROM analytics.deliveries_v1 {where_clause}",
             params,

@@ -1277,6 +1277,126 @@ code {
   gap: 14px;
 }
 
+.matchup-page {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+.matchup-controls,
+.matchup-answer,
+.baseline-card,
+.sample-context {
+  padding: 22px;
+}
+
+.matchup-player-row,
+.matchup-filter-row {
+  display: flex;
+  align-items: end;
+  gap: 14px;
+}
+
+.matchup-player-row {
+  margin-bottom: 16px;
+}
+
+.matchup-field {
+  display: grid;
+  flex: 1 1 0;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.matchup-field input,
+.matchup-field select {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+}
+
+.matchup-field input:focus,
+.matchup-field select:focus {
+  border-color: rgba(242, 143, 59, 0.65);
+}
+
+.matchup-venue-field {
+  flex-grow: 1.5;
+}
+
+.matchup-swap,
+.matchup-run-button {
+  min-height: 46px;
+  white-space: nowrap;
+}
+
+.matchup-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.matchup-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 18px;
+}
+
+.matchup-stat strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.45rem, 2.2vw, 2.2rem);
+}
+
+.sample-context,
+.baseline-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.sample-context > *,
+.baseline-card > * {
+  max-width: 680px;
+}
+
+.sample-context.is-low-sample {
+  border-color: rgba(255, 124, 120, 0.35);
+  background: rgba(255, 124, 120, 0.08);
+}
+
+@media (max-width: 1080px) {
+  .matchup-stat-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .matchup-player-row,
+  .matchup-filter-row,
+  .sample-context,
+  .baseline-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .matchup-swap {
+    align-self: start;
+  }
+
+  .matchup-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .stat-card {
   min-height: 116px;
   justify-content: space-between;

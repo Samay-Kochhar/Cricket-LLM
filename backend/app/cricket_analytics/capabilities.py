@@ -143,7 +143,7 @@ CAPABILITIES: dict[str, Capability] = {
         "matchup",
         ("matchup", "batter", "bowler"),
         ("runs_scored", "balls_faced", "batting_strike_rate", "batter_dot_ball_percentage", "bowler_dot_ball_percentage", "boundary_percentage", "false_shot_percentage", "dismissals", "wickets_taken"),
-        optional_filters=("batter", "bowler", "phase", "bowling_style", "batter_hand"),
+        optional_filters=("batter", "bowler", "phase", "years", "year_mode", "venue", "bowling_style", "batter_hand"),
         allowed_groupings=("matchup", "batter", "bowler", "bowling_style", "batter_hand"),
         expected_executor="executors.matchup_executor.build_matchup_query",
         sample_size_rule="Soft low-sample flag; pair matchups default to 20 balls unless overridden.",

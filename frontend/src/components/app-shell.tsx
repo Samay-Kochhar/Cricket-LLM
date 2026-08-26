@@ -319,6 +319,9 @@ export function AppShell() {
             <Link className="atlas-nav-link is-active" href="/">
               Atlas
             </Link>
+            <Link className="atlas-nav-link" href="/matchups">
+              Matchups
+            </Link>
             <Link className="atlas-nav-link" href="/workbench">
               Workbench
             </Link>

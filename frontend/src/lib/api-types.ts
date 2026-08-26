@@ -205,6 +205,11 @@ export type QueryResponse = {
   insufficiencies: InsufficientEvidenceBlock[];
 };
 
+export type MatchupPageResponse = {
+  matchup: QueryResponse;
+  baseline: QueryResponse;
+};
+
 export type PlayerBattingSummary = {
   player_name: string;
   balls_faced: number;

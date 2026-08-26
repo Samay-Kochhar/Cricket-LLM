@@ -433,7 +433,11 @@ class SemanticQueryPlanner:
             entity = "matchup"
             metric = "batting_strike_rate"
             group_by = []
-            filters = {"batter": batter, "bowler": bowler}
+            filters = {
+                **{key: value for key, value in filters.items() if key not in {"batter", "bowler"}},
+                "batter": batter,
+                "bowler": bowler,
+            }
         if (
             operation == "aggregate"
             and " against " in lowered

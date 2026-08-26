@@ -79,6 +79,10 @@ def client() -> Iterator[TestClient]:
     app.dependency_overrides[get_services] = lambda: {
         "repository": FakeRepository(),
         "query_handler": fake_query_handler,
+        "matchup_handler": lambda **kwargs: {
+            "matchup": fake_query_handler(f"{kwargs['batter']} vs {kwargs['bowler']}"),
+            "baseline": fake_query_handler(f"{kwargs['batter']} baseline"),
+        },
         "chat_service": FakeChatService(),
     }
     with TestClient(app) as test_client:
@@ -94,6 +98,23 @@ def test_query_route_returns_structured_payload(client: TestClient) -> None:
     assert payload["status"] == "supported"
     assert payload["interpretation"]["query_class"] == "role_comparison"
     assert payload["summaries"][0]["title"] == "Comparison"
+
+
+def test_matchup_route_accepts_filters_without_language_interpretation(client: TestClient) -> None:
+    response = client.post(
+        "/api/matchups",
+        json={
+            "batter": "Steven Smith",
+            "bowler": "Jasprit Bumrah",
+            "phase": "death",
+            "year": 2023,
+            "venue": "Sydney Cricket Ground",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["matchup"]["interpretation"]["original_question"] == "Steven Smith vs Jasprit Bumrah"
+    assert response.json()["baseline"]["interpretation"]["original_question"] == "Steven Smith baseline"
 
 
 def test_player_search_route_returns_items(client: TestClient) -> None:

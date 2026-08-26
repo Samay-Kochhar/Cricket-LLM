@@ -65,6 +65,9 @@ def get_services():
         follow_ups = suggest_follow_ups(query_class)
         return answer_composer.compose(response, grounded_notes, grounded_citations, follow_ups)
 
+    def matchup_handler(**filters):
+        return semantic_service.answer_matchup_page(**filters)
+
     chat_service = ChatService(
         repository=repository,
         query_handler=query_handler,
@@ -83,6 +86,7 @@ def get_services():
         "query_interpreter": query_interpreter,
         "semantic_service": semantic_service,
         "query_handler": query_handler,
+        "matchup_handler": matchup_handler,
         "chat_service": chat_service,
         "workbench_service": workbench_service,
     }
