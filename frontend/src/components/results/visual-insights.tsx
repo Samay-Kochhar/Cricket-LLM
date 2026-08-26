@@ -25,7 +25,6 @@ const PITCH_LINE_ORDER = [
   "OUTSIDE_OFFSTUMP",
   "ON_THE_STUMPS",
   "DOWN_LEG",
-  "WIDE_DOWN_LEG",
 ] as const;
 
 const PITCH_LENGTH_ORDER = [
@@ -52,7 +51,6 @@ const LABEL_OVERRIDES: Record<string, string> = {
   OUTSIDE_OFFSTUMP: "Outside off",
   ON_THE_STUMPS: "On the stumps",
   DOWN_LEG: "Down leg",
-  WIDE_DOWN_LEG: "Wide down leg",
   FULL_TOSS: "Full toss",
   GOOD_LENGTH: "Good length",
   SHORT_OF_A_GOOD_LENGTH: "Back of a length",
@@ -209,21 +207,32 @@ function pitchCellColor(cell: PitchMapCell, view: PitchView, maxValue: number) {
 function PitchMap({
   cells,
   view,
+  handedness,
 }: {
   cells: PitchMapCell[];
   view: PitchView;
+  handedness?: string | null;
 }) {
+  const pitchLines = useMemo(
+    () => handedness === "LHB" ? [...PITCH_LINE_ORDER].reverse() : [...PITCH_LINE_ORDER],
+    [handedness],
+  );
   const cellMap = useMemo(
     () => new Map(cells.map((cell) => [`${cell.length}:${cell.line}`, cell])),
     [cells],
   );
-  const maxValue = Math.max(...cells.map((cell) => getPitchCellValue(cell, view)), 1);
+  const maxValue = Math.max(
+    ...cells
+      .filter((cell) => PITCH_LINE_ORDER.includes(cell.line as (typeof PITCH_LINE_ORDER)[number]))
+      .map((cell) => getPitchCellValue(cell, view)),
+    1,
+  );
 
   return (
     <div className="pitch-visual">
       <div className="pitch-line-headers">
         <span />
-        {PITCH_LINE_ORDER.map((line) => (
+        {pitchLines.map((line) => (
           <span className="pitch-axis-label" key={line}>
             {beautifyLabel(line)}
           </span>
@@ -246,7 +255,7 @@ function PitchMap({
           {PITCH_LENGTH_ORDER.map((length) => (
             <div className="pitch-grid-row" key={length}>
               <div className="pitch-length-label">{beautifyLabel(length)}</div>
-              {PITCH_LINE_ORDER.map((line) => {
+              {pitchLines.map((line) => {
                 const cell = cellMap.get(`${length}:${line}`);
                 if (!cell) {
                   return (
@@ -633,7 +642,13 @@ export function VisualInsights({ result }: VisualInsightsProps) {
               ))}
             </div>
           }
-          front={<PitchMap cells={visuals.pitch_map.cells} view={pitchView} />}
+          front={
+            <PitchMap
+              cells={visuals.pitch_map.cells}
+              handedness={visuals.pitch_map.handedness}
+              view={pitchView}
+            />
+          }
           back={
             <MathList
               title="How this pitch map is calculated"

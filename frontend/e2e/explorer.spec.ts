@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-function matchupPagePayload(balls = 121, lowSample = false) {
+function matchupPagePayload(balls = 121, lowSample = false, handedness = "RHB") {
   const common = {
     status: "supported",
     charts: [],
@@ -23,6 +23,7 @@ function matchupPagePayload(balls = 121, lowSample = false) {
       }],
       visuals: { pitch_map: {
         kind: "pitch_map",
+        handedness,
         coverage: { total_balls: balls, covered_balls: balls, coverage_percentage: 100, detail: "Complete coverage." },
         cells: [{ line: "ON_THE_STUMPS", length: "GOOD_LENGTH", balls, runs: 20, strike_rate: 66.67, dismissals: 1, boundary_balls: 2, dot_balls: 17, singles: 9, doubles: 1, triples: 0, fours: 2, sixes: 0, wicket_balls: 1, control_percentage: 75 }],
       } },
@@ -81,6 +82,13 @@ test("matchup explorer answers a named batter versus bowler question", async ({ 
   await expect(page.getByTestId("matchup-stat-strike-rate")).toContainText("85.12");
   await expect(page.getByText("85.12 vs 93.51")).toBeVisible();
   await expect(page.getByText("Line, length, strike rate, and wicket pressure")).toBeVisible();
+  await expect(page.locator(".pitch-line-headers .pitch-axis-label")).toHaveText([
+    "Wide outside off",
+    "Outside off",
+    "On the stumps",
+    "Down leg",
+  ]);
+  await expect(page.getByText("Sample context")).not.toBeVisible();
 });
 
 test("matchup filters form a specific question and protect low samples", async ({ page }) => {
@@ -108,7 +116,62 @@ test("matchup filters form a specific question and protect low samples", async (
     venue: "Sydney Cricket Ground",
   });
   await expect(page).toHaveURL(/phase=death.*year=2023.*venue=Sydney\+Cricket\+Ground/);
-  await expect(page.getByRole("heading", { name: "Treat this as a small sample" })).toBeVisible();
+  await expect(page.getByText("Small sample: only 5 recorded balls, so treat these numbers as descriptive."))
+    .toBeVisible();
   await expect(page.getByRole("heading", { name: "No pitch map shown" })).toBeVisible();
   await expect(page.getByText("Line, length, strike rate, and wicket pressure")).not.toBeVisible();
+});
+
+test("matchup pitch map mirrors for a left-handed batter and omits wide down leg", async ({ page }) => {
+  await page.route("**/api/matchups", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(matchupPagePayload(93, false, "LHB")),
+    });
+  });
+
+  await page.goto("/matchups?batter=Shikhar%20Dhawan&bowler=Mitchell%20Starc");
+
+  await expect(page.locator(".pitch-line-headers .pitch-axis-label")).toHaveText([
+    "Down leg",
+    "On the stumps",
+    "Outside off",
+    "Wide outside off",
+  ]);
+  await expect(page.getByText("Wide Down Leg")).toHaveCount(0);
+
+  const alignment = await page.locator(".pitch-board").evaluate((board) => {
+    const boardBox = board.getBoundingClientRect();
+    const cells = board.querySelectorAll<HTMLElement>(".pitch-grid-row:first-child .pitch-grid-cell");
+    const firstBox = cells[0].getBoundingClientRect();
+    const lastBox = cells[cells.length - 1].getBoundingClientRect();
+    const background = getComputedStyle(board, "::before");
+    return {
+      backgroundLeft: Number.parseFloat(background.left),
+      backgroundRight: Number.parseFloat(background.right),
+      cellsLeft: firstBox.left - boardBox.left,
+      cellsRight: boardBox.right - lastBox.right,
+    };
+  });
+  expect(Math.abs(alignment.backgroundLeft - alignment.cellsLeft)).toBeLessThan(2);
+  expect(Math.abs(alignment.backgroundRight - alignment.cellsRight)).toBeLessThan(2);
+});
+
+test("matchup explorer explains when an exact pair has zero ODI balls", async ({ page }) => {
+  const payload = matchupPagePayload();
+  payload.matchup.status = "insufficient_evidence";
+  payload.matchup.summaries = [];
+  payload.matchup.tables = [];
+  payload.matchup.visuals = null;
+  await page.route("**/api/matchups", async (route) => {
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(payload) });
+  });
+
+  await page.goto("/matchups?batter=Shikhar%20Dhawan&bowler=Jasprit%20Bumrah");
+
+  await expect(
+    page.getByText(
+      "No recorded ODI balls were found between Shikhar Dhawan and Jasprit Bumrah for these filters. Try another bowler or broaden the filters.",
+    ),
+  ).toBeVisible();
 });

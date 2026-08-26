@@ -1284,8 +1284,7 @@ code {
 
 .matchup-controls,
 .matchup-answer,
-.baseline-card,
-.sample-context {
+.baseline-card {
   padding: 22px;
 }
 
@@ -1355,7 +1354,6 @@ code {
   font-size: clamp(1.45rem, 2.2vw, 2.2rem);
 }
 
-.sample-context,
 .baseline-card {
   display: flex;
   align-items: center;
@@ -1363,14 +1361,14 @@ code {
   gap: 24px;
 }
 
-.sample-context > *,
 .baseline-card > * {
   max-width: 680px;
 }
 
-.sample-context.is-low-sample {
-  border-color: rgba(255, 124, 120, 0.35);
-  background: rgba(255, 124, 120, 0.08);
+.matchup-low-sample-note {
+  margin: -4px 4px 4px;
+  color: var(--muted);
+  font-size: 0.86rem;
 }
 
 @media (max-width: 1080px) {
@@ -1382,7 +1380,6 @@ code {
 @media (max-width: 720px) {
   .matchup-player-row,
   .matchup-filter-row,
-  .sample-context,
   .baseline-card {
     align-items: stretch;
     flex-direction: column;
@@ -1909,7 +1906,7 @@ code {
 
 .pitch-line-headers {
   display: grid;
-  grid-template-columns: 130px repeat(5, minmax(0, 1fr));
+  grid-template-columns: 130px repeat(4, minmax(0, 1fr));
   gap: 10px;
   align-items: end;
 }
@@ -1929,7 +1926,7 @@ code {
 .pitch-board::before {
   content: "";
   position: absolute;
-  inset: 16px 138px 16px;
+  inset: 16px 19px 16px 159px;
   border-radius: 22px;
   background: linear-gradient(180deg, rgba(234, 215, 191, 0.88), rgba(217, 192, 161, 0.76));
   box-shadow: inset 0 0 0 1px rgba(111, 79, 44, 0.22);
@@ -1945,7 +1942,7 @@ code {
 
 .pitch-grid-row {
   display: grid;
-  grid-template-columns: 130px repeat(5, minmax(0, 1fr));
+  grid-template-columns: 130px repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -2321,7 +2318,7 @@ code {
   }
 
   .pitch-board::before {
-    inset: 16px;
+    display: none;
   }
 
   .atlas-chat-main {

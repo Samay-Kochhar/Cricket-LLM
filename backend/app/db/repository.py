@@ -2391,6 +2391,7 @@ class AnalyticsRepository:
             params,
         )
         return {
+            "handedness": self.get_primary_batting_hand(player_name, bowler_name, phase=phase),
             "coverage": self._coverage_dict(
                 int(total_row[0] or 0),
                 int(covered_row[0] or 0),

@@ -674,3 +674,42 @@ def test_matchup_page_executes_selected_filters_without_the_language_planner(
         "years": [2023],
         "venue": "Sydney Cricket Ground",
     }
+
+
+def test_matchup_page_pitch_map_reports_left_handed_batter_orientation(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    matchup = semantic_service.answer_matchup_page(
+        batter="Shikhar Dhawan",
+        bowler="Mitchell Starc",
+    )["matchup"]
+
+    assert matchup.status.value == "supported"
+    assert matchup.visuals is not None
+    assert matchup.visuals.pitch_map is not None
+    assert matchup.visuals.pitch_map.handedness == "LHB"
+
+
+def test_matchup_page_returns_every_real_ball_and_marks_small_samples(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    matchup = semantic_service.answer_matchup_page(
+        batter="Steven Smith",
+        bowler="Rashid Khan",
+    )["matchup"]
+
+    assert matchup.status.value == "supported"
+    assert matchup.tables[0].rows[0][2] == 7
+    assert "low sample of 7 balls" in matchup.summaries[0].body.lower()
+
+
+def test_matchup_page_resolves_typed_player_names_and_close_spelling(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    matchup = semantic_service.answer_matchup_page(
+        batter="shikhar dhawan",
+        bowler="mitchell stac",
+    )["matchup"]
+
+    assert matchup.status.value == "supported"
+    assert matchup.tables[0].rows[0][:3] == ["Shikhar Dhawan", "Mitchell Starc", 93]

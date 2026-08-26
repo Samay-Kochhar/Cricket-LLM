@@ -55,6 +55,12 @@ function displayValue(value: string | number | null | undefined) {
   return typeof value === "number" ? value.toLocaleString("en", { maximumFractionDigits: 2 }) : value;
 }
 
+function pageSummary(body: string) {
+  return body
+    .replace(/ The recorded ODI sample contains [^.]+\.$/, "")
+    .replace(/ This is a low sample of [^.]+\.$/, "");
+}
+
 function currentYearIsValid(year: string) {
   if (!year) {
     return true;
@@ -122,6 +128,8 @@ export function MatchupExplorer({
   const balls = numberFrom(matchupRow, "Balls") ?? numberFrom(matchupRow, "Balls Faced");
   const matchupStrikeRate = numberFrom(matchupRow, "Batting Strike Rate");
   const baselineStrikeRate = numberFrom(baselineRow, "Batting Strike Rate");
+  const resolvedBatter = typeof matchupRow.get("Batter") === "string" ? String(matchupRow.get("Batter")) : applied.batter;
+  const resolvedBowler = typeof matchupRow.get("Bowler") === "string" ? String(matchupRow.get("Bowler")) : applied.bowler;
   const isLowSample =
     (balls !== null && balls < 12) ||
     matchup?.summaries.some((summary) => summary.body.toLowerCase().includes("low sample")) === true;
@@ -243,12 +251,14 @@ export function MatchupExplorer({
 
       <section className="panel hero-panel matchup-answer">
         <span className="eyebrow">ODI head to head</span>
-        <h2 className="hero-title">{applied.batter} vs {applied.bowler}</h2>
+        <h2 className="hero-title">{resolvedBatter} vs {resolvedBowler}</h2>
         {isLoading ? <p className="hero-copy">Checking the ODI ball-by-ball evidence…</p> : null}
-        {!isLoading && matchup?.summaries[0] ? <p className="hero-copy">{matchup.summaries[0].body}</p> : null}
+        {!isLoading && matchup?.summaries[0] ? <p className="hero-copy">{pageSummary(matchup.summaries[0].body)}</p> : null}
         {error ? <p className="error-copy">{error}</p> : null}
         {!isLoading && !error && matchup?.status !== "supported" ? (
-          <p className="muted-copy">There is not enough ODI evidence to answer this exact matchup.</p>
+          <p className="muted-copy">
+            No recorded ODI balls were found between {applied.batter} and {applied.bowler} for these filters. Try another bowler or broaden the filters.
+          </p>
         ) : null}
       </section>
 
@@ -263,18 +273,6 @@ export function MatchupExplorer({
             ))}
           </section>
 
-          <section className={`panel sample-context ${isLowSample ? "is-low-sample" : ""}`}>
-            <div>
-              <span className="eyebrow">Sample context</span>
-              <h3 className="card-title">{isLowSample ? "Treat this as a small sample" : `${displayValue(balls)} balls is enough to show the observed record`}</h3>
-            </div>
-            <p className="muted-copy">
-              {isLowSample
-                ? "The numbers are real, but the sample is too small for a strong claim about who has the advantage."
-                : "This describes what happened in the selected ODI sample. It is not a prediction of the next contest."}
-            </p>
-          </section>
-
           {matchupStrikeRate !== null && baselineStrikeRate !== null ? (
             <section className="panel baseline-card">
               <div>
@@ -282,7 +280,7 @@ export function MatchupExplorer({
                 <h3 className="section-title">{matchupStrikeRate.toFixed(2)} vs {baselineStrikeRate.toFixed(2)}</h3>
               </div>
               <p className="muted-copy">
-                Against {applied.bowler}, {applied.batter}'s strike rate is {Math.abs(matchupStrikeRate - baselineStrikeRate).toFixed(2)} points {matchupStrikeRate >= baselineStrikeRate ? "higher" : "lower"} than the matching overall baseline.
+                Against {resolvedBowler}, {resolvedBatter}'s strike rate is {Math.abs(matchupStrikeRate - baselineStrikeRate).toFixed(2)} points {matchupStrikeRate >= baselineStrikeRate ? "higher" : "lower"} than the matching overall baseline.
               </p>
             </section>
           ) : null}
@@ -304,6 +302,12 @@ export function MatchupExplorer({
             </div>
             <CompactDataTable table={matchup.tables[0]} />
           </section>
+
+          {isLowSample ? (
+            <p className="matchup-low-sample-note">
+              Small sample: only {displayValue(balls)} recorded balls, so treat these numbers as descriptive.
+            </p>
+          ) : null}
         </>
       ) : null}
     </main>

@@ -88,6 +88,7 @@ export type PitchMapCell = {
 
 export type PitchMapBlock = {
   kind: "pitch_map";
+  handedness?: string | null;
   coverage: VisualCoverage;
   cells: PitchMapCell[];
 };

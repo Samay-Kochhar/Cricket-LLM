@@ -100,6 +100,7 @@ class PitchMapCell(BaseModel):
 
 class PitchMapBlock(BaseModel):
     kind: Literal["pitch_map"] = "pitch_map"
+    handedness: str | None = None
     coverage: VisualCoverage
     cells: list[PitchMapCell] = Field(default_factory=list)
 

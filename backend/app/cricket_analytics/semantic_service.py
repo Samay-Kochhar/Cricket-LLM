@@ -46,6 +46,7 @@ from backend.app.domain.evidence_models import (
 )
 from backend.app.domain.metric_models import QueryClass
 from backend.app.services.gemini_client import GeminiClient
+from backend.app.services.player_resolution import resolve_player_name
 
 
 MATCHUP_PITCH_MIN_COVERED_BALLS = 12
@@ -110,6 +111,11 @@ class SemanticAnalyticsService:
         venue: str | None = None,
     ) -> dict[str, QueryResponse]:
         """Execute page-selected matchup filters without asking an LLM to reinterpret them."""
+        available_players = self.repository.list_player_names()
+        batter_resolution = resolve_player_name(batter, available_players)
+        bowler_resolution = resolve_player_name(bowler, available_players)
+        batter = batter_resolution.canonical_name or next(iter(batter_resolution.suggestions), batter.strip())
+        bowler = bowler_resolution.canonical_name or next(iter(bowler_resolution.suggestions), bowler.strip())
         context_filters: dict[str, object] = {}
         if phase != "all":
             context_filters["phase"] = phase
@@ -430,6 +436,7 @@ class SemanticAnalyticsService:
 
         visual = VisualPayload(
             pitch_map=PitchMapBlock(
+                handedness=pitch.get("handedness"),
                 coverage=VisualCoverage(**coverage),
                 cells=[PitchMapCell(**cell) for cell in cells],
             )
