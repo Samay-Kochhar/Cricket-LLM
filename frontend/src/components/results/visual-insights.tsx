@@ -17,7 +17,7 @@ type VisualInsightsProps = {
   result: QueryResponse;
 };
 
-type PitchView = "all" | "strike_rate" | "wickets" | "fours" | "sixes" | "running";
+type PitchView = "all" | "strike_rate" | "average" | "wickets" | "fours" | "sixes";
 type WagonView = "classic" | "summary";
 
 const PITCH_LINE_ORDER = [
@@ -82,10 +82,6 @@ function formatPercent(value: number | null | undefined, digits = 1) {
     return "-";
   }
   return `${value.toFixed(digits)}%`;
-}
-
-function sumRunning(cell: PitchMapCell | WagonWheelSector | FieldZoneMetric) {
-  return cell.singles + cell.doubles + cell.triples;
 }
 
 function outcomeSwatch(outcome: keyof typeof OUTCOME_PALETTE) {
@@ -171,6 +167,9 @@ function getPitchCellValue(cell: PitchMapCell, view: PitchView) {
   if (view === "strike_rate") {
     return cell.strike_rate ?? 0;
   }
+  if (view === "average") {
+    return cell.dismissals > 0 ? cell.runs / cell.dismissals : 0;
+  }
   if (view === "wickets") {
     return cell.wicket_balls;
   }
@@ -179,9 +178,6 @@ function getPitchCellValue(cell: PitchMapCell, view: PitchView) {
   }
   if (view === "sixes") {
     return cell.sixes;
-  }
-  if (view === "running") {
-    return sumRunning(cell);
   }
   return cell.strike_rate ?? 0;
 }
@@ -198,8 +194,8 @@ function pitchCellColor(cell: PitchMapCell, view: PitchView, maxValue: number) {
   if (view === "fours") {
     return `rgba(242, 143, 59, ${alpha})`;
   }
-  if (view === "running") {
-    return `rgba(72, 201, 176, ${alpha})`;
+  if (view === "average") {
+    return `rgba(103, 163, 255, ${alpha})`;
   }
   return `rgba(124, 226, 180, ${alpha})`;
 }
@@ -256,6 +252,8 @@ function PitchMap({
                     </div>
                   );
                 }
+                const average = cell.dismissals > 0 ? cell.runs / cell.dismissals : null;
+                const primaryValue = view === "average" ? average : cell.strike_rate;
                 return (
                   <div
                     className="pitch-grid-cell"
@@ -263,10 +261,9 @@ function PitchMap({
                     style={{ backgroundColor: pitchCellColor(cell, view, maxValue) }}
                     title={`${beautifyLabel(length)} / ${beautifyLabel(line)}`}
                   >
-                    <strong>{cell.strike_rate?.toFixed(1) ?? "-"}</strong>
-                    <span>SR</span>
+                    <strong>{primaryValue?.toFixed(1) ?? "—"}</strong>
+                    <span>{view === "average" ? "AVG" : "SR"}</span>
                     <div className="pitch-cell-stats">
-                      <span className="mini-chip">1-3 {sumRunning(cell)}</span>
                       <span className="mini-chip four">4 {cell.fours}</span>
                       <span className="mini-chip six">6 {cell.sixes}</span>
                       <span className="mini-chip wicket">W {cell.wicket_balls}</span>
@@ -287,10 +284,6 @@ function PitchMap({
       </div>
 
       <div className="outcome-legend">
-        <span className="legend-item">
-          <span className="legend-dot" style={outcomeSwatch("single")} />
-          1-3 runs
-        </span>
         <span className="legend-item">
           <span className="legend-dot" style={outcomeSwatch("four")} />
           Four
@@ -625,10 +618,10 @@ export function VisualInsights({ result }: VisualInsightsProps) {
               {([
                 ["all", "All"],
                 ["strike_rate", "SR"],
+                ["average", "Avg"],
                 ["wickets", "W"],
                 ["fours", "4s"],
                 ["sixes", "6s"],
-                ["running", "1-3"],
               ] as const).map(([value, label]) => (
                 <button
                   className={pitchView === value ? "segmented-button is-active" : "segmented-button"}
@@ -654,9 +647,9 @@ export function VisualInsights({ result }: VisualInsightsProps) {
               items={[
                 "Each tile is one recorded line/length bucket from the ODI feed, not a true tracked Hawk-Eye bounce coordinate.",
                 "Strike rate in a tile = runs from that tile / balls in that tile * 100.",
+                "Batting average in a tile = runs from that tile / dismissals in that tile. It is unavailable when there are no dismissals.",
                 "Wickets = deliveries in that tile where out = true.",
-                "1-3 runs combines singles, doubles, and triples to separate running value from boundary value.",
-                "The default view shows strike rate in every tile plus the event counts for 1-3 runs, 4s, 6s, and wickets.",
+                "The default view shows strike rate in every tile plus the event counts for 4s, 6s, and wickets.",
               ]}
               note="The dataset contains Yorker, Full toss, Full, Good length, Short of a good length, and Short. We label 'Short of a good length' as 'Back of a length' in the UI."
             />

@@ -84,6 +84,11 @@ test("matchup explorer answers a named batter versus bowler question", async ({ 
   await expect(page.getByTestId("matchup-stat-strike-rate")).toContainText("Batting SR");
   await expect(page.getByText("85.12 vs 93.51")).toBeVisible();
   await expect(page.getByText("Line, length, strike rate, and wicket pressure")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Avg", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "1-3", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Avg", exact: true }).click();
+  await expect(page.locator('[title="Good length / On the stumps"]')).toContainText("20.0AVG");
+  await expect(page.locator(".pitch-visual").getByText(/^1-3/)).toHaveCount(0);
   await expect(page.locator(".pitch-line-headers .pitch-axis-label")).toHaveText([
     "Wide outside off",
     "Outside off",
