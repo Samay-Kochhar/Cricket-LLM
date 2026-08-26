@@ -243,12 +243,6 @@ function PitchMap({
       </div>
 
       <div className="pitch-board">
-        <div className="pitch-stumps bowling" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
-
         <div className="pitch-grid">
           {PITCH_LENGTH_ORDER.map((length) => (
             <div className="pitch-grid-row" key={length}>
@@ -258,7 +252,7 @@ function PitchMap({
                 if (!cell) {
                   return (
                     <div className="pitch-grid-cell empty" key={`${length}:${line}`}>
-                      <span>-</span>
+                      <span>No deliveries</span>
                     </div>
                   );
                 }

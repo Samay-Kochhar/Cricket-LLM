@@ -1935,6 +1935,8 @@ code {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  width: min(100%, 900px);
+  margin-inline: auto;
 }
 
 .pitch-line-headers {
@@ -2017,6 +2019,12 @@ code {
   color: rgba(167, 178, 187, 0.5);
 }
 
+.pitch-grid-cell.empty > span {
+  color: rgba(11, 16, 20, 0.56);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
 .pitch-grid-cell strong {
   font-family: var(--font-display), sans-serif;
   font-size: 1.2rem;
@@ -2072,16 +2080,12 @@ code {
 
 .pitch-stumps.batting {
   top: auto;
-  bottom: -17px;
-}
-
-.pitch-stumps.bowling {
-  bottom: 12px;
+  bottom: -22px;
 }
 
 .pitch-stumps span {
-  width: 4px;
-  height: 24px;
+  width: 6px;
+  height: 34px;
   border-radius: 999px;
   background: rgba(11, 16, 20, 0.78);
 }

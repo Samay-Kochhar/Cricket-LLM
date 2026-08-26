@@ -159,6 +159,9 @@ test("matchup pitch map mirrors for a left-handed batter and omits wide down leg
     "Wide outside off",
   ]);
   await expect(page.getByText("Wide Down Leg")).toHaveCount(0);
+  await expect(page.locator(".pitch-grid-cell.empty")).toHaveCount(23);
+  await expect(page.locator(".pitch-grid-cell.empty").first()).toHaveText("No deliveries");
+  await expect(page.locator(".pitch-stumps.bowling")).toHaveCount(0);
 
   const alignment = await page.locator(".pitch-board").evaluate((board) => {
     const boardBox = board.getBoundingClientRect();
@@ -180,12 +183,16 @@ test("matchup pitch map mirrors for a left-handed batter and omits wide down leg
       stumpsCenter: (stumpsBox.left + stumpsBox.right) / 2,
       offSideWidth: onStumpsBox.left - firstBox.left,
       legSideWidth: lastBox.right - onStumpsBox.right,
+      boardAspectRatio: boardBox.width / boardBox.height,
+      stumpHeight: stumpsBox.height,
     };
   });
   expect(Math.abs(alignment.backgroundLeft - alignment.cellsLeft)).toBeLessThan(2);
   expect(Math.abs(alignment.backgroundRight - alignment.cellsRight)).toBeLessThan(2);
   expect(Math.abs(alignment.onStumpsCenter - alignment.stumpsCenter)).toBeLessThan(2);
   expect(Math.abs(alignment.offSideWidth - alignment.legSideWidth)).toBeLessThan(2);
+  expect(alignment.boardAspectRatio).toBeLessThan(1.5);
+  expect(alignment.stumpHeight).toBeGreaterThanOrEqual(32);
 
   await expect(page.locator(".pitch-length-label")).toHaveText([
     "Full toss",
