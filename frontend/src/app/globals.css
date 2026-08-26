@@ -1325,6 +1325,39 @@ code {
   border-color: rgba(242, 143, 59, 0.65);
 }
 
+.player-combobox {
+  position: relative;
+}
+
+.player-suggestions {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: #151b20;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.36);
+}
+
+.player-suggestions button {
+  border: 0;
+  padding: 11px 13px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.player-suggestions button:hover,
+.player-suggestions button:focus-visible {
+  background: rgba(242, 143, 59, 0.14);
+  outline: none;
+}
+
 .matchup-venue-field {
   flex-grow: 1.5;
 }
@@ -1337,7 +1370,7 @@ code {
 
 .matchup-stat-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -1906,8 +1939,8 @@ code {
 
 .pitch-line-headers {
   display: grid;
-  grid-template-columns: 130px repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 130px var(--pitch-line-columns);
+  column-gap: 0;
   align-items: end;
 }
 
@@ -1926,7 +1959,7 @@ code {
 .pitch-board::before {
   content: "";
   position: absolute;
-  inset: 16px 19px 16px 159px;
+  inset: 16px 19px 16px 149px;
   border-radius: 22px;
   background: linear-gradient(180deg, rgba(234, 215, 191, 0.88), rgba(217, 192, 161, 0.76));
   box-shadow: inset 0 0 0 1px rgba(111, 79, 44, 0.22);
@@ -1941,9 +1974,10 @@ code {
 }
 
 .pitch-grid-row {
+  position: relative;
   display: grid;
-  grid-template-columns: 130px repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: 130px var(--pitch-line-columns);
+  column-gap: 0;
 }
 
 .pitch-axis-label,
@@ -1954,6 +1988,11 @@ code {
   letter-spacing: 0.12em;
 }
 
+.pitch-axis-label {
+  padding-inline: 4px;
+  text-align: center;
+}
+
 .pitch-length-label {
   display: flex;
   align-items: center;
@@ -1961,7 +2000,7 @@ code {
 
 .pitch-grid-cell {
   min-height: 98px;
-  border-radius: 18px;
+  border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255, 255, 255, 0.05);
   padding: 10px;
@@ -2024,7 +2063,7 @@ code {
 
 .pitch-stumps {
   position: absolute;
-  left: 50%;
+  left: calc(50% + 65px);
   transform: translateX(-50%);
   display: flex;
   gap: 4px;
@@ -2032,7 +2071,8 @@ code {
 }
 
 .pitch-stumps.batting {
-  top: 12px;
+  top: auto;
+  bottom: -17px;
 }
 
 .pitch-stumps.bowling {

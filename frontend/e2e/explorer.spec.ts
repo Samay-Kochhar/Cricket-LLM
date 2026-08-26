@@ -79,7 +79,9 @@ test("matchup explorer answers a named batter versus bowler question", async ({ 
   await expect(page.getByTestId("matchup-stat-runs")).toContainText("103");
   await expect(page.getByTestId("matchup-stat-balls")).toContainText("121");
   await expect(page.getByTestId("matchup-stat-dismissals")).toContainText("2");
+  await expect(page.getByTestId("matchup-stat-batting-average")).toContainText("51.5");
   await expect(page.getByTestId("matchup-stat-strike-rate")).toContainText("85.12");
+  await expect(page.getByTestId("matchup-stat-strike-rate")).toContainText("Batting SR");
   await expect(page.getByText("85.12 vs 93.51")).toBeVisible();
   await expect(page.getByText("Line, length, strike rate, and wicket pressure")).toBeVisible();
   await expect(page.locator(".pitch-line-headers .pitch-axis-label")).toHaveText([
@@ -89,6 +91,24 @@ test("matchup explorer answers a named batter versus bowler question", async ({ 
     "Down leg",
   ]);
   await expect(page.getByText("Sample context")).not.toBeVisible();
+});
+
+test("matchup player fields suggest names while typing", async ({ page }) => {
+  await page.route("**/api/matchups", async (route) => {
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(matchupPagePayload()) });
+  });
+  await page.route("**/api/players/search?**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ query: "shik", items: ["Shikhar Dhawan"], count: 1 }),
+    });
+  });
+
+  await page.goto("/matchups?batter=Steven%20Smith&bowler=Jasprit%20Bumrah");
+  await page.getByRole("combobox", { name: "Batter" }).fill("shik");
+  await expect(page.getByRole("option", { name: "Shikhar Dhawan" })).toBeVisible();
+  await page.getByRole("option", { name: "Shikhar Dhawan" }).click();
+  await expect(page.getByRole("combobox", { name: "Batter" })).toHaveValue("Shikhar Dhawan");
 });
 
 test("matchup filters form a specific question and protect low samples", async ({ page }) => {
@@ -146,15 +166,50 @@ test("matchup pitch map mirrors for a left-handed batter and omits wide down leg
     const firstBox = cells[0].getBoundingClientRect();
     const lastBox = cells[cells.length - 1].getBoundingClientRect();
     const background = getComputedStyle(board, "::before");
+    const onStumps = board.querySelector<HTMLElement>('[title="Good length / On the stumps"]');
+    const stumps = board.querySelector<HTMLElement>(".pitch-stumps.batting");
+    if (!onStumps || !stumps) throw new Error("Expected on-stumps cell and batting stumps");
+    const onStumpsBox = onStumps.getBoundingClientRect();
+    const stumpsBox = stumps.getBoundingClientRect();
     return {
       backgroundLeft: Number.parseFloat(background.left),
       backgroundRight: Number.parseFloat(background.right),
       cellsLeft: firstBox.left - boardBox.left,
       cellsRight: boardBox.right - lastBox.right,
+      onStumpsCenter: (onStumpsBox.left + onStumpsBox.right) / 2,
+      stumpsCenter: (stumpsBox.left + stumpsBox.right) / 2,
+      offSideWidth: onStumpsBox.left - firstBox.left,
+      legSideWidth: lastBox.right - onStumpsBox.right,
     };
   });
   expect(Math.abs(alignment.backgroundLeft - alignment.cellsLeft)).toBeLessThan(2);
   expect(Math.abs(alignment.backgroundRight - alignment.cellsRight)).toBeLessThan(2);
+  expect(Math.abs(alignment.onStumpsCenter - alignment.stumpsCenter)).toBeLessThan(2);
+  expect(Math.abs(alignment.offSideWidth - alignment.legSideWidth)).toBeLessThan(2);
+
+  await expect(page.locator(".pitch-length-label")).toHaveText([
+    "Full toss",
+    "Yorker",
+    "Full",
+    "Good length",
+    "Back of a length",
+    "Short",
+  ]);
+  const lengthPlacement = await page.locator(".pitch-board").evaluate((board) => {
+    const rows = board.querySelectorAll<HTMLElement>(".pitch-grid-row");
+    const stumps = board.querySelector<HTMLElement>(".pitch-stumps.batting");
+    if (!stumps) throw new Error("Expected batting stumps");
+    const fullTossBox = rows[0].getBoundingClientRect();
+    const yorkerBox = rows[1].getBoundingClientRect();
+    const stumpsBox = stumps.getBoundingClientRect();
+    return {
+      fullTossCenter: (fullTossBox.top + fullTossBox.bottom) / 2,
+      stumpCenter: (stumpsBox.top + stumpsBox.bottom) / 2,
+      yorkerCenter: (yorkerBox.top + yorkerBox.bottom) / 2,
+    };
+  });
+  expect(lengthPlacement.fullTossCenter).toBeLessThan(lengthPlacement.stumpCenter);
+  expect(lengthPlacement.stumpCenter).toBeLessThan(lengthPlacement.yorkerCenter);
 });
 
 test("matchup explorer explains when an exact pair has zero ODI balls", async ({ page }) => {

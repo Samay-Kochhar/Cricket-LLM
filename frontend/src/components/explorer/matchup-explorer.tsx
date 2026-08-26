@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { CompactDataTable } from "@/components/results/compact-data-table";
 import { VisualInsights } from "@/components/results/visual-insights";
-import { postApi } from "@/lib/api-client";
+import { fetchApi, postApi } from "@/lib/api-client";
 import type { MatchupPageResponse, QueryResponse, TableBlock } from "@/lib/api-types";
 
 type MatchupExplorerProps = {
@@ -25,15 +25,81 @@ type MatchupFilters = {
   year: string;
 };
 
-const STAT_COLUMNS = [
-  ["runs", "Runs"],
-  ["balls", "Balls"],
-  ["dismissals", "Dismissals"],
-  ["strike-rate", "Batting Strike Rate"],
-  ["dot-ball-rate", "Batter Dot Ball Percentage"],
-  ["boundary-rate", "Boundary Percentage"],
-  ["false-shot-rate", "False Shot Percentage"],
-] as const;
+type PlayerSearchResponse = {
+  items: string[];
+};
+
+function PlayerSearchInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: "Batter" | "Bowler";
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isFocused, setIsFocused] = useState(false);
+  const listboxId = `${label.toLowerCase()}-suggestions`;
+
+  useEffect(() => {
+    const query = value.trim();
+    if (!isFocused || query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    let cancelled = false;
+    const timeout = window.setTimeout(async () => {
+      try {
+        const response = await fetchApi<PlayerSearchResponse>(`/api/players/search?q=${encodeURIComponent(query)}`);
+        if (!cancelled) setSuggestions(response.items);
+      } catch {
+        if (!cancelled) setSuggestions([]);
+      }
+    }, 180);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [isFocused, value]);
+
+  return (
+    <label className="matchup-field">
+      <span>{label}</span>
+      <div className="player-combobox">
+        <input
+          aria-autocomplete="list"
+          aria-controls={listboxId}
+          aria-expanded={isFocused && suggestions.length > 0}
+          aria-label={label}
+          onBlur={() => setIsFocused(false)}
+          onChange={(event) => onChange(event.target.value)}
+          onFocus={() => setIsFocused(true)}
+          role="combobox"
+          value={value}
+        />
+        {isFocused && suggestions.length > 0 ? (
+          <div className="player-suggestions" id={listboxId} role="listbox">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => {
+                  onChange(suggestion);
+                  setIsFocused(false);
+                }}
+                onMouseDown={(event) => event.preventDefault()}
+                role="option"
+                type="button"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </label>
+  );
+}
 
 function firstRow(table: TableBlock | undefined) {
   if (!table?.rows[0]) {
@@ -128,6 +194,19 @@ export function MatchupExplorer({
   const balls = numberFrom(matchupRow, "Balls") ?? numberFrom(matchupRow, "Balls Faced");
   const matchupStrikeRate = numberFrom(matchupRow, "Batting Strike Rate");
   const baselineStrikeRate = numberFrom(baselineRow, "Batting Strike Rate");
+  const runs = numberFrom(matchupRow, "Runs");
+  const dismissals = numberFrom(matchupRow, "Dismissals");
+  const battingAverage = runs !== null && dismissals !== null && dismissals > 0 ? runs / dismissals : null;
+  const matchupStats = [
+    { id: "runs", label: "Runs", value: runs },
+    { id: "balls", label: "Balls", value: balls },
+    { id: "dismissals", label: "Dismissals", value: dismissals },
+    { id: "batting-average", label: "Batting Avg", value: battingAverage },
+    { id: "strike-rate", label: "Batting SR", value: matchupStrikeRate },
+    { id: "dot-ball-rate", label: "Dot Ball %", value: matchupRow.get("Batter Dot Ball Percentage") },
+    { id: "boundary-rate", label: "Boundary %", value: matchupRow.get("Boundary Percentage") },
+    { id: "false-shot-rate", label: "False Shot %", value: matchupRow.get("False Shot Percentage") },
+  ];
   const resolvedBatter = typeof matchupRow.get("Batter") === "string" ? String(matchupRow.get("Batter")) : applied.batter;
   const resolvedBowler = typeof matchupRow.get("Bowler") === "string" ? String(matchupRow.get("Bowler")) : applied.bowler;
   const isLowSample =
@@ -176,14 +255,11 @@ export function MatchupExplorer({
       <section className="panel matchup-controls">
         <form onSubmit={handleSubmit}>
           <div className="matchup-player-row">
-            <label className="matchup-field">
-              <span>Batter</span>
-              <input
-                aria-label="Batter"
-                onChange={(event) => setFilters((current) => ({ ...current, batter: event.target.value }))}
-                value={filters.batter}
-              />
-            </label>
+            <PlayerSearchInput
+              label="Batter"
+              onChange={(batter) => setFilters((current) => ({ ...current, batter }))}
+              value={filters.batter}
+            />
             <button
               aria-label="Swap batter and bowler"
               className="ghost-button matchup-swap"
@@ -192,14 +268,11 @@ export function MatchupExplorer({
             >
               ⇄ Swap
             </button>
-            <label className="matchup-field">
-              <span>Bowler</span>
-              <input
-                aria-label="Bowler"
-                onChange={(event) => setFilters((current) => ({ ...current, bowler: event.target.value }))}
-                value={filters.bowler}
-              />
-            </label>
+            <PlayerSearchInput
+              label="Bowler"
+              onChange={(bowler) => setFilters((current) => ({ ...current, bowler }))}
+              value={filters.bowler}
+            />
           </div>
           <div className="matchup-filter-row">
             <label className="matchup-field">
@@ -265,10 +338,10 @@ export function MatchupExplorer({
       {!isLoading && matchup?.status === "supported" && matchup.tables[0] ? (
         <>
           <section className="matchup-stat-grid" aria-label="Matchup statistics">
-            {STAT_COLUMNS.map(([id, column]) => (
+            {matchupStats.map(({ id, label, value }) => (
               <article className="panel stat-card matchup-stat" data-testid={`matchup-stat-${id}`} key={id}>
-                <span className="stat-label">{column.replace("Batter ", "").replace(" Percentage", " %")}</span>
-                <strong>{displayValue(matchupRow.get(column))}</strong>
+                <span className="stat-label">{label}</span>
+                <strong>{displayValue(value)}</strong>
               </article>
             ))}
           </section>

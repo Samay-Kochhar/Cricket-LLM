@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 
 import type {
   FieldZoneMetric,
@@ -28,8 +28,8 @@ const PITCH_LINE_ORDER = [
 ] as const;
 
 const PITCH_LENGTH_ORDER = [
-  "YORKER",
   "FULL_TOSS",
+  "YORKER",
   "FULL",
   "GOOD_LENGTH",
   "SHORT_OF_A_GOOD_LENGTH",
@@ -217,6 +217,9 @@ function PitchMap({
     () => handedness === "LHB" ? [...PITCH_LINE_ORDER].reverse() : [...PITCH_LINE_ORDER],
     [handedness],
   );
+  const pitchGridStyle = {
+    "--pitch-line-columns": handedness === "LHB" ? "1fr 0.6fr 0.5fr 0.5fr" : "0.5fr 0.5fr 0.6fr 1fr",
+  } as CSSProperties;
   const cellMap = useMemo(
     () => new Map(cells.map((cell) => [`${cell.length}:${cell.line}`, cell])),
     [cells],
@@ -229,7 +232,7 @@ function PitchMap({
   );
 
   return (
-    <div className="pitch-visual">
+    <div className="pitch-visual" style={pitchGridStyle}>
       <div className="pitch-line-headers">
         <span />
         {pitchLines.map((line) => (
@@ -240,11 +243,6 @@ function PitchMap({
       </div>
 
       <div className="pitch-board">
-        <div className="pitch-stumps batting" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
         <div className="pitch-stumps bowling" aria-hidden="true">
           <span />
           <span />
@@ -282,6 +280,13 @@ function PitchMap({
                   </div>
                 );
               })}
+              {length === "FULL_TOSS" ? (
+                <div className="pitch-stumps batting" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
