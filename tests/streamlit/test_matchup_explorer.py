@@ -77,6 +77,34 @@ def test_load_matchup_page_uses_structured_filters_and_builds_practical_metrics(
     assert page["pitch"]["handedness"] == "RHB"
 
 
+def test_load_matchup_page_supports_a_cached_service_bundle_from_before_matchups() -> None:
+    class CachedSemanticService:
+        def answer_matchup_page(self, **filters: object) -> dict[str, object]:
+            return {
+                "matchup": {
+                    "status": "insufficient_evidence",
+                    "summaries": [],
+                    "tables": [],
+                    "visuals": None,
+                },
+                "baseline": {
+                    "status": "supported",
+                    "summaries": [],
+                    "tables": [],
+                    "visuals": None,
+                },
+            }
+
+    page = load_matchup_page(
+        {"semantic_service": CachedSemanticService()},
+        batter="Shikhar Dhawan",
+        bowler="Mitchell Starc",
+    )
+
+    assert page["supported"] is False
+    assert page["title"] == "Shikhar Dhawan vs Mitchell Starc"
+
+
 def test_matchup_explorer_offers_searchable_players_and_renders_answer_metrics() -> None:
     app = AppTest.from_string(
         """
@@ -113,8 +141,13 @@ render_matchup_explorer({"repository": Repository(), "matchup_handler": matchup_
     ).run()
 
     assert [selectbox.label for selectbox in app.selectbox[:2]] == ["Batter", "Bowler"]
+    assert app.button[0].label == "Show matchup"
+    assert app.button[0].disabled is True
     app.selectbox[0].select("Steven Smith").run()
     app.selectbox[1].select("Jasprit Bumrah").run()
+    assert not app.metric
+    assert app.button[0].disabled is False
+    app.button[0].click().run()
 
     assert not app.exception
     assert any(markdown.value == "## Steven Smith vs Jasprit Bumrah" for markdown in app.markdown)
@@ -125,3 +158,36 @@ render_matchup_explorer({"repository": Repository(), "matchup_handler": matchup_
         ("Batting Avg", "51.50"),
         ("Batting SR", "85.12"),
     ]
+
+
+def test_matchup_explorer_keeps_search_controls_available_after_query_error() -> None:
+    app = AppTest.from_string(
+        """
+from streamlit_matchup_explorer import render_matchup_explorer
+
+class Repository:
+    def list_player_names(self):
+        return ["Shikhar Dhawan", "Mitchell Starc", "Virat Kohli"]
+
+    def list_venues(self):
+        return []
+
+def matchup_handler(**filters):
+    raise KeyError("matchup_handler")
+
+render_matchup_explorer({"repository": Repository(), "matchup_handler": matchup_handler})
+"""
+    ).run()
+
+    app.selectbox[0].select("Shikhar Dhawan").run()
+    app.selectbox[1].select("Mitchell Starc").run()
+    app.button[0].click().run()
+
+    assert not app.exception
+    assert [selectbox.label for selectbox in app.selectbox[:2]] == ["Batter", "Bowler"]
+    assert app.button[0].label == "Show matchup"
+    assert any("could not be loaded" in error.value for error in app.error)
+
+    app.selectbox[0].select("Virat Kohli").run()
+    assert not app.error
+    assert app.button[0].disabled is False

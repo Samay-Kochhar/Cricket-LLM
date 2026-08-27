@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from datetime import date
+import logging
 import re
 from typing import Any
 
 import streamlit as st
 
 from streamlit_player_explorer import build_pitch_heatmap
+
+
+LOGGER = logging.getLogger("cricatlas.streamlit.matchups")
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -43,7 +47,12 @@ def load_matchup_page(
     year: int | None = None,
     venue: str | None = None,
 ) -> dict[str, Any]:
-    result = services["matchup_handler"](
+    handler = services.get("matchup_handler")
+    if not callable(handler):
+        handler = getattr(services.get("semantic_service"), "answer_matchup_page", None)
+    if not callable(handler):
+        raise RuntimeError("The matchup service is unavailable in the current service bundle.")
+    result = handler(
         batter=batter,
         bowler=bowler,
         phase=phase,
@@ -150,10 +159,6 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
             key="matchup-venue",
         )
 
-    if not batter or not bowler:
-        st.info("Choose both players above. Each selector supports type-to-search.")
-        return
-
     phase = {
         "All overs": "all",
         "Powerplay": "powerplay",
@@ -161,15 +166,47 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
         "Death overs": "death",
     }[phase_label]
     venue = None if venue_label == "All venues" else venue_label
-    with st.spinner("Checking the ODI ball-by-ball evidence…"):
-        page = load_matchup_page(
-            services,
-            batter=batter,
-            bowler=bowler,
-            phase=phase,
-            year=int(year) if year is not None else None,
-            venue=venue,
-        )
+    request = {
+        "batter": batter,
+        "bowler": bowler,
+        "phase": phase,
+        "year": int(year) if year is not None else None,
+        "venue": venue,
+    }
+    submitted = st.button(
+        "Show matchup",
+        disabled=not batter or not bowler,
+        type="primary",
+        width="stretch",
+    )
+    if submitted:
+        try:
+            with st.spinner("Checking the ODI ball-by-ball evidence…"):
+                st.session_state["matchup-page"] = load_matchup_page(services, **request)
+                st.session_state["matchup-request"] = request
+                st.session_state.pop("matchup-error", None)
+                st.session_state.pop("matchup-error-request", None)
+        except Exception:
+            LOGGER.exception("CricAtlas could not load the selected matchup")
+            st.session_state.pop("matchup-page", None)
+            st.session_state.pop("matchup-request", None)
+            st.session_state["matchup-error"] = (
+                "This matchup could not be loaded. Change either player or broaden the filters, then try again."
+            )
+            st.session_state["matchup-error-request"] = request
+
+    error = st.session_state.get("matchup-error")
+    error_request = st.session_state.get("matchup-error-request")
+    if error and error_request == request:
+        st.error(str(error))
+    page = st.session_state.get("matchup-page")
+    applied_request = st.session_state.get("matchup-request")
+    if not isinstance(page, dict) or applied_request != request:
+        if not error or error_request != request:
+            st.info(
+                "Choose both players, then press Show matchup. Each player selector supports type-to-search."
+            )
+        return
 
     st.markdown(f"## {page['title']}")
     if not page["supported"]:

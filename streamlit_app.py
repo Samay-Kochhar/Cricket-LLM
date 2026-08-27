@@ -24,6 +24,7 @@ SECRET_KEYS = (
     "CRICATLAS_DATA_SHA256",
     "CRICATLAS_DATA_ARCHIVE_MEMBER",
 )
+SERVICE_BUNDLE_VERSION = 2
 
 
 def apply_cloud_secrets() -> None:
@@ -43,7 +44,8 @@ def apply_cloud_secrets() -> None:
 
 
 @st.cache_resource(show_spinner=False)
-def initialize_services() -> dict[str, Any]:
+def initialize_services(service_bundle_version: int = SERVICE_BUNDLE_VERSION) -> dict[str, Any]:
+    del service_bundle_version
     from scripts.bootstrap_data import ensure_database
 
     ensure_database(
@@ -203,7 +205,7 @@ def render_page() -> None:
     if view in {"Player Explorer", "Matchups"}:
         try:
             with st.spinner("Preparing the ODI player database…"):
-                services = initialize_services()
+                services = initialize_services(SERVICE_BUNDLE_VERSION)
             if view == "Player Explorer":
                 from streamlit_player_explorer import render_player_explorer
 
@@ -262,7 +264,7 @@ def render_page() -> None:
 
     try:
         with st.spinner("Preparing the ODI evidence…"):
-            services = initialize_services()
+            services = initialize_services(SERVICE_BUNDLE_VERSION)
             from backend.app.services.chat_service import ChatHistoryTurn
 
             history = [ChatHistoryTurn.model_validate(turn) for turn in st.session_state.history]
