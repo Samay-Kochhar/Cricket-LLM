@@ -42,7 +42,7 @@ MATCHUP_PITCH_LABELS = {
 def build_matchup_pitch_html(
     pitch: dict[str, Any],
     *,
-    colour_metric: str = "Strike rate",
+    pitch_view: str = "All",
 ) -> str:
     """Render the approved matchup pitch structure used by the web explorer."""
     handedness = str(pitch.get("handedness") or "").upper()
@@ -61,15 +61,24 @@ def build_matchup_pitch_html(
     ]
     cell_map = {(str(cell["length"]), str(cell["line"])): cell for cell in cells}
 
-    def cell_value(cell: dict[str, Any]) -> float | None:
-        if colour_metric == "Batting average":
+    def primary_value(cell: dict[str, Any]) -> float | None:
+        if pitch_view == "Avg":
             dismissals = int(cell.get("dismissals", 0) or 0)
             return float(cell.get("runs", 0) or 0) / dismissals if dismissals else None
         value = cell.get("strike_rate")
         return float(value) if isinstance(value, int | float) else None
 
-    max_value = max((cell_value(cell) or 0.0 for cell in cells), default=1.0) or 1.0
-    value_label = "AVG" if colour_metric == "Batting average" else "SR"
+    def colour_value(cell: dict[str, Any]) -> float:
+        if pitch_view == "W":
+            return float(cell.get("wicket_balls", cell.get("dismissals", 0)) or 0)
+        if pitch_view == "4s":
+            return float(cell.get("fours", 0) or 0)
+        if pitch_view == "6s":
+            return float(cell.get("sixes", 0) or 0)
+        return primary_value(cell) or 0.0
+
+    max_value = max((colour_value(cell) for cell in cells), default=1.0) or 1.0
+    value_label = "AVG" if pitch_view == "Avg" else "SR"
     line_headers = "".join(
         f'<span class="atlas-pitch-axis-label">{escape(MATCHUP_PITCH_LABELS[line])}</span>'
         for line in lines
@@ -84,10 +93,15 @@ def build_matchup_pitch_html(
                     '<div class="atlas-pitch-cell empty"><span>No deliveries</span></div>'
                 )
                 continue
-            value = cell_value(cell)
-            ratio = max(0.0, min(1.0, (value or 0.0) / max_value))
+            value = primary_value(cell)
+            ratio = max(0.0, min(1.0, colour_value(cell) / max_value))
             alpha = 0.18 + ratio * 0.52
-            rgb = "103, 163, 255" if colour_metric == "Batting average" else "124, 226, 180"
+            rgb = {
+                "Avg": "103, 163, 255",
+                "W": "239, 83, 80",
+                "4s": "242, 143, 59",
+                "6s": "255, 209, 102",
+            }.get(pitch_view, "124, 226, 180")
             value_text = f"{value:.1f}" if value is not None else "—"
             fours = int(cell.get("fours", 0) or 0)
             sixes = int(cell.get("sixes", 0) or 0)
@@ -365,10 +379,16 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
     if isinstance(matchup_strike_rate, int | float) and isinstance(baseline_strike_rate, int | float):
         difference = float(matchup_strike_rate) - float(baseline_strike_rate)
         direction = "higher" if difference >= 0 else "lower"
-        st.info(
-            f"Against {page['title'].split(' vs ', 1)[1]}, the batter's SR is "
-            f"{abs(difference):.2f} points {direction} than their matching ODI baseline "
-            f"({float(matchup_strike_rate):.2f} vs {float(baseline_strike_rate):.2f})."
+        resolved_batter, resolved_bowler = page["title"].split(" vs ", 1)
+        st.markdown(
+            f"""
+<div style="border:1px solid rgba(239,225,207,.16);border-radius:18px;padding:18px 20px;margin:12px 0;background:rgba(9,14,18,.62)">
+  <span style="color:#9eabb5;font-size:.76rem;text-transform:uppercase;letter-spacing:.12em">Compared with the batter's normal ODI rate</span>
+  <h3 style="margin:.45rem 0;color:#f8f6f0">{float(matchup_strike_rate):.2f} vs {float(baseline_strike_rate):.2f}</h3>
+  <p style="margin:0;color:#9eabb5">Against {escape(resolved_bowler)}, {escape(resolved_batter)}'s strike rate is {abs(difference):.2f} points {direction} than the matching overall baseline.</p>
+</div>
+""",
+            unsafe_allow_html=True,
         )
 
     balls = page["metrics"].get("Balls")
@@ -378,13 +398,14 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
     pitch = page["pitch"]
     if isinstance(pitch, dict) and pitch.get("cells"):
         st.markdown("### Matchup pitch map")
-        colour_metric = st.radio(
-            "Colour cells by",
-            ["Strike rate", "Batting average"],
-            horizontal=True,
+        pitch_view = st.segmented_control(
+            "Pitch view",
+            ["All", "SR", "Avg", "W", "4s", "6s"],
+            default="All",
+            label_visibility="collapsed",
             key="matchup-pitch-metric",
         )
-        st.html(build_matchup_pitch_html(pitch, colour_metric=colour_metric))
+        st.html(build_matchup_pitch_html(pitch, pitch_view=str(pitch_view or "All")))
         st.caption(
             "Cells show the observed matchup record. Average is runs per dismissal; zones without a dismissal "
             "show n/a. Empty zones mean no recorded deliveries."

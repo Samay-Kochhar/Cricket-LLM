@@ -103,7 +103,7 @@ def test_matchup_pitch_html_preserves_the_approved_pitch_structure() -> None:
                 },
             ],
         },
-        colour_metric="Batting average",
+        pitch_view="Avg",
     )
 
     assert "--pitch-line-columns:0.5fr 0.5fr 0.6fr 1fr" in html
@@ -122,6 +122,23 @@ def test_matchup_pitch_html_preserves_the_approved_pitch_structure() -> None:
     assert left_handed_html.index("Down leg") < left_handed_html.index("On the stumps")
     assert left_handed_html.index("On the stumps") < left_handed_html.index("Outside off")
     assert left_handed_html.index("Outside off") < left_handed_html.index("Wide outside off")
+
+    outcome_pitch = {
+        "cells": [{
+            "line": "ON_THE_STUMPS", "length": "GOOD_LENGTH", "balls": 30,
+            "runs": 20, "strike_rate": 66.67, "dismissals": 1,
+            "fours": 2, "sixes": 1, "wicket_balls": 1,
+        }],
+    }
+    for view, colour in {
+        "W": "239, 83, 80",
+        "4s": "242, 143, 59",
+        "6s": "255, 209, 102",
+    }.items():
+        outcome_html = build_matchup_pitch_html(outcome_pitch, pitch_view=view)
+        assert f"rgba({colour}, 0.700)" in outcome_html
+        assert "66.7</strong><span>SR" in outcome_html
+        assert "4 2" in outcome_html and "6 1" in outcome_html and "W 1" in outcome_html
 
 
 def test_load_matchup_page_supports_a_cached_service_bundle_from_before_matchups() -> None:
@@ -216,6 +233,12 @@ render_matchup_explorer({"repository": Repository(), "matchup_handler": matchup_
     ]
     rendered_pitch = app.get("html")
     assert len(rendered_pitch) == 1
+    assert app.segmented_control[0].options == ["All", "SR", "Avg", "W", "4s", "6s"]
+    assert any(
+        "Compared with the batter's normal ODI rate" in markdown.value
+        and "85.12 vs 93.51" in markdown.value
+        for markdown in app.markdown
+    )
 
 
 def test_matchup_explorer_keeps_search_controls_available_after_query_error() -> None:
