@@ -396,6 +396,33 @@ def test_best_length_against_named_batter_ranks_by_lowest_strike_rate(
     ]
 
 
+def test_length_breakdown_chart_uses_answer_metric_and_sample_filtered_rows(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Break down Virat Kohli's batting strike rate by length, minimum 20 balls"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["entity"] == "batter"
+    assert plan["metric"] == "batting_strike_rate"
+    assert plan["group_by"] == ["length"]
+    assert plan["filters"]["batter"] == "Virat Kohli"
+    assert plan["minimum_sample"] == {"balls": 20, "legal_balls": None, "innings": None}
+    assert len(response.charts) == 1
+    chart = response.charts[0]
+    table = response.tables[0]
+    assert chart.title == "Batting Strike Rate by Length"
+    assert chart.chart_type == "bar"
+    assert chart.series == [
+        {"label": row[0], "value": row[1]}
+        for row in table.rows
+    ]
+    balls_index = table.columns.index("Balls Faced")
+    assert all(row[balls_index] >= 20 for row in table.rows)
+
+
 def test_unqualified_death_over_bowler_comparison_returns_core_metric_set(
     semantic_service: SemanticAnalyticsService,
 ) -> None:

@@ -3,6 +3,11 @@ from __future__ import annotations
 from backend.app.cricket_analytics.capabilities import validate_capability
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS, OPERATION_TYPES
+from backend.app.cricket_analytics.plan_normalizer import (
+    is_passive_dismissal_question,
+    requested_bowling_style,
+    requested_metric_from_wording,
+)
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, ValidationResult
 
 
@@ -107,6 +112,32 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
                     )
 
     grouped_or_filtered = set(plan.group_by) | set(plan.filters)
+    if (
+        plan.operation == "aggregate"
+        and is_passive_dismissal_question(lowered)
+        and ("batter" not in plan.filters or "bowler" in plan.filters)
+    ):
+        errors.append("Passive dismissal wording must retain the named player in the batter filter.")
+    requested_metric = (
+        requested_metric_from_wording(lowered)
+        if plan.operation == "aggregate"
+        else None
+    )
+    if requested_metric and plan.metric != requested_metric:
+        errors.append(
+            f"Question requests metric '{requested_metric}', but the plan uses '{plan.metric}'."
+        )
+    if requested_metric in METRICS:
+        requested_owner = METRICS[requested_metric].owner
+        if requested_owner == "bowler" and "batter" in plan.filters and "bowler" not in plan.filters:
+            errors.append("The named player must be retained as a bowler for this bowler-owned metric.")
+        if requested_owner == "batter" and "bowler" in plan.filters and "batter" not in plan.filters:
+            errors.append("The named player must be retained as a batter for this batter-owned metric.")
+    requested_style = requested_bowling_style(lowered)
+    if requested_style and plan.filters.get("bowling_style") != requested_style:
+        errors.append(
+            f"Question requests bowling style '{requested_style}', but the plan does not preserve that exact filter."
+        )
     if "bowling type" in lowered or "bowling style" in lowered or "type of bowling" in lowered:
         if "bowling_style" not in grouped_or_filtered:
             errors.append("Question asks for bowling type but plan does not group or filter by bowling_style.")

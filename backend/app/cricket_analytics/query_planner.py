@@ -8,7 +8,11 @@ from typing import Any
 from pydantic import ValidationError
 
 from backend.app.cricket_analytics.ontology import METRICS, ontology_context
-from backend.app.cricket_analytics.plan_normalizer import normalize_plan
+from backend.app.cricket_analytics.plan_normalizer import (
+    is_passive_dismissal_question,
+    normalize_plan,
+    requested_bowling_style,
+)
 from backend.app.cricket_analytics.plan_validator import validate_plan
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec, ValidationResult
 from backend.app.cricket_analytics.trace import QueryTrace
@@ -413,6 +417,11 @@ class SemanticQueryPlanner:
             "- scoring zone questions group/filter field_zone.\n"
             "- fastest scoring means batting_strike_rate unless the user explicitly asks runs.\n"
             "- hardest to bowl dots to means batter dot_ball_percentage sorted ascending.\n"
+            "- For line, length, or bowling_style breakdowns, keep the requested dimension in group_by and the named player in the correct batter or bowler filter.\n"
+            "- Named-batter scoring or struggle questions use batter-owned metrics; passive dismissal wording keeps the named player as the batter being dismissed.\n"
+            "- Named-bowler dot-ball, wicket, economy, and false-shot-per-over questions use bowler-owned metrics and retain the player in the bowler filter.\n"
+            "- Count wording uses count metrics; percentage/rate wording uses its stated denominator. False shots per over is false_shots_per_over.\n"
+            "- Preserve exact pace, spin, left-arm pace, left-arm spin, wrist-spin, finger-spin, leg-spin, and off-spin filters without broadening a subtype.\n"
             "- For player_compare, preserve every named player and every supported phase, venue, opposition, and bowling_style filter.\n"
             "- For player_compare, infer one shared role from the wording and requested metrics: entity batter for batting metrics, or entity bowler for bowling metrics.\n"
             "- Every comparison_metrics entry must belong to that shared entity role; never mix batter-owned and bowler-owned metrics.\n"
@@ -711,7 +720,11 @@ class SemanticQueryPlanner:
         if "overs bowled" in lowered or "bowled the most overs" in lowered or "most overs" in lowered:
             return "overs_bowled"
         if "how many dot balls" in lowered or "dot ball count" in lowered:
-            return "dot_balls"
+            return (
+                "bowler_dot_balls"
+                if any(token in lowered for token in ("bowl", "bowler", "bowled", "bowls"))
+                else "dot_balls"
+            )
         if "legal balls" in lowered and "minimum" not in lowered:
             return "legal_balls"
         if "balls has" in lowered or "balls did" in lowered or "how many balls" in lowered:
@@ -804,9 +817,14 @@ class SemanticQueryPlanner:
     def _infer_entity(lowered: str, metric: str) -> str:
         if SemanticQueryPlanner._asks_for_bowling_perspective(lowered):
             return "bowler"
-        if metric in {"economy_rate", "bowling_average", "bowling_strike_rate", "wickets_per_over", "wickets_taken", "bowler_dot_ball_percentage", "false_shots_per_over", "yorker_percentage", "yorker_count"}:
+        if "which batter" in lowered or "as a batter" in lowered:
+            return "batter"
+        if "which bowler" in lowered or "as a bowler" in lowered:
             return "bowler"
-        if "which length" in lowered or "which line" in lowered:
+        metric_owner = METRICS[metric].owner if metric in METRICS else None
+        if ("team" in lowered or "teams" in lowered) and metric == "wickets":
+            return "team"
+        if metric_owner == "bowler":
             return "bowler"
         if "phase of an innings" in lowered:
             return "innings"
@@ -816,6 +834,10 @@ class SemanticQueryPlanner:
             return "team"
         if "matchup" in lowered:
             return "matchup"
+        if metric_owner == "batter":
+            return "batter"
+        if "which length" in lowered or "which line" in lowered:
+            return "bowler"
         if "who should bowl" in lowered or "should bowl" in lowered or "which bowler" in lowered or "bowler" in lowered or metric in {"economy_rate", "yorker_percentage", "wickets_per_over", "wicket_opportunity_rate", "false_shots_per_over"}:
             return "bowler"
         if "which batter" in lowered or "batter" in lowered or metric in {"batting_strike_rate", "runs_scored", "balls_faced"}:
@@ -891,6 +913,8 @@ class SemanticQueryPlanner:
                 filters["bowler"] = player
             elif ("which bowler" in lowered or lowered.startswith("who ")) and any(token in lowered for token in ("dismissed", "dismisses", "controls", "against")):
                 filters["batter"] = player
+            elif is_passive_dismissal_question(lowered):
+                filters["batter"] = player
             elif ("which length" in lowered or "which line" in lowered) and any(token in lowered for token in ("dismiss", "against", "to ")):
                 filters["batter"] = player
             elif metric_owner == "bowler":
@@ -927,22 +951,9 @@ class SemanticQueryPlanner:
             filters["length"] = "GOOD_LENGTH"
         elif "full ball" in lowered or "full balls" in lowered or "full-ball" in lowered or "full-balls" in lowered:
             filters["length"] = "FULL"
-        if "against spin" in lowered or "versus spin" in lowered:
-            filters["bowling_style"] = "spin"
-        elif "against pace" in lowered or "versus pace" in lowered:
-            filters["bowling_style"] = "pace"
-        elif "wrist spin" in lowered:
-            filters["bowling_style"] = "wrist_spin"
-        elif "leg spin" in lowered or "leg-spin" in lowered:
-            filters["bowling_style"] = "leg_spin"
-        elif "finger spin" in lowered:
-            filters["bowling_style"] = "finger_spin"
-        elif "off spin" in lowered or "off-spin" in lowered or "off spinner" in lowered:
-            filters["bowling_style"] = "off_spin"
-        elif "left-arm pace" in lowered or "left arm pace" in lowered:
-            filters["bowling_style"] = "left_arm_pace"
-        elif "left-arm spin" in lowered or "left arm spin" in lowered:
-            filters["bowling_style"] = "left_arm_spin"
+        bowling_style = requested_bowling_style(lowered)
+        if bowling_style:
+            filters["bowling_style"] = bowling_style
         if "left-handers" in lowered or "left handers" in lowered or "left-hand batters" in lowered:
             filters["batter_hand"] = "LHB"
         elif "right-handers" in lowered or "right handers" in lowered or "right-hand batters" in lowered:

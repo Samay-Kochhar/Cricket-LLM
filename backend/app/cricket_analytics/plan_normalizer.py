@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.metric_registry import canonical_metric_id
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec
@@ -128,6 +130,59 @@ BOWLING_STYLE_LIST_GROUPS = {
     frozenset({"left arm orthodox", "left arm unorthodox"}): "left_arm_spin",
     frozenset({"left arm pace", "right arm pace"}): "pace",
 }
+
+
+def requested_bowling_style(lowered_question: str) -> str | None:
+    matches: list[str] = []
+    for style, aliases in (
+        ("left_arm_pace", ("left-arm pace", "left arm pace")),
+        ("left_arm_spin", ("left-arm spin", "left arm spin")),
+        ("off_spin", ("off spin", "off-spin", "off spinner", "off-break", "off break")),
+        ("leg_spin", ("leg spin", "leg-spin", "leg spinner", "leg-break", "leg break")),
+        ("wrist_spin", ("wrist spin", "wrist-spin")),
+        ("finger_spin", ("finger spin", "finger-spin")),
+        ("pace", ("against pace", "versus pace", "pace bowling")),
+        ("spin", ("against spin", "versus spin", "spin bowling")),
+    ):
+        if any(alias in lowered_question for alias in aliases):
+            matches.append(style)
+    distinct = set(matches)
+    specific = distinct - {"pace", "spin"}
+    if specific:
+        distinct = specific
+    return next(iter(distinct)) if len(distinct) == 1 else None
+
+
+def requested_metric_from_wording(lowered_question: str) -> str | None:
+    if "false shots per over" in lowered_question or "false-shot per over" in lowered_question:
+        return "false_shots_per_over"
+    if "bowling strike rate" in lowered_question:
+        return "bowling_strike_rate"
+    if "economy" in lowered_question or "economical" in lowered_question:
+        return "economy_rate"
+    if "wicket count" in lowered_question or "how many wickets" in lowered_question:
+        return "wickets_taken"
+    if "dismissal count" in lowered_question or "how many dismissals" in lowered_question:
+        return "dismissals"
+    if "how many dot balls" in lowered_question or "dot ball count" in lowered_question:
+        return (
+            "bowler_dot_balls"
+            if any(
+                token in lowered_question
+                for token in ("bowl", "bowler", "bowled", "bowls")
+            )
+            else "dot_balls"
+        )
+    return None
+
+
+def is_passive_dismissal_question(lowered_question: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(?:is|was|were|gets?|got|been)\b.{0,50}\bdismissed\b",
+            lowered_question,
+        )
+    )
 
 
 def normalize_plan(plan: CricketQueryPlan) -> CricketQueryPlan:

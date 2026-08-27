@@ -139,6 +139,69 @@ cases:
           message_contains: ["outside offstump", "47.46%", "4699 legal balls"]
           evidence: required
 
+  - id: named-batter-line-scoring-breakdown
+    family: breakdown
+    outcome: supported
+    turns:
+      - prompt: Which line does Virat Kohli score most against?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: runs_scored
+            group_by: [line]
+            filters: {batter: Virat Kohli}
+          result:
+            columns: [Line, Runs Scored, Balls Faced, Matches]
+            rows:
+              - {Line: outside offstump, Runs Scored: 4179, Balls Faced: 4704, Matches: 156}
+          message_contains: ["Virat Kohli", "outside offstump", "4179", "4704 balls"]
+          evidence: required
+
+  - id: named-bowler-dot-count-by-length
+    family: breakdown
+    outcome: supported
+    turns:
+      - prompt: How many dot balls does Bumrah bowl by length?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: bowler
+            metric: bowler_dot_balls
+            group_by: [length]
+            filters: {bowler: Jasprit Bumrah}
+          result:
+            columns: [Length, Bowler Dot Balls, Legal Balls, Matches]
+            rows:
+              - {Length: good length, Bowler Dot Balls: 1228, Legal Balls: 1867, Matches: 88}
+          message_contains: ["Jasprit Bumrah", "good length", "1228", "1867 legal balls"]
+          evidence: required
+
+  - id: exact-off-spin-filter
+    family: breakdown
+    outcome: supported
+    turns:
+      - prompt: What is Maxwell's batting strike rate against off spin bowling?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: batting_strike_rate
+            group_by: [batter]
+            filters: {batter: Glenn Maxwell, bowling_style: off_spin}
+          result:
+            columns: [Batter, Batting Strike Rate, Runs Scored, Balls Faced, Matches]
+            rows:
+              - {Batter: Glenn Maxwell, Batting Strike Rate: 134.22, Runs Scored: 608, Balls Faced: 453, Matches: 47}
+          message_contains: ["off spin", "Glenn Maxwell", "134.22", "453 balls"]
+          evidence: required
+
   - id: year-by-year-trend
     family: trend
     outcome: supported

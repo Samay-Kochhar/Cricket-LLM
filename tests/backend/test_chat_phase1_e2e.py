@@ -62,6 +62,98 @@ def test_chat_path_answers_phase1_question_shapes(
     assert "ON_DRIVE" not in str(payload)
 
 
+def test_chat_named_batter_scoring_by_line_keeps_batter_perspective(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "Which line does Virat Kohli score most against?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_operation"] == "aggregate"
+    assert filters["semantic_metric"] == "runs_scored"
+    assert filters["semantic_group_by"] == ["line"]
+    assert filters["batter"] == "Virat Kohli"
+    assert "Bowler" not in result["tables"][0]["columns"]
+
+
+def test_chat_named_batter_dismissal_by_length_keeps_batter_filter(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "Where is David Miller dismissed most often by length?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_metric"] == "wickets_taken"
+    assert filters["semantic_group_by"] == ["length"]
+    assert filters["batter"] == "David Miller"
+    assert "bowler" not in filters
+    assert result["tables"][0]["columns"][:2] == ["Length", "Wickets Taken"]
+
+
+def test_chat_named_bowler_dot_count_by_length_uses_bowler_denominator(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "How many dot balls does Bumrah bowl by length?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_metric"] == "bowler_dot_balls"
+    assert filters["semantic_group_by"] == ["length"]
+    assert filters["bowler"] == "Jasprit Bumrah"
+    assert "batter" not in filters
+    assert result["tables"][0]["columns"][:3] == [
+        "Length",
+        "Bowler Dot Balls",
+        "Legal Balls",
+    ]
+    assert "1867 legal balls" in payload["message"]
+
+
+def test_chat_specific_spin_subtype_is_not_broadened_by_generic_style_wording(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "What is Maxwell's batting strike rate against off spin bowling?",
+            "history": [],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert result["interpretation"]["filters"]["batter"] == "Glenn Maxwell"
+    assert result["interpretation"]["filters"]["bowling_style"] == "off_spin"
+
+
 def test_chat_false_shot_leaderboard_states_scope_and_uses_reliable_default_sample(
     client: TestClient,
 ) -> None:

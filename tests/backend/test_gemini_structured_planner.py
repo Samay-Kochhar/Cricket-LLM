@@ -261,6 +261,98 @@ def test_production_repairs_comparison_with_mixed_role_metrics() -> None:
     assert trace.planner_outcome["repair_outcome"] == "succeeded"
 
 
+def test_production_repairs_silently_broadened_bowling_style_filter() -> None:
+    broadened = _plan_json(
+        filters={"batter": "Glenn Maxwell", "bowling_style": "spin"},
+    )
+    repaired = _plan_json(
+        filters={"batter": "Glenn Maxwell", "bowling_style": "off_spin"},
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(broadened),
+        _structured_result(repaired),
+    ])
+    trace = QueryTrace(
+        original_user_question="What is Maxwell's batting strike rate against off spin?"
+    )
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.filters["bowling_style"] == "off_spin"
+    assert len(client.calls) == 2
+    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+    assert trace.planner_outcome["repair_outcome"] == "succeeded"
+
+
+def test_production_repairs_named_bowler_false_shot_rate_perspective() -> None:
+    batter_plan = _plan_json(
+        entity="batter",
+        metric="false_shot_percentage",
+        group_by=["line"],
+        filters={"batter": "Jasprit Bumrah"},
+        sort={"by": "false_shot_percentage", "direction": "desc"},
+    )
+    bowler_plan = _plan_json(
+        entity="bowler",
+        metric="false_shots_per_over",
+        group_by=["line"],
+        filters={"bowler": "Jasprit Bumrah"},
+        sort={"by": "false_shots_per_over", "direction": "desc"},
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(batter_plan),
+        _structured_result(bowler_plan),
+    ])
+    trace = QueryTrace(
+        original_user_question="Show Bumrah's false shots per over by line."
+    )
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.entity == "bowler"
+    assert result.plan.metric == "false_shots_per_over"
+    assert result.plan.filters["bowler"] == "Jasprit Bumrah"
+    assert len(client.calls) == 2
+    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+
+
+def test_production_repairs_passive_dismissal_player_ownership() -> None:
+    wrong_player_role = _plan_json(
+        entity="bowler",
+        metric="wickets_taken",
+        group_by=["length"],
+        filters={"bowler": "David Miller"},
+        sort={"by": "wickets_taken", "direction": "desc"},
+    )
+    repaired = _plan_json(
+        entity="bowler",
+        metric="wickets_taken",
+        group_by=["length"],
+        filters={"batter": "David Miller"},
+        sort={"by": "wickets_taken", "direction": "desc"},
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(wrong_player_role),
+        _structured_result(repaired),
+    ])
+    trace = QueryTrace(
+        original_user_question="Where is David Miller dismissed most often by length?"
+    )
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.filters["batter"] == "David Miller"
+    assert "bowler" not in result.plan.filters
+    assert len(client.calls) == 2
+    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+
+
 def _live_chat(client: _ScriptedStructuredClient) -> ChatService:
     config = AppConfig.from_env()
     repository = AnalyticsRepository(config.duckdb_path)
