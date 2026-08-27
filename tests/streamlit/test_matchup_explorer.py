@@ -1,0 +1,127 @@
+from __future__ import annotations
+
+from streamlit_matchup_explorer import load_matchup_page
+from streamlit.testing.v1 import AppTest
+
+
+def test_load_matchup_page_uses_structured_filters_and_builds_practical_metrics() -> None:
+    captured: dict[str, object] = {}
+
+    def matchup_handler(**filters: object) -> dict[str, object]:
+        captured.update(filters)
+        return {
+            "matchup": {
+                "status": "supported",
+                "summaries": [{"body": "Steven Smith scored 103 runs from 121 balls. The recorded ODI sample contains 121 balls."}],
+                "tables": [
+                    {
+                        "columns": [
+                            "Batter",
+                            "Bowler",
+                            "Balls",
+                            "Runs",
+                            "Dismissals",
+                            "Batting Strike Rate",
+                            "Batter Dot Ball Percentage",
+                            "Boundary Percentage",
+                            "False Shot Percentage",
+                        ],
+                        "rows": [["Steven Smith", "Jasprit Bumrah", 121, 103, 2, 85.12, 48.76, 8.26, 22.31]],
+                    }
+                ],
+                "visuals": {
+                    "pitch_map": {
+                        "handedness": "RHB",
+                        "coverage": {"total_balls": 121, "covered_balls": 121, "coverage_percentage": 100},
+                        "cells": [{"line": "ON_THE_STUMPS", "length": "GOOD_LENGTH", "balls": 121}],
+                    }
+                },
+            },
+            "baseline": {
+                "status": "supported",
+                "summaries": [],
+                "tables": [{"columns": ["Batter", "Batting Strike Rate"], "rows": [["Steven Smith", 93.51]]}],
+                "visuals": None,
+            },
+        }
+
+    page = load_matchup_page(
+        {"matchup_handler": matchup_handler},
+        batter="Steven Smith",
+        bowler="Jasprit Bumrah",
+        phase="death",
+        year=2023,
+        venue="Sydney Cricket Ground",
+    )
+
+    assert captured == {
+        "batter": "Steven Smith",
+        "bowler": "Jasprit Bumrah",
+        "phase": "death",
+        "year": 2023,
+        "venue": "Sydney Cricket Ground",
+    }
+    assert page["title"] == "Steven Smith vs Jasprit Bumrah"
+    assert page["summary"] == "Steven Smith scored 103 runs from 121 balls."
+    assert page["metrics"] == {
+        "Runs": 103,
+        "Balls": 121,
+        "Dismissals": 2,
+        "Batting Avg": 51.5,
+        "Batting SR": 85.12,
+        "Dot Ball %": 48.76,
+        "Boundary %": 8.26,
+        "False Shot %": 22.31,
+    }
+    assert page["baseline_strike_rate"] == 93.51
+    assert page["pitch"]["handedness"] == "RHB"
+
+
+def test_matchup_explorer_offers_searchable_players_and_renders_answer_metrics() -> None:
+    app = AppTest.from_string(
+        """
+from streamlit_matchup_explorer import render_matchup_explorer
+
+class Repository:
+    def list_player_names(self):
+        return ["Steven Smith", "Jasprit Bumrah"]
+
+    def list_venues(self):
+        return ["Sydney Cricket Ground"]
+
+def matchup_handler(**filters):
+    return {
+        "matchup": {
+            "status": "supported",
+            "summaries": [{"body": "Steven Smith scored 103 runs from 121 balls."}],
+            "tables": [{
+                "columns": ["Batter", "Bowler", "Balls", "Runs", "Dismissals", "Batting Strike Rate"],
+                "rows": [["Steven Smith", "Jasprit Bumrah", 121, 103, 2, 85.12]],
+            }],
+            "visuals": None,
+        },
+        "baseline": {
+            "status": "supported",
+            "summaries": [],
+            "tables": [{"columns": ["Batter", "Batting Strike Rate"], "rows": [["Steven Smith", 93.51]]}],
+            "visuals": None,
+        },
+    }
+
+render_matchup_explorer({"repository": Repository(), "matchup_handler": matchup_handler})
+"""
+    ).run()
+
+    assert [selectbox.label for selectbox in app.selectbox[:2]] == ["Batter", "Bowler"]
+    app.selectbox[0].select("Steven Smith").run()
+    app.selectbox[1].select("Jasprit Bumrah").run()
+
+    assert not app.exception
+    assert any(markdown.value == "## Steven Smith vs Jasprit Bumrah" for markdown in app.markdown)
+    assert [(metric.label, metric.value) for metric in app.metric[:5]] == [
+        ("Runs", "103"),
+        ("Balls", "121"),
+        ("Dismissals", "2"),
+        ("Batting Avg", "51.50"),
+        ("Batting SR", "85.12"),
+    ]

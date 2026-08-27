@@ -163,6 +163,32 @@ def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> 
     assert (first_cell.x[1] - first_cell.x[0]) < (first_cell.x[2] - first_cell.x[3])
 
 
+def test_pitch_heatmap_mirrors_left_handed_lines_and_omits_wide_down_leg() -> None:
+    figure = build_pitch_heatmap(
+        {
+            "handedness": "LHB",
+            "cells": [
+                {
+                    "line": "WIDE_DOWN_LEG",
+                    "length": "GOOD_LENGTH",
+                    "balls": 5,
+                    "runs": 5,
+                    "strike_rate": 100.0,
+                    "dismissals": 0,
+                }
+            ],
+        },
+        min_balls=1,
+    )
+
+    assert figure.layout.meta["lines"] == [
+        "Down Leg",
+        "On The Stumps",
+        "Outside Offstump",
+        "Wide Outside Offstump",
+    ]
+
+
 def test_player_overview_does_not_eagerly_load_other_analysis_sections() -> None:
     class RecordingRepository:
         def __init__(self) -> None:

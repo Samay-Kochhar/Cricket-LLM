@@ -18,7 +18,6 @@ LINE_ORDER = [
     "OUTSIDE_OFFSTUMP",
     "ON_THE_STUMPS",
     "DOWN_LEG",
-    "WIDE_DOWN_LEG",
 ]
 LENGTH_ORDER = [
     "FULL_TOSS",
@@ -100,10 +99,16 @@ def build_pitch_heatmap(
     colour_metric: str = "Strike rate",
     min_balls: int = 20,
 ) -> go.Figure:
-    cells = [cell for cell in pitch.get("cells", []) if isinstance(cell, dict)]
+    cells = [
+        cell
+        for cell in pitch.get("cells", [])
+        if isinstance(cell, dict) and str(cell.get("line")) != "WIDE_DOWN_LEG"
+    ]
     observed_lines = {str(cell["line"]) for cell in cells}
     observed_lengths = {str(cell["length"]) for cell in cells}
     lines = [*LINE_ORDER, *sorted(observed_lines - set(LINE_ORDER))]
+    if str(pitch.get("handedness") or "").upper() == "LHB":
+        lines.reverse()
     lengths = [*LENGTH_ORDER, *sorted(observed_lengths - set(LENGTH_ORDER))]
     cell_map = {(str(cell["length"]), str(cell["line"])): cell for cell in cells}
 

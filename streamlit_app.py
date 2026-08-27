@@ -185,7 +185,11 @@ def render_page() -> None:
         st.markdown("### CricAtlas")
         st.caption("ODI-first · evidence-first")
         st.markdown("Database statistics remain the source of truth. Gemini assists with interpretation and explanation.")
-        view = st.radio("Navigate", ["Ask Atlas", "Player Explorer"], label_visibility="collapsed")
+        view = st.radio(
+            "Navigate",
+            ["Ask Atlas", "Player Explorer", "Matchups"],
+            label_visibility="collapsed",
+        )
         if view == "Ask Atlas":
             if st.button("New analysis", width="stretch"):
                 st.session_state.messages = []
@@ -194,18 +198,23 @@ def render_page() -> None:
                 st.rerun()
         st.divider()
         st.caption("Private testing deployment")
-        st.caption("Chat and Player Explorer are hosted here. Compare and venue explorers remain in the Docker edition.")
+        st.caption("Chat, Player Explorer and Matchups are hosted here. Compare and venue explorers remain in the Docker edition.")
 
-    if view == "Player Explorer":
+    if view in {"Player Explorer", "Matchups"}:
         try:
             with st.spinner("Preparing the ODI player database…"):
                 services = initialize_services()
-            from streamlit_player_explorer import render_player_explorer
+            if view == "Player Explorer":
+                from streamlit_player_explorer import render_player_explorer
 
-            render_player_explorer(services)
+                render_player_explorer(services)
+            else:
+                from streamlit_matchup_explorer import render_matchup_explorer
+
+                render_matchup_explorer(services)
         except Exception:
-            LOGGER.exception("CricAtlas Streamlit player explorer failed to initialize")
-            st.error("CricAtlas could not prepare the Player Explorer. Check the private app logs for details.")
+            LOGGER.exception("CricAtlas Streamlit %s failed to initialize", view)
+            st.error(f"CricAtlas could not prepare {view}. Check the private app logs for details.")
         return
 
     st.markdown("<div class='atlas-kicker'>◆ Cricket intelligence workbench</div>", unsafe_allow_html=True)

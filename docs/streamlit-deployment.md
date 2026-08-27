@@ -47,5 +47,5 @@ be reduced. Use a dedicated Gemini project with the intended spending cap.
 ## Product boundary
 
 The Docker/Next.js application remains the full CricAtlas experience. The
-Streamlit app intentionally focuses on chat, tables, Plotly charts, evidence,
-metric definitions and limitations for invited testing.
+Streamlit app includes chat, Player Explorer and direct batter-versus-bowler
+Matchups with filters, summary metrics and a pitch map for invited testing.
