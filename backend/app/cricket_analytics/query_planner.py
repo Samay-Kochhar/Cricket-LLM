@@ -269,10 +269,14 @@ class SemanticQueryPlanner:
 
         updates: dict[str, object] = {"filters": filters}
         resolved_compare_players = filters.get("compare_players")
-        if infer_meaning and (
+        if (
             normalized.operation == "player_compare"
             and isinstance(resolved_compare_players, list)
             and len(resolved_compare_players) >= 2
+            and (
+                infer_meaning
+                or not self._comparison_has_explicit_metric_request(question.lower())
+            )
         ):
             comparison_metrics = self._infer_comparison_metrics(
                 question.lower(),
@@ -409,6 +413,12 @@ class SemanticQueryPlanner:
             "- scoring zone questions group/filter field_zone.\n"
             "- fastest scoring means batting_strike_rate unless the user explicitly asks runs.\n"
             "- hardest to bowl dots to means batter dot_ball_percentage sorted ascending.\n"
+            "- For player_compare, preserve every named player and every supported phase, venue, opposition, and bowling_style filter.\n"
+            "- For player_compare, infer one shared role from the wording and requested metrics: entity batter for batting metrics, or entity bowler for bowling metrics.\n"
+            "- Every comparison_metrics entry must belong to that shared entity role; never mix batter-owned and bowler-owned metrics.\n"
+            "- An unqualified batter comparison uses batting_strike_rate, runs_scored, batting_average, batter_dot_ball_percentage, and boundary_percentage.\n"
+            "- An unqualified bowler comparison uses economy_rate, bowling_average, bowling_strike_rate, wickets_taken, bowler_dot_ball_percentage, and boundary_percentage.\n"
+            "- If the question materially mixes player roles or does not establish one shared comparison role, set unsupported_reason and explain the ambiguity.\n"
             "- If unsupported, set unsupported_reason and choose the closest operation.\n\n"
             f"User question: {question}"
         )
@@ -1236,6 +1246,27 @@ class SemanticQueryPlanner:
             if metric not in deduped:
                 deduped.append(metric)
         return deduped
+
+    @staticmethod
+    def _comparison_has_explicit_metric_request(lowered: str) -> bool:
+        return bool(re.search(r"\b(?:runs?|wickets?|boundaries)\b", lowered)) or any(
+            token in lowered
+            for token in (
+                "average",
+                "avg",
+                "boundary percentage",
+                "dot-ball percentage",
+                "dot ball percentage",
+                "dot percentage",
+                "economy",
+                "runs scored",
+                "scores faster",
+                "strike rate",
+                "wicket rate",
+                "wickets per over",
+                "wickets taken",
+            )
+        )
 
     @staticmethod
     def _question_subject(lowered: str) -> str | None:

@@ -168,7 +168,7 @@ def test_unknown_plan_fields_are_rejected_by_the_typed_contract() -> None:
     assert trace.planner_outcome["repair_outcome"] == "succeeded"
 
 
-def test_production_preserves_gemini_comparison_meaning() -> None:
+def test_production_unqualified_comparison_uses_core_metrics_for_gemini_role() -> None:
     comparison = _plan_json(
         operation="player_compare",
         entity="batter",
@@ -187,8 +187,78 @@ def test_production_preserves_gemini_comparison_meaning() -> None:
 
     assert result.validation.valid is True
     assert result.plan is not None
-    assert result.plan.filters["comparison_metrics"] == ["runs_scored"]
+    assert result.plan.entity == "batter"
+    assert result.plan.filters["comparison_metrics"] == [
+        "batting_strike_rate",
+        "runs_scored",
+        "batting_average",
+        "batter_dot_ball_percentage",
+        "boundary_percentage",
+    ]
     assert trace.planner_outcome["repair_outcome"] == "not_needed"
+
+
+def test_production_metric_specific_comparison_preserves_requested_total_runs() -> None:
+    comparison = _plan_json(
+        operation="player_compare",
+        entity="batter",
+        metric="runs_scored",
+        group_by=["batter"],
+        filters={
+            "compare_players": ["Virat Kohli", "Rohit Sharma"],
+            "comparison_metrics": ["runs_scored"],
+        },
+        sort={"by": "runs_scored", "direction": "desc"},
+    )
+    client = _ScriptedStructuredClient([_structured_result(comparison)])
+    trace = QueryTrace(original_user_question="Compare Virat and Rohit by total runs")
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.filters["comparison_metrics"] == ["runs_scored"]
+
+
+def test_production_repairs_comparison_with_mixed_role_metrics() -> None:
+    mixed_role = _plan_json(
+        operation="player_compare",
+        entity="bowler",
+        metric="economy_rate",
+        group_by=["bowler"],
+        filters={
+            "compare_players": ["Jasprit Bumrah", "Mitchell Starc"],
+            "comparison_metrics": ["economy_rate", "batting_average"],
+        },
+        sort={"by": "economy_rate", "direction": "asc"},
+    )
+    repaired = _plan_json(
+        operation="player_compare",
+        entity="bowler",
+        metric="economy_rate",
+        group_by=["bowler"],
+        filters={
+            "compare_players": ["Jasprit Bumrah", "Mitchell Starc"],
+            "comparison_metrics": ["economy_rate", "bowling_average"],
+        },
+        sort={"by": "economy_rate", "direction": "asc"},
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(mixed_role),
+        _structured_result(repaired),
+    ])
+    trace = QueryTrace(
+        original_user_question="Compare Bumrah and Starc on economy and bowling average"
+    )
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.filters["comparison_metrics"] == ["economy_rate", "bowling_average"]
+    assert len(client.calls) == 2
+    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+    assert trace.planner_outcome["repair_outcome"] == "succeeded"
 
 
 def _live_chat(client: _ScriptedStructuredClient) -> ChatService:
@@ -255,3 +325,121 @@ def test_canonical_typed_planner_questions_pass_through_live_chat() -> None:
     assert ambiguous.mode == "clarification"
     assert ambiguous.query_response is None
     assert ambiguous_client.calls == []
+
+
+def test_typed_batter_comparison_preserves_players_style_metric_and_sample_in_live_chat() -> None:
+    client = _ScriptedStructuredClient([
+        _structured_result(
+            _plan_json(
+                operation="player_compare",
+                entity="batter",
+                metric="batting_average",
+                group_by=["batter"],
+                filters={
+                    "compare_players": ["KL Rahul", "Shreyas Iyer"],
+                    "comparison_metrics": ["batting_average"],
+                    "bowling_style": "spin",
+                },
+                sort={"by": "batting_average", "direction": "desc"},
+            )
+        )
+    ])
+
+    reply = _live_chat(client).reply(
+        "How do KL Rahul and Shreyas Iyer compare by batting average against spin?",
+        history=[],
+    )
+
+    assert reply.mode == "analysis"
+    assert reply.query_response is not None
+    response = reply.query_response
+    assert response.status.value == "supported"
+    assert response.interpretation.entities == ["KL Rahul", "Shreyas Iyer"]
+    assert response.interpretation.filters["bowling_style"] == "spin"
+    assert response.interpretation.filters["comparison_metrics"] == ["batting_average"]
+    assert response.tables[0].columns == [
+        "Player",
+        "Batting Average",
+        "Balls Faced",
+        "Dismissals",
+        "Matches",
+    ]
+    assert "Batting Average" in response.summaries[0].body
+
+
+def test_typed_bowler_comparison_preserves_phase_and_bowler_metrics_in_live_chat() -> None:
+    client = _ScriptedStructuredClient([
+        _structured_result(
+            _plan_json(
+                operation="player_compare",
+                entity="bowler",
+                metric="wickets_per_over",
+                group_by=["bowler"],
+                filters={
+                    "compare_players": ["Mitchell Starc", "Jasprit Bumrah"],
+                    "comparison_metrics": ["wickets_per_over", "economy_rate"],
+                    "phase": "death",
+                },
+                sort={"by": "wickets_per_over", "direction": "desc"},
+            )
+        )
+    ])
+
+    reply = _live_chat(client).reply(
+        "How do Starc and Bumrah compare on economy and wicket rate at the death?",
+        history=[],
+    )
+
+    assert reply.mode == "analysis"
+    assert reply.query_response is not None
+    response = reply.query_response
+    assert response.status.value == "supported"
+    assert response.interpretation.entities == ["Mitchell Starc", "Jasprit Bumrah"]
+    assert response.interpretation.filters["phase"] == "death"
+    assert response.interpretation.filters["comparison_metrics"] == [
+        "wickets_per_over",
+        "economy_rate",
+    ]
+    assert response.tables[0].columns == [
+        "Player",
+        "Wickets Per Over",
+        "Economy Rate",
+        "Legal Balls",
+        "Runs Conceded",
+        "Matches",
+    ]
+    assert "Wickets Per Over, Economy Rate" in response.summaries[0].body
+
+
+def test_typed_materially_mixed_role_comparison_is_clearly_unsupported_in_live_chat() -> None:
+    reason = (
+        "This comparison mixes a batter and a bowler without one shared statistical role. "
+        "Ask to compare both players as batters or both as bowlers."
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(
+            _plan_json(
+                operation="player_compare",
+                entity="batter",
+                metric="batting_strike_rate",
+                group_by=["batter"],
+                filters={
+                    "compare_players": ["Virat Kohli", "Jasprit Bumrah"],
+                    "comparison_metrics": ["batting_strike_rate"],
+                },
+                sort={"by": "batting_strike_rate", "direction": "desc"},
+                unsupported_reason=reason,
+            )
+        )
+    ])
+
+    reply = _live_chat(client).reply(
+        "Compare Virat Kohli and Jasprit Bumrah.",
+        history=[],
+    )
+
+    assert reply.mode == "analysis"
+    assert reply.query_response is not None
+    assert reply.query_response.status.value == "unsupported"
+    assert reply.query_response.failure_state == "unsupported_capability"
+    assert reply.query_response.summaries[0].body == reason

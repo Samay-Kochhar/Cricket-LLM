@@ -15,6 +15,11 @@ COMPATIBLE_OWNER = {
     "venue": {"team", "batter_or_bowler"},
 }
 
+COMPARISON_COMPATIBLE_OWNER = {
+    "batter": {"batter", "batter_or_bowler"},
+    "bowler": {"bowler", "batter_or_bowler"},
+}
+
 
 FILTER_DIMENSIONS = {
     "batter",
@@ -82,6 +87,24 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
             errors.append("Player comparison requires at least one explicit comparison metric.")
         elif any(not isinstance(metric, str) or metric not in METRICS for metric in comparison_metrics):
             errors.append("Player comparison contains an unsupported comparison metric.")
+        else:
+            for comparison_metric in comparison_metrics:
+                try:
+                    owner = get_metric(
+                        comparison_metric,
+                        entity=plan.entity,
+                        filters=plan.filters,
+                    ).owner
+                except KeyError:
+                    owner = METRICS[comparison_metric].owner
+                if (
+                    plan.entity in COMPARISON_COMPATIBLE_OWNER
+                    and owner not in COMPARISON_COMPATIBLE_OWNER[plan.entity]
+                ):
+                    errors.append(
+                        f"Comparison metric '{comparison_metric}' is owned by {owner}, "
+                        f"not compatible with entity '{plan.entity}'."
+                    )
 
     grouped_or_filtered = set(plan.group_by) | set(plan.filters)
     if "bowling type" in lowered or "bowling style" in lowered or "type of bowling" in lowered:
