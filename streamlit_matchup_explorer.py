@@ -1,16 +1,152 @@
 from __future__ import annotations
 
 from datetime import date
+from html import escape
 import logging
 import re
 from typing import Any
 
 import streamlit as st
 
-from streamlit_player_explorer import build_pitch_heatmap
-
 
 LOGGER = logging.getLogger("cricatlas.streamlit.matchups")
+
+MATCHUP_PITCH_LINES = (
+    "WIDE_OUTSIDE_OFFSTUMP",
+    "OUTSIDE_OFFSTUMP",
+    "ON_THE_STUMPS",
+    "DOWN_LEG",
+)
+MATCHUP_PITCH_LENGTHS = (
+    "FULL_TOSS",
+    "YORKER",
+    "FULL",
+    "GOOD_LENGTH",
+    "SHORT_OF_A_GOOD_LENGTH",
+    "SHORT",
+)
+MATCHUP_PITCH_LABELS = {
+    "WIDE_OUTSIDE_OFFSTUMP": "Wide outside off",
+    "OUTSIDE_OFFSTUMP": "Outside off",
+    "ON_THE_STUMPS": "On the stumps",
+    "DOWN_LEG": "Down leg",
+    "FULL_TOSS": "Full toss",
+    "YORKER": "Yorker",
+    "FULL": "Full",
+    "GOOD_LENGTH": "Good length",
+    "SHORT_OF_A_GOOD_LENGTH": "Back of a length",
+    "SHORT": "Short",
+}
+
+
+def build_matchup_pitch_html(
+    pitch: dict[str, Any],
+    *,
+    colour_metric: str = "Strike rate",
+) -> str:
+    """Render the approved matchup pitch structure used by the web explorer."""
+    handedness = str(pitch.get("handedness") or "").upper()
+    lines = list(MATCHUP_PITCH_LINES)
+    column_weights = "0.5fr 0.5fr 0.6fr 1fr"
+    if handedness == "LHB":
+        lines.reverse()
+        column_weights = "1fr 0.6fr 0.5fr 0.5fr"
+
+    cells = [
+        cell
+        for cell in pitch.get("cells", [])
+        if isinstance(cell, dict)
+        and str(cell.get("line")) in MATCHUP_PITCH_LINES
+        and str(cell.get("length")) in MATCHUP_PITCH_LENGTHS
+    ]
+    cell_map = {(str(cell["length"]), str(cell["line"])): cell for cell in cells}
+
+    def cell_value(cell: dict[str, Any]) -> float | None:
+        if colour_metric == "Batting average":
+            dismissals = int(cell.get("dismissals", 0) or 0)
+            return float(cell.get("runs", 0) or 0) / dismissals if dismissals else None
+        value = cell.get("strike_rate")
+        return float(value) if isinstance(value, int | float) else None
+
+    max_value = max((cell_value(cell) or 0.0 for cell in cells), default=1.0) or 1.0
+    value_label = "AVG" if colour_metric == "Batting average" else "SR"
+    line_headers = "".join(
+        f'<span class="atlas-pitch-axis-label">{escape(MATCHUP_PITCH_LABELS[line])}</span>'
+        for line in lines
+    )
+    rows: list[str] = []
+    for length in MATCHUP_PITCH_LENGTHS:
+        rendered_cells: list[str] = []
+        for line in lines:
+            cell = cell_map.get((length, line))
+            if cell is None:
+                rendered_cells.append(
+                    '<div class="atlas-pitch-cell empty"><span>No deliveries</span></div>'
+                )
+                continue
+            value = cell_value(cell)
+            ratio = max(0.0, min(1.0, (value or 0.0) / max_value))
+            alpha = 0.18 + ratio * 0.52
+            rgb = "103, 163, 255" if colour_metric == "Batting average" else "124, 226, 180"
+            value_text = f"{value:.1f}" if value is not None else "—"
+            fours = int(cell.get("fours", 0) or 0)
+            sixes = int(cell.get("sixes", 0) or 0)
+            wickets = int(cell.get("wicket_balls", cell.get("dismissals", 0)) or 0)
+            title = escape(f"{MATCHUP_PITCH_LABELS[length]} / {MATCHUP_PITCH_LABELS[line]}")
+            rendered_cells.append(
+                f'<div class="atlas-pitch-cell" data-line="{line}" title="{title}" '
+                f'style="background-color:rgba({rgb}, {alpha:.3f})">'
+                f"<strong>{value_text}</strong><span>{value_label}</span>"
+                '<div class="atlas-pitch-cell-stats">'
+                f'<span class="atlas-mini-chip four">4 {fours}</span>'
+                f'<span class="atlas-mini-chip six">6 {sixes}</span>'
+                f'<span class="atlas-mini-chip wicket">W {wickets}</span>'
+                "</div></div>"
+            )
+        stumps = (
+            '<div class="atlas-pitch-stumps" aria-hidden="true"><span></span><span></span><span></span></div>'
+            if length == "FULL_TOSS"
+            else ""
+        )
+        rows.append(
+            '<div class="atlas-pitch-grid-row">'
+            f'<div class="atlas-pitch-length-label">{escape(MATCHUP_PITCH_LABELS[length])}</div>'
+            f"{''.join(rendered_cells)}{stumps}</div>"
+        )
+
+    return f"""
+<style>
+.atlas-approved-pitch {{ --pitch-line-columns:{column_weights}; display:flex; flex-direction:column; gap:14px; width:min(100%,900px); margin:4px auto 12px; }}
+.atlas-pitch-line-headers, .atlas-pitch-grid-row {{ display:grid; grid-template-columns:130px var(--pitch-line-columns); column-gap:0; }}
+.atlas-pitch-line-headers {{ align-items:end; }}
+.atlas-pitch-axis-label, .atlas-pitch-length-label {{ color:#9eabb5; font-size:.76rem; text-transform:uppercase; letter-spacing:.12em; }}
+.atlas-pitch-axis-label {{ padding-inline:4px; text-align:center; }}
+.atlas-pitch-board {{ position:relative; border-radius:28px; border:1px solid rgba(239,225,207,.16); background:radial-gradient(circle at top center,rgba(242,143,59,.08),transparent 24%),linear-gradient(180deg,rgba(239,225,207,.1),rgba(239,225,207,.04)),rgba(9,14,18,.76); padding:26px 18px 18px; overflow:hidden; }}
+.atlas-pitch-board::before {{ content:""; position:absolute; inset:16px 19px 16px 149px; border-radius:22px; background:linear-gradient(180deg,rgba(234,215,191,.88),rgba(217,192,161,.76)); box-shadow:inset 0 0 0 1px rgba(111,79,44,.22); pointer-events:none; }}
+.atlas-pitch-grid {{ position:relative; display:grid; gap:10px; z-index:1; }}
+.atlas-pitch-grid-row {{ position:relative; }}
+.atlas-pitch-length-label {{ display:flex; align-items:center; }}
+.atlas-pitch-cell {{ min-height:98px; border-radius:10px; border:1px solid rgba(255,255,255,.08); padding:10px; display:flex; flex-direction:column; gap:8px; justify-content:space-between; color:#101418; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }}
+.atlas-pitch-cell.empty {{ justify-content:center; align-items:center; background:rgba(255,255,255,.05); color:rgba(11,16,20,.56); }}
+.atlas-pitch-cell.empty span {{ font-size:.68rem; letter-spacing:.08em; }}
+.atlas-pitch-cell strong {{ font-size:1.2rem; }}
+.atlas-pitch-cell > span {{ color:rgba(11,16,20,.72); font-size:.72rem; letter-spacing:.14em; }}
+.atlas-pitch-cell-stats {{ display:flex; flex-wrap:wrap; gap:6px; }}
+.atlas-mini-chip {{ display:inline-flex; align-items:center; justify-content:center; min-height:24px; padding:0 8px; border-radius:999px; background:rgba(11,16,20,.68); color:#f8f6f0; font-size:.74rem; }}
+.atlas-mini-chip.four {{ background:rgba(242,143,59,.86); color:#101418; }}
+.atlas-mini-chip.six {{ background:rgba(255,209,102,.9); color:#101418; }}
+.atlas-mini-chip.wicket {{ background:rgba(239,83,80,.88); }}
+.atlas-pitch-stumps {{ position:absolute; left:calc(50% + 65px); bottom:-22px; transform:translateX(-50%); display:flex; gap:4px; z-index:2; }}
+.atlas-pitch-stumps span {{ width:6px; height:34px; border-radius:999px; background:rgba(11,16,20,.78); }}
+.atlas-pitch-legend {{ display:flex; gap:12px; flex-wrap:wrap; color:#9eabb5; font-size:.84rem; }}
+@media (max-width:700px) {{ .atlas-pitch-line-headers, .atlas-pitch-grid-row {{ grid-template-columns:78px var(--pitch-line-columns); }} .atlas-pitch-board::before {{ left:97px; }} .atlas-pitch-stumps {{ left:calc(50% + 39px); }} .atlas-pitch-cell {{ min-height:82px; padding:7px; }} .atlas-pitch-axis-label, .atlas-pitch-length-label {{ font-size:.62rem; }} }}
+</style>
+<div class="atlas-approved-pitch" style="--pitch-line-columns:{column_weights}">
+  <div class="atlas-pitch-line-headers"><span></span>{line_headers}</div>
+  <div class="atlas-pitch-board"><div class="atlas-pitch-grid">{''.join(rows)}</div></div>
+  <div class="atlas-pitch-legend"><span>Orange: fours</span><span>Yellow: sixes</span><span>Red: wickets</span></div>
+</div>
+"""
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -248,11 +384,7 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
             horizontal=True,
             key="matchup-pitch-metric",
         )
-        st.plotly_chart(
-            build_pitch_heatmap(pitch, colour_metric=colour_metric, min_balls=1),
-            width="stretch",
-            config={"displayModeBar": False, "scrollZoom": False, "doubleClick": False},
-        )
+        st.html(build_matchup_pitch_html(pitch, colour_metric=colour_metric))
         st.caption(
             "Cells show the observed matchup record. Average is runs per dismissal; zones without a dismissal "
             "show n/a. Empty zones mean no recorded deliveries."

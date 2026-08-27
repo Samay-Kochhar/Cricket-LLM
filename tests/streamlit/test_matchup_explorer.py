@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from streamlit_matchup_explorer import load_matchup_page
+from streamlit_matchup_explorer import build_matchup_pitch_html, load_matchup_page
 from streamlit.testing.v1 import AppTest
 
 
@@ -77,6 +77,53 @@ def test_load_matchup_page_uses_structured_filters_and_builds_practical_metrics(
     assert page["pitch"]["handedness"] == "RHB"
 
 
+def test_matchup_pitch_html_preserves_the_approved_pitch_structure() -> None:
+    html = build_matchup_pitch_html(
+        {
+            "handedness": "RHB",
+            "cells": [
+                {
+                    "line": "ON_THE_STUMPS",
+                    "length": "GOOD_LENGTH",
+                    "balls": 30,
+                    "runs": 20,
+                    "strike_rate": 66.67,
+                    "dismissals": 1,
+                    "fours": 2,
+                    "sixes": 0,
+                    "wicket_balls": 1,
+                },
+                {
+                    "line": "WIDE_DOWN_LEG",
+                    "length": "GOOD_LENGTH",
+                    "balls": 1,
+                    "runs": 0,
+                    "strike_rate": 0,
+                    "dismissals": 1,
+                },
+            ],
+        },
+        colour_metric="Batting average",
+    )
+
+    assert "--pitch-line-columns:0.5fr 0.5fr 0.6fr 1fr" in html
+    assert html.index("Wide outside off") < html.index("Outside off") < html.index("On the stumps")
+    assert html.index("On the stumps") < html.index("Down leg")
+    assert html.count('class="atlas-pitch-cell empty"') == 23
+    assert html.count('class="atlas-pitch-stumps"') == 1
+    assert "20.0" in html and "AVG" in html
+    assert "No deliveries" in html
+    assert "WIDE_DOWN_LEG" not in html
+    assert "1-3" not in html
+    assert html.index("Full toss") < html.index('class="atlas-pitch-stumps"') < html.index("Yorker")
+
+    left_handed_html = build_matchup_pitch_html({"handedness": "LHB", "cells": []})
+    assert "--pitch-line-columns:1fr 0.6fr 0.5fr 0.5fr" in left_handed_html
+    assert left_handed_html.index("Down leg") < left_handed_html.index("On the stumps")
+    assert left_handed_html.index("On the stumps") < left_handed_html.index("Outside off")
+    assert left_handed_html.index("Outside off") < left_handed_html.index("Wide outside off")
+
+
 def test_load_matchup_page_supports_a_cached_service_bundle_from_before_matchups() -> None:
     class CachedSemanticService:
         def answer_matchup_page(self, **filters: object) -> dict[str, object]:
@@ -126,7 +173,16 @@ def matchup_handler(**filters):
                 "columns": ["Batter", "Bowler", "Balls", "Runs", "Dismissals", "Batting Strike Rate"],
                 "rows": [["Steven Smith", "Jasprit Bumrah", 121, 103, 2, 85.12]],
             }],
-            "visuals": None,
+            "visuals": {
+                "pitch_map": {
+                    "handedness": "RHB",
+                    "cells": [{
+                        "line": "ON_THE_STUMPS", "length": "GOOD_LENGTH", "balls": 121,
+                        "runs": 103, "strike_rate": 85.12, "dismissals": 2,
+                        "fours": 8, "sixes": 1, "wicket_balls": 2,
+                    }],
+                },
+            },
         },
         "baseline": {
             "status": "supported",
@@ -158,6 +214,8 @@ render_matchup_explorer({"repository": Repository(), "matchup_handler": matchup_
         ("Batting Avg", "51.50"),
         ("Batting SR", "85.12"),
     ]
+    rendered_pitch = app.get("html")
+    assert len(rendered_pitch) == 1
 
 
 def test_matchup_explorer_keeps_search_controls_available_after_query_error() -> None:
