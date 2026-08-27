@@ -189,6 +189,31 @@ def test_pitch_heatmap_mirrors_left_handed_lines_and_omits_wide_down_leg() -> No
     ]
 
 
+def test_player_pitch_keeps_perspective_but_uses_balanced_line_widths_and_centred_stumps() -> None:
+    figure = build_pitch_heatmap({"cells": []}, min_balls=1)
+
+    assert figure.layout.meta["perspective"] == {"top_half_width": 1.65, "bottom_half_width": 3.0}
+    assert figure.layout.meta["line_weights"] == [0.5, 0.5, 0.6, 1.0]
+
+    first_row = figure.data[:4]
+    bottom_widths = [trace.x[2] - trace.x[3] for trace in first_row]
+    assert round(bottom_widths[1] / bottom_widths[0], 3) == 1.0
+    assert round(bottom_widths[2] / bottom_widths[1], 3) == 1.2
+    assert round(bottom_widths[3] / bottom_widths[2], 3) == 1.667
+
+    on_stumps = first_row[2]
+    on_stumps_top_center = (on_stumps.x[0] + on_stumps.x[1]) / 2
+    stump_shapes = [shape for shape in figure.layout.shapes if shape.name.startswith("stump-")]
+    stump_center = sum(shape.x0 for shape in stump_shapes) / len(stump_shapes)
+    assert abs(on_stumps_top_center - stump_center) < 1e-9
+
+    left_handed = build_pitch_heatmap({"handedness": "LHB", "cells": []}, min_balls=1)
+    assert left_handed.layout.meta["line_weights"] == [1.0, 0.6, 0.5, 0.5]
+    left_on_stumps = left_handed.data[1]
+    left_on_stumps_top_center = (left_on_stumps.x[0] + left_on_stumps.x[1]) / 2
+    assert abs(left_on_stumps_top_center - stump_center) < 1e-9
+
+
 def test_player_overview_does_not_eagerly_load_other_analysis_sections() -> None:
     class RecordingRepository:
         def __init__(self) -> None:

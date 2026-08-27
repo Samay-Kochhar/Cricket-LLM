@@ -19,6 +19,12 @@ LINE_ORDER = [
     "ON_THE_STUMPS",
     "DOWN_LEG",
 ]
+LINE_WEIGHTS = {
+    "WIDE_OUTSIDE_OFFSTUMP": 0.5,
+    "OUTSIDE_OFFSTUMP": 0.5,
+    "ON_THE_STUMPS": 0.6,
+    "DOWN_LEG": 1.0,
+}
 LENGTH_ORDER = [
     "FULL_TOSS",
     "YORKER",
@@ -195,14 +201,14 @@ def build_pitch_heatmap(
     figure = go.Figure()
     annotations: list[dict[str, Any]] = []
     row_count = len(lengths)
-    column_count = len(lines)
+    line_weights = [LINE_WEIGHTS.get(line, 1.0) for line in lines]
     for row_index, record_row in enumerate(cell_records):
         y_top = float(row_count - row_index)
         y_bottom = y_top - 1.0
         for column_index, record in enumerate(record_row):
             polygon_x, polygon_y = _pitch_cell_polygon(
                 column_index,
-                column_count,
+                line_weights,
                 y_top,
                 y_bottom,
                 row_count,
@@ -262,8 +268,8 @@ def build_pitch_heatmap(
         "WIDE_DOWN_LEG": "Wide leg",
     }
     for column_index, line in enumerate(lines):
-        left = _pitch_boundary_x(column_index, column_count, 0.0, row_count)
-        right = _pitch_boundary_x(column_index + 1, column_count, 0.0, row_count)
+        left = _pitch_boundary_x(column_index, line_weights, 0.0, row_count)
+        right = _pitch_boundary_x(column_index + 1, line_weights, 0.0, row_count)
         annotations.append(
             dict(
                 name="pitch-line-label",
@@ -317,6 +323,7 @@ def build_pitch_heatmap(
             "colour_values": z,
             "low_sample_fill": LOW_SAMPLE_FILL,
             "perspective": {"top_half_width": 1.65, "bottom_half_width": 3.0},
+            "line_weights": line_weights,
         },
         dragmode=False,
     )
@@ -332,22 +339,24 @@ def _pitch_half_width(y: float, row_count: int) -> float:
     return 3.0 - (1.35 * clamped_y / float(row_count))
 
 
-def _pitch_boundary_x(boundary: int, column_count: int, y: float, row_count: int) -> float:
+def _pitch_boundary_x(boundary: int, line_weights: list[float], y: float, row_count: int) -> float:
     half_width = _pitch_half_width(y, row_count)
-    return -half_width + (2.0 * half_width * boundary / column_count)
+    total_weight = sum(line_weights)
+    covered_weight = sum(line_weights[:boundary])
+    return -half_width + (2.0 * half_width * covered_weight / total_weight)
 
 
 def _pitch_cell_polygon(
     column: int,
-    column_count: int,
+    line_weights: list[float],
     y_top: float,
     y_bottom: float,
     row_count: int,
 ) -> tuple[list[float], list[float]]:
-    left_top = _pitch_boundary_x(column, column_count, y_top, row_count)
-    right_top = _pitch_boundary_x(column + 1, column_count, y_top, row_count)
-    left_bottom = _pitch_boundary_x(column, column_count, y_bottom, row_count)
-    right_bottom = _pitch_boundary_x(column + 1, column_count, y_bottom, row_count)
+    left_top = _pitch_boundary_x(column, line_weights, y_top, row_count)
+    right_top = _pitch_boundary_x(column + 1, line_weights, y_top, row_count)
+    left_bottom = _pitch_boundary_x(column, line_weights, y_bottom, row_count)
+    right_bottom = _pitch_boundary_x(column + 1, line_weights, y_bottom, row_count)
     return (
         [left_top, right_top, right_bottom, left_bottom, left_top],
         [y_top, y_top, y_bottom, y_bottom, y_top],
