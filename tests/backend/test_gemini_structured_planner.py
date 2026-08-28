@@ -635,3 +635,39 @@ def test_typed_materially_mixed_role_comparison_is_clearly_unsupported_in_live_c
     assert reply.query_response.status.value == "unsupported"
     assert reply.query_response.failure_state == "unsupported_capability"
     assert reply.query_response.summaries[0].body == reason
+
+
+def test_production_repairs_named_phase_split_misclassified_as_aggregate() -> None:
+    misclassified = _plan_json(
+        operation="aggregate",
+        entity="bowler",
+        metric="economy_rate",
+        group_by=["bowler"],
+        filters={"bowler": "Mitchell Starc", "phase": "powerplay"},
+        sort={"by": "economy_rate", "direction": "asc"},
+    )
+    repaired = _plan_json(
+        operation="split_compare",
+        entity="bowler",
+        metric="economy_rate",
+        group_by=["bowler"],
+        filters={"bowler": "Mitchell Starc"},
+        split_by="phase",
+        compare_values=["powerplay", "death"],
+        sort={"by": "economy_rate", "direction": "asc"},
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(misclassified),
+        _structured_result(repaired),
+    ])
+    trace = QueryTrace(
+        original_user_question="Compare Mitchell Starc's economy in the powerplay versus death overs"
+    )
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.operation == "split_compare"
+    assert result.plan.split_by == "phase"
+    assert len(client.calls) == 2

@@ -482,7 +482,81 @@ class SemanticAnalyticsService:
             )
 
         table = self._split_table_for_rows(plan, split_build, dict_rows)
+        if plan.entity in plan.filters:
+            row = dict_rows[0]
+            insufficient_sides = []
+            for label, value_column, sample_column in (
+                (split_build.split_a_label, split_build.value_a_column, split_build.sample_a_column),
+                (split_build.split_b_label, split_build.value_b_column, split_build.sample_b_column),
+            ):
+                sample = int(row.get(sample_column) or 0)
+                if row.get(value_column) is None or sample < split_build.minimum_sample:
+                    insufficient_sides.append(
+                        f"{_label(label)} has {sample} balls, below the minimum of {split_build.minimum_sample}"
+                    )
+            if insufficient_sides:
+                detail = "; ".join(insufficient_sides) + "."
+                trace.final_answer_metadata = {
+                    "status": "insufficient_split_side",
+                    "columns": build.columns,
+                    "insufficient_sides": insufficient_sides,
+                }
+                trace.log()
+                return QueryResponse(
+                    status=EvidenceStatus.insufficient_evidence,
+                    failure_state="data_limitation",
+                    interpretation=self._interpretation(question, plan),
+                    summaries=[
+                        SummaryBlock(
+                            title="Split comparison needs more evidence",
+                            body=f"The two requested slices are not yet comparable: {detail}",
+                        )
+                    ],
+                    tables=[table],
+                    metric_references=[self._metric_reference(plan.metric)],
+                    evidence_queries=[
+                        EvidenceQueryBlock(
+                            title="Semantic V2 split comparison query",
+                            description=build.description,
+                            sql=build.sql,
+                            parameters=_display_parameters(build.params),
+                            table=table,
+                        )
+                    ],
+                    evidence_notes=self._trace_notes(trace, plan),
+                    citations=[
+                        Citation(
+                            label="Semantic split comparison source",
+                            source_type=CitationSource.database,
+                            locator="analytics.deliveries_v1",
+                        )
+                    ],
+                    insufficiencies=[
+                        InsufficientEvidenceBlock(
+                            title="One or more split sides are below the evidence threshold",
+                            detail=detail,
+                            suggestions=["Use a broader filter or lower the minimum sample explicitly."],
+                        )
+                    ],
+                )
         summary = self._split_summary_for_rows(plan, split_build, dict_rows)
+        top = dict_rows[0]
+        chart_values = [
+            top.get(split_build.value_a_column),
+            top.get(split_build.value_b_column),
+        ]
+        split_chart = (
+            ChartBlock(
+                title=f"{_label(plan.metric)}: {_label(split_build.split_a_label)} versus {_label(split_build.split_b_label)}",
+                chart_type="bar",
+                series=[
+                    {"label": _label(split_build.split_a_label), "value": chart_values[0]},
+                    {"label": _label(split_build.split_b_label), "value": chart_values[1]},
+                ],
+            )
+            if all(isinstance(value, int | float) for value in chart_values)
+            else None
+        )
         trace.final_answer_metadata = {
             "status": "supported",
             "row_count": len(dict_rows),
@@ -497,6 +571,7 @@ class SemanticAnalyticsService:
             interpretation=self._interpretation(question, plan),
             summaries=[summary],
             tables=[table],
+            charts=[split_chart] if split_chart else [],
             metric_references=[self._metric_reference(plan.metric)],
             evidence_queries=[
                 EvidenceQueryBlock(
@@ -1326,14 +1401,22 @@ class SemanticAnalyticsService:
         value_a = _display_value(top.get(split_build.value_a_column))
         value_b = _display_value(top.get(split_build.value_b_column))
         difference = _display_value(top.get("difference"))
+        sample_a = _display_value(top.get(split_build.sample_a_column))
+        sample_b = _display_value(top.get(split_build.sample_b_column))
         suffix = "%" if metric_unit == "percent" else ""
+        is_named_comparison = plan.entity in plan.filters
+        lead = (
+            f"Within the available ODI dataset, {subject}'s {_label(plan.metric)} is"
+            if is_named_comparison
+            else f"Within the available ODI dataset, {subject} has the largest split on {_label(plan.metric)}:"
+        )
         return SummaryBlock(
             title="Semantic split comparison answer",
             body=(
-                f"Within the available ODI dataset, {subject} has the largest split on {_label(plan.metric)}: "
-                f"{_label(split_build.split_a_label)} {value_a}{suffix}, "
-                f"{_label(split_build.split_b_label)} {value_b}{suffix}, "
-                f"difference {difference}{suffix}."
+                f"{lead} {_label(split_build.split_a_label)} {value_a}{suffix} "
+                f"from {sample_a} balls, and {_label(split_build.split_b_label)} {value_b}{suffix} "
+                f"from {sample_b} balls; the calculated difference is {difference}{suffix}. "
+                "This is a descriptive comparison, not a claim of statistical significance."
             ),
         )
 
