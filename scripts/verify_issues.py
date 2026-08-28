@@ -162,6 +162,84 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "14": [
+        Check(
+            "same-role-player-comparisons",
+            "Verify batter and bowler comparison paraphrases, metrics, filters, samples, and tables.",
+            (
+                "pytest",
+                "tests/backend/test_user_reported_query_capabilities.py",
+                "tests/backend/test_gemini_structured_planner.py",
+                "-k",
+                "comparison or compare",
+            ),
+        ),
+        Check(
+            "comparison-browser-flow",
+            "Run a player comparison through the real browser and chat API.",
+            (
+                "npm",
+                "run",
+                "test:e2e",
+                "--",
+                "odi-correctness-smoke.spec.ts",
+                "--grep",
+                "comparison question",
+            ),
+        ),
+    ],
+    "15": [
+        Check(
+            "line-length-style-breakdowns",
+            "Verify line, length, and bowling-style ownership, metrics, filters, and chart contracts.",
+            (
+                "pytest",
+                "tests/backend/test_user_reported_query_capabilities.py",
+                "tests/backend/test_gemini_structured_planner.py",
+                "-k",
+                "length or bowling_style or style or off_spin or false_shot",
+            ),
+        ),
+    ],
+    "16": [
+        Check(
+            "ranking-intent-and-scope",
+            "Verify ranking direction, metric meaning, filters, limits, and sample thresholds.",
+            (
+                "pytest",
+                "tests/backend/test_user_reported_query_capabilities.py",
+                "tests/backend/test_gemini_structured_planner.py",
+                "-k",
+                "ranking or minimum_sample or threshold or limit",
+            ),
+        ),
+        Check(
+            "ranking-browser-control",
+            "Verify the browser exposes and applies the legal-ball threshold for bowling rankings.",
+            (
+                "npm",
+                "run",
+                "test:e2e",
+                "--",
+                "chat.spec.ts",
+                "--grep",
+                "bowling ranking",
+            ),
+        ),
+    ],
+    "17": [
+        Check(
+            "phase-and-handedness-splits",
+            "Verify canonical phase boundaries, handedness, samples, insufficiency, and chart gating.",
+            (
+                "pytest",
+                "tests/backend/test_split_compare_executor.py",
+                "tests/backend/test_gemini_structured_planner.py",
+                "-k",
+                "split or phase or handedness",
+            ),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [
