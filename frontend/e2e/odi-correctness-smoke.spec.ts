@@ -74,10 +74,19 @@ test.describe("ODI correctness product-family smoke", () => {
     await chatInput(page).fill("Mitchell Starc death-over economy trend after 2018");
     await page.getByRole("button", { name: "Send", exact: true }).click();
 
-    await expect(page.getByText(/observed Economy Rate decreased from 7\.83 in 2018 to 7\.35 in 2023/i).first()).toBeVisible();
+    await expect(page.getByText(/observed Economy Rate decreased from 7\.83 in 2018 to 7\.35 in 2023/i).first()).toBeVisible({
+      timeout: 30_000,
+    });
     await expect(page.getByText(/not a claim of statistical significance/i).first()).toBeVisible();
     await expect(page.getByText("Economy Rate by Year", { exact: true })).toBeVisible();
-    await expect(page.getByRole("img", { name: "Economy Rate by Year line chart" })).toBeVisible();
+    const trendChart = page.getByRole("img", { name: "Economy Rate by Year line chart" });
+    await expect(trendChart).toBeVisible();
+    expect(await trendChart.locator(".simple-line-y-label").count()).toBeGreaterThanOrEqual(3);
+    const axisY = Number(await trendChart.locator(".simple-line-x-axis").getAttribute("y1"));
+    const pointYs = await trendChart.locator(".simple-line-point").evaluateAll((points) =>
+      points.map((point) => Number(point.getAttribute("cy"))),
+    );
+    expect(Math.max(...pointYs)).toBeLessThan(axisY - 4);
     await expect(page.getByText("2018", { exact: true }).last()).toBeVisible();
     await expect(page.getByText("7.83", { exact: true }).last()).toBeVisible();
   });

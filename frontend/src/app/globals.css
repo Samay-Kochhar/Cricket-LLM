@@ -827,6 +827,11 @@ code {
   stroke-width: 1;
 }
 
+.simple-line-grid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
 .simple-line-path {
   fill: none;
   stroke: var(--orange);
@@ -842,7 +847,8 @@ code {
 }
 
 .simple-line-label,
-.simple-line-value {
+.simple-line-value,
+.simple-line-y-label {
   fill: var(--muted);
   font-size: 0.72rem;
 }
