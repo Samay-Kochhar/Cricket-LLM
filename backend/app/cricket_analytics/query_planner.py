@@ -24,6 +24,16 @@ from backend.app.services.gemini_client import GeminiClient, GeminiStructuredRes
 from backend.app.services.player_resolution import ALIASES, normalize_name, resolve_player_name
 
 
+LEFT_HAND_TERMS = ("left-handers", "left handers", "left-hand batters", "left-handed batters")
+RIGHT_HAND_TERMS = ("right-handers", "right handers", "right-hand batters", "right-handed batters")
+
+
+def _mentions_both_hands(question: str) -> bool:
+    return any(token in question for token in LEFT_HAND_TERMS) and any(
+        token in question for token in RIGHT_HAND_TERMS
+    )
+
+
 @dataclass(slots=True)
 class PlannerResult:
     plan: CricketQueryPlan | None
@@ -213,9 +223,25 @@ class SemanticQueryPlanner:
         question: str,
         validation: ValidationResult,
     ) -> ValidationResult:
+        lowered = question.lower()
+        inferred = self._infer_filters(question, lowered, plan.metric)
+        expected_split, expected_values = self._infer_split(lowered, inferred)
+        errors = list(validation.errors)
+        if expected_split is not None:
+            if plan.operation != "split_compare":
+                errors.append(
+                    f"Question requests a {expected_split} split comparison, but the plan uses {plan.operation}."
+                )
+            elif plan.split_by != expected_split:
+                errors.append(
+                    f"Question requests split_by {expected_split!r}, but the plan uses {plan.split_by!r}."
+                )
+            elif expected_values and plan.compare_values != expected_values:
+                errors.append(
+                    f"Question requests split values {expected_values!r}, but the plan uses {plan.compare_values!r}."
+                )
         if plan.operation != "aggregate":
-            return validation
-        inferred = self._infer_filters(question, question.lower(), plan.metric)
+            return validation.model_copy(update={"valid": not errors, "errors": errors})
         scope_keys = {
             "venue",
             "phase",
@@ -224,7 +250,6 @@ class SemanticQueryPlanner:
             "opposition",
             "bowling_style",
         }
-        errors = list(validation.errors)
         for key in scope_keys:
             expected = inferred.get(key)
             if expected is not None and plan.filters.get(key) != expected:
@@ -660,10 +685,14 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_split(lowered: str, filters: dict[str, object]) -> tuple[str | None, list[str] | None]:
-        if "powerplay" in lowered and ("death" in lowered or "death-over" in lowered):
+        if (
+            "powerplay" in lowered
+            and ("death" in lowered or "death-over" in lowered)
+            and "middle overs" not in lowered
+        ):
             filters.pop("phase", None)
             return "phase", ["powerplay", "death"]
-        if "left-handers" in lowered and "right-handers" in lowered:
+        if _mentions_both_hands(lowered):
             filters.pop("batter_hand", None)
             return "batter_hand", ["LHB", "RHB"]
         if "wrist spin" in lowered and "finger spin" in lowered:
@@ -712,6 +741,19 @@ class SemanticQueryPlanner:
             return "predictive_analysis"
         if any(token in lowered for token in ("immediately after", "after a wicket", "milestone", "after the powerplay", "after early wickets", "losing early wickets", "lost early wickets", "after a timeout", "after timeout")):
             return "event_window"
+        if (
+            (
+                "powerplay" in lowered
+                and ("death" in lowered or "death-over" in lowered)
+                and "middle overs" not in lowered
+            )
+            or _mentions_both_hands(lowered)
+            or ("wrist spin" in lowered and "finger spin" in lowered)
+            or "after facing 20 balls" in lowered
+            or "after 20 balls" in lowered
+            or "between overs" in lowered
+        ):
+            return "split_compare"
         if lowered.startswith("compare ") or " compare " in lowered or "who has the better" in lowered or "who scores faster" in lowered:
             return "player_compare"
         if any(token in lowered for token in ("concentrated", "concentration", "entropy", "spread", "variation", "changes most", "changes the most", "distribution", "varies")):
@@ -980,9 +1022,9 @@ class SemanticQueryPlanner:
         bowling_style = requested_bowling_style(lowered)
         if bowling_style:
             filters["bowling_style"] = bowling_style
-        if "left-handers" in lowered or "left handers" in lowered or "left-hand batters" in lowered:
+        if any(token in lowered for token in LEFT_HAND_TERMS):
             filters["batter_hand"] = "LHB"
-        elif "right-handers" in lowered or "right handers" in lowered or "right-hand batters" in lowered:
+        elif any(token in lowered for token in RIGHT_HAND_TERMS):
             filters["batter_hand"] = "RHB"
         opposition = self._extract_opposition(lowered)
         if opposition:

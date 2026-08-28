@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from backend.app.cricket_analytics.ontology import METRICS
+from backend.app.cricket_analytics.cricket_definitions import phase_case_expression
 from backend.app.cricket_analytics.metric_registry import split_metric_expression
 from backend.app.cricket_analytics.query_builders.aggregate_builder import (
     BOWLER_WICKET,
@@ -39,6 +40,7 @@ class SplitCompareBuild:
     sample_b_column: str
     split_a_label: str
     split_b_label: str
+    minimum_sample: int
 
 
 def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
@@ -59,6 +61,7 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
     rank_expression = _rank_expression(plan, difference_expression)
     minimum_sample = _minimum_sample(plan)
     limit = plan.limit or 10
+    is_named_comparison = plan.entity in plan.filters
 
     where_clauses = ["1 = 1"]
     filter_params: list[Any] = []
@@ -67,7 +70,20 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
         where_clauses.append(clause)
         filter_params.extend(clause_params)
 
-    params = [*split_params, *filter_params, minimum_sample, minimum_sample, limit]
+    eligibility_clause = (
+        f"WHERE ({value_a_column} IS NOT NULL OR {value_b_column} IS NOT NULL)"
+        if is_named_comparison
+        else (
+            f"WHERE {value_a_column} IS NOT NULL "
+            f"AND {value_b_column} IS NOT NULL "
+            f"AND {sample_a_column} >= ? "
+            f"AND {sample_b_column} >= ?"
+        )
+    )
+    params = [*split_params, *filter_params]
+    if not is_named_comparison:
+        params.extend([minimum_sample, minimum_sample])
+    params.append(limit)
 
     sql = f"""
             WITH bucketed AS (
@@ -130,10 +146,7 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
               {sample_b_column},
               {rank_expression} AS rank_value
             FROM pivoted
-            WHERE {value_a_column} IS NOT NULL
-              AND {value_b_column} IS NOT NULL
-              AND {sample_a_column} >= ?
-              AND {sample_b_column} >= ?
+            {eligibility_clause}
             ORDER BY rank_value DESC, {sample_a_column} + {sample_b_column} DESC
             LIMIT ?
             """
@@ -161,6 +174,7 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
         sample_b_column=sample_b_column,
         split_a_label=split_a_label,
         split_b_label=split_b_label,
+        minimum_sample=minimum_sample,
     )
 
 
@@ -185,10 +199,7 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
     compare_values = plan.compare_values or []
     if plan.split_by == "phase":
         split_a, split_b = _two_values(compare_values, "powerplay", "death")
-        split_case = (
-            "CASE WHEN TRY_CAST(over AS DOUBLE) <= 10 THEN 'powerplay' "
-            "WHEN TRY_CAST(over AS DOUBLE) <= 40 THEN 'middle' ELSE 'death' END"
-        )
+        split_case = phase_case_expression()
         return split_case, split_a, split_b, split_a, split_b, []
     if plan.split_by == "batter_hand":
         split_a, split_b = _two_values(compare_values, "LHB", "RHB")
