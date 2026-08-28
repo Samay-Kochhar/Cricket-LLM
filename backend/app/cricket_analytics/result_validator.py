@@ -52,9 +52,12 @@ def validate_result(
         if plan.metric == "economy_rate" and value < 0:
             errors.append("Economy rate cannot be negative.")
 
-    if plan.sort and metric_values:
-        sorted_values = sorted(metric_values, reverse=plan.sort.direction == "desc")
-        if metric_values != sorted_values:
-            warnings.append(f"Rows are not sorted {plan.sort.direction} by {plan.metric}.")
+    if plan.sort:
+        sort_values = [row.get(plan.sort.by) for row in rows]
+        comparable_sort_values = [value for value in sort_values if isinstance(value, int | float | str)]
+        if len(comparable_sort_values) == len(rows):
+            sorted_values = sorted(comparable_sort_values, reverse=plan.sort.direction == "desc")
+            if comparable_sort_values != sorted_values:
+                warnings.append(f"Rows are not sorted {plan.sort.direction} by {plan.sort.by}.")
 
     return ResultValidation(valid=not errors, errors=errors, warnings=warnings)

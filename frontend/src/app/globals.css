@@ -815,6 +815,43 @@ code {
   gap: 10px;
 }
 
+.simple-line-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.simple-line-axis {
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 1;
+}
+
+.simple-line-path {
+  fill: none;
+  stroke: var(--orange);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.simple-line-point {
+  fill: var(--orange);
+  stroke: var(--surface);
+  stroke-width: 2;
+}
+
+.simple-line-label,
+.simple-line-value {
+  fill: var(--muted);
+  font-size: 0.72rem;
+}
+
+.simple-line-value {
+  fill: var(--text);
+  font-weight: 700;
+}
+
 .chart-row {
   display: grid;
   grid-template-columns: minmax(86px, 1fr) 1.8fr auto;

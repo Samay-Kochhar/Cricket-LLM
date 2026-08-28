@@ -240,6 +240,26 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "18": [
+        Check(
+            "yearly-trend-contract",
+            "Verify yearly plans, retained filters, database truth, evidence thresholds, matching charts, and cautious conclusions.",
+            ("pytest", "tests/backend/test_issue_18_trends.py"),
+        ),
+        Check(
+            "yearly-trend-browser-flow",
+            "Run a filtered bowler trend through the real browser and chat API.",
+            (
+                "npm",
+                "run",
+                "test:e2e",
+                "--",
+                "odi-correctness-smoke.spec.ts",
+                "--grep",
+                "yearly trend question",
+            ),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [

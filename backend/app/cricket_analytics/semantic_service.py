@@ -1216,7 +1216,11 @@ class SemanticAnalyticsService:
             query_class=(
                 QueryClass.strengths_weaknesses.value
                 if plan and plan.question_subject == "weakness_check"
-                else QueryClass.venue_context_leaderboard.value
+                else (
+                    QueryClass.trend_progression.value
+                    if plan and plan.question_subject == "yearly_trend"
+                    else QueryClass.venue_context_leaderboard.value
+                )
             ),
             entities=entities,
             filters=filters,
@@ -1229,6 +1233,26 @@ class SemanticAnalyticsService:
                 detail=json.dumps(_public_object(trace.as_dict()), sort_keys=True, default=str)[:50000],
             )
         ]
+        if plan and plan.question_subject == "yearly_trend":
+            thresholds: list[str] = []
+            if plan.minimum_sample:
+                for value, label in (
+                    (plan.minimum_sample.balls, "balls"),
+                    (plan.minimum_sample.legal_balls, "legal balls"),
+                    (plan.minimum_sample.innings, "innings"),
+                ):
+                    if value is not None:
+                        thresholds.append(f"{value} {label}")
+            notes.append(
+                EvidenceNote(
+                    title="Yearly evidence threshold",
+                    detail=(
+                        f"Each displayed year meets a minimum sample of {', '.join(thresholds)}; weaker years are excluded."
+                        if thresholds
+                        else "Each displayed row is a separate yearly sample; no minimum threshold applies to this count metric."
+                    ),
+                )
+            )
         if plan and plan.assumptions:
             notes.append(EvidenceNote(title="Semantic V2 assumptions", detail=" | ".join(plan.assumptions)))
         return notes
@@ -1263,11 +1287,12 @@ class SemanticAnalyticsService:
         if len(plan.group_by) != 1:
             return None
         dimension = plan.group_by[0]
+        is_trend = dimension == "year" and plan.question_subject == "yearly_trend"
         is_breakdown = dimension in {"line", "length", "bowling_style"}
         is_ranking = dimension == plan.entity and dimension not in plan.filters and bool(
             plan.sort and plan.sort.by == plan.metric
         )
-        if not is_breakdown and not is_ranking:
+        if not is_trend and not is_breakdown and not is_ranking:
             return None
         series = [
             {"label": str(row[0]), "value": row[1]}
@@ -1279,15 +1304,17 @@ class SemanticAnalyticsService:
         return ChartBlock(
             title=(
                 f"{_label(plan.metric)} by {_label(dimension)}"
-                if is_breakdown
+                if is_breakdown or is_trend
                 else f"{_label(plan.metric)} ranking"
             ),
-            chart_type="bar",
+            chart_type="line" if is_trend else "bar",
             series=series,
         )
 
     @staticmethod
     def _summary_for_rows(plan: CricketQueryPlan, rows: list[dict[str, object]]) -> SummaryBlock:
+        if plan.question_subject == "yearly_trend":
+            return SemanticAnalyticsService._yearly_trend_summary(plan, rows)
         top = rows[0]
         dimension_columns = plan.group_by or ([plan.entity] if plan.entity in top else [])
         subject = "overall"
@@ -1363,6 +1390,47 @@ class SemanticAnalyticsService:
                     if plan.metric == "bowling_strike_rate"
                     else ""
                 )
+            ),
+        )
+
+    @staticmethod
+    def _yearly_trend_summary(plan: CricketQueryPlan, rows: list[dict[str, object]]) -> SummaryBlock:
+        scope = _summary_scope(plan, ["year"])
+        context = _summary_context(plan, scope).rstrip(" ,")
+        subject = context or "For the requested player"
+        metric_label = _label(plan.metric)
+        if len(rows) < 2:
+            return SummaryBlock(
+                title="Year-by-year trend",
+                body=(
+                    f"{subject}, only one comparable yearly sample is available for {metric_label}. "
+                    "That is not enough to describe a change or claim statistical significance."
+                ),
+            )
+
+        first = rows[0]
+        last = rows[-1]
+        first_value = _display_value(first.get(plan.metric))
+        last_value = _display_value(last.get(plan.metric))
+        yearly_values = "; ".join(
+            f"{row.get('year')}: {_display_value(row.get(plan.metric))}"
+            for row in rows
+        )
+        direction = "changed"
+        if isinstance(first.get(plan.metric), int | float) and isinstance(last.get(plan.metric), int | float):
+            if float(last[plan.metric]) > float(first[plan.metric]):
+                direction = "increased"
+            elif float(last[plan.metric]) < float(first[plan.metric]):
+                direction = "decreased"
+            else:
+                direction = "was unchanged"
+        return SummaryBlock(
+            title="Year-by-year trend",
+            body=(
+                f"{subject}, the observed {metric_label} {direction} from {first_value} in {first.get('year')} "
+                f"to {last_value} in {last.get('year')} across the comparable yearly samples shown. "
+                f"Yearly values: {yearly_values}. "
+                "This is a descriptive change, not a claim of statistical significance."
             ),
         )
 

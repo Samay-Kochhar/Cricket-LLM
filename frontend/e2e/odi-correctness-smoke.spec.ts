@@ -58,4 +58,19 @@ test.describe("ODI correctness product-family smoke", () => {
 
     await expect(page.getByText(/149\.9.*1016 balls/i).first()).toBeVisible();
   });
+
+  test("yearly trend question shows cautious comparable evidence", async ({ page }) => {
+    await page.goto("/");
+    await chatInput(page).fill("Mitchell Starc death-over economy trend after 2018");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+
+    await expect(page.getByText(/observed Economy Rate decreased from 7\.83 in 2018 to 7\.35 in 2023/i).first()).toBeVisible();
+    await expect(page.getByText(/not a claim of statistical significance/i).first()).toBeVisible();
+    await page.getByRole("button", { name: "Debug trace", exact: true }).click();
+    await page.getByText("Derived charts", { exact: true }).click();
+    await expect(page.getByText("Economy Rate by Year", { exact: true })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Economy Rate by Year line chart" })).toBeVisible();
+    await expect(page.getByText("2018", { exact: true }).last()).toBeVisible();
+    await expect(page.getByText("7.83", { exact: true }).last()).toBeVisible();
+  });
 });

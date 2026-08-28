@@ -356,7 +356,79 @@ class SemanticQueryPlanner:
             )
 
         normalized = normalized.model_copy(update=updates)
+        normalized = self._apply_yearly_trend_contract(
+            normalized,
+            question,
+            infer_metric=infer_meaning,
+        )
         return self._apply_question_guardrails(normalized, question) if infer_meaning else normalized
+
+    @staticmethod
+    def _is_yearly_trend_question(lowered: str) -> bool:
+        explicit_time_wording = any(
+            token in lowered
+            for token in (
+                "by year",
+                "year by year",
+                "each year",
+                "year-wise",
+                "year wise",
+                "trend",
+                "over time",
+            )
+        )
+        change_wording = any(
+            token in lowered
+            for token in (
+                "become more",
+                "become less",
+                "changed",
+                "change since",
+                "change after",
+                "improved",
+                "declined",
+                "increased",
+                "decreased",
+            )
+        )
+        has_year_scope = bool(re.search(r"\b(?:since|after)\s+20\d{2}\b", lowered))
+        return explicit_time_wording or (change_wording and has_year_scope)
+
+    @staticmethod
+    def _apply_yearly_trend_contract(
+        plan: CricketQueryPlan,
+        question: str,
+        *,
+        infer_metric: bool,
+    ) -> CricketQueryPlan:
+        lowered = question.lower()
+        if plan.operation != "aggregate" or not SemanticQueryPlanner._is_yearly_trend_question(lowered):
+            return plan
+
+        metric = plan.metric
+        if (
+            infer_metric
+            and plan.entity == "batter"
+            and any(token in lowered for token in ("destructive", "improved", "improving"))
+            and not any(token in lowered for token in ("runs", "average", "dot ball", "boundary"))
+        ):
+            metric = "batting_strike_rate"
+
+        minimum_sample = plan.minimum_sample
+        if not plan.minimum_sample_explicit and metric in METRICS:
+            defaults = METRICS[metric].minimum_sample.as_dict()
+            minimum_sample = MinimumSampleSpec(**defaults) if defaults else None
+
+        return plan.model_copy(
+            update={
+                "metric": metric,
+                "group_by": ["year"],
+                "sort": SortSpec(by="year", direction="asc"),
+                "limit": 50,
+                "minimum_sample": minimum_sample,
+                "question_subject": "yearly_trend",
+            }
+        )
 
     @staticmethod
     def _apply_question_guardrails(plan: CricketQueryPlan, question: str) -> CricketQueryPlan:
@@ -430,7 +502,9 @@ class SemanticQueryPlanner:
         metric = METRICS.get(plan.metric)
         is_rate_ranking = bool(metric and metric.denominator is not None and ranking_wording)
         minimum_sample: MinimumSampleSpec | None = None
-        if explicit_minimum:
+        if plan.question_subject == "yearly_trend":
+            minimum_sample = plan.minimum_sample
+        elif explicit_minimum:
             minimum_sample = explicit_minimum
         elif is_rate_ranking:
             defaults = metric.minimum_sample.as_dict() if metric else {}
@@ -487,6 +561,9 @@ class SemanticQueryPlanner:
             "- Named-bowler dot-ball, wicket, economy, and false-shot-per-over questions use bowler-owned metrics and retain the player in the bowler filter.\n"
             "- Count wording uses count metrics; percentage/rate wording uses its stated denominator. False shots per over is false_shots_per_over.\n"
             "- Preserve exact pace, spin, left-arm pace, left-arm spin, wrist-spin, finger-spin, leg-spin, and off-spin filters without broadening a subtype.\n"
+            "- Trend, change, improvement, decline, over-time, and year-by-year questions use aggregate grouped by year, sorted by year ascending, with limit 50.\n"
+            "- Trend plans retain every requested player role, phase, style, venue, opposition, and since/after-year filter. Use the metric's default minimum sample for each year.\n"
+            "- 'More destructive' or unqualified batter improvement means batting_strike_rate unless another metric is explicit.\n"
             "- For player_compare, preserve every named player and every supported phase, venue, opposition, and bowling_style filter.\n"
             "- For player_compare, infer one shared role from the wording and requested metrics: entity batter for batting metrics, or entity bowler for bowling metrics.\n"
             "- Every comparison_metrics entry must belong to that shared entity role; never mix batter-owned and bowler-owned metrics.\n"
@@ -862,9 +939,11 @@ class SemanticQueryPlanner:
                 "score fastest",
                 "scores fastest",
                 "dominates",
+                "destructive",
                 "struggle",
                 "struggles",
                 "improves",
+                "improved",
                 "vulnerable",
                 "effective",
                 "optimal bowling plan",
