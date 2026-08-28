@@ -62,6 +62,98 @@ def test_chat_path_answers_phase1_question_shapes(
     assert "ON_DRIVE" not in str(payload)
 
 
+def test_chat_named_batter_scoring_by_line_keeps_batter_perspective(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "Which line does Virat Kohli score most against?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_operation"] == "aggregate"
+    assert filters["semantic_metric"] == "runs_scored"
+    assert filters["semantic_group_by"] == ["line"]
+    assert filters["batter"] == "Virat Kohli"
+    assert "Bowler" not in result["tables"][0]["columns"]
+
+
+def test_chat_named_batter_dismissal_by_length_keeps_batter_filter(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "Where is David Miller dismissed most often by length?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_metric"] == "wickets_taken"
+    assert filters["semantic_group_by"] == ["length"]
+    assert filters["batter"] == "David Miller"
+    assert "bowler" not in filters
+    assert result["tables"][0]["columns"][:2] == ["Length", "Wickets Taken"]
+
+
+def test_chat_named_bowler_dot_count_by_length_uses_bowler_denominator(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "How many dot balls does Bumrah bowl by length?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_metric"] == "bowler_dot_balls"
+    assert filters["semantic_group_by"] == ["length"]
+    assert filters["bowler"] == "Jasprit Bumrah"
+    assert "batter" not in filters
+    assert result["tables"][0]["columns"][:3] == [
+        "Length",
+        "Bowler Dot Balls",
+        "Legal Balls",
+    ]
+    assert "1867 legal balls" in payload["message"]
+
+
+def test_chat_specific_spin_subtype_is_not_broadened_by_generic_style_wording(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "What is Maxwell's batting strike rate against off spin bowling?",
+            "history": [],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert result["interpretation"]["filters"]["batter"] == "Glenn Maxwell"
+    assert result["interpretation"]["filters"]["bowling_style"] == "off_spin"
+
+
 def test_chat_false_shot_leaderboard_states_scope_and_uses_reliable_default_sample(
     client: TestClient,
 ) -> None:
@@ -83,6 +175,69 @@ def test_chat_false_shot_leaderboard_states_scope_and_uses_reliable_default_samp
     assert "available odi dataset" not in message.lower()
     assert "minimum sample" not in message.lower()
     assert plan["bowling_style"] == "leg_spin"
+
+
+def test_chat_most_yorkers_ranks_count_with_limit_and_phase_scope(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "Show the top 3 bowlers who bowled the most yorkers at the death",
+            "history": [],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_metric"] == "yorker_count"
+    assert filters["phase"] == "death"
+    assert len(result["tables"][0]["rows"]) == 3
+    assert result["tables"][0]["columns"][:2] == ["Bowler", "Yorker Count"]
+
+
+def test_chat_vague_best_statistics_asks_user_to_choose_a_metric(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "Who has the best statistics?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "clarification"
+    assert payload["query_response"] is None
+    assert "metric" in payload["message"].lower()
+    assert [option["label"] for option in payload["clarification_options"]] == [
+        "Runs scored",
+        "Batting strike rate",
+        "Wickets taken",
+        "Economy rate",
+    ]
+
+    clarified = client.post(
+        "/api/chat",
+        json={
+            "message": payload["clarification_options"][0]["message"],
+            "history": [
+                {"role": "user", "content": "Who has the best statistics?"},
+                {"role": "assistant", "content": payload["message"]},
+            ],
+        },
+    )
+    clarified_payload = clarified.json()
+    assert clarified_payload["mode"] == "analysis"
+    assert clarified_payload["query_response"]["status"] == "supported"
+    assert (
+        clarified_payload["query_response"]["interpretation"]["filters"]["semantic_metric"]
+        == "runs_scored"
+    )
 
 
 def test_unqualified_style_filtered_strike_rate_asks_for_metric_clarification(

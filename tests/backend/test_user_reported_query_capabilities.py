@@ -62,6 +62,118 @@ def test_least_death_economy_honors_explicit_minimum_sample(
     assert "100" in response.summaries[0].body
 
 
+def test_worst_economy_reverses_metric_direction_and_shows_explicit_ranking_scope(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Show the 4 bowlers with the worst economy rate, minimum 100 legal balls"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["metric"] == "economy_rate"
+    assert plan["limit"] == 4
+    assert plan["sort"] == {"by": "economy_rate", "direction": "desc"}
+    assert plan["minimum_sample"] == {
+        "balls": None,
+        "legal_balls": 100,
+        "innings": None,
+    }
+    table = response.tables[0]
+    assert len(table.rows) == 4
+    assert [row[1] for row in table.rows] == sorted(
+        [row[1] for row in table.rows], reverse=True
+    )
+    assert "minimum sample of 100 legal balls" in response.summaries[0].body.lower()
+
+
+def test_filtered_ranking_keeps_scope_and_aligns_table_narrative_and_chart(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Show the top 5 batters by highest false shot percentage against spin "
+        "at R Premadasa Stadium, Colombo in middle overs in 2009 against Sri Lanka, "
+        "minimum 20 balls"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["metric"] == "false_shot_percentage"
+    assert plan["limit"] == 5
+    assert plan["minimum_sample"] == {
+        "balls": 20,
+        "legal_balls": None,
+        "innings": None,
+    }
+    assert plan["filters"] == {
+        "years": [2009],
+        "phase": "middle",
+        "bowling_style": "spin",
+        "opposition": "Sri Lanka",
+        "venue": "R Premadasa Stadium, Colombo",
+    }
+    table = response.tables[0]
+    assert table.columns[:2] == ["Batter", "False Shot Percentage"]
+    assert all(row[table.columns.index("Balls Faced")] >= 20 for row in table.rows)
+    assert str(table.rows[0][0]) in response.summaries[0].body
+    assert str(table.rows[0][1]) in response.summaries[0].body
+    assert response.charts[0].title == "False Shot Percentage ranking"
+    assert response.charts[0].series == [
+        {"label": row[0], "value": row[1]}
+        for row in table.rows
+    ]
+
+
+@pytest.mark.parametrize(
+    ("question", "metric", "direction"),
+    [
+        ("Which bowler has the best economy rate?", "economy_rate", "asc"),
+        ("Which bowler has the worst economy rate?", "economy_rate", "desc"),
+        ("Which bowler has the highest economy rate?", "economy_rate", "desc"),
+        ("Which bowler has the lowest economy rate?", "economy_rate", "asc"),
+        ("Which bowler has the most wickets?", "wickets_taken", "desc"),
+        ("Which bowler has the fewest wickets?", "wickets_taken", "asc"),
+    ],
+)
+def test_ranking_words_use_the_requested_metric_direction(
+    semantic_service: SemanticAnalyticsService,
+    question: str,
+    metric: str,
+    direction: str,
+) -> None:
+    response = semantic_service.answer_question(question)
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["metric"] == metric
+    assert plan["sort"] == {"by": metric, "direction": direction}
+    values = [row[1] for row in response.tables[0].rows]
+    assert values == sorted(values, reverse=direction == "desc")
+
+
+def test_pace_ranking_preserves_venue_year_opposition_limit_and_sample(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Show the top 3 batters by highest batting strike rate against pace "
+        "at R Premadasa Stadium, Colombo in 2009 against Sri Lanka, minimum 20 balls"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["limit"] == 3
+    assert plan["minimum_sample"]["balls"] == 20
+    assert plan["filters"] == {
+        "years": [2009],
+        "bowling_style": "pace",
+        "opposition": "Sri Lanka",
+        "venue": "R Premadasa Stadium, Colombo",
+    }
+    table = response.tables[0]
+    assert len(table.rows) <= 3
+    assert all(row[table.columns.index("Balls Faced")] >= 20 for row in table.rows)
+
+
 def test_worst_false_shot_percentage_against_leg_spin_keeps_style_filter(
     semantic_service: SemanticAnalyticsService,
 ) -> None:
@@ -394,6 +506,33 @@ def test_best_length_against_named_batter_ranks_by_lowest_strike_rate(
         "Balls Faced",
         "Matches",
     ]
+
+
+def test_length_breakdown_chart_uses_answer_metric_and_sample_filtered_rows(
+    semantic_service: SemanticAnalyticsService,
+) -> None:
+    response = semantic_service.answer_question(
+        "Break down Virat Kohli's batting strike rate by length, minimum 20 balls"
+    )
+    plan = _trace(response)["normalized_plan"]
+
+    assert response.status.value == "supported"
+    assert plan["entity"] == "batter"
+    assert plan["metric"] == "batting_strike_rate"
+    assert plan["group_by"] == ["length"]
+    assert plan["filters"]["batter"] == "Virat Kohli"
+    assert plan["minimum_sample"] == {"balls": 20, "legal_balls": None, "innings": None}
+    assert len(response.charts) == 1
+    chart = response.charts[0]
+    table = response.tables[0]
+    assert chart.title == "Batting Strike Rate by Length"
+    assert chart.chart_type == "bar"
+    assert chart.series == [
+        {"label": row[0], "value": row[1]}
+        for row in table.rows
+    ]
+    balls_index = table.columns.index("Balls Faced")
+    assert all(row[balls_index] >= 20 for row in table.rows)
 
 
 def test_unqualified_death_over_bowler_comparison_returns_core_metric_set(

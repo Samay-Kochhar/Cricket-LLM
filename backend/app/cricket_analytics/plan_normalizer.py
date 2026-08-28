@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.metric_registry import canonical_metric_id
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec
@@ -128,6 +130,173 @@ BOWLING_STYLE_LIST_GROUPS = {
     frozenset({"left arm orthodox", "left arm unorthodox"}): "left_arm_spin",
     frozenset({"left arm pace", "right arm pace"}): "pace",
 }
+
+WORD_NUMBERS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+
+
+def requested_bowling_style(lowered_question: str) -> str | None:
+    matches: list[str] = []
+    for style, aliases in (
+        ("left_arm_pace", ("left-arm pace", "left arm pace")),
+        ("left_arm_spin", ("left-arm spin", "left arm spin")),
+        ("off_spin", ("off spin", "off-spin", "off spinner", "off-break", "off break")),
+        ("leg_spin", ("leg spin", "leg-spin", "leg spinner", "leg-break", "leg break")),
+        ("wrist_spin", ("wrist spin", "wrist-spin")),
+        ("finger_spin", ("finger spin", "finger-spin")),
+        ("pace", ("against pace", "versus pace", "pace bowling")),
+        ("spin", ("against spin", "versus spin", "spin bowling")),
+    ):
+        if any(alias in lowered_question for alias in aliases):
+            matches.append(style)
+    distinct = set(matches)
+    specific = distinct - {"pace", "spin"}
+    if specific:
+        distinct = specific
+    return next(iter(distinct)) if len(distinct) == 1 else None
+
+
+def requested_metric_from_wording(lowered_question: str) -> str | None:
+    if (
+        re.search(r"\b(?:most|fewest)\s+yorkers\b", lowered_question)
+        or "yorker count" in lowered_question
+        or "how many yorkers" in lowered_question
+    ):
+        return "yorker_count"
+    if "yorker percentage" in lowered_question or "percentage of yorkers" in lowered_question:
+        return "yorker_percentage"
+    if "false shots per over" in lowered_question or "false-shot per over" in lowered_question:
+        return "false_shots_per_over"
+    if "bowling strike rate" in lowered_question:
+        return "bowling_strike_rate"
+    if "economy" in lowered_question or "economical" in lowered_question:
+        return "economy_rate"
+    if "wicket count" in lowered_question or "how many wickets" in lowered_question:
+        return "wickets_taken"
+    if "dismissal count" in lowered_question or "how many dismissals" in lowered_question:
+        return "dismissals"
+    if "how many dot balls" in lowered_question or "dot ball count" in lowered_question:
+        return (
+            "bowler_dot_balls"
+            if any(
+                token in lowered_question
+                for token in ("bowl", "bowler", "bowled", "bowls")
+            )
+            else "dot_balls"
+        )
+    return None
+
+
+def requested_limit_from_wording(lowered_question: str) -> int | None:
+    numeric = re.search(
+        r"\b(?:top|bottom|first|last|show|list|give me|which)\s+(?:the\s+)?(\d{1,2})\b",
+        lowered_question,
+    )
+    if numeric:
+        return max(1, min(int(numeric.group(1)), 50))
+    word_match = re.search(
+        r"\b(?:top|bottom|first|last|show|list|give me|which)\s+(?:the\s+)?([a-z]+)\b",
+        lowered_question,
+    )
+    if word_match and word_match.group(1) in WORD_NUMBERS:
+        return WORD_NUMBERS[word_match.group(1)]
+    nested_word_match = re.search(
+        r"\b(?:show|list|give me)\s+(?:the\s+)?(?:top|bottom)\s+([a-z]+)\b",
+        lowered_question,
+    )
+    if nested_word_match and nested_word_match.group(1) in WORD_NUMBERS:
+        return WORD_NUMBERS[nested_word_match.group(1)]
+    return None
+
+
+def requested_minimum_sample(
+    lowered_question: str,
+    metric: str,
+) -> MinimumSampleSpec | None:
+    match = re.search(
+        r"\b(?:minimum|min\.?|at least)\s+(\d{1,7})\s+"
+        r"(legal balls?|balls?|deliver(?:y|ies)|innings?)\b",
+        lowered_question,
+    )
+    if not match:
+        return None
+    value = int(match.group(1))
+    unit = match.group(2)
+    if unit.startswith("inning"):
+        return MinimumSampleSpec(innings=value)
+    if unit.startswith("legal ball") or (
+        METRICS.get(metric) and METRICS[metric].denominator == "legal_balls"
+    ):
+        return MinimumSampleSpec(legal_balls=value)
+    return MinimumSampleSpec(balls=value)
+
+
+def is_passive_dismissal_question(lowered_question: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(?:is|was|were|gets?|got|been)\b.{0,50}\bdismissed\b",
+            lowered_question,
+        )
+    )
+
+
+def requested_sort_direction(
+    lowered_question: str,
+    metric: str,
+    entity: str,
+    *,
+    group_by: list[str] | None = None,
+    filters: dict[str, object] | None = None,
+) -> str | None:
+    if any(token in lowered_question for token in ("highest", "biggest", "fastest")):
+        return "desc"
+    if any(token in lowered_question for token in ("lowest", "fewest", "smallest", "slowest")):
+        return "asc"
+
+    metric_definition = METRICS.get(metric)
+    if metric_definition is None:
+        return None
+    good_direction = metric_definition.good_direction or metric_definition.default_sort
+    if entity == "batter" and metric in {
+        "batter_dot_ball_percentage",
+        "dot_ball_percentage",
+        "false_shot_percentage",
+        "dismissal_rate",
+    }:
+        good_direction = "asc"
+    elif entity == "bowler" and metric in {"boundary_percentage", "runs_conceded"}:
+        good_direction = "asc"
+
+    dimensions = set(group_by or [])
+    plan_filters = filters or {}
+    if (
+        dimensions & {"line", "length", "bowling_style"}
+        and "batter" in plan_filters
+        and metric_definition.owner == "batter"
+    ):
+        good_direction = "asc" if good_direction == "desc" else "desc"
+
+    if "worst" in lowered_question or re.search(r"\bbottom\s+(?:\d+|\w+)", lowered_question):
+        return "asc" if good_direction == "desc" else "desc"
+    if "best" in lowered_question or "top" in lowered_question:
+        return good_direction
+    if "most" in lowered_question:
+        if "most economical" in lowered_question or "most effective" in lowered_question:
+            return good_direction
+        return "desc"
+    if "least" in lowered_question:
+        return "asc"
+    return None
 
 
 def normalize_plan(plan: CricketQueryPlan) -> CricketQueryPlan:

@@ -99,6 +99,30 @@ class ChatService:
         conversation_state: ConversationState | None = None,
     ) -> ChatReply:
         normalized_message = message.strip()
+        if self._has_ambiguous_ranking_metric(normalized_message):
+            replacements = (
+                ("Runs scored", "most runs"),
+                ("Batting strike rate", "highest batting strike rate"),
+                ("Wickets taken", "most wickets"),
+                ("Economy rate", "best economy rate"),
+            )
+            return ChatReply(
+                mode="clarification",
+                message="Which metric should I use to rank the ODI statistics?",
+                clarification_options=[
+                    ClarificationOption(
+                        label=label,
+                        message=re.sub(
+                            r"\bbest\s+(?:statistics|stats|numbers)\b",
+                            replacement,
+                            normalized_message,
+                            count=1,
+                            flags=re.IGNORECASE,
+                        ),
+                    )
+                    for label, replacement in replacements
+                ],
+            )
         if self._has_ambiguous_strike_rate(normalized_message):
             return ChatReply(
                 mode="clarification",
@@ -247,6 +271,16 @@ class ChatService:
             "strike rate" in lowered
             and "batting strike rate" not in lowered
             and "bowling strike rate" not in lowered
+        )
+
+    @staticmethod
+    def _has_ambiguous_ranking_metric(message: str) -> bool:
+        return bool(
+            re.search(
+                r"\bbest\s+(?:statistics|stats|numbers)\b",
+                message,
+                flags=re.IGNORECASE,
+            )
         )
 
     @staticmethod

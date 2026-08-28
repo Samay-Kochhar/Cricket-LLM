@@ -8,7 +8,15 @@ from typing import Any
 from pydantic import ValidationError
 
 from backend.app.cricket_analytics.ontology import METRICS, ontology_context
-from backend.app.cricket_analytics.plan_normalizer import normalize_plan
+from backend.app.cricket_analytics.plan_normalizer import (
+    is_passive_dismissal_question,
+    normalize_plan,
+    requested_bowling_style,
+    requested_limit_from_wording,
+    requested_metric_from_wording,
+    requested_minimum_sample,
+    requested_sort_direction,
+)
 from backend.app.cricket_analytics.plan_validator import validate_plan
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec, ValidationResult
 from backend.app.cricket_analytics.trace import QueryTrace
@@ -77,6 +85,7 @@ class SemanticQueryPlanner:
         fallback = self._fallback_plan(question)
         normalized = self._normalize_and_resolve_players(fallback, question, infer_meaning=True)
         validation = validate_plan(normalized, question)
+        validation = self._validate_explicit_scope(normalized, question, validation)
         trace.parsed_json_plan = fallback.model_dump(mode="json")
         trace.normalized_plan = normalized.model_dump(mode="json")
         trace.validation_result = validation.model_dump(mode="json")
@@ -191,11 +200,38 @@ class SemanticQueryPlanner:
             infer_meaning=not generated.schema_constrained,
         )
         validation = validate_plan(normalized, question)
+        validation = self._validate_explicit_scope(normalized, question, validation)
         attempt_trace["validation_outcome"] = "valid" if validation.valid else "invalid"
         trace.normalized_plan = normalized.model_dump(mode="json")
         trace.validation_result = validation.model_dump(mode="json")
         trace.operation_type = normalized.operation
         return PlannerResult(plan=normalized, validation=validation, used_gemini=True)
+
+    def _validate_explicit_scope(
+        self,
+        plan: CricketQueryPlan,
+        question: str,
+        validation: ValidationResult,
+    ) -> ValidationResult:
+        if plan.operation != "aggregate":
+            return validation
+        inferred = self._infer_filters(question, question.lower(), plan.metric)
+        scope_keys = {
+            "venue",
+            "phase",
+            "years",
+            "year_mode",
+            "opposition",
+            "bowling_style",
+        }
+        errors = list(validation.errors)
+        for key in scope_keys:
+            expected = inferred.get(key)
+            if expected is not None and plan.filters.get(key) != expected:
+                errors.append(
+                    f"Question requests {key} filter {expected!r}, but the plan does not preserve it."
+                )
+        return validation.model_copy(update={"valid": not errors, "errors": errors})
 
     def _generate_structured(self, prompt: str, *, prefer_complex: bool) -> GeminiStructuredResult:
         generator = getattr(self.gemini_client, "generate_structured", None)
@@ -269,10 +305,14 @@ class SemanticQueryPlanner:
 
         updates: dict[str, object] = {"filters": filters}
         resolved_compare_players = filters.get("compare_players")
-        if infer_meaning and (
+        if (
             normalized.operation == "player_compare"
             and isinstance(resolved_compare_players, list)
             and len(resolved_compare_players) >= 2
+            and (
+                infer_meaning
+                or not self._comparison_has_explicit_metric_request(question.lower())
+            )
         ):
             comparison_metrics = self._infer_comparison_metrics(
                 question.lower(),
@@ -345,10 +385,7 @@ class SemanticQueryPlanner:
             filters.pop("comparison_metrics", None)
             unsupported_reason = None
 
-        explicit_minimum = re.search(
-            r"\b(?:minimum|min\.?|at least)\s+(\d{1,7})\s+(legal balls|balls|deliveries|innings)\b",
-            lowered,
-        )
+        explicit_minimum = requested_minimum_sample(lowered, plan.metric)
         ranking_wording = any(
             token in lowered
             for token in (
@@ -369,17 +406,27 @@ class SemanticQueryPlanner:
         is_rate_ranking = bool(metric and metric.denominator is not None and ranking_wording)
         minimum_sample: MinimumSampleSpec | None = None
         if explicit_minimum:
-            value = int(explicit_minimum.group(1))
-            unit = explicit_minimum.group(2)
-            if unit == "innings":
-                minimum_sample = MinimumSampleSpec(innings=value)
-            elif unit == "legal balls" or (metric and metric.denominator == "legal_balls"):
-                minimum_sample = MinimumSampleSpec(legal_balls=value)
-            else:
-                minimum_sample = MinimumSampleSpec(balls=value)
+            minimum_sample = explicit_minimum
         elif is_rate_ranking:
             defaults = metric.minimum_sample.as_dict() if metric else {}
             minimum_sample = MinimumSampleSpec(**defaults) if defaults else None
+
+        requested_direction = (
+            requested_sort_direction(
+                lowered,
+                plan.metric,
+                entity,
+                group_by=group_by,
+                filters=filters,
+            )
+            if operation == "aggregate"
+            else None
+        )
+        sort = (
+            SortSpec(by=plan.metric, direction=requested_direction)
+            if requested_direction
+            else plan.sort
+        )
 
         return plan.model_copy(
             update={
@@ -389,6 +436,7 @@ class SemanticQueryPlanner:
                 "filters": filters,
                 "minimum_sample": minimum_sample,
                 "minimum_sample_explicit": bool(explicit_minimum),
+                "sort": sort,
                 "unsupported_reason": unsupported_reason,
             }
         )
@@ -409,6 +457,17 @@ class SemanticQueryPlanner:
             "- scoring zone questions group/filter field_zone.\n"
             "- fastest scoring means batting_strike_rate unless the user explicitly asks runs.\n"
             "- hardest to bowl dots to means batter dot_ball_percentage sorted ascending.\n"
+            "- For line, length, or bowling_style breakdowns, keep the requested dimension in group_by and the named player in the correct batter or bowler filter.\n"
+            "- Named-batter scoring or struggle questions use batter-owned metrics; passive dismissal wording keeps the named player as the batter being dismissed.\n"
+            "- Named-bowler dot-ball, wicket, economy, and false-shot-per-over questions use bowler-owned metrics and retain the player in the bowler filter.\n"
+            "- Count wording uses count metrics; percentage/rate wording uses its stated denominator. False shots per over is false_shots_per_over.\n"
+            "- Preserve exact pace, spin, left-arm pace, left-arm spin, wrist-spin, finger-spin, leg-spin, and off-spin filters without broadening a subtype.\n"
+            "- For player_compare, preserve every named player and every supported phase, venue, opposition, and bowling_style filter.\n"
+            "- For player_compare, infer one shared role from the wording and requested metrics: entity batter for batting metrics, or entity bowler for bowling metrics.\n"
+            "- Every comparison_metrics entry must belong to that shared entity role; never mix batter-owned and bowler-owned metrics.\n"
+            "- An unqualified batter comparison uses batting_strike_rate, runs_scored, batting_average, batter_dot_ball_percentage, and boundary_percentage.\n"
+            "- An unqualified bowler comparison uses economy_rate, bowling_average, bowling_strike_rate, wickets_taken, bowler_dot_ball_percentage, and boundary_percentage.\n"
+            "- If the question materially mixes player roles or does not establish one shared comparison role, set unsupported_reason and explain the ambiguity.\n"
             "- If unsupported, set unsupported_reason and choose the closest operation.\n\n"
             f"User question: {question}"
         )
@@ -523,6 +582,19 @@ class SemanticQueryPlanner:
             default_sort = "asc"
             if "batter" not in group_by:
                 group_by = ["batter"]
+        requested_direction = (
+            requested_sort_direction(
+                lowered,
+                metric,
+                entity,
+                group_by=group_by,
+                filters=filters,
+            )
+            if operation == "aggregate"
+            else None
+        )
+        if requested_direction:
+            default_sort = requested_direction
         if operation == "matchup":
             entity, metric, group_by, filters, default_sort = self._refine_matchup_plan(
                 lowered,
@@ -620,41 +692,11 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_limit(lowered: str) -> int:
-        word_numbers = {
-            "one": 1,
-            "two": 2,
-            "three": 3,
-            "four": 4,
-            "five": 5,
-            "six": 6,
-            "seven": 7,
-            "eight": 8,
-            "nine": 9,
-            "ten": 10,
-        }
-        numeric = re.search(r"\b(?:top|bottom|first|last|show|list|give me|which)\s+(?:the\s+)?(\d{1,2})\b", lowered)
-        if numeric:
-            return max(1, min(int(numeric.group(1)), 50))
-        word_match = re.search(r"\b(?:top|bottom|first|last|show|list|give me|which)\s+(?:the\s+)?([a-z]+)\b", lowered)
-        if word_match and word_match.group(1) in word_numbers:
-            return word_numbers[word_match.group(1)]
-        nested_word_match = re.search(r"\b(?:show|list|give me)\s+(?:the\s+)?(?:top|bottom)\s+([a-z]+)\b", lowered)
-        if nested_word_match and nested_word_match.group(1) in word_numbers:
-            return word_numbers[nested_word_match.group(1)]
-        return 10
+        return requested_limit_from_wording(lowered) or 10
 
     @staticmethod
     def _infer_minimum_sample(lowered: str, metric: str) -> MinimumSampleSpec | None:
-        match = re.search(r"\bminimum\s+(\d{1,7})\s+(legal balls|balls|deliveries)\b", lowered)
-        if not match:
-            return None
-        value = int(match.group(1))
-        sample_key = "legal_balls" if match.group(2) == "legal balls" else "balls"
-        if sample_key == "legal_balls":
-            return MinimumSampleSpec(legal_balls=value)
-        if METRICS.get(metric) and METRICS[metric].denominator == "legal_balls":
-            return MinimumSampleSpec(legal_balls=value)
-        return MinimumSampleSpec(balls=value)
+        return requested_minimum_sample(lowered, metric)
 
     @staticmethod
     def _infer_operation(lowered: str) -> str:
@@ -692,6 +734,9 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_metric(lowered: str) -> str:
+        requested_metric = requested_metric_from_wording(lowered)
+        if requested_metric:
+            return requested_metric
         if "bowling strike rate" in lowered:
             return "bowling_strike_rate"
         if "average" in lowered or re.search(r"\bavg\b", lowered):
@@ -701,7 +746,11 @@ class SemanticQueryPlanner:
         if "overs bowled" in lowered or "bowled the most overs" in lowered or "most overs" in lowered:
             return "overs_bowled"
         if "how many dot balls" in lowered or "dot ball count" in lowered:
-            return "dot_balls"
+            return (
+                "bowler_dot_balls"
+                if any(token in lowered for token in ("bowl", "bowler", "bowled", "bowls"))
+                else "dot_balls"
+            )
         if "legal balls" in lowered and "minimum" not in lowered:
             return "legal_balls"
         if "balls has" in lowered or "balls did" in lowered or "how many balls" in lowered:
@@ -794,9 +843,14 @@ class SemanticQueryPlanner:
     def _infer_entity(lowered: str, metric: str) -> str:
         if SemanticQueryPlanner._asks_for_bowling_perspective(lowered):
             return "bowler"
-        if metric in {"economy_rate", "bowling_average", "bowling_strike_rate", "wickets_per_over", "wickets_taken", "bowler_dot_ball_percentage", "false_shots_per_over", "yorker_percentage", "yorker_count"}:
+        if "which batter" in lowered or "as a batter" in lowered:
+            return "batter"
+        if "which bowler" in lowered or "as a bowler" in lowered:
             return "bowler"
-        if "which length" in lowered or "which line" in lowered:
+        metric_owner = METRICS[metric].owner if metric in METRICS else None
+        if ("team" in lowered or "teams" in lowered) and metric == "wickets":
+            return "team"
+        if metric_owner == "bowler":
             return "bowler"
         if "phase of an innings" in lowered:
             return "innings"
@@ -806,6 +860,10 @@ class SemanticQueryPlanner:
             return "team"
         if "matchup" in lowered:
             return "matchup"
+        if metric_owner == "batter":
+            return "batter"
+        if "which length" in lowered or "which line" in lowered:
+            return "bowler"
         if "who should bowl" in lowered or "should bowl" in lowered or "which bowler" in lowered or "bowler" in lowered or metric in {"economy_rate", "yorker_percentage", "wickets_per_over", "wicket_opportunity_rate", "false_shots_per_over"}:
             return "bowler"
         if "which batter" in lowered or "batter" in lowered or metric in {"batting_strike_rate", "runs_scored", "balls_faced"}:
@@ -881,6 +939,8 @@ class SemanticQueryPlanner:
                 filters["bowler"] = player
             elif ("which bowler" in lowered or lowered.startswith("who ")) and any(token in lowered for token in ("dismissed", "dismisses", "controls", "against")):
                 filters["batter"] = player
+            elif is_passive_dismissal_question(lowered):
+                filters["batter"] = player
             elif ("which length" in lowered or "which line" in lowered) and any(token in lowered for token in ("dismiss", "against", "to ")):
                 filters["batter"] = player
             elif metric_owner == "bowler":
@@ -917,22 +977,9 @@ class SemanticQueryPlanner:
             filters["length"] = "GOOD_LENGTH"
         elif "full ball" in lowered or "full balls" in lowered or "full-ball" in lowered or "full-balls" in lowered:
             filters["length"] = "FULL"
-        if "against spin" in lowered or "versus spin" in lowered:
-            filters["bowling_style"] = "spin"
-        elif "against pace" in lowered or "versus pace" in lowered:
-            filters["bowling_style"] = "pace"
-        elif "wrist spin" in lowered:
-            filters["bowling_style"] = "wrist_spin"
-        elif "leg spin" in lowered or "leg-spin" in lowered:
-            filters["bowling_style"] = "leg_spin"
-        elif "finger spin" in lowered:
-            filters["bowling_style"] = "finger_spin"
-        elif "off spin" in lowered or "off-spin" in lowered or "off spinner" in lowered:
-            filters["bowling_style"] = "off_spin"
-        elif "left-arm pace" in lowered or "left arm pace" in lowered:
-            filters["bowling_style"] = "left_arm_pace"
-        elif "left-arm spin" in lowered or "left arm spin" in lowered:
-            filters["bowling_style"] = "left_arm_spin"
+        bowling_style = requested_bowling_style(lowered)
+        if bowling_style:
+            filters["bowling_style"] = bowling_style
         if "left-handers" in lowered or "left handers" in lowered or "left-hand batters" in lowered:
             filters["batter_hand"] = "LHB"
         elif "right-handers" in lowered or "right handers" in lowered or "right-hand batters" in lowered:
@@ -1236,6 +1283,27 @@ class SemanticQueryPlanner:
             if metric not in deduped:
                 deduped.append(metric)
         return deduped
+
+    @staticmethod
+    def _comparison_has_explicit_metric_request(lowered: str) -> bool:
+        return bool(re.search(r"\b(?:runs?|wickets?|boundaries)\b", lowered)) or any(
+            token in lowered
+            for token in (
+                "average",
+                "avg",
+                "boundary percentage",
+                "dot-ball percentage",
+                "dot ball percentage",
+                "dot percentage",
+                "economy",
+                "runs scored",
+                "scores faster",
+                "strike rate",
+                "wicket rate",
+                "wickets per over",
+                "wickets taken",
+            )
+        )
 
     @staticmethod
     def _question_subject(lowered: str) -> str | None:

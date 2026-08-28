@@ -3,7 +3,15 @@ from __future__ import annotations
 from backend.app.cricket_analytics.capabilities import validate_capability
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS, OPERATION_TYPES
-from backend.app.cricket_analytics.schemas import CricketQueryPlan, ValidationResult
+from backend.app.cricket_analytics.plan_normalizer import (
+    is_passive_dismissal_question,
+    requested_bowling_style,
+    requested_limit_from_wording,
+    requested_metric_from_wording,
+    requested_minimum_sample,
+    requested_sort_direction,
+)
+from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, ValidationResult
 
 
 COMPATIBLE_OWNER = {
@@ -13,6 +21,11 @@ COMPATIBLE_OWNER = {
     "matchup": {"matchup", "batter", "bowler", "batter_or_bowler"},
     "innings": {"team", "batter_or_bowler"},
     "venue": {"team", "batter_or_bowler"},
+}
+
+COMPARISON_COMPATIBLE_OWNER = {
+    "batter": {"batter", "batter_or_bowler"},
+    "bowler": {"bowler", "batter_or_bowler"},
 }
 
 
@@ -82,8 +95,77 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
             errors.append("Player comparison requires at least one explicit comparison metric.")
         elif any(not isinstance(metric, str) or metric not in METRICS for metric in comparison_metrics):
             errors.append("Player comparison contains an unsupported comparison metric.")
+        else:
+            for comparison_metric in comparison_metrics:
+                try:
+                    owner = get_metric(
+                        comparison_metric,
+                        entity=plan.entity,
+                        filters=plan.filters,
+                    ).owner
+                except KeyError:
+                    owner = METRICS[comparison_metric].owner
+                if (
+                    plan.entity in COMPARISON_COMPATIBLE_OWNER
+                    and owner not in COMPARISON_COMPATIBLE_OWNER[plan.entity]
+                ):
+                    errors.append(
+                        f"Comparison metric '{comparison_metric}' is owned by {owner}, "
+                        f"not compatible with entity '{plan.entity}'."
+                    )
 
     grouped_or_filtered = set(plan.group_by) | set(plan.filters)
+    if (
+        plan.operation == "aggregate"
+        and is_passive_dismissal_question(lowered)
+        and ("batter" not in plan.filters or "bowler" in plan.filters)
+    ):
+        errors.append("Passive dismissal wording must retain the named player in the batter filter.")
+    requested_metric = (
+        requested_metric_from_wording(lowered)
+        if plan.operation == "aggregate"
+        else None
+    )
+    if requested_metric and plan.metric != requested_metric:
+        errors.append(
+            f"Question requests metric '{requested_metric}', but the plan uses '{plan.metric}'."
+        )
+    if requested_metric in METRICS:
+        requested_owner = METRICS[requested_metric].owner
+        if requested_owner == "bowler" and "batter" in plan.filters and "bowler" not in plan.filters:
+            errors.append("The named player must be retained as a bowler for this bowler-owned metric.")
+        if requested_owner == "batter" and "bowler" in plan.filters and "batter" not in plan.filters:
+            errors.append("The named player must be retained as a batter for this batter-owned metric.")
+    requested_direction = requested_sort_direction(
+        lowered,
+        plan.metric,
+        plan.entity,
+        group_by=plan.group_by,
+        filters=plan.filters,
+    )
+    if (
+        plan.operation == "aggregate"
+        and requested_direction
+        and (not plan.sort or plan.sort.direction != requested_direction)
+    ):
+        errors.append(
+            f"Question requests '{requested_direction}' ranking direction for '{plan.metric}'."
+        )
+    requested_limit = requested_limit_from_wording(lowered)
+    if plan.operation == "aggregate" and requested_limit and plan.limit != requested_limit:
+        errors.append(
+            f"Question requests a top/bottom limit of {requested_limit}, but the plan uses {plan.limit}."
+        )
+    explicit_sample = requested_minimum_sample(lowered, plan.metric)
+    if plan.operation == "aggregate" and explicit_sample:
+        actual_sample = plan.minimum_sample or MinimumSampleSpec()
+        if actual_sample != explicit_sample or not plan.minimum_sample_explicit:
+            errors.append("Plan does not preserve the explicitly requested minimum sample.")
+    requested_style = requested_bowling_style(lowered)
+    if requested_style and plan.filters.get("bowling_style") != requested_style:
+        errors.append(
+            f"Question requests bowling style '{requested_style}', but the plan does not preserve that exact filter."
+        )
     if "bowling type" in lowered or "bowling style" in lowered or "type of bowling" in lowered:
         if "bowling_style" not in grouped_or_filtered:
             errors.append("Question asks for bowling type but plan does not group or filter by bowling_style.")

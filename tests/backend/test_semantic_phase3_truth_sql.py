@@ -203,6 +203,53 @@ TRUTH_CASES = [
         ["Hardik Pandya"],
     ),
     (
+        "Which line does Virat Kohli score most against?",
+        "Runs Scored",
+        None,
+        """
+        SELECT SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER)=1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END)
+        FROM analytics.deliveries_v1
+        WHERE bat = ? AND NULLIF(TRIM(CAST(line AS VARCHAR)), '') IS NOT NULL
+        GROUP BY line
+        ORDER BY 1 DESC,
+          SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER)=1 THEN 1 ELSE 0 END) DESC,
+          line ASC
+        LIMIT 1
+        """,
+        ["Virat Kohli"],
+    ),
+    (
+        "How many dot balls does Bumrah bowl by length?",
+        "Bowler Dot Balls",
+        None,
+        f"""
+        SELECT SUM(CASE WHEN {LEGAL} AND TRY_CAST(bowlruns AS INTEGER)=0 THEN 1 ELSE 0 END)
+        FROM analytics.deliveries_v1
+        WHERE bowl = ? AND NULLIF(TRIM(CAST(length AS VARCHAR)), '') IS NOT NULL
+        GROUP BY length
+        ORDER BY 1 DESC,
+          SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER)=1 THEN 1 ELSE 0 END) DESC,
+          length ASC
+        LIMIT 1
+        """,
+        ["Jasprit Bumrah"],
+    ),
+    (
+        "What is Rohit Sharma's batting strike rate against off spin?",
+        "Batting Strike Rate",
+        None,
+        """
+        SELECT ROUND(
+          SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER)=1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END)
+          / NULLIF(SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER)=1 THEN 1 ELSE 0 END), 0) * 100.0,
+          2
+        )
+        FROM analytics.deliveries_v1
+        WHERE bat = ? AND bowl_style = 'OB'
+        """,
+        ["Rohit Sharma"],
+    ),
+    (
         "Which ground has Starc taken the most wickets at?",
         "Wickets Taken",
         None,

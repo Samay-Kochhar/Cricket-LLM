@@ -223,6 +223,7 @@ class SemanticAnalyticsService:
 
         table = self._table_for_rows(plan, dict_rows)
         summary = self._summary_for_rows(plan, dict_rows)
+        aggregate_chart = self._aggregate_chart(plan, table)
         trace.final_answer_metadata = {
             "status": "supported",
             "row_count": len(dict_rows),
@@ -235,6 +236,7 @@ class SemanticAnalyticsService:
             interpretation=self._interpretation(question, plan),
             summaries=[summary],
             tables=[table],
+            charts=[aggregate_chart] if aggregate_chart else [],
             metric_references=[self._metric_reference(plan.metric)],
             evidence_queries=[
                 EvidenceQueryBlock(
@@ -1182,6 +1184,34 @@ class SemanticAnalyticsService:
         )
 
     @staticmethod
+    def _aggregate_chart(plan: CricketQueryPlan, table: TableBlock) -> ChartBlock | None:
+        if len(plan.group_by) != 1:
+            return None
+        dimension = plan.group_by[0]
+        is_breakdown = dimension in {"line", "length", "bowling_style"}
+        is_ranking = dimension == plan.entity and dimension not in plan.filters and bool(
+            plan.sort and plan.sort.by == plan.metric
+        )
+        if not is_breakdown and not is_ranking:
+            return None
+        series = [
+            {"label": str(row[0]), "value": row[1]}
+            for row in table.rows
+            if len(row) > 1 and isinstance(row[1], int | float)
+        ]
+        if not series:
+            return None
+        return ChartBlock(
+            title=(
+                f"{_label(plan.metric)} by {_label(dimension)}"
+                if is_breakdown
+                else f"{_label(plan.metric)} ranking"
+            ),
+            chart_type="bar",
+            series=series,
+        )
+
+    @staticmethod
     def _summary_for_rows(plan: CricketQueryPlan, rows: list[dict[str, object]]) -> SummaryBlock:
         top = rows[0]
         dimension_columns = plan.group_by or ([plan.entity] if plan.entity in top else [])
@@ -1198,13 +1228,18 @@ class SemanticAnalyticsService:
         metric_unit = METRICS[plan.metric].unit
         metric_text = f"{metric_value}%" if metric_unit == "percent" and metric_value is not None else str(metric_value)
         denominator = METRICS[plan.metric].denominator
+        default_sample = (
+            ("legal_balls", "legal ball")
+            if plan.entity == "bowler"
+            else ("balls", "ball")
+        )
         sample_key, sample_label = {
             "legal_balls": ("legal_balls", "legal ball"),
             "balls_faced": ("balls_faced", "ball"),
             "balls": ("balls", "ball"),
             "dismissals": ("dismissals", "dismissal"),
             "wickets": ("wickets", "wicket"),
-        }.get(denominator, ("balls", "ball"))
+        }.get(denominator, default_sample)
         sample = top.get(sample_key) or top.get("balls") or top.get("legal_balls")
         plural = "" if sample == 1 else "s"
         sample_text = f" from {sample} {sample_label}{plural}" if sample else ""
