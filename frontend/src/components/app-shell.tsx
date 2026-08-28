@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { SimpleChart } from "@/components/charts/simple-chart";
 import { ChatResponseSections } from "@/components/results/chat-response-sections";
 import { CompactDataTable } from "@/components/results/compact-data-table";
 import { hasSemanticTrace } from "@/components/results/semantic-debug-trace";
@@ -495,13 +496,22 @@ export function AppShell() {
                         }}
                         result={message.reply.query_response}
                       />
+                      {message.reply.query_response.charts.length > 0 ? (
+                        <div className="chat-inline-charts">
+                          {message.reply.query_response.charts.map((chart) => (
+                            <section className="panel result-panel" key={chart.title}>
+                              <SimpleChart chart={chart} />
+                            </section>
+                          ))}
+                        </div>
+                      ) : null}
                       <div className="chat-attachment-actions">
                         <button className="ghost-button" onClick={() => handleOpenWorkbench(message)} type="button">
                           Go to Workbench
                         </button>
                       </div>
                       {expandedEvidenceMessageId === message.id ? (
-                        <ChatResponseSections result={message.reply.query_response} />
+                        <ChatResponseSections hideCharts result={message.reply.query_response} />
                       ) : null}
                     </div>
                   ) : null}

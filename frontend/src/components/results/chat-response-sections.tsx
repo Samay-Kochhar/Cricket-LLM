@@ -9,10 +9,11 @@ import { VisualInsights } from "@/components/results/visual-insights";
 import type { QueryResponse } from "@/lib/api-types";
 
 type ChatResponseSectionsProps = {
+  hideCharts?: boolean;
   result: QueryResponse;
 };
 
-export function ChatResponseSections({ result }: ChatResponseSectionsProps) {
+export function ChatResponseSections({ hideCharts = false, result }: ChatResponseSectionsProps) {
   const visibleEvidenceNotes = nonTraceEvidenceNotes(result.evidence_notes);
 
   return (
@@ -49,7 +50,7 @@ export function ChatResponseSections({ result }: ChatResponseSectionsProps) {
 
       <SemanticDebugTrace result={result} />
 
-      {result.charts.length > 0 ? (
+      {!hideCharts && result.charts.length > 0 ? (
         <details className="chat-details">
           <summary>Derived charts</summary>
           <div className="chat-details-body">

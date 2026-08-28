@@ -1708,12 +1708,6 @@ code {
   overflow-y: auto;
 }
 
-.atlas-chat-main.is-empty .atlas-chat-log {
-  flex: 0 0 auto;
-  min-height: auto;
-  padding-bottom: 4px;
-}
-
 .chat-turn {
   display: flex;
   flex-direction: column;
@@ -1878,6 +1872,13 @@ code {
 }
 
 .chat-table-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.chat-inline-charts {
   display: flex;
   flex-direction: column;
   gap: 12px;
