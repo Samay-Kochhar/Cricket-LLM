@@ -52,13 +52,15 @@ export function SimpleChart({ chart }: SimpleChartProps) {
     const ticks = Array.from({ length: intervalCount + 1 }, (_, index) => axisMin + index * step);
     const left = 56;
     const right = 570;
+    const plotLeft = left + 28;
+    const plotRight = right - 28;
     const top = 24;
     const bottom = 176;
     const points = chart.series.map((point, index) => ({
       ...point,
       x: chart.series.length === 1
-        ? (left + right) / 2
-        : left + (index / (chart.series.length - 1)) * (right - left),
+        ? (plotLeft + plotRight) / 2
+        : plotLeft + (index / (chart.series.length - 1)) * (plotRight - plotLeft),
       y: bottom - ((point.value - axisMin) / valueRange) * (bottom - top),
     }));
 

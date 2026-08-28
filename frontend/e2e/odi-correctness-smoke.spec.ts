@@ -87,6 +87,18 @@ test.describe("ODI correctness product-family smoke", () => {
       points.map((point) => Number(point.getAttribute("cy"))),
     );
     expect(Math.max(...pointYs)).toBeLessThan(axisY - 4);
+    const yAxisX = Number(await trendChart.locator(".simple-line-axis").first().getAttribute("x1"));
+    const firstValueBounds = await trendChart.locator(".simple-line-value").first().evaluate((label) => {
+      const bounds = (label as SVGGraphicsElement).getBBox();
+      return { left: bounds.x, right: bounds.x + bounds.width };
+    });
+    expect(firstValueBounds.left).toBeGreaterThan(yAxisX + 4);
+    const chartRight = Number(await trendChart.locator(".simple-line-x-axis").getAttribute("x2"));
+    const lastValueBounds = await trendChart.locator(".simple-line-value").last().evaluate((label) => {
+      const bounds = (label as SVGGraphicsElement).getBBox();
+      return { left: bounds.x, right: bounds.x + bounds.width };
+    });
+    expect(lastValueBounds.right).toBeLessThan(chartRight - 4);
     await expect(page.getByText("2018", { exact: true }).last()).toBeVisible();
     await expect(page.getByText("7.83", { exact: true }).last()).toBeVisible();
   });
