@@ -69,6 +69,22 @@ def test_batter_change_question_returns_comparable_yearly_evidence(client: TestC
     assert "60 balls" in threshold_note["detail"]
 
 
+def test_destructiveness_noun_returns_evidence_without_external_planner(client: TestClient) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "Assess Shimron Hetmyer's destructiveness", "history": []},
+    )
+
+    assert response.status_code == 200
+    result = response.json()["query_response"]
+
+    assert result["status"] == "supported"
+    assert result["interpretation"]["filters"]["batter"] == "Shimron Hetmyer"
+    assert result["interpretation"]["filters"]["semantic_metric"] == "batting_strike_rate"
+    assert "105.49" in result["summaries"][0]["body"]
+    assert "1457 balls" in result["summaries"][0]["body"]
+
+
 def test_filtered_bowler_trend_matches_database_truth(client: TestClient) -> None:
     response = client.post(
         "/api/chat",
