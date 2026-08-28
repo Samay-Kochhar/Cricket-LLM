@@ -177,6 +177,69 @@ def test_chat_false_shot_leaderboard_states_scope_and_uses_reliable_default_samp
     assert plan["bowling_style"] == "leg_spin"
 
 
+def test_chat_most_yorkers_ranks_count_with_limit_and_phase_scope(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "Show the top 3 bowlers who bowled the most yorkers at the death",
+            "history": [],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    result = payload["query_response"]
+    filters = result["interpretation"]["filters"]
+
+    assert payload["mode"] == "analysis"
+    assert result["status"] == "supported"
+    assert filters["semantic_metric"] == "yorker_count"
+    assert filters["phase"] == "death"
+    assert len(result["tables"][0]["rows"]) == 3
+    assert result["tables"][0]["columns"][:2] == ["Bowler", "Yorker Count"]
+
+
+def test_chat_vague_best_statistics_asks_user_to_choose_a_metric(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={"message": "Who has the best statistics?", "history": []},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "clarification"
+    assert payload["query_response"] is None
+    assert "metric" in payload["message"].lower()
+    assert [option["label"] for option in payload["clarification_options"]] == [
+        "Runs scored",
+        "Batting strike rate",
+        "Wickets taken",
+        "Economy rate",
+    ]
+
+    clarified = client.post(
+        "/api/chat",
+        json={
+            "message": payload["clarification_options"][0]["message"],
+            "history": [
+                {"role": "user", "content": "Who has the best statistics?"},
+                {"role": "assistant", "content": payload["message"]},
+            ],
+        },
+    )
+    clarified_payload = clarified.json()
+    assert clarified_payload["mode"] == "analysis"
+    assert clarified_payload["query_response"]["status"] == "supported"
+    assert (
+        clarified_payload["query_response"]["interpretation"]["filters"]["semantic_metric"]
+        == "runs_scored"
+    )
+
+
 def test_unqualified_style_filtered_strike_rate_asks_for_metric_clarification(
     client: TestClient,
 ) -> None:

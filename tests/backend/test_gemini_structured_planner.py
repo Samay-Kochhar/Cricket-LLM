@@ -112,6 +112,8 @@ def _planner(client: _ScriptedStructuredClient) -> SemanticQueryPlanner:
     return SemanticQueryPlanner(
         gemini_client=client,  # type: ignore[arg-type]
         available_players=["Virat Kohli", "Rohit Sharma", "Mitchell Starc"],
+        available_venues=["R Premadasa Stadium, Colombo"],
+        available_teams=["Sri Lanka", "Australia", "India"],
         allow_dev_fallback=False,
     )
 
@@ -349,6 +351,104 @@ def test_production_repairs_passive_dismissal_player_ownership() -> None:
     assert result.plan is not None
     assert result.plan.filters["batter"] == "David Miller"
     assert "bowler" not in result.plan.filters
+    assert len(client.calls) == 2
+    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+
+
+def test_production_repairs_dropped_ranking_limit_and_explicit_sample() -> None:
+    dropped_constraints = _plan_json(
+        entity="bowler",
+        metric="yorker_count",
+        group_by=["bowler"],
+        filters={"phase": "death"},
+        sort={"by": "yorker_count", "direction": "asc"},
+        limit=10,
+        minimum_sample=None,
+        minimum_sample_explicit=False,
+    )
+    repaired = _plan_json(
+        entity="bowler",
+        metric="yorker_count",
+        group_by=["bowler"],
+        filters={"phase": "death"},
+        sort={"by": "yorker_count", "direction": "asc"},
+        limit=3,
+        minimum_sample={"legal_balls": 100},
+        minimum_sample_explicit=True,
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(dropped_constraints),
+        _structured_result(repaired),
+    ])
+    trace = QueryTrace(
+        original_user_question=(
+            "Show the bottom 3 bowlers with the fewest yorkers at the death, "
+            "minimum 100 legal balls"
+        )
+    )
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.limit == 3
+    assert result.plan.minimum_sample is not None
+    assert result.plan.minimum_sample.legal_balls == 100
+    assert result.plan.minimum_sample_explicit is True
+    assert len(client.calls) == 2
+    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+
+
+def test_production_repairs_dropped_ranking_scope_filters() -> None:
+    dropped_scope = _plan_json(
+        entity="batter",
+        metric="false_shot_percentage",
+        group_by=["batter"],
+        filters={"bowling_style": "spin"},
+        sort={"by": "false_shot_percentage", "direction": "desc"},
+        limit=5,
+        minimum_sample={"balls": 20},
+        minimum_sample_explicit=True,
+    )
+    repaired = _plan_json(
+        entity="batter",
+        metric="false_shot_percentage",
+        group_by=["batter"],
+        filters={
+            "bowling_style": "spin",
+            "venue": "R Premadasa Stadium, Colombo",
+            "phase": "middle",
+            "years": [2009],
+            "opposition": "Sri Lanka",
+        },
+        sort={"by": "false_shot_percentage", "direction": "desc"},
+        limit=5,
+        minimum_sample={"balls": 20},
+        minimum_sample_explicit=True,
+    )
+    client = _ScriptedStructuredClient([
+        _structured_result(dropped_scope),
+        _structured_result(repaired),
+    ])
+    trace = QueryTrace(
+        original_user_question=(
+            "Show the top 5 batters by highest false shot percentage against spin "
+            "at R Premadasa Stadium, Colombo in middle overs in 2009 against Sri Lanka, "
+            "minimum 20 balls"
+        )
+    )
+
+    result = _planner(client).plan(trace.original_user_question, trace)
+
+    assert result.validation.valid is True
+    assert result.plan is not None
+    assert result.plan.filters == {
+        "bowling_style": "spin",
+        "venue": "R Premadasa Stadium, Colombo",
+        "phase": "middle",
+        "years": [2009],
+        "opposition": "Sri Lanka",
+    }
     assert len(client.calls) == 2
     assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
 

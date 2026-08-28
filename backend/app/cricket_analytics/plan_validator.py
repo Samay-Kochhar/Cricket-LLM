@@ -6,9 +6,12 @@ from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS
 from backend.app.cricket_analytics.plan_normalizer import (
     is_passive_dismissal_question,
     requested_bowling_style,
+    requested_limit_from_wording,
     requested_metric_from_wording,
+    requested_minimum_sample,
+    requested_sort_direction,
 )
-from backend.app.cricket_analytics.schemas import CricketQueryPlan, ValidationResult
+from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, ValidationResult
 
 
 COMPATIBLE_OWNER = {
@@ -133,6 +136,31 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
             errors.append("The named player must be retained as a bowler for this bowler-owned metric.")
         if requested_owner == "batter" and "bowler" in plan.filters and "batter" not in plan.filters:
             errors.append("The named player must be retained as a batter for this batter-owned metric.")
+    requested_direction = requested_sort_direction(
+        lowered,
+        plan.metric,
+        plan.entity,
+        group_by=plan.group_by,
+        filters=plan.filters,
+    )
+    if (
+        plan.operation == "aggregate"
+        and requested_direction
+        and (not plan.sort or plan.sort.direction != requested_direction)
+    ):
+        errors.append(
+            f"Question requests '{requested_direction}' ranking direction for '{plan.metric}'."
+        )
+    requested_limit = requested_limit_from_wording(lowered)
+    if plan.operation == "aggregate" and requested_limit and plan.limit != requested_limit:
+        errors.append(
+            f"Question requests a top/bottom limit of {requested_limit}, but the plan uses {plan.limit}."
+        )
+    explicit_sample = requested_minimum_sample(lowered, plan.metric)
+    if plan.operation == "aggregate" and explicit_sample:
+        actual_sample = plan.minimum_sample or MinimumSampleSpec()
+        if actual_sample != explicit_sample or not plan.minimum_sample_explicit:
+            errors.append("Plan does not preserve the explicitly requested minimum sample.")
     requested_style = requested_bowling_style(lowered)
     if requested_style and plan.filters.get("bowling_style") != requested_style:
         errors.append(

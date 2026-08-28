@@ -119,6 +119,108 @@ cases:
           message_contains: ["Odean Smith", "167.23", "119 balls"]
           evidence: required
 
+  - id: most-yorkers-ranks-count
+    family: ranking
+    outcome: supported
+    turns:
+      - prompt: Show the top 3 bowlers who bowled the most yorkers at the death
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: bowler
+            metric: yorker_count
+            group_by: [bowler]
+            filters: {phase: death}
+            sort: {by: yorker_count, direction: desc}
+            limit: 3
+          result:
+            columns: [Bowler, Yorker Count, Legal Balls, Matches]
+            rows:
+              - {Bowler: Jasprit Bumrah, Yorker Count: 144, Legal Balls: 1123, Matches: 66}
+              - {Bowler: Mitchell Starc, Yorker Count: 101, Legal Balls: 1037, Matches: 75}
+              - {Bowler: Trent Boult, Yorker Count: 87, Legal Balls: 923, Matches: 73}
+          message_contains: ["Jasprit Bumrah", "144", "1123 legal balls"]
+          evidence: required
+
+  - id: highest-yorker-percentage-ranks-rate
+    family: ranking
+    outcome: supported
+    turns:
+      - prompt: Which bowler has the highest yorker percentage?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: bowler
+            metric: yorker_percentage
+            group_by: [bowler]
+            sort: {by: yorker_percentage, direction: desc}
+            minimum_sample: {legal_balls: 60}
+          result:
+            columns: [Bowler, Yorker Percentage, Yorker Balls, Legal Balls, Matches]
+            rows:
+              - {Bowler: T Natarajan, Yorker Percentage: 10.0, Yorker Balls: 12, Legal Balls: 120, Matches: 2}
+          message_contains: ["T Natarajan", "10.0%", "120 legal balls"]
+          evidence: required
+
+  - id: worst-economy-explicit-limit-and-sample
+    family: ranking
+    outcome: supported
+    turns:
+      - prompt: Show the 4 bowlers with the worst economy rate, minimum 100 legal balls
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: bowler
+            metric: economy_rate
+            group_by: [bowler]
+            sort: {by: economy_rate, direction: desc}
+            limit: 4
+            minimum_sample: {legal_balls: 100}
+            minimum_sample_explicit: true
+          result:
+            columns: [Bowler, Economy Rate, Runs Conceded, Legal Balls, Matches]
+            rows:
+              - {Bowler: Abdool Samad, Economy Rate: 8.65, Runs Conceded: 183, Legal Balls: 127, Matches: 9}
+              - {Bowler: Sherfane Rutherford, Economy Rate: 8.64, Runs Conceded: 154, Legal Balls: 107, Matches: 5}
+          message_contains: ["minimum sample of 100 legal balls", "Abdool Samad", "8.65"]
+          evidence: required
+
+  - id: fully-filtered-spin-ranking
+    family: ranking
+    outcome: supported
+    turns:
+      - prompt: Show the top 5 batters by highest false shot percentage against spin at R Premadasa Stadium, Colombo in middle overs in 2009 against Sri Lanka, minimum 20 balls
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: false_shot_percentage
+            group_by: [batter]
+            filters:
+              bowling_style: spin
+              venue: R Premadasa Stadium, Colombo
+              phase: middle
+              years: [2009]
+              opposition: Sri Lanka
+            sort: {by: false_shot_percentage, direction: desc}
+            limit: 5
+            minimum_sample: {balls: 20}
+            minimum_sample_explicit: true
+          result:
+            columns: [Batter, False Shot Percentage, False Shots, Balls Faced, Matches]
+            rows:
+              - {Batter: Yuvraj Singh, False Shot Percentage: 16.67, False Shots: 20, Balls Faced: 120, Matches: 6}
+          message_contains: ["Yuvraj Singh", "16.67", "minimum sample of 20 balls", "against spin", "middle overs", "against Sri Lanka", "R Premadasa Stadium"]
+          evidence: required
+
   - id: line-breakdown
     family: breakdown
     outcome: supported
@@ -232,6 +334,16 @@ cases:
           mode: clarification
           clarification_labels: [Batting strike rate, Bowling strike rate]
           message_contains: ["Do you mean batting strike rate or bowling strike rate?"]
+
+  - id: ambiguous-best-statistics
+    family: ambiguity
+    outcome: ambiguous
+    turns:
+      - prompt: Who has the best statistics?
+        expected:
+          mode: clarification
+          clarification_labels: [Runs scored, Batting strike rate, Wickets taken, Economy rate]
+          message_contains: ["Which metric"]
 
   - id: unsupported-team-economy
     family: unsupported

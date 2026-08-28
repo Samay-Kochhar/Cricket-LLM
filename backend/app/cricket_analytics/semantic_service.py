@@ -223,7 +223,7 @@ class SemanticAnalyticsService:
 
         table = self._table_for_rows(plan, dict_rows)
         summary = self._summary_for_rows(plan, dict_rows)
-        breakdown_chart = self._breakdown_chart(plan, table)
+        aggregate_chart = self._aggregate_chart(plan, table)
         trace.final_answer_metadata = {
             "status": "supported",
             "row_count": len(dict_rows),
@@ -236,7 +236,7 @@ class SemanticAnalyticsService:
             interpretation=self._interpretation(question, plan),
             summaries=[summary],
             tables=[table],
-            charts=[breakdown_chart] if breakdown_chart else [],
+            charts=[aggregate_chart] if aggregate_chart else [],
             metric_references=[self._metric_reference(plan.metric)],
             evidence_queries=[
                 EvidenceQueryBlock(
@@ -1184,12 +1184,15 @@ class SemanticAnalyticsService:
         )
 
     @staticmethod
-    def _breakdown_chart(plan: CricketQueryPlan, table: TableBlock) -> ChartBlock | None:
-        if len(plan.group_by) != 1 or plan.group_by[0] not in {
-            "line",
-            "length",
-            "bowling_style",
-        }:
+    def _aggregate_chart(plan: CricketQueryPlan, table: TableBlock) -> ChartBlock | None:
+        if len(plan.group_by) != 1:
+            return None
+        dimension = plan.group_by[0]
+        is_breakdown = dimension in {"line", "length", "bowling_style"}
+        is_ranking = dimension == plan.entity and dimension not in plan.filters and bool(
+            plan.sort and plan.sort.by == plan.metric
+        )
+        if not is_breakdown and not is_ranking:
             return None
         series = [
             {"label": str(row[0]), "value": row[1]}
@@ -1199,7 +1202,11 @@ class SemanticAnalyticsService:
         if not series:
             return None
         return ChartBlock(
-            title=f"{_label(plan.metric)} by {_label(plan.group_by[0])}",
+            title=(
+                f"{_label(plan.metric)} by {_label(dimension)}"
+                if is_breakdown
+                else f"{_label(plan.metric)} ranking"
+            ),
             chart_type="bar",
             series=series,
         )
