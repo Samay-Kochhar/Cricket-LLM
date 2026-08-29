@@ -9,7 +9,9 @@ from fastapi.testclient import TestClient
 from backend.app.bootstrap import get_services
 from backend.app.config import AppConfig
 from backend.app.cricket_analytics.cricket_definitions import LEGAL_BALL_PREDICATE
+from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
 from backend.app.cricket_analytics.semantic_service import SemanticAnalyticsService
+from backend.app.cricket_analytics.trace import QueryTrace
 from backend.app.db.repository import AnalyticsRepository
 from backend.app.main import app
 from backend.app.services.chat_service import ChatService
@@ -21,6 +23,14 @@ class FakeGeminiClient:
 
     def generate_text(self, prompt: str, prefer_complex: bool = False) -> str | None:
         return None
+
+
+class UnexpectedGeminiPlannerClient:
+    def is_configured(self) -> bool:
+        return True
+
+    def generate_structured(self, *args: object, **kwargs: object) -> object:
+        raise AssertionError("Recognized database questions should not call Gemini")
 
 
 @pytest.fixture()
@@ -83,6 +93,49 @@ def test_destructiveness_noun_returns_evidence_without_external_planner(client: 
     assert result["interpretation"]["filters"]["semantic_metric"] == "batting_strike_rate"
     assert "105.49" in result["summaries"][0]["body"]
     assert "1457 balls" in result["summaries"][0]["body"]
+
+
+def test_recognized_yearly_trend_uses_fast_local_plan_before_gemini() -> None:
+    question = "Has Shimron Hetmyer become more destructive after 2020?"
+    planner = SemanticQueryPlanner(
+        gemini_client=UnexpectedGeminiPlannerClient(),  # type: ignore[arg-type]
+        available_players=["Shimron Hetmyer"],
+        allow_dev_fallback=True,
+    )
+
+    result = planner.plan(question, QueryTrace(original_user_question=question))
+
+    assert result.validation.valid is True
+    assert result.used_gemini is False
+    assert result.plan is not None
+    assert result.plan.metric == "batting_strike_rate"
+    assert result.plan.group_by == ["year"]
+
+
+@pytest.mark.parametrize(
+    ("question", "expected_operation"),
+    [
+        ("What is Virat Kohli's batting strike rate against Australia?", "aggregate"),
+        ("Compare Virat Kohli and Rohit Sharma by runs scored.", "player_compare"),
+    ],
+)
+def test_recognized_named_database_question_uses_fast_local_plan_before_gemini(
+    question: str,
+    expected_operation: str,
+) -> None:
+    planner = SemanticQueryPlanner(
+        gemini_client=UnexpectedGeminiPlannerClient(),  # type: ignore[arg-type]
+        available_players=["Virat Kohli", "Rohit Sharma"],
+        available_teams=["Australia"],
+        allow_dev_fallback=True,
+    )
+
+    result = planner.plan(question, QueryTrace(original_user_question=question))
+
+    assert result.validation.valid is True
+    assert result.used_gemini is False
+    assert result.plan is not None
+    assert result.plan.operation == expected_operation
 
 
 def test_filtered_bowler_trend_matches_database_truth(client: TestClient) -> None:

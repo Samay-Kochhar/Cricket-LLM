@@ -6,7 +6,7 @@ from backend.app.services.chat_service import ChatHistoryTurn, ChatService, Conv
 
 class FakeRepository:
     def list_player_names(self) -> list[str]:
-        return ["Ravichandran Ashwin", "Virat Kohli", "Glenn Maxwell", "Hardik Pandya", "Jasprit Bumrah", "Mitchell Starc", "Tim Southee"]
+        return ["Ravichandran Ashwin", "Virat Kohli", "Glenn Maxwell", "Hardik Pandya", "Jasprit Bumrah", "Mitchell Starc", "Shimron Hetmyer", "Tim Southee"]
 
     def search_players(self, query: str, limit: int = 5) -> list[str]:
         mapping = {
@@ -332,6 +332,32 @@ def test_chat_service_contextualizes_trend_comparison_with_new_player() -> None:
     assert "mitchell starc" in seen_questions[0].lower()
     assert "as a bowler" in seen_questions[0]
     assert "in death overs" in seen_questions[0]
+
+
+def test_complete_named_trend_question_does_not_inherit_stale_bowling_context() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    question = "Has Shimron Hetmyer become more destructive after 2020?"
+
+    reply = service.reply(
+        question,
+        history=[
+            ChatHistoryTurn(role="user", content="What is Jasprit Bumrah's economy rate in death overs?"),
+            ChatHistoryTurn(role="assistant", content="Jasprit Bumrah's death-over economy is 5.78."),
+        ],
+    )
+
+    assert seen_questions == [question]
+    assert reply.resolved_input is None
 
 
 def test_successful_comparison_returns_structured_conversation_state() -> None:

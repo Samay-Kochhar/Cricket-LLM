@@ -334,18 +334,29 @@ class ChatService:
             return message
 
         lowered = message.lower()
-        context_markers = (
+        referential_markers = (
             "the player",
             "this player",
             "same player",
-            "his",
-            "him",
+            "this trend",
+        )
+        has_referential_context = (
+            any(marker in lowered for marker in referential_markers)
+            or bool(re.search(r"\b(?:his|him)\b", lowered))
+        )
+        if self._message_mentions_player(message) and not has_referential_context:
+            return message
+
+        context_markers = (
+            *referential_markers,
             "year by year",
             "role changes",
             "over time",
-            "this trend",
         )
-        if not any(marker in lowered for marker in context_markers):
+        if (
+            not any(marker in lowered for marker in context_markers)
+            and not re.search(r"\b(?:his|him)\b", lowered)
+        ):
             return message
 
         player = self._last_player_from_history(history)

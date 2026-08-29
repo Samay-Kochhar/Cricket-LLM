@@ -69,6 +69,22 @@ test.describe("ODI correctness product-family smoke", () => {
     await expect(page.getByText(/149\.9.*1016 balls/i).first()).toBeVisible();
   });
 
+  test("complete named trend question ignores stale bowler context", async ({ page }) => {
+    await page.goto("/");
+    const input = chatInput(page);
+    await input.fill("What is Jasprit Bumrah's economy rate in death overs?");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await expect(page.getByText(/Jasprit Bumrah.*Economy Rate/i).first()).toBeVisible({ timeout: 30_000 });
+
+    await input.fill("Has Shimron Hetmyer become more destructive after 2020?");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+
+    await expect(page.getByText(/only one comparable yearly sample.*Batting Strike Rate/i).first()).toBeVisible({
+      timeout: 5_000,
+    });
+    await expect(page.getByText(/could not answer right now/i)).toHaveCount(0);
+  });
+
   test("yearly trend question shows cautious comparable evidence", async ({ page }) => {
     await page.goto("/");
     await chatInput(page).fill("Mitchell Starc death-over economy trend after 2018");

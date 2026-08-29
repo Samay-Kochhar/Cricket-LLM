@@ -58,6 +58,15 @@ class SemanticQueryPlanner:
         self.allow_dev_fallback = allow_dev_fallback
 
     def plan(self, question: str, trace: QueryTrace) -> PlannerResult:
+        use_fast_local_plan = self.allow_dev_fallback and (
+            self._is_yearly_trend_question(question.lower())
+            or bool(self._extract_players(question))
+        )
+        if use_fast_local_plan:
+            fast_plan = self._plan_with_deterministic_fallback(question, trace)
+            if fast_plan.plan is not None and fast_plan.validation.valid:
+                return fast_plan
+
         if self.gemini_client.is_configured():
             planned = self._plan_with_gemini(question, trace, prefer_complex=self._needs_complex_model(question))
             if planned.plan is not None and planned.validation.valid:
@@ -92,6 +101,9 @@ class SemanticQueryPlanner:
                 }
             return PlannerResult(plan=None, validation=validation, used_gemini=self.gemini_client.is_configured())
 
+        return self._plan_with_deterministic_fallback(question, trace)
+
+    def _plan_with_deterministic_fallback(self, question: str, trace: QueryTrace) -> PlannerResult:
         fallback = self._fallback_plan(question)
         normalized = self._normalize_and_resolve_players(fallback, question, infer_meaning=True)
         validation = validate_plan(normalized, question)
