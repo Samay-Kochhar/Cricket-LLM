@@ -118,6 +118,26 @@ def _planner(client: _ScriptedStructuredClient) -> SemanticQueryPlanner:
     )
 
 
+def test_novel_named_player_question_still_uses_gemini() -> None:
+    client = _ScriptedStructuredClient([
+        _structured_result(
+            _plan_json(filters={"batter": "Virat Kohli"}),
+        )
+    ])
+    planner = SemanticQueryPlanner(
+        gemini_client=client,  # type: ignore[arg-type]
+        available_players=["Virat Kohli"],
+        allow_dev_fallback=True,
+    )
+    question = "How has Virat Kohli adapted his batting approach under pressure?"
+
+    result = planner.plan(question, QueryTrace(original_user_question=question))
+
+    assert result.validation.valid is True
+    assert result.used_gemini is True
+    assert len(client.calls) == 1
+
+
 def test_truncated_plan_is_repaired_once_even_when_its_json_looks_valid() -> None:
     client = _ScriptedStructuredClient([
         _structured_result(_plan_json(), finish_reason="MAX_TOKENS"),

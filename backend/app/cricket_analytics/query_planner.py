@@ -58,9 +58,9 @@ class SemanticQueryPlanner:
         self.allow_dev_fallback = allow_dev_fallback
 
     def plan(self, question: str, trace: QueryTrace) -> PlannerResult:
-        use_fast_local_plan = self.allow_dev_fallback and (
-            self._is_yearly_trend_question(question.lower())
-            or bool(self._extract_players(question))
+        use_fast_local_plan = (
+            self.allow_dev_fallback
+            and self._has_explicit_deterministic_intent(question)
         )
         if use_fast_local_plan:
             fast_plan = self._plan_with_deterministic_fallback(question, trace)
@@ -113,6 +113,28 @@ class SemanticQueryPlanner:
         trace.validation_result = validation.model_dump(mode="json")
         trace.operation_type = normalized.operation
         return PlannerResult(plan=normalized, validation=validation, used_gemini=False)
+
+    def _has_explicit_deterministic_intent(self, question: str) -> bool:
+        lowered = question.lower()
+        if self._is_yearly_trend_question(lowered):
+            return True
+
+        metric_or_analysis_wording = re.search(
+            r"\b(?:"
+            r"strike rate|scoring rate|run rate|runs?|average|economy|economical|"
+            r"wickets?|dismissals?|dismissed|dismisses|dot balls?|boundaries|boundary rate|"
+            r"false shots?|yorkers?|control percentage|balls faced|legal balls|overs bowled|"
+            r"fastest|slowest|destructive|dominates?|struggles?|weakness(?:es)?"
+            r")\b",
+            lowered,
+        )
+        if metric_or_analysis_wording:
+            return True
+
+        named_players = self._extract_players(question)
+        return len(named_players) >= 2 and bool(
+            re.search(r"\b(?:against|versus|vs|matchup)\b", lowered)
+        )
 
     def _plan_with_gemini(self, question: str, trace: QueryTrace, prefer_complex: bool) -> PlannerResult:
         prompt = self._planner_prompt(question)

@@ -360,6 +360,31 @@ def test_complete_named_trend_question_does_not_inherit_stale_bowling_context() 
     assert reply.resolved_input is None
 
 
+def test_complete_named_novel_question_keeps_its_own_pronoun_context() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    question = "How has Virat Kohli adapted his batting approach under pressure?"
+
+    service.reply(
+        question,
+        history=[
+            ChatHistoryTurn(role="user", content="What is Jasprit Bumrah's economy in death overs?"),
+            ChatHistoryTurn(role="assistant", content="Jasprit Bumrah's death-over economy is 5.78."),
+        ],
+    )
+
+    assert seen_questions == [question]
+
+
 def test_successful_comparison_returns_structured_conversation_state() -> None:
     def query_handler(question: str) -> QueryResponse:
         return QueryResponse(

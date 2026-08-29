@@ -340,11 +340,14 @@ class ChatService:
             "same player",
             "this trend",
         )
+        has_explicit_cross_turn_reference = any(
+            marker in lowered for marker in referential_markers
+        )
         has_referential_context = (
-            any(marker in lowered for marker in referential_markers)
+            has_explicit_cross_turn_reference
             or bool(re.search(r"\b(?:his|him)\b", lowered))
         )
-        if self._message_mentions_player(message) and not has_referential_context:
+        if self._message_mentions_player(message) and not has_explicit_cross_turn_reference:
             return message
 
         context_markers = (
