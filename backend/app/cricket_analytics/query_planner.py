@@ -1411,6 +1411,8 @@ class SemanticQueryPlanner:
     @staticmethod
     def _infer_comparison_metrics(lowered: str, primary_metric: str, entity: str) -> list[str]:
         metrics: list[str] = []
+        if "run count" in lowered:
+            metrics.append("runs_scored")
         if "wicket rate" in lowered or "wickets per over" in lowered:
             metrics.append("wickets_per_over")
         if "wickets taken" in lowered:
