@@ -351,6 +351,39 @@ def test_comparison_follow_up_replaces_venue_and_preserves_structured_context(
     assert filters["venue"] == "Wankhede Stadium, Mumbai"
 
 
+def test_comparison_follow_up_keeps_real_rows_when_batting_average_is_undefined(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "Compare Virat Kohli and Rohit Sharma in death overs.",
+            "history": [],
+        },
+    )
+    original_state = first.json()["conversation_state"]
+    assert original_state is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens, Kolkata?",
+            "history": [],
+            "conversation_state": original_state,
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    assert payload["query_response"]["status"] == "supported"
+    table = payload["query_response"]["tables"][0]
+    player_index = table["columns"].index("Player")
+    average_index = table["columns"].index("Batting Average")
+    rows_by_player = {row[player_index]: row for row in table["rows"]}
+    assert rows_by_player["Virat Kohli"][average_index] == "N/A — not dismissed"
+    assert "26 runs from 26 balls" in payload["message"]
+
+
 def test_comparison_follow_up_replaces_time_scope_and_preserves_participants(
     client: TestClient,
 ) -> None:

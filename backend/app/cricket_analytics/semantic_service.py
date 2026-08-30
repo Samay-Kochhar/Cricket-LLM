@@ -273,15 +273,16 @@ class SemanticAnalyticsService:
 
         trace.final_sql_or_method = "\n---\n".join(compare.executed_sql[:4])
         trace.result_columns = compare.columns
-        missing_players = [
-            str(row.get("player"))
-            for row in compare.rows
-            if any(
-                row.get(metric) is None
-                for metric in compare.metrics
-                if metric != "bowling_strike_rate"
+        missing_players = list(
+            dict.fromkeys(
+                str(row.get("player"))
+                for row in compare.rows
+                if any(
+                    not self._comparison_metric_has_evidence(row, metric)
+                    for metric in compare.metrics
+                )
             )
-        ]
+        )
         if missing_players:
             trace.final_answer_metadata = {
                 "status": "comparison_no_rows",
@@ -1500,6 +1501,8 @@ class SemanticAnalyticsService:
                     else (
                         "N/A — no wickets taken"
                         if column == "bowling_strike_rate" and row.get(column) is None
+                        else "N/A — not dismissed"
+                        if column == "batting_average" and row.get(column) is None
                         else _display_value(row.get(column))
                     )
                     for column in compare.columns
@@ -1593,13 +1596,44 @@ class SemanticAnalyticsService:
                     title="Semantic team-wise comparison answer",
                     body="Calculated standout differences: " + "; ".join(highlights) + ".",
                 )
+        sample_details = []
+        undefined_details = []
+        for row in compare.rows:
+            player = str(row.get("player"))
+            if isinstance(row.get("runs_scored"), int | float) and isinstance(
+                row.get("balls_faced"), int | float
+            ):
+                sample_details.append(
+                    f"{player}: {_display_value(row['runs_scored'])} runs from "
+                    f"{_display_value(row['balls_faced'])} balls"
+                )
+            if "batting_average" in compare.metrics and row.get("batting_average") is None:
+                undefined_details.append(
+                    f"{player}'s batting average is N/A because they were not dismissed in this sample"
+                )
+        detail = ""
+        if sample_details:
+            detail += " " + "; ".join(sample_details) + "."
+        if undefined_details:
+            detail += " " + "; ".join(undefined_details) + "."
         return SummaryBlock(
             title="Semantic player comparison answer",
             body=(
                 f"Compared {players} on {metric_labels}. "
                 "The table includes the shared sample and formula inputs for verification."
+                f"{detail}"
             ),
         )
+
+    @staticmethod
+    def _comparison_metric_has_evidence(row: dict[str, object], metric: str) -> bool:
+        if row.get(metric) is not None:
+            return True
+        if metric == "batting_average":
+            return bool(row.get("balls_faced")) and row.get("dismissals") == 0
+        if metric == "bowling_strike_rate":
+            return bool(row.get("legal_balls")) and row.get("wickets") == 0
+        return False
 
     @staticmethod
     def _matchup_table_for_rows(
