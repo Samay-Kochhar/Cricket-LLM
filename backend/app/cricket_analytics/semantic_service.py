@@ -5,6 +5,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any
 
+from backend.app.cricket_analytics.comparison_insights import build_player_comparison_insight
 from backend.app.cricket_analytics.executors import (
     distribution_executor,
     event_window_executor,
@@ -273,15 +274,16 @@ class SemanticAnalyticsService:
 
         trace.final_sql_or_method = "\n---\n".join(compare.executed_sql[:4])
         trace.result_columns = compare.columns
-        missing_players = [
-            str(row.get("player"))
-            for row in compare.rows
-            if any(
-                row.get(metric) is None
-                for metric in compare.metrics
-                if metric != "bowling_strike_rate"
+        missing_players = list(
+            dict.fromkeys(
+                str(row.get("player"))
+                for row in compare.rows
+                if any(
+                    not self._comparison_metric_has_evidence(row, metric)
+                    for metric in compare.metrics
+                )
             )
-        ]
+        )
         if missing_players:
             trace.final_answer_metadata = {
                 "status": "comparison_no_rows",
@@ -1500,6 +1502,8 @@ class SemanticAnalyticsService:
                     else (
                         "N/A — no wickets taken"
                         if column == "bowling_strike_rate" and row.get(column) is None
+                        else "N/A — not dismissed"
+                        if column == "batting_average" and row.get(column) is None
                         else _display_value(row.get(column))
                     )
                     for column in compare.columns
@@ -1536,70 +1540,20 @@ class SemanticAnalyticsService:
 
     @staticmethod
     def _comparison_summary_for_rows(compare: player_compare_executor.PlayerCompareResult) -> SummaryBlock:
-        metric_labels = ", ".join(_label(metric) for metric in compare.metrics)
-        players = " and ".join(compare.players)
-        if compare.view == "opposition" and len(compare.players) >= 2:
-            first_player, second_player = compare.players[:2]
-            first_rows = {
-                str(row.get("opposition")): row
-                for row in compare.rows
-                if row.get("player") == first_player and row.get("opposition")
-            }
-            second_rows = {
-                str(row.get("opposition")): row
-                for row in compare.rows
-                if row.get("player") == second_player and row.get("opposition")
-            }
-            candidates: list[tuple[float, str, str, dict[str, object], dict[str, object]]] = []
-            for metric in compare.metrics:
-                metric_candidates: list[
-                    tuple[float, str, str, dict[str, object], dict[str, object]]
-                ] = []
-                for opposition in first_rows.keys() & second_rows.keys():
-                    first_value = first_rows[opposition].get(metric)
-                    second_value = second_rows[opposition].get(metric)
-                    if not isinstance(first_value, int | float) or not isinstance(second_value, int | float):
-                        continue
-                    metric_candidates.append(
-                        (
-                            abs(float(first_value) - float(second_value)),
-                            metric,
-                            opposition,
-                            first_rows[opposition],
-                            second_rows[opposition],
-                        )
-                    )
-                if metric_candidates:
-                    candidates.append(max(metric_candidates, key=lambda item: item[0]))
-
-            sample_column = compare.sample_columns[0]
-            sample_label = sample_column.replace("_", " ")
-            highlights: list[str] = []
-            for gap, metric, opposition, first_row, second_row in sorted(
-                candidates,
-                key=lambda item: (-item[0], item[1], item[2]),
-            )[:3]:
-                first_value = float(first_row[metric])
-                second_value = float(second_row[metric])
-                direction = "higher" if first_value > second_value else "lower"
-                highlights.append(
-                    f"Against {opposition}, {first_player}'s {_label(metric)} "
-                    f"({_display_value(first_value)} from {first_row.get(sample_column)} {sample_label}) is "
-                    f"{_display_value(gap)} {direction} than {second_player}'s "
-                    f"({_display_value(second_value)} from {second_row.get(sample_column)} {sample_label})"
-                )
-            if highlights:
-                return SummaryBlock(
-                    title="Semantic team-wise comparison answer",
-                    body="Calculated standout differences: " + "; ".join(highlights) + ".",
-                )
         return SummaryBlock(
             title="Semantic player comparison answer",
-            body=(
-                f"Compared {players} on {metric_labels}. "
-                "The table includes the shared sample and formula inputs for verification."
-            ),
+            body=build_player_comparison_insight(compare),
         )
+
+    @staticmethod
+    def _comparison_metric_has_evidence(row: dict[str, object], metric: str) -> bool:
+        if row.get(metric) is not None:
+            return True
+        if metric == "batting_average":
+            return bool(row.get("balls_faced")) and row.get("dismissals") == 0
+        if metric == "bowling_strike_rate":
+            return bool(row.get("legal_balls")) and row.get("wickets") == 0
+        return False
 
     @staticmethod
     def _matchup_table_for_rows(

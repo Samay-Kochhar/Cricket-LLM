@@ -308,3 +308,632 @@ def test_comparison_phase_suggestion_passes_as_an_exact_history_chain(
     assert payload["query_response"]["status"] == "supported"
     assert payload["query_response"]["interpretation"]["filters"]["comparison_view"] == "phase"
     assert len(payload["query_response"]["tables"][0]["rows"]) == 6
+
+
+def test_phase_comparison_summary_leads_with_insight_instead_of_repeating_rows(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": (
+                "Compare Rohit Sharma and Virat Kohli in powerplay, middle overs, and "
+                "death overs at M Chinnaswamy Stadium, Bangalore and "
+                "M Chinnaswamy Stadium, Bengaluru."
+            ),
+            "history": [],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["query_response"]["status"] == "supported"
+    assert len(payload["query_response"]["tables"][0]["rows"]) == 6
+    assert "Rohit Sharma scored faster than Virat Kohli in all three phases" in payload["message"]
+    assert "largest strike-rate gap was at the death: 274.29 vs 123.81" in payload["message"]
+    assert "The table includes" not in payload["message"]
+    assert payload["message"].count("Rohit Sharma:") == 0
+
+
+def test_comparison_follow_up_replaces_venue_and_preserves_structured_context(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "Compare Virat Kohli and Rohit Sharma by runs scored in death overs.",
+            "history": [],
+        },
+    )
+    assert first.status_code == 200
+    first_payload = first.json()
+    assert first_payload["query_response"]["status"] == "supported"
+    assert first_payload["conversation_state"] is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Wankhede?",
+            "history": [
+                {
+                    "role": "user",
+                    "content": "Compare Virat Kohli and Rohit Sharma by runs scored in death overs.",
+                },
+                {"role": "assistant", "content": first_payload["message"]},
+            ],
+            "conversation_state": first_payload["conversation_state"],
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    filters = payload["query_response"]["interpretation"]["filters"]
+    assert filters["compare_players"] == ["Rohit Sharma", "Virat Kohli"]
+    assert set(filters["comparison_metrics"]) == set(
+        first_payload["conversation_state"]["comparison_metrics"]
+    )
+    assert filters["phase"] == "death"
+    assert filters["venue"] == "Wankhede Stadium, Mumbai"
+
+
+def test_comparison_follow_up_keeps_real_rows_when_batting_average_is_undefined(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "Compare Virat Kohli and Rohit Sharma in death overs.",
+            "history": [],
+        },
+    )
+    original_state = first.json()["conversation_state"]
+    assert original_state is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens, Kolkata?",
+            "history": [],
+            "conversation_state": original_state,
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    assert payload["query_response"]["status"] == "supported"
+    table = payload["query_response"]["tables"][0]
+    player_index = table["columns"].index("Player")
+    average_index = table["columns"].index("Batting Average")
+    rows_by_player = {row[player_index]: row for row in table["rows"]}
+    assert rows_by_player["Virat Kohli"][average_index] == "N/A — not dismissed"
+    assert "Rohit Sharma scored more runs than Virat Kohli: 110 vs 26" in payload["message"]
+    assert "Rohit Sharma scored faster than Virat Kohli: 250 vs 100" in payload["message"]
+    assert "runs from" not in payload["message"]
+
+
+def test_same_stadium_venue_aliases_are_combined_without_clarification(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at chinnaswamy?",
+            "history": [],
+            "conversation_state": {
+                "players": ["Rohit Sharma", "Virat Kohli"],
+                "operation": "player_compare",
+                "metric": "batting_strike_rate",
+                "group_by": ["batter"],
+                "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+                "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+                "filters": {"phase": "death"},
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] == "supported"
+    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
+        "M Chinnaswamy Stadium, Bangalore",
+        "M Chinnaswamy Stadium, Bengaluru",
+    ]
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        {
+            "players": ["Virat Kohli"],
+            "operation": "aggregate",
+            "metric": "batting_strike_rate",
+            "group_by": [],
+            "filters": {"batter": "Virat Kohli", "phase": "death"},
+        },
+        {
+            "players": ["Virat Kohli", "Mitchell Starc"],
+            "operation": "matchup",
+            "metric": "batting_strike_rate",
+            "group_by": ["batter", "bowler"],
+            "filters": {
+                "batter": "Virat Kohli",
+                "bowler": "Mitchell Starc",
+                "phase": "death",
+            },
+        },
+        {
+            "players": ["Virat Kohli"],
+            "operation": "aggregate",
+            "metric": "runs_scored",
+            "group_by": ["year"],
+            "filters": {"batter": "Virat Kohli"},
+        },
+    ],
+)
+def test_same_stadium_aliases_work_for_aggregate_matchup_and_trend_follow_ups(
+    client: TestClient,
+    state: dict[str, object],
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at chinnaswamy?",
+            "history": [],
+            "conversation_state": state,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] != "unsupported"
+    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
+        "M Chinnaswamy Stadium, Bangalore",
+        "M Chinnaswamy Stadium, Bengaluru",
+    ]
+
+
+def test_both_resolves_every_pending_venue_choice_without_losing_context(
+    client: TestClient,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens?",
+            "history": [],
+            "conversation_state": state,
+        },
+    )
+    clarification_payload = clarification.json()
+    assert clarification_payload["mode"] == "clarification"
+    assert clarification_payload["conversation_state"]["pending_clarification"] == {
+        "kind": "venue",
+        "original_message": "What about at Eden Gardens?",
+        "options": [
+            "Eden Gardens, Kolkata",
+            "Eden Park, Auckland",
+            "Sophia Gardens, Cardiff",
+        ],
+    }
+
+    resolved = client.post(
+        "/api/chat",
+        json={
+            "message": "both",
+            "history": [],
+            "conversation_state": clarification_payload["conversation_state"],
+        },
+    )
+
+    assert resolved.status_code == 200
+    payload = resolved.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] == "supported"
+    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
+        "Eden Gardens, Kolkata",
+        "Eden Park, Auckland",
+        "Sophia Gardens, Cardiff",
+    ]
+    assert payload["conversation_state"]["pending_clarification"] is None
+
+
+@pytest.mark.parametrize(
+    ("selection", "expected_venue"),
+    [
+        ("first", "Eden Gardens, Kolkata"),
+        ("2", "Eden Park, Auckland"),
+        ("option 3", "Sophia Gardens, Cardiff"),
+        ("Auckland", "Eden Park, Auckland"),
+        ("What about at Eden Gardens, Kolkata?", "Eden Gardens, Kolkata"),
+    ],
+)
+def test_pending_venue_choice_accepts_ordinals_numbers_names_and_button_messages(
+    client: TestClient,
+    selection: str,
+    expected_venue: str,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens?",
+            "history": [],
+            "conversation_state": state,
+        },
+    ).json()
+
+    resolved = client.post(
+        "/api/chat",
+        json={
+            "message": selection,
+            "history": [],
+            "conversation_state": clarification["conversation_state"],
+        },
+    ).json()
+
+    assert resolved["mode"] == "analysis"
+    assert resolved["query_response"]["status"] != "unsupported"
+    assert resolved["query_response"]["interpretation"]["filters"]["venue"] == expected_venue
+    assert resolved["conversation_state"]["comparison_participants"] == [
+        "Rohit Sharma",
+        "Virat Kohli",
+    ]
+
+
+def test_unrecognized_venue_clarification_reply_keeps_choices_open(
+    client: TestClient,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens?",
+            "history": [],
+            "conversation_state": state,
+        },
+    ).json()
+
+    unresolved = client.post(
+        "/api/chat",
+        json={
+            "message": "somewhere else",
+            "history": [],
+            "conversation_state": clarification["conversation_state"],
+        },
+    ).json()
+
+    assert unresolved["mode"] == "clarification"
+    assert unresolved["message"] == "Please choose one or more of these ODI venues."
+    assert unresolved["conversation_state"] == clarification["conversation_state"]
+    assert [option["label"] for option in unresolved["clarification_options"]] == [
+        "Eden Gardens, Kolkata",
+        "Eden Park, Auckland",
+        "Sophia Gardens, Cardiff",
+    ]
+
+
+def test_pending_venue_choice_accepts_a_common_venue_abbreviation(
+    client: TestClient,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about in Melbourne?",
+            "history": [],
+            "conversation_state": state,
+        },
+    ).json()
+
+    resolved = client.post(
+        "/api/chat",
+        json={
+            "message": "MCG",
+            "history": [],
+            "conversation_state": clarification["conversation_state"],
+        },
+    ).json()
+
+    assert resolved["mode"] == "analysis"
+    assert resolved["query_response"]["status"] != "unsupported"
+    assert resolved["query_response"]["interpretation"]["filters"]["venue"] == (
+        "Melbourne Cricket Ground"
+    )
+
+
+def test_comparison_follow_up_replaces_time_scope_and_preserves_participants(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "Compare Virat Kohli and Rohit Sharma in death overs.",
+            "history": [],
+        },
+    )
+    first_payload = first.json()
+    original_state = first_payload["conversation_state"]
+    assert original_state is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "Since 2020?",
+            "history": [],
+            "conversation_state": original_state,
+        },
+    )
+
+    assert second.status_code == 200
+    filters = second.json()["query_response"]["interpretation"]["filters"]
+    assert filters["compare_players"] == ["Rohit Sharma", "Virat Kohli"]
+    assert set(filters["comparison_metrics"]) == set(original_state["comparison_metrics"])
+    assert filters["phase"] == "death"
+    assert filters["years"] == [2020]
+    assert filters["year_mode"] == "after"
+
+
+def test_comparison_follow_up_replaces_style_and_preserves_participants(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "Compare Virat Kohli and Rohit Sharma against spin.",
+            "history": [],
+        },
+    )
+    first_payload = first.json()
+    original_state = first_payload["conversation_state"]
+    assert original_state is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "Leg-spin?",
+            "history": [],
+            "conversation_state": original_state,
+        },
+    )
+
+    assert second.status_code == 200
+    filters = second.json()["query_response"]["interpretation"]["filters"]
+    assert filters["compare_players"] == ["Rohit Sharma", "Virat Kohli"]
+    assert set(filters["comparison_metrics"]) == set(original_state["comparison_metrics"])
+    assert filters["bowling_style"] == "leg_spin"
+
+
+def test_matchup_follow_up_replaces_phase_and_preserves_structured_matchup(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "How did Steve Smith perform against Jasprit Bumrah?",
+            "history": [],
+        },
+    )
+    assert first.status_code == 200
+    first_payload = first.json()
+    assert first_payload["query_response"]["status"] == "supported"
+    assert first_payload["conversation_state"] is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "And in death overs?",
+            "history": [],
+            "conversation_state": first_payload["conversation_state"],
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    filters = payload["query_response"]["interpretation"]["filters"]
+    assert filters["batter"] == "Steven Smith"
+    assert filters["bowler"] == "Jasprit Bumrah"
+    assert filters["phase"] == "death"
+    assert filters["semantic_operation"] == "matchup"
+    assert filters["semantic_metric"] == first_payload["conversation_state"]["metric"]
+
+
+def test_trend_follow_up_replaces_metric_and_window_but_preserves_player_role(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "Mitchell Starc death-over economy trend after 2018",
+            "history": [],
+        },
+    )
+    assert first.status_code == 200
+    first_payload = first.json()
+    assert first_payload["query_response"]["status"] == "supported"
+    assert first_payload["conversation_state"] is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "What about wickets after 2020?",
+            "history": [],
+            "conversation_state": first_payload["conversation_state"],
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    filters = payload["query_response"]["interpretation"]["filters"]
+    assert filters["bowler"] == "Mitchell Starc"
+    assert filters["phase"] == "death"
+    assert filters["years"] == [2020]
+    assert filters["year_mode"] == "after"
+    assert filters["semantic_metric"] == "wickets_taken"
+    assert filters["semantic_group_by"] == ["year"]
+
+
+def test_ambiguous_follow_up_clarifies_without_mutating_structured_state(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "What is Virat Kohli's batting strike rate in death overs?",
+            "history": [],
+        },
+    )
+    assert first.status_code == 200
+    first_payload = first.json()
+    original_state = first_payload["conversation_state"]
+    assert original_state is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "What about strike rate?",
+            "history": [],
+            "conversation_state": original_state,
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    assert payload["mode"] == "clarification"
+    assert payload["conversation_state"] == original_state
+    assert [option["label"] for option in payload["clarification_options"]] == [
+        "Batting strike rate",
+        "Bowling strike rate",
+    ]
+
+
+def test_non_analytical_turn_does_not_break_the_next_structured_follow_up(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "What is Virat Kohli's batting strike rate in death overs?",
+            "history": [],
+        },
+    )
+    first_payload = first.json()
+    original_state = first_payload["conversation_state"]
+    assert original_state is not None
+
+    unrelated = client.post(
+        "/api/chat",
+        json={
+            "message": "Teach me how to judge spin weakness.",
+            "history": [],
+            "conversation_state": original_state,
+        },
+    )
+    assert unrelated.status_code == 200
+    unrelated_payload = unrelated.json()
+    assert unrelated_payload["conversation_state"] == original_state
+
+    follow_up = client.post(
+        "/api/chat",
+        json={
+            "message": "Powerplay?",
+            "history": [],
+            "conversation_state": unrelated_payload["conversation_state"],
+        },
+    )
+
+    assert follow_up.status_code == 200
+    filters = follow_up.json()["query_response"]["interpretation"]["filters"]
+    assert filters["batter"] == "Virat Kohli"
+    assert filters["phase"] == "powerplay"
+    assert filters["semantic_metric"] == "batting_strike_rate"
+
+
+def test_ambiguous_venue_follow_up_offers_choices_without_mutating_state(
+    client: TestClient,
+) -> None:
+    first = client.post(
+        "/api/chat",
+        json={
+            "message": "Compare Virat Kohli and Rohit Sharma by runs scored.",
+            "history": [],
+        },
+    )
+    first_payload = first.json()
+    original_state = first_payload["conversation_state"]
+    assert original_state is not None
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": "What about in Melbourne?",
+            "history": [],
+            "conversation_state": original_state,
+        },
+    )
+
+    assert second.status_code == 200
+    payload = second.json()
+    assert payload["mode"] == "clarification"
+    clarification_state = payload["conversation_state"]
+    assert clarification_state["pending_clarification"] == {
+        "kind": "venue",
+        "original_message": "What about in Melbourne?",
+        "options": [
+            "Docklands Stadium, Melbourne",
+            "Melbourne Cricket Ground",
+        ],
+    }
+    assert {
+        **clarification_state,
+        "pending_clarification": None,
+    } == original_state
+    assert [option["label"] for option in payload["clarification_options"]] == [
+        "Docklands Stadium, Melbourne",
+        "Melbourne Cricket Ground",
+    ]
+
+    clarified = client.post(
+        "/api/chat",
+        json={
+            "message": payload["clarification_options"][1]["message"],
+            "history": [],
+            "conversation_state": payload["conversation_state"],
+        },
+    )
+    clarified_filters = clarified.json()["query_response"]["interpretation"]["filters"]
+    assert clarified_filters["compare_players"] == ["Rohit Sharma", "Virat Kohli"]
+    assert clarified_filters["venue"] == "Melbourne Cricket Ground"

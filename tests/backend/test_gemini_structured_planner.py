@@ -576,7 +576,9 @@ def test_typed_batter_comparison_preserves_players_style_metric_and_sample_in_li
         "Dismissals",
         "Matches",
     ]
-    assert "Batting Average" in response.summaries[0].body
+    assert response.summaries[0].body == (
+        "Shreyas Iyer had a higher batting average than KL Rahul: 71.4 vs 54."
+    )
 
 
 def test_typed_bowler_comparison_preserves_phase_and_bowler_metrics_in_live_chat() -> None:
@@ -620,7 +622,10 @@ def test_typed_bowler_comparison_preserves_phase_and_bowler_metrics_in_live_chat
         "Runs Conceded",
         "Matches",
     ]
-    assert "Wickets Per Over, Economy Rate" in response.summaries[0].body
+    summary = response.summaries[0].body
+    assert "took wickets more frequently than" in summary
+    assert " vs " in summary
+    assert "The table includes" not in summary
 
 
 def test_typed_materially_mixed_role_comparison_is_clearly_unsupported_in_live_chat() -> None:

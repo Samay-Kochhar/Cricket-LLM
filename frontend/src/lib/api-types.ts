@@ -268,9 +268,15 @@ export type ConversationState = {
   players: string[];
   operation?: string | null;
   metric?: string | null;
+  group_by: string[];
   comparison_participants: string[];
   comparison_metrics: string[];
   filters: Record<string, unknown>;
+  pending_clarification?: {
+    kind: string;
+    original_message: string;
+    options: string[];
+  } | null;
 };
 
 export type ChatReply = {

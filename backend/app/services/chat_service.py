@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from pydantic import BaseModel, Field
 
+from backend.app.cricket_analytics.venue_resolution import same_venue_family, venue_alias_matches
 from backend.app.domain.evidence_models import CitationSource, EvidenceStatus, QueryInterpretation, QueryResponse
 from backend.app.services.follow_up_suggester import suggest_follow_ups
 from backend.app.services.gemini_client import GeminiClient
@@ -65,13 +66,21 @@ class ClarificationOption(BaseModel):
     message: str
 
 
+class PendingClarification(BaseModel):
+    kind: str
+    original_message: str
+    options: list[str] = Field(default_factory=list)
+
+
 class ConversationState(BaseModel):
     players: list[str] = Field(default_factory=list)
     operation: str | None = None
     metric: str | None = None
+    group_by: list[str] = Field(default_factory=list)
     comparison_participants: list[str] = Field(default_factory=list)
     comparison_metrics: list[str] = Field(default_factory=list)
     filters: dict[str, object] = Field(default_factory=dict)
+    pending_clarification: PendingClarification | None = None
 
 
 class ChatReply(BaseModel):
@@ -91,6 +100,7 @@ class ChatService:
     repository: object
     query_handler: object
     gemini_client: GeminiClient
+    _venue_names: tuple[str, ...] | None = field(default=None, init=False, repr=False)
 
     def reply(
         self,
@@ -99,6 +109,31 @@ class ChatService:
         conversation_state: ConversationState | None = None,
     ) -> ChatReply:
         normalized_message = message.strip()
+        resolved_pending_venues: list[str] | None = None
+        if (
+            conversation_state is not None
+            and conversation_state.pending_clarification is not None
+            and conversation_state.pending_clarification.kind == "venue"
+        ):
+            pending = conversation_state.pending_clarification
+            resolved_pending_venues = self._resolve_pending_venue_selection(
+                normalized_message,
+                pending.options,
+            )
+            if not resolved_pending_venues:
+                return ChatReply(
+                    mode="clarification",
+                    message="Please choose one or more of these ODI venues.",
+                    conversation_state=conversation_state,
+                    clarification_options=[
+                        ClarificationOption(label=venue, message=f"What about at {venue}?")
+                        for venue in pending.options
+                    ],
+                )
+            normalized_message = pending.original_message
+            conversation_state = conversation_state.model_copy(
+                update={"pending_clarification": None}
+            )
         if self._has_ambiguous_ranking_metric(normalized_message):
             replacements = (
                 ("Runs scored", "most runs"),
@@ -109,6 +144,7 @@ class ChatService:
             return ChatReply(
                 mode="clarification",
                 message="Which metric should I use to rank the ODI statistics?",
+                conversation_state=conversation_state,
                 clarification_options=[
                     ClarificationOption(
                         label=label,
@@ -127,6 +163,7 @@ class ChatService:
             return ChatReply(
                 mode="clarification",
                 message="Do you mean batting strike rate or bowling strike rate?",
+                conversation_state=conversation_state,
                 clarification_options=[
                     ClarificationOption(
                         label="Batting strike rate",
@@ -150,10 +187,44 @@ class ChatService:
                     ),
                 ],
             )
+        venue_matches = (
+            resolved_pending_venues
+            or self._venue_follow_up_matches(normalized_message)
+            if conversation_state is not None
+            else []
+        )
+        if (
+            conversation_state is not None
+            and len(venue_matches) > 1
+            and not same_venue_family(venue_matches)
+            and resolved_pending_venues is None
+        ):
+            pending_state = conversation_state.model_copy(
+                update={
+                    "pending_clarification": PendingClarification(
+                        kind="venue",
+                        original_message=normalized_message,
+                        options=venue_matches,
+                    )
+                }
+            )
+            return ChatReply(
+                mode="clarification",
+                message="Which ODI venue do you mean?",
+                conversation_state=pending_state,
+                clarification_options=[
+                    ClarificationOption(
+                        label=venue,
+                        message=f"What about at {venue}?",
+                    )
+                    for venue in venue_matches
+                ],
+            )
         contextual_message = self._contextualize_follow_up(
             normalized_message,
             history,
             conversation_state,
+            venue_matches=venue_matches,
         )
         resolution_note = None
         if self._looks_like_coaching_prompt(normalized_message):
@@ -188,6 +259,7 @@ class ChatService:
                     "Compare the batter's spin numbers with their pace baseline.",
                     "Inspect dismissal rate, dot percentage, and control percentage by bowling style.",
                 ],
+                conversation_state=conversation_state,
                 activity_trace=["Gemini reasoning"] if used_gemini else [],
             )
         query_response = self.query_handler(contextual_message)
@@ -230,6 +302,7 @@ class ChatService:
                 resolved_input=resolved_input,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
+                conversation_state=conversation_state,
             )
 
         if self._looks_like_general_chat(message) or not entities:
@@ -247,6 +320,7 @@ class ChatService:
                 resolved_input=None,
                 resolution_note=resolution_note,
                 activity_trace=self._build_activity_trace(query_response, used_gemini=self.gemini_client.is_configured()),
+                conversation_state=conversation_state,
             )
 
         fallback, used_gemini = self._analysis_reply(
@@ -262,6 +336,7 @@ class ChatService:
             resolved_input=resolved_input,
             resolution_note=resolution_note,
             activity_trace=self._build_activity_trace(query_response, used_gemini=used_gemini),
+            conversation_state=conversation_state,
         )
 
     @staticmethod
@@ -289,6 +364,7 @@ class ChatService:
         raw_filters = interpretation.filters
         participants = raw_filters.get("compare_players")
         comparison_metrics = raw_filters.get("comparison_metrics")
+        semantic_group_by = raw_filters.get("semantic_group_by")
         internal_keys = {
             "compare_players",
             "comparison_metrics",
@@ -308,6 +384,11 @@ class ChatService:
                 if isinstance(raw_filters.get("semantic_metric"), str)
                 else None
             ),
+            group_by=(
+                [str(dimension) for dimension in semantic_group_by if isinstance(dimension, str)]
+                if isinstance(semantic_group_by, list)
+                else []
+            ),
             comparison_participants=(
                 [str(player) for player in participants if isinstance(player, str)]
                 if isinstance(participants, list)
@@ -326,9 +407,14 @@ class ChatService:
         message: str,
         history: list[ChatHistoryTurn],
         conversation_state: ConversationState | None = None,
+        venue_matches: list[str] | None = None,
     ) -> str:
-        structured = self._contextualize_from_state(message, conversation_state)
-        if structured != message:
+        structured = self._contextualize_from_state(
+            message,
+            conversation_state,
+            venue_matches=venue_matches,
+        )
+        if conversation_state is not None:
             return structured
         if not history:
             return message
@@ -392,14 +478,48 @@ class ChatService:
 
         return contextual
 
-    @staticmethod
     def _contextualize_from_state(
+        self,
         message: str,
         state: ConversationState | None,
+        venue_matches: list[str] | None = None,
     ) -> str:
         if state is None:
             return message
         lowered = message.lower()
+        if venue_matches is None:
+            venue_matches = self._venue_follow_up_matches(message)
+        explicit_metric = self._explicit_follow_up_metric(lowered)
+        has_explicit_dimension = bool(
+            explicit_metric
+            or re.search(r"\b20\d{2}\b", lowered)
+            or any(
+                token in lowered
+                for token in (
+                    "powerplay",
+                    "power play",
+                    "middle overs",
+                    "death overs",
+                    "death-over",
+                    "at the death",
+                    "leg spin",
+                    "leg-spin",
+                    "off spin",
+                    "off-spin",
+                    "wrist spin",
+                    "wrist-spin",
+                    "finger spin",
+                    "finger-spin",
+                    "left-arm spin",
+                    "left arm spin",
+                    "left-arm pace",
+                    "left arm pace",
+                    "against spin",
+                    "against pace",
+                )
+            )
+            or bool(venue_matches)
+        )
         is_short_follow_up = any(
             marker in lowered
             for marker in (
@@ -409,12 +529,25 @@ class ChatService:
                 "now show",
                 "now in ",
                 "same ",
+                "break it down",
+                "year by year",
+                "over time",
             )
-        )
+        ) or has_explicit_dimension
         if not is_short_follow_up:
             return message
 
         filters = dict(state.filters)
+        metric = explicit_metric or state.metric
+        year_matches = [int(match) for match in re.findall(r"\b(20\d{2})\b", lowered)]
+        if year_matches:
+            filters["years"] = year_matches
+            if "after " in lowered or "since " in lowered:
+                filters["year_mode"] = "after"
+            elif "before " in lowered:
+                filters["year_mode"] = "before"
+            else:
+                filters.pop("year_mode", None)
         all_phases = all(
             token in lowered
             for token in ("powerplay", "middle", "death")
@@ -440,43 +573,192 @@ class ChatService:
             if any(alias in lowered for alias in aliases):
                 filters["bowling_style"] = style
                 break
+        if len(venue_matches) == 1:
+            filters["venue"] = venue_matches[0]
+            filters.pop("venues", None)
+        elif len(venue_matches) > 1:
+            filters["venues"] = venue_matches
+            filters.pop("venue", None)
 
         filter_phrases: list[str] = []
         phase = filters.get("phase")
-        if phase == "powerplay":
+        if phase == "powerplay" and not all_phases:
             filter_phrases.append("in powerplay")
-        elif phase == "middle":
+        elif phase == "middle" and not all_phases:
             filter_phrases.append("in middle overs")
-        elif phase == "death":
+        elif phase == "death" and not all_phases:
             filter_phrases.append("in death overs")
         bowling_style = filters.get("bowling_style")
         if isinstance(bowling_style, str):
             filter_phrases.append(f"against {bowling_style.replace('_', ' ')}")
+        venue = filters.get("venue")
+        if isinstance(venue, str):
+            filter_phrases.append(f"at {venue}")
+        venues = filters.get("venues")
+        if isinstance(venues, list) and venues:
+            venue_names = [str(item) for item in venues if isinstance(item, str)]
+            if venue_names:
+                filter_phrases.append(f"at {' and '.join(venue_names)}")
+        years = filters.get("years")
+        if isinstance(years, list) and years and all(isinstance(year, int) for year in years):
+            year_text = " and ".join(str(year) for year in years)
+            year_mode = filters.get("year_mode")
+            if year_mode == "after":
+                filter_phrases.append(f"after {year_text}")
+            elif year_mode == "before":
+                filter_phrases.append(f"before {year_text}")
+            else:
+                filter_phrases.append(f"in {year_text}")
 
-        metrics = state.comparison_metrics or ([state.metric] if state.metric else [])
-        metric_text = " and ".join(metric.replace("_", " ") for metric in metrics)
-        if state.operation == "matchup" and len(state.players) >= 2 and state.metric:
+        metrics = state.comparison_metrics or ([metric] if metric else [])
+        metric_text = " and ".join(self._follow_up_metric_phrase(metric) for metric in metrics)
+        if state.operation == "matchup" and len(state.players) >= 2 and metric:
             batter, bowler = state.players[:2]
             suffix = f" {' '.join(filter_phrases)}" if filter_phrases else ""
             return (
-                f"What is {batter}'s {state.metric.replace('_', ' ')} "
+                f"What is {batter}'s {metric.replace('_', ' ')} "
                 f"against {bowler}{suffix}?"
             )
         if len(state.comparison_participants) >= 2:
             players = " and ".join(state.comparison_participants)
             metric_phrase = f" by {metric_text}" if metric_text else ""
             suffix = (
-                " across powerplay, middle overs, and death overs"
+                " "
+                + " ".join(
+                    [
+                        *filter_phrases,
+                        "across powerplay, middle overs, and death overs",
+                    ]
+                )
                 if all_phases
                 else f" {' '.join(filter_phrases)}" if filter_phrases else ""
             )
             return f"Compare {players}{metric_phrase}{suffix}".strip()
 
         player = state.players[-1] if state.players else None
-        if player and state.metric:
+        if player and metric:
             suffix = f" {' '.join(filter_phrases)}" if filter_phrases else ""
-            return f"What is {player}'s {state.metric.replace('_', ' ')}{suffix}?"
+            if state.group_by == ["year"]:
+                return f"Show {player}'s {metric.replace('_', ' ')} trend year by year{suffix}"
+            return f"What is {player}'s {metric.replace('_', ' ')}{suffix}?"
         return message
+
+    @staticmethod
+    def _explicit_follow_up_metric(lowered: str) -> str | None:
+        metric_aliases = (
+            ("bowling_strike_rate", ("bowling strike rate",)),
+            ("batting_strike_rate", ("batting strike rate",)),
+            ("economy_rate", ("economy", "economical")),
+            ("wickets_taken", ("wickets taken", "wicket count", "wickets")),
+            ("runs_scored", ("runs scored", "run count", "runs")),
+            ("batting_average", ("batting average",)),
+            ("bowling_average", ("bowling average",)),
+            ("boundary_percentage", ("boundary percentage", "boundary rate")),
+            (
+                "batter_dot_ball_percentage",
+                ("batter dot-ball percentage", "batter dot ball percentage"),
+            ),
+            (
+                "bowler_dot_ball_percentage",
+                ("bowler dot-ball percentage", "bowler dot ball percentage"),
+            ),
+        )
+        for metric, aliases in metric_aliases:
+            if any(alias in lowered for alias in aliases):
+                return metric
+        return None
+
+    @staticmethod
+    def _follow_up_metric_phrase(metric: str) -> str:
+        if metric == "runs_scored":
+            return "run count"
+        return metric.replace("_", " ")
+
+    def _venue_follow_up_matches(self, message: str) -> list[str]:
+        lowered = message.lower()
+        venues = self._known_venues()
+        if venues:
+            explicit = [venue for venue in venues if venue.lower() in lowered]
+            if explicit:
+                return explicit
+            aliases = venue_alias_matches(message, venues)
+            if aliases:
+                return aliases
+            stopwords = {
+                "about", "and", "at", "club", "compare", "cricket", "death",
+                "ground", "in", "international", "middle", "now", "overs",
+                "players", "powerplay", "same", "sports", "stadium", "the", "what",
+            }
+            query_tokens = set(re.findall(r"[a-z0-9]+", lowered)) - stopwords
+            if not query_tokens:
+                return []
+            matches = [
+                venue
+                for venue in venues
+                if query_tokens & set(re.findall(r"[a-z0-9]+", venue.lower()))
+            ]
+            if matches:
+                return matches
+            return []
+        search_venues = getattr(self.repository, "search_venues", None)
+        return [
+            venue
+            for venue in (search_venues(message, limit=5) if callable(search_venues) else [])
+            if isinstance(venue, str)
+        ]
+
+    def _known_venues(self) -> tuple[str, ...]:
+        if self._venue_names is not None:
+            return self._venue_names
+        list_venues = getattr(self.repository, "list_venues", None)
+        self._venue_names = tuple(
+            venue
+            for venue in (list_venues() if callable(list_venues) else [])
+            if isinstance(venue, str)
+        )
+        return self._venue_names
+
+    def _resolve_pending_venue_selection(self, message: str, options: list[str]) -> list[str]:
+        lowered = message.lower().strip(" .?!,;:")
+        if lowered in {
+            "all",
+            "all of them",
+            "all venues",
+            "both",
+            "both of them",
+            "both venues",
+        }:
+            return list(options)
+
+        ordinal_patterns = (
+            (0, r"^(?:1|1st|first|the first|option 1|first one)$"),
+            (1, r"^(?:2|2nd|second|the second|option 2|second one)$"),
+            (2, r"^(?:3|3rd|third|the third|option 3|third one)$"),
+        )
+        for index, pattern in ordinal_patterns:
+            if index < len(options) and re.fullmatch(pattern, lowered):
+                return [options[index]]
+
+        explicit = [option for option in options if option.lower() in lowered]
+        if explicit:
+            return explicit
+
+        aliases = [venue for venue in self._venue_follow_up_matches(message) if venue in options]
+        if aliases:
+            return aliases
+
+        query_tokens = set(re.findall(r"[a-z0-9]+", lowered)) - {
+            "at", "stadium", "the", "venue",
+        }
+        if not query_tokens:
+            return []
+        partial = [
+            option
+            for option in options
+            if query_tokens <= set(re.findall(r"[a-z0-9]+", option.lower()))
+        ]
+        return partial if len(partial) == 1 else []
+
 
     @staticmethod
     def _append_context(message: str, suffix: str) -> str:

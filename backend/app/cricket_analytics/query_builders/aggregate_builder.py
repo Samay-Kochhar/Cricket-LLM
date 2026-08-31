@@ -234,6 +234,11 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
             clauses.append(("bat_hand = ?", [value]))
         elif key == "venue":
             clauses.append(("ground = ?", [value]))
+        elif key == "venues" and isinstance(value, list) and value:
+            venues = [venue for venue in value if isinstance(venue, str)]
+            if venues:
+                placeholders = ", ".join("?" for _ in venues)
+                clauses.append((f"ground IN ({placeholders})", venues))
         elif key == "opposition":
             if entity == "bowler" or ("bowler" in filters and "batter" not in filters):
                 clauses.append(("team_bat = ?", [value]))

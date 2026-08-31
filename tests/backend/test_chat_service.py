@@ -514,6 +514,138 @@ def test_short_matchup_follow_up_preserves_batter_bowler_and_metric() -> None:
     assert "in death overs" in seen_questions[0]
 
 
+def test_structured_state_prevents_canonical_inference_from_prose_history() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    state = ConversationState(
+        players=["Virat Kohli"],
+        operation="aggregate",
+        metric="batting_strike_rate",
+        group_by=["year"],
+        filters={"batter": "Virat Kohli"},
+    )
+
+    service.reply(
+        "Break it down year by year.",
+        history=[
+            ChatHistoryTurn(role="user", content="What is Jasprit Bumrah's economy rate?"),
+            ChatHistoryTurn(role="assistant", content="Jasprit Bumrah's economy rate is 4.6."),
+        ],
+        conversation_state=state,
+    )
+
+    assert seen_questions == [
+        "Show Virat Kohli's batting strike rate trend year by year"
+    ]
+
+
+def test_unsupported_turn_returns_last_successful_structured_state() -> None:
+    def unsupported_query_handler(question: str) -> QueryResponse:
+        return QueryResponse(
+            status=EvidenceStatus.unsupported,
+            interpretation=QueryInterpretation(
+                original_question=question,
+                query_class="role_comparison",
+                entities=["Virat Kohli"],
+            ),
+        )
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=unsupported_query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    state = ConversationState(
+        players=["Virat Kohli"],
+        operation="aggregate",
+        metric="batting_strike_rate",
+        filters={"batter": "Virat Kohli", "phase": "death"},
+    )
+
+    reply = service.reply(
+        "What about an unsupported situation?",
+        history=[],
+        conversation_state=state,
+    )
+
+    assert reply.query_response is not None
+    assert reply.query_response.status == EvidenceStatus.unsupported
+    assert reply.conversation_state == state
+
+
+def test_explicit_dimension_only_follow_up_uses_structured_state() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    state = ConversationState(
+        players=["Virat Kohli"],
+        operation="aggregate",
+        metric="batting_strike_rate",
+        filters={"batter": "Virat Kohli", "phase": "death"},
+    )
+
+    service.reply("Powerplay?", history=[], conversation_state=state)
+
+    assert seen_questions == [
+        "What is Virat Kohli's batting strike rate in powerplay?"
+    ]
+
+
+def test_phase_split_follow_up_preserves_other_comparison_filters() -> None:
+    seen_questions: list[str] = []
+
+    def query_handler(question: str) -> QueryResponse:
+        seen_questions.append(question)
+        return fake_query_handler(question)
+
+    service = ChatService(
+        repository=FakeRepository(),
+        query_handler=query_handler,
+        gemini_client=FakeGeminiClient(),
+    )
+    state = ConversationState(
+        players=["Virat Kohli", "Glenn Maxwell"],
+        operation="player_compare",
+        metric="batting_strike_rate",
+        group_by=["batter"],
+        comparison_participants=["Virat Kohli", "Glenn Maxwell"],
+        comparison_metrics=["batting_strike_rate"],
+        filters={
+            "phase": "death",
+            "bowling_style": "spin",
+            "venue": "Sydney Cricket Ground",
+        },
+    )
+
+    service.reply(
+        "Compare the same players in powerplay, middle, and death overs.",
+        history=[],
+        conversation_state=state,
+    )
+
+    assert seen_questions == [
+        "Compare Virat Kohli and Glenn Maxwell by batting strike rate "
+        "against spin at Sydney Cricket Ground across powerplay, middle overs, and death overs"
+    ]
+
+
 def test_chat_service_returns_supported_leaderboard_as_analysis_without_entities() -> None:
     service = ChatService(
         repository=FakeRepository(),

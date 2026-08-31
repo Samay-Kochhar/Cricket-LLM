@@ -19,6 +19,7 @@ from backend.app.cricket_analytics.plan_normalizer import (
 )
 from backend.app.cricket_analytics.plan_validator import validate_plan
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec, ValidationResult
+from backend.app.cricket_analytics.venue_resolution import venue_alias_matches
 from backend.app.cricket_analytics.trace import QueryTrace
 from backend.app.services.gemini_client import GeminiClient, GeminiStructuredResult
 from backend.app.services.player_resolution import ALIASES, normalize_name, resolve_player_name
@@ -274,10 +275,11 @@ class SemanticQueryPlanner:
                 errors.append(
                     f"Question requests split values {expected_values!r}, but the plan uses {plan.compare_values!r}."
                 )
-        if plan.operation != "aggregate":
+        if plan.operation not in {"aggregate", "player_compare", "matchup", "split_compare"}:
             return validation.model_copy(update={"valid": not errors, "errors": errors})
         scope_keys = {
             "venue",
+            "venues",
             "phase",
             "years",
             "year_mode",
@@ -285,6 +287,8 @@ class SemanticQueryPlanner:
             "bowling_style",
         }
         for key in scope_keys:
+            if key == "phase" and plan.filters.get("comparison_view") == "phase":
+                continue
             expected = inferred.get(key)
             if expected is not None and plan.filters.get(key) != expected:
                 errors.append(
@@ -1142,9 +1146,11 @@ class SemanticQueryPlanner:
         opposition = self._extract_opposition(lowered)
         if opposition:
             filters["opposition"] = opposition
-        venue = None if "by venue" in lowered else self._extract_venue(lowered)
-        if venue:
-            filters["venue"] = venue
+        venues = [] if "by venue" in lowered else self._extract_venues(lowered)
+        if len(venues) > 1:
+            filters["venues"] = venues
+        elif venues:
+            filters["venue"] = venues[0]
         for key, aliases in {
             "midwicket": ("mid wicket", "mid-wicket", "midwicket", "cow corner"),
             "cover": ("cover", "covers"),
@@ -1206,23 +1212,14 @@ class SemanticQueryPlanner:
         return None
 
     def _extract_venue(self, lowered: str) -> str | None:
-        aliases = {
-            "wankhede": "Wankhede Stadium, Mumbai",
-            "lord's": "Lord's, London",
-            "lord’s": "Lord's, London",
-            "lords": "Lord's, London",
-            "mcg": "Melbourne Cricket Ground",
-            "melbourne cricket ground": "Melbourne Cricket Ground",
-            "the oval": "Kennington Oval, London",
-            "kennington oval": "Kennington Oval, London",
-        }
-        for alias, venue in aliases.items():
-            if alias in lowered:
-                return venue
-        for venue in self.available_venues:
-            if venue.lower() in lowered:
-                return venue
-        return None
+        venues = self._extract_venues(lowered)
+        return venues[0] if venues else None
+
+    def _extract_venues(self, lowered: str) -> list[str]:
+        aliases = venue_alias_matches(lowered, self.available_venues)
+        if aliases:
+            return aliases
+        return [venue for venue in self.available_venues if venue.lower() in lowered]
 
     @staticmethod
     def _comparison_looks_bowling(players: list[str], lowered: str, metric: str) -> bool:
@@ -1411,6 +1408,8 @@ class SemanticQueryPlanner:
     @staticmethod
     def _infer_comparison_metrics(lowered: str, primary_metric: str, entity: str) -> list[str]:
         metrics: list[str] = []
+        if "run count" in lowered:
+            metrics.append("runs_scored")
         if "wicket rate" in lowered or "wickets per over" in lowered:
             metrics.append("wickets_per_over")
         if "wickets taken" in lowered:
