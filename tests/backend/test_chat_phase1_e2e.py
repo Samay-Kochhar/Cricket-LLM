@@ -310,6 +310,31 @@ def test_comparison_phase_suggestion_passes_as_an_exact_history_chain(
     assert len(payload["query_response"]["tables"][0]["rows"]) == 6
 
 
+def test_phase_comparison_summary_leads_with_insight_instead_of_repeating_rows(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": (
+                "Compare Rohit Sharma and Virat Kohli in powerplay, middle overs, and "
+                "death overs at M Chinnaswamy Stadium, Bangalore and "
+                "M Chinnaswamy Stadium, Bengaluru."
+            ),
+            "history": [],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["query_response"]["status"] == "supported"
+    assert len(payload["query_response"]["tables"][0]["rows"]) == 6
+    assert "Rohit Sharma scored faster than Virat Kohli in all three phases" in payload["message"]
+    assert "largest strike-rate gap was at the death: 274.29 vs 123.81" in payload["message"]
+    assert "The table includes" not in payload["message"]
+    assert payload["message"].count("Rohit Sharma:") == 0
+
+
 def test_comparison_follow_up_replaces_venue_and_preserves_structured_context(
     client: TestClient,
 ) -> None:
@@ -381,7 +406,9 @@ def test_comparison_follow_up_keeps_real_rows_when_batting_average_is_undefined(
     average_index = table["columns"].index("Batting Average")
     rows_by_player = {row[player_index]: row for row in table["rows"]}
     assert rows_by_player["Virat Kohli"][average_index] == "N/A — not dismissed"
-    assert "26 runs from 26 balls" in payload["message"]
+    assert "Rohit Sharma scored more runs than Virat Kohli: 110 vs 26" in payload["message"]
+    assert "Rohit Sharma scored faster than Virat Kohli: 250 vs 100" in payload["message"]
+    assert "runs from" not in payload["message"]
 
 
 def test_same_stadium_venue_aliases_are_combined_without_clarification(

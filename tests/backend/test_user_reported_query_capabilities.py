@@ -671,10 +671,10 @@ def test_team_wise_comparison_returns_one_opposition_table_per_player(
         assert table.rows
         assert all(row[0] for row in table.rows)
     summary = response.summaries[0].body
-    assert "Calculated standout differences:" in summary
-    assert 1 <= summary.count("Against ") <= 3
-    assert "legal balls" in summary
-    assert " higher " in summary or " lower " in summary
+    assert summary.startswith("Against ")
+    assert " than " in summary
+    assert "Calculated standout differences:" not in summary
+    assert summary.count(" vs ") == 1
 
 
 def test_named_matchup_is_descriptive_and_hides_duplicate_or_internal_columns(
