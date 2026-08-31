@@ -61,6 +61,7 @@ COMMON_FILTERS = frozenset(
         "batter_hand",
         "bowler_hand",
         "venue",
+        "venues",
         "opposition",
         "innings",
         "over_range",

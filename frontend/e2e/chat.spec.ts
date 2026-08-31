@@ -209,6 +209,71 @@ test("venue clarification click preserves the last successful conversation state
   await expect(page.getByText("MCG comparison ready.")).toBeVisible();
 });
 
+test("typed both sends the pending venue clarification state", async ({ page }) => {
+  const requests: Array<{ message: string; conversation_state?: unknown }> = [];
+  const baseState = {
+    players: ["Rohit Sharma", "Virat Kohli"],
+    operation: "player_compare",
+    metric: "batting_strike_rate",
+    group_by: ["batter"],
+    comparison_participants: ["Rohit Sharma", "Virat Kohli"],
+    comparison_metrics: ["batting_strike_rate", "runs_scored"],
+    filters: { phase: "death" },
+  };
+  const pendingState = {
+    ...baseState,
+    pending_clarification: {
+      kind: "venue",
+      original_message: "What about at Eden Gardens?",
+      options: ["Eden Gardens, Kolkata", "Eden Park, Auckland"],
+    },
+  };
+  await page.route("**/api/chat", async (route) => {
+    const request = route.request().postDataJSON() as {
+      message: string;
+      conversation_state?: unknown;
+    };
+    requests.push(request);
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify(
+        request.message === "What about at Eden Gardens?"
+          ? {
+              mode: "clarification",
+              message: "Which ODI venue do you mean?",
+              suggestions: [],
+              clarification_options: pendingState.pending_clarification.options.map((venue) => ({
+                label: venue,
+                message: `What about at ${venue}?`,
+              })),
+              conversation_state: pendingState,
+              activity_trace: [],
+            }
+          : {
+              mode: "analysis",
+              message: request.message === "both" ? "Combined venue comparison ready." : "Ready.",
+              suggestions: [],
+              clarification_options: [],
+              conversation_state: baseState,
+              activity_trace: [],
+            },
+      ),
+    });
+  });
+
+  await page.goto("/");
+  await page.getByRole("textbox").fill("Compare Virat Kohli and Rohit Sharma");
+  await page.getByRole("button", { name: "Send", exact: true }).click();
+  await page.getByRole("textbox").fill("What about at Eden Gardens?");
+  await page.getByRole("button", { name: "Send", exact: true }).click();
+  await page.getByRole("textbox").fill("both");
+  await page.getByRole("button", { name: "Send", exact: true }).click();
+
+  await expect.poll(() => requests.length).toBe(3);
+  expect(requests[2].conversation_state).toEqual(pendingState);
+  await expect(page.getByText("Combined venue comparison ready.")).toBeVisible();
+});
+
 test("minimum-balls control reruns the database query instead of filtering limited rows", async ({ page }) => {
   const messages: string[] = [];
   await page.route("**/api/chat", async (route) => {

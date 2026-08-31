@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 
 from pydantic import BaseModel, Field
 
+from backend.app.cricket_analytics.venue_resolution import same_venue_family, venue_alias_matches
 from backend.app.domain.evidence_models import CitationSource, EvidenceStatus, QueryInterpretation, QueryResponse
 from backend.app.services.follow_up_suggester import suggest_follow_ups
 from backend.app.services.gemini_client import GeminiClient
@@ -65,6 +66,12 @@ class ClarificationOption(BaseModel):
     message: str
 
 
+class PendingClarification(BaseModel):
+    kind: str
+    original_message: str
+    options: list[str] = Field(default_factory=list)
+
+
 class ConversationState(BaseModel):
     players: list[str] = Field(default_factory=list)
     operation: str | None = None
@@ -73,6 +80,7 @@ class ConversationState(BaseModel):
     comparison_participants: list[str] = Field(default_factory=list)
     comparison_metrics: list[str] = Field(default_factory=list)
     filters: dict[str, object] = Field(default_factory=dict)
+    pending_clarification: PendingClarification | None = None
 
 
 class ChatReply(BaseModel):
@@ -101,6 +109,31 @@ class ChatService:
         conversation_state: ConversationState | None = None,
     ) -> ChatReply:
         normalized_message = message.strip()
+        resolved_pending_venues: list[str] | None = None
+        if (
+            conversation_state is not None
+            and conversation_state.pending_clarification is not None
+            and conversation_state.pending_clarification.kind == "venue"
+        ):
+            pending = conversation_state.pending_clarification
+            resolved_pending_venues = self._resolve_pending_venue_selection(
+                normalized_message,
+                pending.options,
+            )
+            if not resolved_pending_venues:
+                return ChatReply(
+                    mode="clarification",
+                    message="Please choose one or more of these ODI venues.",
+                    conversation_state=conversation_state,
+                    clarification_options=[
+                        ClarificationOption(label=venue, message=f"What about at {venue}?")
+                        for venue in pending.options
+                    ],
+                )
+            normalized_message = pending.original_message
+            conversation_state = conversation_state.model_copy(
+                update={"pending_clarification": None}
+            )
         if self._has_ambiguous_ranking_metric(normalized_message):
             replacements = (
                 ("Runs scored", "most runs"),
@@ -155,15 +188,30 @@ class ChatService:
                 ],
             )
         venue_matches = (
-            self._venue_follow_up_matches(normalized_message)
+            resolved_pending_venues
+            or self._venue_follow_up_matches(normalized_message)
             if conversation_state is not None
             else []
         )
-        if conversation_state is not None and len(venue_matches) > 1:
+        if (
+            conversation_state is not None
+            and len(venue_matches) > 1
+            and not same_venue_family(venue_matches)
+            and resolved_pending_venues is None
+        ):
+            pending_state = conversation_state.model_copy(
+                update={
+                    "pending_clarification": PendingClarification(
+                        kind="venue",
+                        original_message=normalized_message,
+                        options=venue_matches,
+                    )
+                }
+            )
             return ChatReply(
                 mode="clarification",
                 message="Which ODI venue do you mean?",
-                conversation_state=conversation_state,
+                conversation_state=pending_state,
                 clarification_options=[
                     ClarificationOption(
                         label=venue,
@@ -176,6 +224,7 @@ class ChatService:
             normalized_message,
             history,
             conversation_state,
+            venue_matches=venue_matches,
         )
         resolution_note = None
         if self._looks_like_coaching_prompt(normalized_message):
@@ -358,8 +407,13 @@ class ChatService:
         message: str,
         history: list[ChatHistoryTurn],
         conversation_state: ConversationState | None = None,
+        venue_matches: list[str] | None = None,
     ) -> str:
-        structured = self._contextualize_from_state(message, conversation_state)
+        structured = self._contextualize_from_state(
+            message,
+            conversation_state,
+            venue_matches=venue_matches,
+        )
         if conversation_state is not None:
             return structured
         if not history:
@@ -428,11 +482,13 @@ class ChatService:
         self,
         message: str,
         state: ConversationState | None,
+        venue_matches: list[str] | None = None,
     ) -> str:
         if state is None:
             return message
         lowered = message.lower()
-        venue_matches = self._venue_follow_up_matches(message)
+        if venue_matches is None:
+            venue_matches = self._venue_follow_up_matches(message)
         explicit_metric = self._explicit_follow_up_metric(lowered)
         has_explicit_dimension = bool(
             explicit_metric
@@ -462,7 +518,7 @@ class ChatService:
                     "against pace",
                 )
             )
-            or len(venue_matches) == 1
+            or bool(venue_matches)
         )
         is_short_follow_up = any(
             marker in lowered
@@ -519,6 +575,10 @@ class ChatService:
                 break
         if len(venue_matches) == 1:
             filters["venue"] = venue_matches[0]
+            filters.pop("venues", None)
+        elif len(venue_matches) > 1:
+            filters["venues"] = venue_matches
+            filters.pop("venue", None)
 
         filter_phrases: list[str] = []
         phase = filters.get("phase")
@@ -534,6 +594,11 @@ class ChatService:
         venue = filters.get("venue")
         if isinstance(venue, str):
             filter_phrases.append(f"at {venue}")
+        venues = filters.get("venues")
+        if isinstance(venues, list) and venues:
+            venue_names = [str(item) for item in venues if isinstance(item, str)]
+            if venue_names:
+                filter_phrases.append(f"at {' and '.join(venue_names)}")
         years = filters.get("years")
         if isinstance(years, list) and years and all(isinstance(year, int) for year in years):
             year_text = " and ".join(str(year) for year in years)
@@ -616,6 +681,9 @@ class ChatService:
             explicit = [venue for venue in venues if venue.lower() in lowered]
             if explicit:
                 return explicit
+            aliases = venue_alias_matches(message, venues)
+            if aliases:
+                return aliases
             stopwords = {
                 "about", "and", "at", "club", "compare", "cricket", "death",
                 "ground", "in", "international", "middle", "now", "overs",
@@ -649,6 +717,48 @@ class ChatService:
             if isinstance(venue, str)
         )
         return self._venue_names
+
+    def _resolve_pending_venue_selection(self, message: str, options: list[str]) -> list[str]:
+        lowered = message.lower().strip(" .?!,;:")
+        if lowered in {
+            "all",
+            "all of them",
+            "all venues",
+            "both",
+            "both of them",
+            "both venues",
+        }:
+            return list(options)
+
+        ordinal_patterns = (
+            (0, r"^(?:1|1st|first|the first|option 1|first one)$"),
+            (1, r"^(?:2|2nd|second|the second|option 2|second one)$"),
+            (2, r"^(?:3|3rd|third|the third|option 3|third one)$"),
+        )
+        for index, pattern in ordinal_patterns:
+            if index < len(options) and re.fullmatch(pattern, lowered):
+                return [options[index]]
+
+        explicit = [option for option in options if option.lower() in lowered]
+        if explicit:
+            return explicit
+
+        aliases = [venue for venue in self._venue_follow_up_matches(message) if venue in options]
+        if aliases:
+            return aliases
+
+        query_tokens = set(re.findall(r"[a-z0-9]+", lowered)) - {
+            "at", "stadium", "the", "venue",
+        }
+        if not query_tokens:
+            return []
+        partial = [
+            option
+            for option in options
+            if query_tokens <= set(re.findall(r"[a-z0-9]+", option.lower()))
+        ]
+        return partial if len(partial) == 1 else []
+
 
     @staticmethod
     def _append_context(message: str, suffix: str) -> str:

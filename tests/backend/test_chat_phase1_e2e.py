@@ -384,6 +384,270 @@ def test_comparison_follow_up_keeps_real_rows_when_batting_average_is_undefined(
     assert "26 runs from 26 balls" in payload["message"]
 
 
+def test_same_stadium_venue_aliases_are_combined_without_clarification(
+    client: TestClient,
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at chinnaswamy?",
+            "history": [],
+            "conversation_state": {
+                "players": ["Rohit Sharma", "Virat Kohli"],
+                "operation": "player_compare",
+                "metric": "batting_strike_rate",
+                "group_by": ["batter"],
+                "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+                "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+                "filters": {"phase": "death"},
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] == "supported"
+    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
+        "M Chinnaswamy Stadium, Bangalore",
+        "M Chinnaswamy Stadium, Bengaluru",
+    ]
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        {
+            "players": ["Virat Kohli"],
+            "operation": "aggregate",
+            "metric": "batting_strike_rate",
+            "group_by": [],
+            "filters": {"batter": "Virat Kohli", "phase": "death"},
+        },
+        {
+            "players": ["Virat Kohli", "Mitchell Starc"],
+            "operation": "matchup",
+            "metric": "batting_strike_rate",
+            "group_by": ["batter", "bowler"],
+            "filters": {
+                "batter": "Virat Kohli",
+                "bowler": "Mitchell Starc",
+                "phase": "death",
+            },
+        },
+        {
+            "players": ["Virat Kohli"],
+            "operation": "aggregate",
+            "metric": "runs_scored",
+            "group_by": ["year"],
+            "filters": {"batter": "Virat Kohli"},
+        },
+    ],
+)
+def test_same_stadium_aliases_work_for_aggregate_matchup_and_trend_follow_ups(
+    client: TestClient,
+    state: dict[str, object],
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at chinnaswamy?",
+            "history": [],
+            "conversation_state": state,
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] != "unsupported"
+    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
+        "M Chinnaswamy Stadium, Bangalore",
+        "M Chinnaswamy Stadium, Bengaluru",
+    ]
+
+
+def test_both_resolves_every_pending_venue_choice_without_losing_context(
+    client: TestClient,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens?",
+            "history": [],
+            "conversation_state": state,
+        },
+    )
+    clarification_payload = clarification.json()
+    assert clarification_payload["mode"] == "clarification"
+    assert clarification_payload["conversation_state"]["pending_clarification"] == {
+        "kind": "venue",
+        "original_message": "What about at Eden Gardens?",
+        "options": [
+            "Eden Gardens, Kolkata",
+            "Eden Park, Auckland",
+            "Sophia Gardens, Cardiff",
+        ],
+    }
+
+    resolved = client.post(
+        "/api/chat",
+        json={
+            "message": "both",
+            "history": [],
+            "conversation_state": clarification_payload["conversation_state"],
+        },
+    )
+
+    assert resolved.status_code == 200
+    payload = resolved.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] == "supported"
+    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
+        "Eden Gardens, Kolkata",
+        "Eden Park, Auckland",
+        "Sophia Gardens, Cardiff",
+    ]
+    assert payload["conversation_state"]["pending_clarification"] is None
+
+
+@pytest.mark.parametrize(
+    ("selection", "expected_venue"),
+    [
+        ("first", "Eden Gardens, Kolkata"),
+        ("2", "Eden Park, Auckland"),
+        ("option 3", "Sophia Gardens, Cardiff"),
+        ("Auckland", "Eden Park, Auckland"),
+        ("What about at Eden Gardens, Kolkata?", "Eden Gardens, Kolkata"),
+    ],
+)
+def test_pending_venue_choice_accepts_ordinals_numbers_names_and_button_messages(
+    client: TestClient,
+    selection: str,
+    expected_venue: str,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens?",
+            "history": [],
+            "conversation_state": state,
+        },
+    ).json()
+
+    resolved = client.post(
+        "/api/chat",
+        json={
+            "message": selection,
+            "history": [],
+            "conversation_state": clarification["conversation_state"],
+        },
+    ).json()
+
+    assert resolved["mode"] == "analysis"
+    assert resolved["query_response"]["status"] != "unsupported"
+    assert resolved["query_response"]["interpretation"]["filters"]["venue"] == expected_venue
+    assert resolved["conversation_state"]["comparison_participants"] == [
+        "Rohit Sharma",
+        "Virat Kohli",
+    ]
+
+
+def test_unrecognized_venue_clarification_reply_keeps_choices_open(
+    client: TestClient,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about at Eden Gardens?",
+            "history": [],
+            "conversation_state": state,
+        },
+    ).json()
+
+    unresolved = client.post(
+        "/api/chat",
+        json={
+            "message": "somewhere else",
+            "history": [],
+            "conversation_state": clarification["conversation_state"],
+        },
+    ).json()
+
+    assert unresolved["mode"] == "clarification"
+    assert unresolved["message"] == "Please choose one or more of these ODI venues."
+    assert unresolved["conversation_state"] == clarification["conversation_state"]
+    assert [option["label"] for option in unresolved["clarification_options"]] == [
+        "Eden Gardens, Kolkata",
+        "Eden Park, Auckland",
+        "Sophia Gardens, Cardiff",
+    ]
+
+
+def test_pending_venue_choice_accepts_a_common_venue_abbreviation(
+    client: TestClient,
+) -> None:
+    state = {
+        "players": ["Rohit Sharma", "Virat Kohli"],
+        "operation": "player_compare",
+        "metric": "batting_strike_rate",
+        "group_by": ["batter"],
+        "comparison_participants": ["Rohit Sharma", "Virat Kohli"],
+        "comparison_metrics": ["batting_strike_rate", "runs_scored"],
+        "filters": {"phase": "death"},
+    }
+    clarification = client.post(
+        "/api/chat",
+        json={
+            "message": "What about in Melbourne?",
+            "history": [],
+            "conversation_state": state,
+        },
+    ).json()
+
+    resolved = client.post(
+        "/api/chat",
+        json={
+            "message": "MCG",
+            "history": [],
+            "conversation_state": clarification["conversation_state"],
+        },
+    ).json()
+
+    assert resolved["mode"] == "analysis"
+    assert resolved["query_response"]["status"] != "unsupported"
+    assert resolved["query_response"]["interpretation"]["filters"]["venue"] == (
+        "Melbourne Cricket Ground"
+    )
+
+
 def test_comparison_follow_up_replaces_time_scope_and_preserves_participants(
     client: TestClient,
 ) -> None:
@@ -617,7 +881,19 @@ def test_ambiguous_venue_follow_up_offers_choices_without_mutating_state(
     assert second.status_code == 200
     payload = second.json()
     assert payload["mode"] == "clarification"
-    assert payload["conversation_state"] == original_state
+    clarification_state = payload["conversation_state"]
+    assert clarification_state["pending_clarification"] == {
+        "kind": "venue",
+        "original_message": "What about in Melbourne?",
+        "options": [
+            "Docklands Stadium, Melbourne",
+            "Melbourne Cricket Ground",
+        ],
+    }
+    assert {
+        **clarification_state,
+        "pending_clarification": None,
+    } == original_state
     assert [option["label"] for option in payload["clarification_options"]] == [
         "Docklands Stadium, Melbourne",
         "Melbourne Cricket Ground",
