@@ -20,6 +20,7 @@ from backend.app.cricket_analytics.cricket_definitions import public_label
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.query_builders.aggregate_builder import build_aggregate_query
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
+from backend.app.cricket_analytics.presentation_policy import select_chart
 from backend.app.cricket_analytics.result_validator import validate_result
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, QueryBuildResult, SortSpec, ValidationResult
 from backend.app.cricket_analytics.trace import QueryTrace
@@ -224,7 +225,7 @@ class SemanticAnalyticsService:
 
         table = self._table_for_rows(plan, dict_rows)
         summary = self._summary_for_rows(plan, dict_rows)
-        aggregate_chart = self._aggregate_chart(plan, table)
+        aggregate_chart = select_chart(plan, table)
         trace.final_answer_metadata = {
             "status": "supported",
             "row_count": len(dict_rows),
@@ -300,6 +301,7 @@ class SemanticAnalyticsService:
         tables = self._comparison_tables_for_rows(compare)
         table = tables[0]
         summary = self._comparison_summary_for_rows(compare)
+        comparison_chart = select_chart(plan, table)
         trace.final_answer_metadata = {
             "status": "supported",
             "row_count": len(compare.rows),
@@ -313,6 +315,7 @@ class SemanticAnalyticsService:
             interpretation=self._interpretation(question, plan),
             summaries=[summary],
             tables=tables,
+            charts=[comparison_chart] if comparison_chart else [],
             metric_references=[self._metric_reference(metric) for metric in compare.metrics],
             evidence_queries=[
                 EvidenceQueryBlock(
@@ -542,23 +545,7 @@ class SemanticAnalyticsService:
                     ],
                 )
         summary = self._split_summary_for_rows(plan, split_build, dict_rows)
-        top = dict_rows[0]
-        chart_values = [
-            top.get(split_build.value_a_column),
-            top.get(split_build.value_b_column),
-        ]
-        split_chart = (
-            ChartBlock(
-                title=f"{_label(plan.metric)}: {_label(split_build.split_a_label)} versus {_label(split_build.split_b_label)}",
-                chart_type="bar",
-                series=[
-                    {"label": _label(split_build.split_a_label), "value": chart_values[0]},
-                    {"label": _label(split_build.split_b_label), "value": chart_values[1]},
-                ],
-            )
-            if all(isinstance(value, int | float) for value in chart_values)
-            else None
-        )
+        split_chart = select_chart(plan, table)
         trace.final_answer_metadata = {
             "status": "supported",
             "row_count": len(dict_rows),
@@ -1282,35 +1269,6 @@ class SemanticAnalyticsService:
             title="Semantic aggregate result",
             columns=[_label(column) for column in columns],
             rows=table_rows,
-        )
-
-    @staticmethod
-    def _aggregate_chart(plan: CricketQueryPlan, table: TableBlock) -> ChartBlock | None:
-        if len(plan.group_by) != 1:
-            return None
-        dimension = plan.group_by[0]
-        is_trend = dimension == "year" and plan.question_subject == "yearly_trend"
-        is_breakdown = dimension in {"line", "length", "bowling_style"}
-        is_ranking = dimension == plan.entity and dimension not in plan.filters and bool(
-            plan.sort and plan.sort.by == plan.metric
-        )
-        if not is_trend and not is_breakdown and not is_ranking:
-            return None
-        series = [
-            {"label": str(row[0]), "value": row[1]}
-            for row in table.rows
-            if len(row) > 1 and isinstance(row[1], int | float)
-        ]
-        if not series:
-            return None
-        return ChartBlock(
-            title=(
-                f"{_label(plan.metric)} by {_label(dimension)}"
-                if is_breakdown or is_trend
-                else f"{_label(plan.metric)} ranking"
-            ),
-            chart_type="line" if is_trend else "bar",
-            series=series,
         )
 
     @staticmethod

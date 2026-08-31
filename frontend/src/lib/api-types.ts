@@ -39,6 +39,9 @@ export type EvidenceQueryBlock = {
 export type ChartPoint = {
   label: string;
   value: number;
+  group?: string;
+  x?: string;
+  y?: string;
 };
 
 export type ChartBlock = {

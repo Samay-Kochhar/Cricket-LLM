@@ -24,6 +24,79 @@ function formatAxisValue(value: number, step: number) {
 export function SimpleChart({ chart }: SimpleChartProps) {
   const maxValue = Math.max(...chart.series.map((point) => point.value), 1);
 
+  if (chart.chart_type === "heatmap" && chart.series.length > 0) {
+    const xLabels = [...new Set(chart.series.map((point) => point.x).filter((value): value is string => Boolean(value)))];
+    const yLabels = [...new Set(chart.series.map((point) => point.y).filter((value): value is string => Boolean(value)))];
+    const cells = new Map(chart.series.map((point) => [`${point.x}:${point.y}`, point]));
+
+    return (
+      <div className="chart-card">
+        <h3 className="card-title">{chart.title}</h3>
+        <div
+          aria-label={`${chart.title} heatmap`}
+          className="simple-heatmap"
+          role="img"
+          style={{ gridTemplateColumns: `minmax(92px, auto) repeat(${xLabels.length}, minmax(72px, 1fr))` }}
+        >
+          <span />
+          {xLabels.map((label) => (
+            <strong className="simple-heatmap-axis" key={`x-${label}`}>{label}</strong>
+          ))}
+          {yLabels.map((yLabel) => (
+            <div className="simple-heatmap-row" key={`y-${yLabel}`}>
+              <strong className="simple-heatmap-axis">{yLabel}</strong>
+              {xLabels.map((xLabel) => {
+                const point = cells.get(`${xLabel}:${yLabel}`);
+                const intensity = point ? Math.max(point.value / maxValue, 0) : 0;
+                return (
+                  <span
+                    className={`simple-heatmap-cell${point ? "" : " empty"}`}
+                    key={`${xLabel}:${yLabel}`}
+                    style={point ? { backgroundColor: `rgba(124, 226, 180, ${0.14 + intensity * 0.62})` } : undefined}
+                    title={point ? `${point.label}: ${point.value}` : `${xLabel} / ${yLabel}: no evidence`}
+                  >
+                    {point?.value ?? "—"}
+                  </span>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (chart.chart_type === "grouped_bar" && chart.series.length > 0) {
+    const labels = [...new Set(chart.series.map((point) => point.label))];
+
+    return (
+      <div className="chart-card">
+        <h3 className="card-title">{chart.title}</h3>
+        <div className="chart-list grouped-chart-list">
+          {labels.map((label) => (
+            <div className="grouped-chart-row" key={`${chart.title}-${label}`}>
+              <div className="chart-label">{label}</div>
+              <div className="grouped-chart-bars">
+                {chart.series.filter((point) => point.label === label).map((point) => {
+                  const width = `${Math.max((point.value / maxValue) * 100, 4)}%`;
+                  return (
+                    <div className="grouped-chart-bar" key={`${label}-${point.group ?? "metric"}`}>
+                      <span className="grouped-chart-metric">{point.group}</span>
+                      <div className="chart-bar-track">
+                        <div className="chart-bar-fill" style={{ width }} />
+                      </div>
+                      <span className="chart-value">{point.value}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (chart.chart_type === "line" && chart.series.length > 0) {
     const values = chart.series.map((point) => point.value);
     const minValue = Math.min(...values);

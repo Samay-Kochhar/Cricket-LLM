@@ -526,7 +526,7 @@ def test_length_breakdown_chart_uses_answer_metric_and_sample_filtered_rows(
     chart = response.charts[0]
     table = response.tables[0]
     assert chart.title == "Batting Strike Rate by Length"
-    assert chart.chart_type == "bar"
+    assert chart.chart_type == "horizontal_bar"
     assert chart.series == [
         {"label": row[0], "value": row[1]}
         for row in table.rows

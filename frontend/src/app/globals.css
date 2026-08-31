@@ -1891,6 +1891,74 @@ code {
   margin-bottom: 12px;
 }
 
+.grouped-chart-list,
+.grouped-chart-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grouped-chart-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 2fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.grouped-chart-bars {
+  gap: 7px;
+}
+
+.grouped-chart-bar {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.8fr) minmax(120px, 2fr) minmax(48px, auto);
+  gap: 10px;
+  align-items: center;
+}
+
+.grouped-chart-metric {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.simple-heatmap {
+  display: grid;
+  gap: 6px;
+  overflow-x: auto;
+  align-items: stretch;
+}
+
+.simple-heatmap-row {
+  display: contents;
+}
+
+.simple-heatmap-axis {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-align: center;
+}
+
+.simple-heatmap-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  border: 1px solid rgba(124, 226, 180, 0.18);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: 800;
+}
+
+.simple-heatmap-cell.empty {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--muted);
+}
+
 .chat-table-card {
   border: 1px solid var(--line);
   border-radius: 12px;

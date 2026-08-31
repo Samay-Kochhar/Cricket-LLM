@@ -1067,6 +1067,12 @@ class SemanticQueryPlanner:
             return ["bowling_style"]
         if "matchup" in lowered or "batter-bowler" in lowered:
             return ["matchup"]
+        if (
+            "line" in lowered
+            and "length" in lowered
+            and any(token in lowered for token in (" by ", "breakdown", "heatmap", "matrix", "wise", "across"))
+        ):
+            return ["line", "length"]
         if "length" in lowered:
             return ["length"]
         if "line" in lowered:
