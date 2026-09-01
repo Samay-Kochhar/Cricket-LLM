@@ -260,6 +260,17 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "21": [
+        Check(
+            "player-explorer-lightweight-initialization",
+            "Verify Player Explorer caches repository capabilities without initializing Gemini or chat services.",
+            (
+                "pytest",
+                "tests/streamlit/test_issue_21_player_explorer_initialization.py",
+                "tests/streamlit/test_player_explorer.py",
+            ),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [

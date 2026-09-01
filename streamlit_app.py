@@ -25,6 +25,7 @@ SECRET_KEYS = (
     "CRICATLAS_DATA_ARCHIVE_MEMBER",
 )
 SERVICE_BUNDLE_VERSION = 2
+PLAYER_EXPLORER_BUNDLE_VERSION = 1
 
 
 def apply_cloud_secrets() -> None:
@@ -61,6 +62,31 @@ def initialize_services(service_bundle_version: int = SERVICE_BUNDLE_VERSION) ->
 
     get_services.cache_clear()
     return get_services()
+
+
+@st.cache_resource(show_spinner=False)
+def initialize_player_explorer_services(
+    service_bundle_version: int = PLAYER_EXPLORER_BUNDLE_VERSION,
+) -> dict[str, Any]:
+    del service_bundle_version
+    from scripts.bootstrap_data import ensure_database
+
+    ensure_database(
+        root=ROOT,
+        csv_path=CSV_PATH,
+        db_path=DB_PATH,
+        source_url=os.getenv("CRICATLAS_DATA_URL"),
+        expected_sha256=os.getenv("CRICATLAS_DATA_SHA256"),
+        archive_member=os.getenv("CRICATLAS_DATA_ARCHIVE_MEMBER"),
+    )
+
+    from backend.app.db.repository import AnalyticsRepository
+
+    repository = AnalyticsRepository(DB_PATH)
+    return {
+        "repository": repository,
+        "player_names": tuple(repository.list_player_names()),
+    }
 
 
 def render_chart(chart: Any) -> None:
@@ -205,7 +231,11 @@ def render_page() -> None:
     if view in {"Player Explorer", "Matchups"}:
         try:
             with st.spinner("Preparing the ODI player database…"):
-                services = initialize_services(SERVICE_BUNDLE_VERSION)
+                services = (
+                    initialize_player_explorer_services(PLAYER_EXPLORER_BUNDLE_VERSION)
+                    if view == "Player Explorer"
+                    else initialize_services(SERVICE_BUNDLE_VERSION)
+                )
             if view == "Player Explorer":
                 from streamlit_player_explorer import render_player_explorer
 
@@ -302,4 +332,5 @@ def render_page() -> None:
     st.rerun()
 
 
-render_page()
+if __name__ == "__main__":
+    render_page()

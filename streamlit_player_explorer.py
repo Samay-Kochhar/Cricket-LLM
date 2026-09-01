@@ -590,7 +590,10 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
 
-    player_names = repository.list_player_names()
+    cached_player_names = services.get("player_names")
+    player_names = list(
+        cached_player_names if cached_player_names is not None else repository.list_player_names()
+    )
     control_left, control_right = st.columns([2, 1])
     with control_left:
         player = st.selectbox(
