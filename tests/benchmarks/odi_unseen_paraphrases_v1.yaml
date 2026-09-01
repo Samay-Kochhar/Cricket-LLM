@@ -1,0 +1,2679 @@
+version: 1
+name: ODI unseen production paraphrase benchmark
+frozen_at: '2026-09-01'
+design: 75 independently specified cricket meanings, each expressed through two previously unused phrasings
+cases:
+- id: unseen-direct-kohli-runs-aus-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli's ODI run tally versus Australia?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        filters:
+          batter: Virat Kohli
+          opposition: Australia
+- id: unseen-direct-kohli-runs-aus-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Against Australia, how many runs has Virat Kohli made?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        filters:
+          batter: Virat Kohli
+          opposition: Australia
+- id: unseen-direct-rohit-pp-sr-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: How quickly does Rohit score in the first ten overs?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Rohit Sharma
+          phase: powerplay
+- id: unseen-direct-rohit-pp-sr-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Rohit Sharma powerplay strike rate, please.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Rohit Sharma
+          phase: powerplay
+- id: unseen-direct-babar-spin-dot-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: What share of Babar's balls against spin are dots?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batter_dot_ball_percentage
+        filters:
+          batter: Babar Azam
+          bowling_style: spin
+- id: unseen-direct-babar-spin-dot-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Babar Azam dot-ball percentage when facing spin?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batter_dot_ball_percentage
+        filters:
+          batter: Babar Azam
+          bowling_style: spin
+- id: unseen-direct-klaasen-death-boundary-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Klaasen's boundary percentage at the death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        filters:
+          batter: Heinrich Klaasen
+          phase: death
+- id: unseen-direct-klaasen-death-boundary-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: How often does Heinrich Klaasen find the rope in death overs?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        filters:
+          batter: Heinrich Klaasen
+          phase: death
+- id: unseen-direct-buttler-middle-false-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Jos Buttler false-shot rate through the middle overs?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: false_shot_percentage
+        filters:
+          batter: Jos Buttler
+          phase: middle
+- id: unseen-direct-buttler-middle-false-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: In the middle phase, what is Buttler's false-shot percentage?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: false_shot_percentage
+        filters:
+          batter: Jos Buttler
+          phase: middle
+- id: unseen-direct-bumrah-death-econ-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: How expensive is Bumrah from over 41 onwards?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Jasprit Bumrah
+          phase: death
+- id: unseen-direct-bumrah-death-econ-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Give me Jasprit Bumrah's death-over economy.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Jasprit Bumrah
+          phase: death
+- id: unseen-direct-starc-pp-wickets-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Starc wickets inside the opening ten overs?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        filters:
+          bowler: Mitchell Starc
+          phase: powerplay
+- id: unseen-direct-starc-pp-wickets-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: How many powerplay wickets has Mitchell Starc taken?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        filters:
+          bowler: Mitchell Starc
+          phase: powerplay
+- id: unseen-direct-rashid-left-dot-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Rashid Khan dot-ball rate to left-handers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        filters:
+          bowler: Rashid Khan
+          batter_hand: LHB
+- id: unseen-direct-rashid-left-dot-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Against left-handed batters, what percentage of Rashid's balls are dots?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        filters:
+          bowler: Rashid Khan
+          batter_hand: LHB
+- id: unseen-direct-malinga-yorker-share-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: What fraction of Malinga's legal deliveries are yorkers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: yorker_percentage
+        filters:
+          bowler: Lasith Malinga
+- id: unseen-direct-malinga-yorker-share-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Lasith Malinga yorker percentage in ODIs?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: yorker_percentage
+        filters:
+          bowler: Lasith Malinga
+- id: unseen-direct-ashwin-right-econ-a
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Ashwin economy to right-handed batters?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Ravichandran Ashwin
+          batter_hand: RHB
+- id: unseen-direct-ashwin-right-econ-b
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: What does Ravichandran Ashwin concede per over against right-handers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Ravichandran Ashwin
+          batter_hand: RHB
+- id: unseen-rank-death-econ-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Ten most economical death bowlers, at least 120 legal balls.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - bowler
+        filters:
+          phase: death
+        sort:
+          by: economy_rate
+          direction: asc
+        limit: 10
+        minimum_sample:
+          legal_balls: 120
+        minimum_sample_explicit: true
+- id: unseen-rank-death-econ-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: With a 120-ball cutoff, rank the best ten death-over economies.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - bowler
+        filters:
+          phase: death
+        sort:
+          by: economy_rate
+          direction: asc
+        limit: 10
+        minimum_sample:
+          legal_balls: 120
+        minimum_sample_explicit: true
+- id: unseen-rank-pp-wickets-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Who are the top five powerplay wicket takers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - bowler
+        filters:
+          phase: powerplay
+        sort:
+          by: wickets_taken
+          direction: desc
+        limit: 5
+- id: unseen-rank-pp-wickets-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: List five bowlers with the most wickets in overs 1 to 10.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - bowler
+        filters:
+          phase: powerplay
+        sort:
+          by: wickets_taken
+          direction: desc
+        limit: 5
+- id: unseen-rank-middle-dots-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Rank the best eight middle-over dot-ball bowlers, minimum 180 legal balls.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        group_by:
+        - bowler
+        filters:
+          phase: middle
+        sort:
+          by: bowler_dot_ball_percentage
+          direction: desc
+        limit: 8
+        minimum_sample:
+          legal_balls: 180
+        minimum_sample_explicit: true
+- id: unseen-rank-middle-dots-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Which eight bowlers lead dot-ball percentage in overs 11-40 with 180+ legal balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        group_by:
+        - bowler
+        filters:
+          phase: middle
+        sort:
+          by: bowler_dot_ball_percentage
+          direction: desc
+        limit: 8
+        minimum_sample:
+          legal_balls: 180
+        minimum_sample_explicit: true
+- id: unseen-rank-yorker-count-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Which six bowlers have delivered the most yorkers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: yorker_count
+        group_by:
+        - bowler
+        filters: {}
+        sort:
+          by: yorker_count
+          direction: desc
+        limit: 6
+- id: unseen-rank-yorker-count-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Top six by yorker volume, not yorker rate.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: yorker_count
+        group_by:
+        - bowler
+        filters: {}
+        sort:
+          by: yorker_count
+          direction: desc
+        limit: 6
+- id: unseen-rank-yorker-rate-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Who leads yorker percentage with at least 150 legal balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: yorker_percentage
+        group_by:
+        - bowler
+        filters: {}
+        sort:
+          by: yorker_percentage
+          direction: desc
+        limit: 10
+        minimum_sample:
+          legal_balls: 150
+        minimum_sample_explicit: true
+- id: unseen-rank-yorker-rate-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Highest yorker rate among bowlers with 150+ legal deliveries?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: yorker_percentage
+        group_by:
+        - bowler
+        filters: {}
+        sort:
+          by: yorker_percentage
+          direction: desc
+        limit: 10
+        minimum_sample:
+          legal_balls: 150
+        minimum_sample_explicit: true
+- id: unseen-rank-worst-econ-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Show the five worst economy rates, minimum 200 legal balls.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - bowler
+        filters: {}
+        sort:
+          by: economy_rate
+          direction: desc
+        limit: 5
+        minimum_sample:
+          legal_balls: 200
+        minimum_sample_explicit: true
+- id: unseen-rank-worst-econ-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Which five qualified bowlers concede the most per over after 200 balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - bowler
+        filters: {}
+        sort:
+          by: economy_rate
+          direction: desc
+        limit: 5
+        minimum_sample:
+          legal_balls: 200
+        minimum_sample_explicit: true
+- id: unseen-rank-spin-sr-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Top seven batters by strike rate versus spin, 100 balls minimum.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - batter
+        filters:
+          bowling_style: spin
+        sort:
+          by: batting_strike_rate
+          direction: desc
+        limit: 7
+        minimum_sample:
+          balls: 100
+        minimum_sample_explicit: true
+- id: unseen-rank-spin-sr-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Against spin, who are the seven fastest scorers with 100+ balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - batter
+        filters:
+          bowling_style: spin
+        sort:
+          by: batting_strike_rate
+          direction: desc
+        limit: 7
+        minimum_sample:
+          balls: 100
+        minimum_sample_explicit: true
+- id: unseen-rank-pace-boundary-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Who has the best boundary percentage against pace after 120 balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        group_by:
+        - batter
+        filters:
+          bowling_style: pace
+        sort:
+          by: boundary_percentage
+          direction: desc
+        limit: 10
+        minimum_sample:
+          balls: 120
+        minimum_sample_explicit: true
+- id: unseen-rank-pace-boundary-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Rank batters by boundary rate versus pace, minimum sample 120.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        group_by:
+        - batter
+        filters:
+          bowling_style: pace
+        sort:
+          by: boundary_percentage
+          direction: desc
+        limit: 10
+        minimum_sample:
+          balls: 120
+        minimum_sample_explicit: true
+- id: unseen-rank-pp-runs-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Leading five run scorers in the powerplay?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - batter
+        filters:
+          phase: powerplay
+        sort:
+          by: runs_scored
+          direction: desc
+        limit: 5
+- id: unseen-rank-pp-runs-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Who owns the five largest run totals in overs 1-10?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - batter
+        filters:
+          phase: powerplay
+        sort:
+          by: runs_scored
+          direction: desc
+        limit: 5
+- id: unseen-rank-death-sr-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Fastest six death-over batters with at least 90 balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - batter
+        filters:
+          phase: death
+        sort:
+          by: batting_strike_rate
+          direction: desc
+        limit: 6
+        minimum_sample:
+          balls: 90
+        minimum_sample_explicit: true
+- id: unseen-rank-death-sr-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Give six highest strike rates after over 40, 90-ball floor.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - batter
+        filters:
+          phase: death
+        sort:
+          by: batting_strike_rate
+          direction: desc
+        limit: 6
+        minimum_sample:
+          balls: 90
+        minimum_sample_explicit: true
+- id: unseen-rank-2019-runs-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Top ten ODI run scorers in 2019?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - batter
+        filters:
+          years:
+          - 2019
+        sort:
+          by: runs_scored
+          direction: desc
+        limit: 10
+- id: unseen-rank-2019-runs-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Who made the most runs during 2019?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - batter
+        filters:
+          years:
+          - 2019
+        sort:
+          by: runs_scored
+          direction: desc
+        limit: 10
+- id: unseen-rank-lords-wickets-a
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Five leading wicket takers at Lord's?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - bowler
+        filters:
+          venue: Lord's, London
+        sort:
+          by: wickets_taken
+          direction: desc
+        limit: 5
+- id: unseen-rank-lords-wickets-b
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: At Lord's in London, rank the top five bowlers by wickets.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - bowler
+        filters:
+          venue: Lord's, London
+        sort:
+          by: wickets_taken
+          direction: desc
+        limit: 5
+- id: unseen-break-kohli-line-runs-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Map Kohli's run output across bowling lines.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - line
+        filters:
+          batter: Virat Kohli
+- id: unseen-break-kohli-line-runs-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Which line does Virat Kohli score the most runs from?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - line
+        filters:
+          batter: Virat Kohli
+- id: unseen-break-rohit-length-dots-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Break Rohit's dot-ball rate down by length.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batter_dot_ball_percentage
+        group_by:
+        - length
+        filters:
+          batter: Rohit Sharma
+- id: unseen-break-rohit-length-dots-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: For Rohit Sharma, which lengths produce his dot balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batter_dot_ball_percentage
+        group_by:
+        - length
+        filters:
+          batter: Rohit Sharma
+- id: unseen-break-babar-style-sr-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Babar strike rate for every bowling style?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - bowling_style
+        filters:
+          batter: Babar Azam
+- id: unseen-break-babar-style-sr-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Split Babar Azam's scoring rate by bowler type.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - bowling_style
+        filters:
+          batter: Babar Azam
+- id: unseen-break-buttler-shot-runs-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Jos Buttler run totals for each shot type?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - shot_type
+        filters:
+          batter: Jos Buttler
+- id: unseen-break-buttler-shot-runs-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Which shots account for Buttler's runs?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - shot_type
+        filters:
+          batter: Jos Buttler
+- id: unseen-break-klaasen-zone-boundary-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Klaasen boundary percentage by field zone?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        group_by:
+        - field_zone
+        filters:
+          batter: Heinrich Klaasen
+- id: unseen-break-klaasen-zone-boundary-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Where does Heinrich Klaasen find boundaries most often by zone?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        group_by:
+        - field_zone
+        filters:
+          batter: Heinrich Klaasen
+- id: unseen-break-bumrah-length-wickets-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Bumrah wickets grouped by delivery length?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - length
+        filters:
+          bowler: Jasprit Bumrah
+- id: unseen-break-bumrah-length-wickets-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Which lengths bring Jasprit Bumrah his wickets?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - length
+        filters:
+          bowler: Jasprit Bumrah
+- id: unseen-break-starc-line-dots-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Starc dot-ball percentage across each line?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        group_by:
+        - line
+        filters:
+          bowler: Mitchell Starc
+- id: unseen-break-starc-line-dots-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Which bowling line creates Mitchell Starc's dots?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        group_by:
+        - line
+        filters:
+          bowler: Mitchell Starc
+- id: unseen-break-rashid-phase-econ-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Rashid Khan economy in each innings phase?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - phase
+        filters:
+          bowler: Rashid Khan
+- id: unseen-break-rashid-phase-econ-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: How does Rashid's economy move from powerplay to middle to death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - phase
+        filters:
+          bowler: Rashid Khan
+- id: unseen-break-boult-hand-wickets-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Boult wickets split by batter handedness?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - batter_hand
+        filters:
+          bowler: Trent Boult
+- id: unseen-break-boult-hand-wickets-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Does Trent Boult take more wickets against lefties or righties?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - batter_hand
+        filters:
+          bowler: Trent Boult
+- id: unseen-break-warner-year-sr-a
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: David Warner strike rate year by year?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - year
+        filters:
+          batter: David Warner
+- id: unseen-break-warner-year-sr-b
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Show Warner's annual batting strike-rate breakdown.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - year
+        filters:
+          batter: David Warner
+- id: unseen-match-kohli-starc-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli versus Starc head-to-head numbers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          bowler: Mitchell Starc
+- id: unseen-match-kohli-starc-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: How has Mitchell Starc done when bowling to Virat Kohli?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          bowler: Mitchell Starc
+- id: unseen-match-smith-bumrah-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Smith's scoring record off Bumrah?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Steven Smith
+          bowler: Jasprit Bumrah
+- id: unseen-match-smith-bumrah-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: 'Jasprit Bumrah against Steven Smith: show the matchup.'
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Steven Smith
+          bowler: Jasprit Bumrah
+- id: unseen-match-maxwell-ashwin-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: How many runs has Maxwell taken from Ashwin?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: runs_scored
+        filters:
+          batter: Glenn Maxwell
+          bowler: Ravichandran Ashwin
+- id: unseen-match-maxwell-ashwin-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Maxwell v Ravichandran Ashwin run tally?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: runs_scored
+        filters:
+          batter: Glenn Maxwell
+          bowler: Ravichandran Ashwin
+- id: unseen-match-warner-dismissers-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Which bowler gets David Warner out most?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: dismissals
+        filters:
+          batter: David Warner
+        group_by:
+        - bowler
+- id: unseen-match-warner-dismissers-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Warner's most frequent ODI dismissor?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: dismissals
+        filters:
+          batter: David Warner
+        group_by:
+        - bowler
+- id: unseen-match-klaasen-dots-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Who controls Klaasen best by dot-ball percentage, minimum 60 legal balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        filters:
+          batter: Heinrich Klaasen
+        group_by:
+        - bowler
+        minimum_sample:
+          legal_balls: 60
+        minimum_sample_explicit: true
+- id: unseen-match-klaasen-dots-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Against Heinrich Klaasen, rank bowlers on dot rate with 60+ balls.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        filters:
+          batter: Heinrich Klaasen
+        group_by:
+        - bowler
+        minimum_sample:
+          legal_balls: 60
+        minimum_sample_explicit: true
+- id: unseen-match-miller-false-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Which bowler induces Miller's highest false-shot percentage after 60 balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: false_shot_percentage
+        filters:
+          batter: David Miller
+        group_by:
+        - bowler
+        minimum_sample:
+          balls: 60
+        minimum_sample_explicit: true
+- id: unseen-match-miller-false-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: David Miller's toughest bowler by false-shot rate, 60-ball minimum?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: false_shot_percentage
+        filters:
+          batter: David Miller
+        group_by:
+        - bowler
+        minimum_sample:
+          balls: 60
+        minimum_sample_explicit: true
+- id: unseen-match-rashid-boundary-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Which batter has the best boundary rate off Rashid Khan with 60 balls faced?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        filters:
+          bowler: Rashid Khan
+        group_by:
+        - batter
+        minimum_sample:
+          balls: 60
+        minimum_sample_explicit: true
+- id: unseen-match-rashid-boundary-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Against Rashid, who finds boundaries most often after 60 deliveries?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: boundary_percentage
+        filters:
+          bowler: Rashid Khan
+        group_by:
+        - batter
+        minimum_sample:
+          balls: 60
+        minimum_sample_explicit: true
+- id: unseen-match-kohli-pace-a
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Which pace bowler has the highest boundary rate conceded to Kohli, minimum 60 balls?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: boundary_percentage
+        filters:
+          batter: Virat Kohli
+          bowling_style: pace
+        group_by:
+        - bowler
+        minimum_sample:
+          balls: 60
+        minimum_sample_explicit: true
+- id: unseen-match-kohli-pace-b
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: 'Kohli versus pace: rank opposing bowlers by boundary percentage with a 60-ball floor.'
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: boundary_percentage
+        filters:
+          batter: Virat Kohli
+          bowling_style: pace
+        group_by:
+        - bowler
+        minimum_sample:
+          balls: 60
+        minimum_sample_explicit: true
+- id: unseen-compare-kohli-rohit-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Put Kohli and Rohit side by side as ODI batters.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          compare_players:
+          - Virat Kohli
+          - Rohit Sharma
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - batting_average
+          - batter_dot_ball_percentage
+          - boundary_percentage
+- id: unseen-compare-kohli-rohit-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Virat Kohli with Rohit Sharma across their core batting numbers.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          compare_players:
+          - Virat Kohli
+          - Rohit Sharma
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - batting_average
+          - batter_dot_ball_percentage
+          - boundary_percentage
+- id: unseen-compare-babar-smith-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Babar versus Steven Smith as batters?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          compare_players:
+          - Babar Azam
+          - Steven Smith
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - batting_average
+          - batter_dot_ball_percentage
+          - boundary_percentage
+- id: unseen-compare-babar-smith-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Babar Azam and Steven Smith's ODI batting records.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          compare_players:
+          - Babar Azam
+          - Steven Smith
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - batting_average
+          - batter_dot_ball_percentage
+          - boundary_percentage
+- id: unseen-compare-buttler-klaasen-spin-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Against spin, contrast Buttler and Klaasen.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          bowling_style: spin
+          compare_players:
+          - Jos Buttler
+          - Heinrich Klaasen
+          comparison_metrics:
+          - batting_strike_rate
+          - runs_scored
+          - boundary_percentage
+- id: unseen-compare-buttler-klaasen-spin-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Jos Buttler with Heinrich Klaasen when facing spin bowling.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          bowling_style: spin
+          compare_players:
+          - Jos Buttler
+          - Heinrich Klaasen
+          comparison_metrics:
+          - batting_strike_rate
+          - runs_scored
+          - boundary_percentage
+- id: unseen-compare-rohit-warner-pp-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: "Rohit or Warner in the powerplay\u2014compare them."
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          phase: powerplay
+          compare_players:
+          - Rohit Sharma
+          - David Warner
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - boundary_percentage
+- id: unseen-compare-rohit-warner-pp-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Side-by-side powerplay batting for Rohit Sharma and David Warner.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          phase: powerplay
+          compare_players:
+          - Rohit Sharma
+          - David Warner
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - boundary_percentage
+- id: unseen-compare-bumrah-starc-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Bumrah and Starc as ODI bowlers.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          compare_players:
+          - Jasprit Bumrah
+          - Mitchell Starc
+          comparison_metrics:
+          - wickets_taken
+          - economy_rate
+          - bowling_strike_rate
+          - bowler_dot_ball_percentage
+- id: unseen-compare-bumrah-starc-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Jasprit Bumrah versus Mitchell Starc across their main bowling metrics.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          compare_players:
+          - Jasprit Bumrah
+          - Mitchell Starc
+          comparison_metrics:
+          - wickets_taken
+          - economy_rate
+          - bowling_strike_rate
+          - bowler_dot_ball_percentage
+- id: unseen-compare-bumrah-starc-death-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: At the death, compare Bumrah with Starc.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          phase: death
+          compare_players:
+          - Jasprit Bumrah
+          - Mitchell Starc
+          comparison_metrics:
+          - economy_rate
+          - wickets_taken
+          - bowler_dot_ball_percentage
+- id: unseen-compare-bumrah-starc-death-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: 'Death-over bowling comparison: Jasprit Bumrah and Mitchell Starc.'
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          phase: death
+          compare_players:
+          - Jasprit Bumrah
+          - Mitchell Starc
+          comparison_metrics:
+          - economy_rate
+          - wickets_taken
+          - bowler_dot_ball_percentage
+- id: unseen-compare-rashid-ashwin-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: "Rashid Khan or Ashwin\u2014compare their ODI bowling."
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          bowling_style: spin
+          compare_players:
+          - Rashid Khan
+          - Ravichandran Ashwin
+          comparison_metrics:
+          - wickets_taken
+          - economy_rate
+          - bowler_dot_ball_percentage
+- id: unseen-compare-rashid-ashwin-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Put Rashid Khan and Ravichandran Ashwin side by side as spin bowlers.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          bowling_style: spin
+          compare_players:
+          - Rashid Khan
+          - Ravichandran Ashwin
+          comparison_metrics:
+          - wickets_taken
+          - economy_rate
+          - bowler_dot_ball_percentage
+- id: unseen-compare-rabada-shaheen-pp-a
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Contrast Rabada and Shaheen in the opening ten overs.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          phase: powerplay
+          compare_players:
+          - Kagiso Rabada
+          - Shaheen Shah Afridi
+          comparison_metrics:
+          - wickets_taken
+          - economy_rate
+          - bowler_dot_ball_percentage
+- id: unseen-compare-rabada-shaheen-pp-b
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Powerplay comparison for Kagiso Rabada versus Shaheen Shah Afridi.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: bowler
+        filters:
+          phase: powerplay
+          compare_players:
+          - Kagiso Rabada
+          - Shaheen Shah Afridi
+          comparison_metrics:
+          - wickets_taken
+          - economy_rate
+          - bowler_dot_ball_percentage
+- id: unseen-split-bumrah-phase-econ-a
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: How different is Bumrah's economy in powerplay versus death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: economy_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          bowler: Jasprit Bumrah
+- id: unseen-split-bumrah-phase-econ-b
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Jasprit Bumrah's powerplay and death-over economy.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: economy_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          bowler: Jasprit Bumrah
+- id: unseen-split-starc-hand-econ-a
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Starc economy to left-handers versus right-handers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: economy_rate
+        split_by: batter_hand
+        compare_values:
+        - LHB
+        - RHB
+        filters:
+          bowler: Mitchell Starc
+- id: unseen-split-starc-hand-econ-b
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Mitchell Starc's economy by batter hand.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: economy_rate
+        split_by: batter_hand
+        compare_values:
+        - LHB
+        - RHB
+        filters:
+          bowler: Mitchell Starc
+- id: unseen-split-kohli-phase-sr-a
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli strike rate in powerplay compared with death overs?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: batter
+        metric: batting_strike_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          batter: Virat Kohli
+- id: unseen-split-kohli-phase-sr-b
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Virat Kohli's scoring rate at the start and the death.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: batter
+        metric: batting_strike_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          batter: Virat Kohli
+- id: unseen-split-klaasen-spin-type-a
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Klaasen against wrist spin versus finger spin?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: batter
+        metric: batting_strike_rate
+        split_by: bowling_style_group
+        compare_values:
+        - wrist_spin
+        - finger_spin
+        filters:
+          batter: Heinrich Klaasen
+- id: unseen-split-klaasen-spin-type-b
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Heinrich Klaasen's strike rate across wrist and finger spin.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: batter
+        metric: batting_strike_rate
+        split_by: bowling_style_group
+        compare_values:
+        - wrist_spin
+        - finger_spin
+        filters:
+          batter: Heinrich Klaasen
+- id: unseen-split-boult-hand-dots-a
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Boult dot rate to lefties compared with righties?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        split_by: batter_hand
+        compare_values:
+        - LHB
+        - RHB
+        filters:
+          bowler: Trent Boult
+- id: unseen-split-boult-hand-dots-b
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Trent Boult's dot-ball percentage by batter handedness.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: bowler_dot_ball_percentage
+        split_by: batter_hand
+        compare_values:
+        - LHB
+        - RHB
+        filters:
+          bowler: Trent Boult
+- id: unseen-split-miller-phase-boundary-a
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: 'Miller boundary percentage: powerplay or death?'
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: batter
+        metric: boundary_percentage
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          batter: David Miller
+- id: unseen-split-miller-phase-boundary-b
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Compare David Miller's boundary rate in powerplay and death overs.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: batter
+        metric: boundary_percentage
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          batter: David Miller
+- id: unseen-split-team-phase-runrate-a
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Which team changes run rate most from powerplay to death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: team
+        metric: run_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters: {}
+- id: unseen-split-team-phase-runrate-b
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Rank teams by the gap between powerplay and death-over run rate.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: team
+        metric: run_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters: {}
+- id: unseen-trend-kohli-sr-a
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Trace Kohli's batting strike rate by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - year
+        filters:
+          batter: Virat Kohli
+- id: unseen-trend-kohli-sr-b
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: How has Virat Kohli's scoring rate moved season by season?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - year
+        filters:
+          batter: Virat Kohli
+- id: unseen-trend-rohit-runs-a
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Rohit Sharma runs year over year?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - year
+        filters:
+          batter: Rohit Sharma
+- id: unseen-trend-rohit-runs-b
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Give me Rohit's annual ODI run totals.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - year
+        filters:
+          batter: Rohit Sharma
+- id: unseen-trend-bumrah-econ-a
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Bumrah economy trend by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - year
+        filters:
+          bowler: Jasprit Bumrah
+- id: unseen-trend-bumrah-econ-b
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: How has Jasprit Bumrah's economy changed season to season?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - year
+        filters:
+          bowler: Jasprit Bumrah
+- id: unseen-trend-starc-death-a
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Starc death-over economy year by year since 2018.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - year
+        filters:
+          bowler: Mitchell Starc
+          phase: death
+          years:
+          - 2018
+          year_mode: after
+- id: unseen-trend-starc-death-b
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: From 2018 onward, chart Mitchell Starc's annual economy at the death.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - year
+        filters:
+          bowler: Mitchell Starc
+          phase: death
+          years:
+          - 2018
+          year_mode: after
+- id: unseen-trend-rashid-wickets-a
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Rashid Khan wickets by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - year
+        filters:
+          bowler: Rashid Khan
+- id: unseen-trend-rashid-wickets-b
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Show Rashid's annual ODI wicket trend.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: wickets_taken
+        group_by:
+        - year
+        filters:
+          bowler: Rashid Khan
+- id: unseen-context-kohli-phase-a
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Virat Kohli's batting strike rate?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Now only at the death.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          phase: death
+- id: unseen-context-kohli-phase-b
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Virat Kohli's batting strike rate?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: What about in the powerplay instead?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          phase: powerplay
+- id: unseen-context-bumrah-phase-a
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Jasprit Bumrah's economy rate?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Limit that to the powerplay.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Jasprit Bumrah
+          phase: powerplay
+- id: unseen-context-bumrah-phase-b
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Jasprit Bumrah's economy rate?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: And at the death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Jasprit Bumrah
+          phase: death
+- id: unseen-context-kohli-starc-a
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: How has Virat Kohli scored against Mitchell Starc?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Only in the middle overs.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          bowler: Mitchell Starc
+          phase: middle
+- id: unseen-context-kohli-starc-b
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: How has Virat Kohli scored against Mitchell Starc?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Now show the death overs.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          bowler: Mitchell Starc
+          phase: death
+- id: unseen-context-comparison-a
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Rohit Sharma and David Warner as batters.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Use just the powerplay.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        metric: runs_scored
+        filters:
+          phase: powerplay
+          compare_players:
+          - Rohit Sharma
+          - David Warner
+- id: unseen-context-comparison-b
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Rohit Sharma and David Warner as batters.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Switch that comparison to death overs.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        metric: runs_scored
+        filters:
+          phase: death
+          compare_players:
+          - Rohit Sharma
+          - David Warner
+- id: unseen-context-trend-a
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: Show Jasprit Bumrah's economy year by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Restrict it to death overs.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Jasprit Bumrah
+          phase: death
+        group_by:
+        - year
+- id: unseen-context-trend-b
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: Show Jasprit Bumrah's economy year by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Use powerplay overs instead.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        filters:
+          bowler: Jasprit Bumrah
+          phase: powerplay
+        group_by:
+        - year
+- id: unseen-ambiguous-bumrah-sr-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: What's Bumrah's strike rate?
+    expected:
+      mode: clarification
+      clarification_labels:
+      - Batting strike rate
+      - Bowling strike rate
+- id: unseen-ambiguous-bumrah-sr-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Give me Jasprit Bumrah's SR.
+    expected:
+      mode: clarification
+      clarification_labels:
+      - Batting strike rate
+      - Bowling strike rate
+- id: unseen-ambiguous-best-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Who has the best numbers?
+    expected:
+      mode: clarification
+      clarification_labels:
+      - Runs scored
+      - Batting strike rate
+      - Wickets taken
+      - Economy rate
+- id: unseen-ambiguous-best-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Which player has the strongest statistics?
+    expected:
+      mode: clarification
+      clarification_labels:
+      - Runs scored
+      - Batting strike rate
+      - Wickets taken
+      - Economy rate
+- id: unseen-ambiguous-player-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: How good is Sharma?
+    expected:
+      mode: clarification
+- id: unseen-ambiguous-player-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Show me Khan's record.
+    expected:
+      mode: clarification
+- id: unseen-missing-catches-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Who took the most catches in the 2019 World Cup?
+    expected:
+      mode: analysis
+      status: insufficient_evidence
+      failure_state: data_limitation
+- id: unseen-missing-catches-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Leading ODI catcher in 2019?
+    expected:
+      mode: analysis
+      status: insufficient_evidence
+      failure_state: data_limitation
+- id: unseen-unsupported-team-econ-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Which national side has the best bowling economy?
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-unsupported-team-econ-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Rank teams by economy rate against India.
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-unsupported-prediction-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Who will win India's next ODI?
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-unsupported-prediction-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Predict the next World Cup champion from this data.
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-unsupported-weather-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: How did rain affect Kohli's strike rate?
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-unsupported-weather-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: What is Bumrah's economy in humid weather?
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-missing-captain-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Who captained India most often in 2012?
+    expected:
+      mode: analysis
+      status: insufficient_evidence
+      failure_state: data_limitation
+- id: unseen-missing-captain-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Which captain won the most ODIs in 2015?
+    expected:
+      mode: analysis
+      status: insufficient_evidence
+      failure_state: data_limitation
+- id: unseen-unsupported-salary-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Which ODI player offers the best value for salary?
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-unsupported-salary-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Rank players by runs per million dollars.
+    expected:
+      mode: analysis
+      status: unsupported
+      failure_state: unsupported_capability
+- id: unseen-ambiguous-comparison-a
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Kohli and Bumrah.
+    expected:
+      mode: clarification
+- id: unseen-ambiguous-comparison-b
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Who is better, Rohit or Starc?
+    expected:
+      mode: clarification

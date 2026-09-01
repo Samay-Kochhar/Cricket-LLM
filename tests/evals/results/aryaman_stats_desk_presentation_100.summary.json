@@ -1,0 +1,171 @@
+{
+  "benchmark": "dl4nlp_cricket_analyst_supported_100",
+  "failures": {
+    "safeguard_aware": [
+      {
+        "category": "single_metric",
+        "id": "analyst-single-rashid-middle-dots",
+        "reason": "Treated ODI middle overs as overs 7-15 instead of overs 11-40."
+      },
+      {
+        "category": "leaderboard",
+        "id": "analyst-lb-pace-dots",
+        "reason": "Ranked Robin Uthappa first from only two legal balls, below the 60-ball safeguard."
+      },
+      {
+        "category": "leaderboard",
+        "id": "analyst-lb-chinnaswamy-boundary",
+        "reason": "Used a 30-ball threshold rather than the frozen 60-ball threshold, changing the eligible population."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-kohli-length",
+        "reason": "Selected yorkers from 29 balls as the quietest length despite the 60-ball benchmark safeguard."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-rohit-style-boundary",
+        "reason": "Selected a bowling style from only 13 balls despite the 60-ball benchmark safeguard."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-babar-line-false",
+        "reason": "Selected wide outside off stump from 33 balls despite the 60-ball benchmark safeguard."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-maxwell-style-sr",
+        "reason": "Ranked a sparse bowling-style slice first without applying or displaying the 60-ball benchmark safeguard."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-boult-phase-wickets",
+        "reason": "Reported phase values in the thousands as wickets, indicating the wrong aggregation."
+      },
+      {
+        "category": "split_compare",
+        "id": "analyst-split-team-middle-death",
+        "reason": "Compared strike-rate acceleration instead of the requested team run-rate change."
+      },
+      {
+        "category": "matchup",
+        "id": "analyst-matchup-klaasen-dot",
+        "reason": "Ranked a 19-ball matchup despite the 60-legal-ball benchmark safeguard."
+      },
+      {
+        "category": "matchup",
+        "id": "analyst-matchup-miller-false",
+        "reason": "Ranked a 32-ball matchup despite the 60-ball benchmark safeguard."
+      },
+      {
+        "category": "matchup",
+        "id": "analyst-matchup-rashid-boundary",
+        "reason": "Ranked a 20-ball matchup despite the 60-ball benchmark safeguard."
+      },
+      {
+        "category": "single_metric",
+        "id": "analyst-extra-smith-middle-runs",
+        "reason": "Treated ODI middle overs as overs 7-15 instead of overs 11-40."
+      }
+    ],
+    "semantic_capability": [
+      {
+        "category": "single_metric",
+        "id": "analyst-single-rashid-middle-dots",
+        "reason": "Treated ODI middle overs as overs 7-15 instead of overs 11-40."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-boult-phase-wickets",
+        "reason": "Reported phase values in the thousands as wickets, indicating the wrong aggregation."
+      },
+      {
+        "category": "split_compare",
+        "id": "analyst-split-team-middle-death",
+        "reason": "Compared strike-rate acceleration instead of the requested team run-rate change."
+      },
+      {
+        "category": "single_metric",
+        "id": "analyst-extra-smith-middle-runs",
+        "reason": "Treated ODI middle overs as overs 7-15 instead of overs 11-40."
+      }
+    ]
+  },
+  "records": 100,
+  "review_method": "complete human review of stored visible responses; no numeric equality across datasets",
+  "safeguard_aware": {
+    "by_category": {
+      "breakdown": {
+        "correct": 23,
+        "rate": 0.8214285714285714,
+        "total": 28
+      },
+      "leaderboard": {
+        "correct": 24,
+        "rate": 0.9230769230769231,
+        "total": 26
+      },
+      "matchup": {
+        "correct": 5,
+        "rate": 0.625,
+        "total": 8
+      },
+      "player_comparison": {
+        "correct": 10,
+        "rate": 1.0,
+        "total": 10
+      },
+      "single_metric": {
+        "correct": 17,
+        "rate": 0.8947368421052632,
+        "total": 19
+      },
+      "split_compare": {
+        "correct": 8,
+        "rate": 0.8888888888888888,
+        "total": 9
+      }
+    },
+    "correct": 87,
+    "rate": 0.87,
+    "total": 100
+  },
+  "semantic_capability": {
+    "by_category": {
+      "breakdown": {
+        "correct": 27,
+        "rate": 0.9642857142857143,
+        "total": 28
+      },
+      "leaderboard": {
+        "correct": 26,
+        "rate": 1.0,
+        "total": 26
+      },
+      "matchup": {
+        "correct": 8,
+        "rate": 1.0,
+        "total": 8
+      },
+      "player_comparison": {
+        "correct": 10,
+        "rate": 1.0,
+        "total": 10
+      },
+      "single_metric": {
+        "correct": 17,
+        "rate": 0.8947368421052632,
+        "total": 19
+      },
+      "split_compare": {
+        "correct": 8,
+        "rate": 0.8888888888888888,
+        "total": 9
+      }
+    },
+    "correct": 96,
+    "rate": 0.96,
+    "total": 100
+  },
+  "source": "https://stats-desk.aryaman.ink/"
+}

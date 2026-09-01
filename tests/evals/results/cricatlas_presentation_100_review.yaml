@@ -1,0 +1,109 @@
+benchmark: dl4nlp_cricket_analyst_supported_100
+source: current CricAtlas production planner and local ODI DuckDB
+captured_at: 2026-09-01
+git_commit: a1e8893d502a941d2bc6ef11dfe7043b9cf6202c
+reviewed_all_records: true
+numeric_note: This semantic review complements the database top-row score. It credits equivalent result shapes and operation choices when the visible answer preserves the requested meaning.
+rubric:
+  semantic_capability:
+    pass: The database-backed answer preserves the requested entity, role, metric, comparison or split, and filters.
+    fail: The production planner declines the answer or changes a material metric, dimension, or filter.
+  safeguard_aware:
+    pass: Semantic capability passes and CricAtlas applies its registered sample safeguard.
+    fail: Semantic capability fails or a required safeguard is absent.
+defaults:
+  semantic_capability: pass
+  safeguard_aware: pass
+overrides:
+  analyst-lb-2023-runs:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning did not normalize the 2023 year filter and returned no answer.
+  analyst-lb-since-2022-boundary:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning did not normalize the since-2022 filter and returned no answer.
+  analyst-lb-chinnaswamy-boundary:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production venue resolution did not accept the short Chinnaswamy reference.
+  analyst-bd-buttler-shot-runs:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Changed most productive shot by runs into highest batting strike rate by shot.
+  analyst-bd-klaasen-spin-lines:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Dropped the requested spin filter from the line breakdown.
+  analyst-split-batter-after20:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning returned planner uncertainty for the event-window split.
+  analyst-split-batter-wrist-finger:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning returned planner uncertainty for the spin-type split.
+  analyst-split-bowler-power-death:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning returned planner uncertainty for the phase split.
+  analyst-split-bowler-left-right:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning returned planner uncertainty for the handedness split.
+  analyst-split-team-middle-death:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning returned planner uncertainty for the team phase split.
+  analyst-split-bowler-dot-hands:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: The split plan did not execute to sufficient evidence under production normalization.
+  analyst-split-batter-overs15-20:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning returned planner uncertainty for the over-range split.
+  analyst-extra-split-team-power-death:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production planning returned planner uncertainty for the team phase split.
+  analyst-compare-kohli-smith:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-compare-rohit-warner-powerplay:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-compare-buttler-klaasen-spin:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-compare-babar-kohli-pace:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-compare-bumrah-starc:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-compare-bumrah-starc-death:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-compare-malinga-boult-powerplay:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-compare-rashid-ashwin-spin:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-extra-compare-maxwell-miller-death:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.
+  analyst-extra-compare-rabada-shaheen-powerplay:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Production comparison plan failed validation and returned planner uncertainty.

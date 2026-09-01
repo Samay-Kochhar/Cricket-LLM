@@ -1,0 +1,70 @@
+benchmark: dl4nlp_cricket_analyst_supported_100
+source: https://stats-desk.aryaman.ink/
+captured_at: 2026-09-01
+model: Fast
+reviewed_all_records: true
+scope_note: Questions without an explicit format were prefixed with "In ODIs" because Stats Desk is multi-format while CricAtlas is ODI-only.
+numeric_note: Numerical equality was not scored because the two products use different data coverage. Review scores whether the answer preserves the requested cricket meaning.
+rubric:
+  semantic_capability:
+    pass: The visible answer uses the requested entity, role, metric, comparison or split, and ODI filter meaning.
+    fail: The visible answer changes a material metric, phase definition, role, or calculation.
+  safeguard_aware:
+    pass: Semantic capability passes and the displayed leading result satisfies the frozen benchmark's minimum sample where the response exposes it.
+    fail: Semantic capability fails, or an undersized leading result changes the conclusion.
+defaults:
+  semantic_capability: pass
+  safeguard_aware: pass
+overrides:
+  analyst-single-rashid-middle-dots:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Treated ODI middle overs as overs 7-15 instead of overs 11-40.
+  analyst-lb-pace-dots:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Ranked Robin Uthappa first from only two legal balls, below the 60-ball safeguard.
+  analyst-lb-chinnaswamy-boundary:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Used a 30-ball threshold rather than the frozen 60-ball threshold, changing the eligible population.
+  analyst-bd-kohli-length:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Selected yorkers from 29 balls as the quietest length despite the 60-ball benchmark safeguard.
+  analyst-bd-rohit-style-boundary:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Selected a bowling style from only 13 balls despite the 60-ball benchmark safeguard.
+  analyst-bd-babar-line-false:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Selected wide outside off stump from 33 balls despite the 60-ball benchmark safeguard.
+  analyst-bd-maxwell-style-sr:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Ranked a sparse bowling-style slice first without applying or displaying the 60-ball benchmark safeguard.
+  analyst-bd-boult-phase-wickets:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Reported phase values in the thousands as wickets, indicating the wrong aggregation.
+  analyst-split-team-middle-death:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Compared strike-rate acceleration instead of the requested team run-rate change.
+  analyst-matchup-klaasen-dot:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Ranked a 19-ball matchup despite the 60-legal-ball benchmark safeguard.
+  analyst-matchup-miller-false:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Ranked a 32-ball matchup despite the 60-ball benchmark safeguard.
+  analyst-matchup-rashid-boundary:
+    semantic_capability: pass
+    safeguard_aware: fail
+    reason: Ranked a 20-ball matchup despite the 60-ball benchmark safeguard.
+  analyst-extra-smith-middle-runs:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Treated ODI middle overs as overs 7-15 instead of overs 11-40.

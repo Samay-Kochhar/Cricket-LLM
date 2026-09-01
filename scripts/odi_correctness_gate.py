@@ -40,6 +40,24 @@ class CaseResult:
     def passed(self) -> bool:
         return not self.errors
 
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "case_id": self.case_id,
+            "family": self.family,
+            "prompt": self.prompt,
+            "passed": self.passed,
+            "errors": list(self.errors),
+        }
+
+    @classmethod
+    def from_dict(cls, record: dict[str, Any]) -> "CaseResult":
+        return cls(
+            case_id=str(record["case_id"]),
+            family=str(record["family"]),
+            prompt=str(record["prompt"]),
+            errors=tuple(str(error) for error in record.get("errors", [])),
+        )
+
 
 @dataclass
 class GateReport:
@@ -68,6 +86,25 @@ class GateReport:
             lines.extend(f"  - {error}" for error in result.errors)
         return "\n".join(lines)
 
+    def as_dict(self) -> dict[str, Any]:
+        families: dict[str, dict[str, int]] = {}
+        grouped: dict[str, list[CaseResult]] = defaultdict(list)
+        for result in self.results:
+            grouped[result.family].append(result)
+        for family, results in sorted(grouped.items()):
+            families[family] = {
+                "passed": sum(result.passed for result in results),
+                "total": len(results),
+            }
+        return {
+            "version": self.version,
+            "name": self.name,
+            "passed": sum(result.passed for result in self.results),
+            "total": len(self.results),
+            "families": families,
+            "failures": [result.as_dict() for result in self.results if not result.passed],
+        }
+
 
 def load_benchmark(path: Path = DEFAULT_BENCHMARK) -> dict[str, Any]:
     benchmark = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -76,12 +113,41 @@ def load_benchmark(path: Path = DEFAULT_BENCHMARK) -> dict[str, Any]:
     return benchmark
 
 
-def run_gate(path: Path = DEFAULT_BENCHMARK) -> GateReport:
+def run_gate(path: Path = DEFAULT_BENCHMARK, *, output_path: Path | None = None) -> GateReport:
     benchmark = load_benchmark(path)
     report = GateReport(version=int(benchmark["version"]), name=str(benchmark["name"]))
-    for case in benchmark["cases"]:
-        report.results.append(_run_case(case))
+    completed = _load_case_results(output_path) if output_path else {}
+    output_stream = None
+    if output_path:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_stream = output_path.open("a", encoding="utf-8")
+    try:
+        for index, case in enumerate(benchmark["cases"], start=1):
+            case_id = str(case["id"])
+            result = completed.get(case_id)
+            if result is None:
+                print(f"[{index}/{len(benchmark['cases'])}] {case_id}", flush=True)
+                result = _run_case(case)
+                if output_stream:
+                    output_stream.write(json.dumps(result.as_dict(), ensure_ascii=False) + "\n")
+                    output_stream.flush()
+            report.results.append(result)
+    finally:
+        if output_stream:
+            output_stream.close()
     return report
+
+
+def _load_case_results(path: Path | None) -> dict[str, CaseResult]:
+    if path is None or not path.exists():
+        return {}
+    results: dict[str, CaseResult] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        result = CaseResult.from_dict(json.loads(line))
+        results[result.case_id] = result
+    return results
 
 
 def _run_case(case: dict[str, Any]) -> CaseResult:
@@ -125,13 +191,15 @@ def _run_case(case: dict[str, Any]) -> CaseResult:
 
 @contextmanager
 def _chat_client(planner_mode: str) -> Iterator[TestClient]:
-    production = planner_mode == "production_unavailable"
+    production = planner_mode in {"production_unavailable", "production_live"}
+    live = planner_mode == "production_live"
     updates = {
         "APP_ENV": "production" if production else "development",
         "USE_SEMANTIC_ANALYTICS_V2": "true",
         "SEMANTIC_V2_DEV_FALLBACK": "false" if production else "true",
-        "GEMINI_API_KEY": "",
     }
+    if not live:
+        updates["GEMINI_API_KEY"] = ""
     previous = {key: os.environ.get(key) for key in updates}
     os.environ.update(updates)
     get_services.cache_clear()
@@ -273,9 +341,14 @@ def _expect_equal(errors: list[str], label: str, actual: Any, expected: Any) -> 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run the versioned ODI real-chat correctness gate.")
     parser.add_argument("--benchmark", type=Path, default=DEFAULT_BENCHMARK)
+    parser.add_argument("--output", type=Path, help="Append each completed case as JSONL and resume it later.")
+    parser.add_argument("--summary", type=Path, help="Write the compact final report as JSON.")
     args = parser.parse_args()
     logging.disable(logging.INFO)
-    report = run_gate(args.benchmark)
+    report = run_gate(args.benchmark, output_path=args.output)
+    if args.summary:
+        args.summary.parent.mkdir(parents=True, exist_ok=True)
+        args.summary.write_text(json.dumps(report.as_dict(), indent=2) + "\n", encoding="utf-8")
     print(report.format())
     return 0 if report.passed else 1
 

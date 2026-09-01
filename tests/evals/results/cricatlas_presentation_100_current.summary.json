@@ -1,0 +1,585 @@
+{
+  "benchmark": "presentation-supported-100",
+  "by_category": {
+    "breakdown": {
+      "answer_correct": 23,
+      "answer_rate": 0.8214285714285714,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 28,
+      "supported_rate": 1.0,
+      "total": 28
+    },
+    "leaderboard": {
+      "answer_correct": 22,
+      "answer_rate": 0.8461538461538461,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 23,
+      "supported_rate": 0.8846153846153846,
+      "total": 26
+    },
+    "matchup": {
+      "answer_correct": 1,
+      "answer_rate": 0.125,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 8,
+      "supported_rate": 1.0,
+      "total": 8
+    },
+    "player_comparison": {
+      "answer_correct": 0,
+      "answer_rate": 0.0,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 0,
+      "supported_rate": 0.0,
+      "total": 10
+    },
+    "single_metric": {
+      "answer_correct": 19,
+      "answer_rate": 1.0,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 19,
+      "supported_rate": 1.0,
+      "total": 19
+    },
+    "split_compare": {
+      "answer_correct": 0,
+      "answer_rate": 0.0,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 1,
+      "supported_rate": 0.1111111111111111,
+      "total": 9
+    }
+  },
+  "failures": [
+    {
+      "category": "single_metric",
+      "id": "analyst-single-kohli-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-rohit-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-babar-dot",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-klaasen-spin-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-buttler-death-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-warner-powerplay-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-maxwell-pace-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-miller-short-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-bumrah-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-starc-death-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-malinga-yorker",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-rashid-middle-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-southee-left-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-boult-powerplay-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-single-rabada-pace-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-death-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-powerplay-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-middle-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-yorker-volume",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-left-arm-pace-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-spin-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-pace-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-2023-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-since-2022-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-spin-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-pace-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-death-batter-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-powerplay-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-lords-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-mcg-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-chinnaswamy-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-team-run-rate",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-venue-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-style",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-length",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-shot",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-zone",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-rohit-phase",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-rohit-style-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-babar-line-false",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-babar-length-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-buttler-zone-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-buttler-shot-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-klaasen-spin-lines",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-klaasen-style-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-miller-length-dismiss",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-maxwell-style-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-bumrah-phase-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-bumrah-length-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-starc-line-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-malinga-length-yorker",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-rashid-hand-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-boult-phase-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-after20",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-wrist-finger",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-bowler-power-death",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-bowler-left-right",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-team-middle-death",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-power-death-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-bowler-dot-hands",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-overs15-20",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-kohli-smith",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-rohit-warner-powerplay",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-buttler-klaasen-spin",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-babar-kohli-pace",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-bumrah-starc",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-bumrah-starc-death",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-malinga-boult-powerplay",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-compare-rashid-ashwin-spin",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-smith-bumrah",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-maxwell-ashwin",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-kohli-starc",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-warner-dismissers",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-klaasen-dot",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-miller-false",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-rashid-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-kohli-pace-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-extra-ab-spin-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-extra-smith-middle-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-extra-shaheen-powerplay-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "single_metric",
+      "id": "analyst-extra-ashwin-right-hand-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-lowest-batter-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-highest-false-batter",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-lowest-bowling-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-false-shots-bowler",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-good-length-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-short-ball-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-yorker-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-full-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-warner-style-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-smith-shot-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-ab-zone-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-warner-line-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-rabada-length-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-shaheen-line-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-ashwin-phase-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-southee-hand-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-extra-split-team-power-death",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-extra-compare-maxwell-miller-death",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "player_comparison",
+      "id": "analyst-extra-compare-rabada-shaheen-powerplay",
+      "reason": "plan mismatch"
+    }
+  ],
+  "git_commit": "a1e8893d502a941d2bc6ef11dfe7043b9cf6202c",
+  "gold_cases": 100,
+  "plan_exact_match": {
+    "correct": 0,
+    "rate": 0.0,
+    "total": 100
+  },
+  "predictions": 100,
+  "scored_at": "2026-09-01T16:08:02.640758+00:00",
+  "status_accuracy": {
+    "correct": 79,
+    "rate": 0.79,
+    "total": 100
+  },
+  "top_row_exact_match": {
+    "correct": 25,
+    "rate": 0.25,
+    "total": 100
+  },
+  "top_row_semantic_match": {
+    "correct": 65,
+    "rate": 0.65,
+    "total": 100
+  }
+}
