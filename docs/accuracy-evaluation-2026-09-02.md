@@ -67,3 +67,51 @@ This is a strict engineering gate, not a claim that every failed visible answer 
 - Unseen compact summary and exact failure reasons: `tests/evals/results/cricatlas_odi_unseen_150.summary.json`
 
 The live gate writes every completed case immediately and resumes from its JSONL file. This prevents API cost and evidence loss if a long run is interrupted.
+
+## Production accuracy release gate
+
+The frozen unseen baseline remains **42/150 strict passes**. Do not edit
+`tests/benchmarks/odi_unseen_paraphrases_v1.yaml` or either original 100-question
+input to improve a score. Release artifacts use schema version 1 and summaries
+use scoring version 1, so future scoring changes create a new scoring version
+without rewriting questions or captured responses.
+
+Run a new production release from the repository root with Gemini configured:
+
+```bash
+python scripts/odi_correctness_gate.py \
+  --release \
+  --fresh \
+  --benchmark tests/benchmarks/odi_unseen_paraphrases_v1.yaml \
+  --output tests/evals/results/releases/cricatlas_odi_unseen_release.jsonl \
+  --summary tests/evals/results/releases/cricatlas_odi_unseen_release.summary.json
+```
+
+If the run is interrupted, repeat the command without `--fresh`. Completed case
+IDs are loaded from the artifact and their production model calls are not
+repeated. Each newly completed question is fsynced into a complete temporary
+snapshot and atomically replaces the previous artifact.
+
+Rescore the saved release without Gemini, a running application server, or
+Stats Desk:
+
+```bash
+python scripts/odi_correctness_gate.py \
+  --replay \
+  --benchmark tests/benchmarks/odi_unseen_paraphrases_v1.yaml \
+  --output tests/evals/results/releases/cricatlas_odi_unseen_release.jsonl \
+  --summary tests/evals/results/releases/cricatlas_odi_unseen_release.summary.json
+```
+
+To report regressions and improvements, add
+`--previous path/to/previous-release.jsonl` to either command. The summary
+reconciles strict, semantic-capability, safeguard-aware, family, paraphrase-pair,
+and planner-overlap totals before it is written. Failed cases record the first
+failing stage from the fixed stage vocabulary: meaning extraction,
+canonicalization, compilation, validation, execution, result validation,
+conversation-state application, or response policy.
+
+The release artifact recursively redacts credentials, authorization values,
+cookies, passwords, secrets, and tokens. The saved one-time Stats Desk responses
+remain comparison-only inputs; neither the production release nor offline replay
+queries Stats Desk.

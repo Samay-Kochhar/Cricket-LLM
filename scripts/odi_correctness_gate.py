@@ -22,7 +22,14 @@ if root_str not in sys.path:
     sys.path.insert(0, root_str)
 
 from backend.app.bootstrap import get_services
+from backend.app.cricket_analytics.trace import QueryTrace
 from backend.app.main import app
+from scripts.accuracy_release import (
+    AccuracyArtifactStore,
+    classify_first_failing_stage,
+    score_release,
+    validate_unique_case_ids,
+)
 
 
 DEFAULT_BENCHMARK = ROOT / "tests" / "benchmarks" / "odi_correctness_v1.yaml"
@@ -138,6 +145,64 @@ def run_gate(path: Path = DEFAULT_BENCHMARK, *, output_path: Path | None = None)
     return report
 
 
+def run_accuracy_release(
+    path: Path,
+    *,
+    output_path: Path,
+    previous_path: Path | None = None,
+    fresh: bool = False,
+) -> dict[str, Any]:
+    benchmark = load_benchmark(path)
+    validate_unique_case_ids(benchmark["cases"])
+    store = AccuracyArtifactStore(output_path)
+    if fresh:
+        store.reset()
+    for index, case in enumerate(benchmark["cases"], start=1):
+        case_id = str(case["id"])
+        if case_id in store.completed_ids:
+            continue
+        print(f"[{index}/{len(benchmark['cases'])}] {case_id}", flush=True)
+        try:
+            record = _run_case_evidence(case)
+        except Exception as error:  # A terminal record prevents repeating a completed model call on resume.
+            runner_error = f"{type(error).__name__}: {error}"
+            record = {
+                "case_id": case_id,
+                "family": str(case.get("family", "uncategorized")),
+                "planner_mode": str(case.get("planner_mode", "development_fallback")),
+                "turns": [
+                    {
+                        "turn": turn_index,
+                        "user_input": str(turn.get("prompt", "")),
+                        "response": {"status": "runner_error", "failure_state": "runner_error"},
+                        "trace": {},
+                        "errors": [runner_error],
+                        "deterministic_errors": ["runner did not complete deterministic comparison"],
+                        "production_planner_errors": ["runner did not capture the production plan"],
+                    }
+                    for turn_index, turn in enumerate(case.get("turns", []), start=1)
+                ],
+            }
+        record["first_failing_stage"] = (
+            None if all(not turn["errors"] for turn in record["turns"]) else classify_first_failing_stage(record)
+        )
+        store.append(record)
+    previous_records = AccuracyArtifactStore(previous_path).records if previous_path else None
+    return score_release(benchmark, store.records, previous_records=previous_records)
+
+
+def replay_accuracy_release(
+    path: Path,
+    *,
+    output_path: Path,
+    previous_path: Path | None = None,
+) -> dict[str, Any]:
+    benchmark = load_benchmark(path)
+    records = AccuracyArtifactStore(output_path).records
+    previous_records = AccuracyArtifactStore(previous_path).records if previous_path else None
+    return score_release(benchmark, records, previous_records=previous_records)
+
+
 def _load_case_results(path: Path | None) -> dict[str, CaseResult]:
     if path is None or not path.exists():
         return {}
@@ -187,6 +252,146 @@ def _run_case(case: dict[str, Any]) -> CaseResult:
         prompt=" -> ".join(prompts),
         errors=tuple(errors),
     )
+
+
+def _run_case_evidence(case: dict[str, Any]) -> dict[str, Any]:
+    history: list[dict[str, str]] = []
+    conversation_state: dict[str, Any] | None = None
+    planner_mode = str(case.get("planner_mode", "development_fallback"))
+    turns: list[dict[str, Any]] = []
+    with _chat_client(planner_mode) as client:
+        semantic_service = get_services()["semantic_service"]
+        for turn_index, turn in enumerate(case["turns"], start=1):
+            prompt = str(turn["prompt"])
+            state_input = conversation_state
+            request = {
+                "message": prompt,
+                "history": history,
+                "conversation_state": state_input,
+            }
+            response = client.post("/api/chat", json=request)
+            if response.status_code == 200:
+                payload = response.json()
+                errors = score_turn(payload, turn["expected"])
+            else:
+                payload = {"mode": "http_error", "message": response.text}
+                errors = [f"HTTP {response.status_code}"]
+            resolved_input = str(payload.get("resolved_input") or prompt)
+            deterministic_candidate, deterministic_validation = _deterministic_candidate(
+                resolved_input, semantic_service
+            )
+            expected_plan = turn.get("expected", {}).get("plan")
+            deterministic_errors = (
+                semantic_mismatches(deterministic_candidate, expected_plan, "plan")
+                if expected_plan is not None
+                else []
+            )
+            query_response = payload.get("query_response") or {}
+            trace = _semantic_trace(query_response)
+            compiled_plan = trace.get("normalized_plan")
+            production_planner_errors = (
+                semantic_mismatches(compiled_plan, expected_plan, "plan")
+                if expected_plan is not None
+                else []
+            )
+            turns.append(
+                {
+                    "turn": turn_index,
+                    "user_input": prompt,
+                    "conversation_state_input": state_input,
+                    "conversation_state_output": payload.get("conversation_state"),
+                    "conversation_state_applied": (
+                        True if turn_index == 1 else bool(state_input and resolved_input != prompt)
+                    ),
+                    "resolved_input": resolved_input,
+                    "selected_planning_path": _planning_path(trace, mode=payload.get("mode")),
+                    "safe_model_metadata": _safe_model_metadata(trace),
+                    "raw_structured_candidate": trace.get("parsed_json_plan"),
+                    "deterministic_candidate": deterministic_candidate,
+                    "deterministic_validation": deterministic_validation,
+                    "canonical_meaning": turn.get("expected"),
+                    "compiled_plan": compiled_plan,
+                    "normalization_validation": trace.get("validation_result"),
+                    "selected_executor": trace.get("selected_executor"),
+                    "database_evidence": query_response.get("evidence_queries") or [],
+                    "response": {
+                        "http_status": response.status_code,
+                        "mode": payload.get("mode"),
+                        "status": query_response.get("status"),
+                        "failure_state": query_response.get("failure_state"),
+                    },
+                    "displayed_answer_evidence": {
+                        "message": payload.get("message"),
+                        "summaries": query_response.get("summaries") or [],
+                        "tables": query_response.get("tables") or [],
+                        "clarification_options": payload.get("clarification_options") or [],
+                    },
+                    "trace": trace,
+                    "errors": errors,
+                    "deterministic_errors": deterministic_errors,
+                    "production_planner_errors": production_planner_errors,
+                }
+            )
+            history.extend(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": str(payload.get("message", ""))},
+                ]
+            )
+            conversation_state = payload.get("conversation_state") or conversation_state
+    return {
+        "case_id": str(case["id"]),
+        "family": str(case["family"]),
+        "planner_mode": planner_mode,
+        "turns": turns,
+    }
+
+
+def _deterministic_candidate(question: str, semantic_service: Any) -> tuple[dict[str, Any] | None, dict[str, Any]]:
+    trace = QueryTrace(original_user_question=question)
+    result = semantic_service.planner._plan_with_deterministic_fallback(question, trace)
+    plan = result.plan.model_dump(mode="json") if result.plan is not None else None
+    return plan, result.validation.model_dump(mode="json")
+
+
+def _semantic_trace(response: dict[str, Any]) -> dict[str, Any]:
+    for note in response.get("evidence_notes", []):
+        if note.get("title") != "Semantic V2 trace":
+            continue
+        try:
+            value = json.loads(note.get("detail", ""))
+        except (TypeError, json.JSONDecodeError):
+            return {}
+        return value if isinstance(value, dict) else {}
+    return {}
+
+
+def _planning_path(trace: dict[str, Any], *, mode: object = None) -> str:
+    if mode == "clarification":
+        return "clarification_policy"
+    outcome = trace.get("planner_outcome") or {}
+    if outcome.get("selected_model"):
+        return "production_model"
+    if outcome.get("parse_outcome") == "structured_page_filters":
+        return "structured_input"
+    return "deterministic"
+
+
+def _safe_model_metadata(trace: dict[str, Any]) -> dict[str, Any]:
+    outcome = trace.get("planner_outcome") or {}
+    return {
+        key: outcome.get(key)
+        for key in (
+            "attempt_count",
+            "selected_model",
+            "finish_reason",
+            "parse_outcome",
+            "validation_outcome",
+            "repair_outcome",
+            "latency_ms",
+        )
+        if key in outcome
+    }
 
 
 @contextmanager
@@ -343,8 +548,39 @@ def main() -> int:
     parser.add_argument("--benchmark", type=Path, default=DEFAULT_BENCHMARK)
     parser.add_argument("--output", type=Path, help="Append each completed case as JSONL and resume it later.")
     parser.add_argument("--summary", type=Path, help="Write the compact final report as JSON.")
+    release_mode = parser.add_mutually_exclusive_group()
+    release_mode.add_argument(
+        "--release", action="store_true", help="Capture the complete production replay artifact."
+    )
+    release_mode.add_argument(
+        "--replay", action="store_true", help="Rescore an existing release artifact offline."
+    )
+    parser.add_argument("--previous", type=Path, help="Previous release artifact for regressions and improvements.")
+    parser.add_argument("--fresh", action="store_true", help="Atomically replace the release artifact before running.")
     args = parser.parse_args()
     logging.disable(logging.INFO)
+    if args.release or args.replay:
+        if args.output is None:
+            parser.error("--release and --replay require --output")
+        report = (
+            replay_accuracy_release(
+                args.benchmark,
+                output_path=args.output,
+                previous_path=args.previous,
+            )
+            if args.replay
+            else run_accuracy_release(
+                args.benchmark,
+                output_path=args.output,
+                previous_path=args.previous,
+                fresh=args.fresh,
+            )
+        )
+        if args.summary:
+            args.summary.parent.mkdir(parents=True, exist_ok=True)
+            args.summary.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(json.dumps(report, indent=2, sort_keys=True))
+        return 0 if report["strict_accuracy"]["passed"] == report["strict_accuracy"]["total"] else 1
     report = run_gate(args.benchmark, output_path=args.output)
     if args.summary:
         args.summary.parent.mkdir(parents=True, exist_ok=True)
