@@ -175,3 +175,53 @@ def test_release_runner_resumes_without_repeating_completed_case_calls(tmp_path,
     odi_correctness_gate.run_accuracy_release(benchmark_path, output_path=artifact_path)
 
     assert calls == ["one", "two"]
+
+
+def test_release_runner_rejects_systemic_production_model_failure(tmp_path, monkeypatch) -> None:
+    benchmark_path = tmp_path / "benchmark.yaml"
+    artifact_path = tmp_path / "release.jsonl"
+    benchmark_path.write_text(
+        yaml.safe_dump(
+            {
+                "version": 1,
+                "name": "Production release",
+                "cases": [
+                    {
+                        "id": "one",
+                        "family": "direct",
+                        "planner_mode": "production_live",
+                        "turns": [{"prompt": "Question", "expected": {}}],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    def failed_model_call(case):
+        return {
+            "case_id": case["id"],
+            "family": case["family"],
+            "planner_mode": case["planner_mode"],
+            "turns": [
+                {
+                    "errors": ["status expected supported, got unsupported"],
+                    "deterministic_errors": [],
+                    "production_planner_errors": ["missing plan"],
+                    "trace": {
+                        "parsed_json_plan": None,
+                        "planner_attempts": [
+                            {"attempt": "initial", "error_kind": "request_failed"},
+                            {"attempt": "repair", "error_kind": "request_failed"},
+                        ],
+                    },
+                }
+            ],
+        }
+
+    monkeypatch.setattr(odi_correctness_gate, "_run_case_evidence", failed_model_call)
+
+    with pytest.raises(RuntimeError, match="production planner unavailable"):
+        odi_correctness_gate.run_accuracy_release(benchmark_path, output_path=artifact_path)
+
+    assert AccuracyArtifactStore(artifact_path).records == []

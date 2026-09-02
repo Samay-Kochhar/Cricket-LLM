@@ -92,6 +92,11 @@ IDs are loaded from the artifact and their production model calls are not
 repeated. Each newly completed question is fsynced into a complete temporary
 snapshot and atomically replaces the previous artifact.
 
+The release aborts without saving the current case when every production-model
+attempt fails at the transport or provider layer (for example `http_429`). This
+keeps quota, billing, model-access, and network failures out of product accuracy
+and leaves the case eligible for a later resume.
+
 Rescore the saved release without Gemini, a running application server, or
 Stats Desk:
 

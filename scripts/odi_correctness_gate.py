@@ -183,6 +183,7 @@ def run_accuracy_release(
                     for turn_index, turn in enumerate(case.get("turns", []), start=1)
                 ],
             }
+        _assert_production_planner_health(record)
         record["first_failing_stage"] = (
             None if all(not turn["errors"] for turn in record["turns"]) else classify_first_failing_stage(record)
         )
@@ -201,6 +202,23 @@ def replay_accuracy_release(
     records = AccuracyArtifactStore(output_path).records
     previous_records = AccuracyArtifactStore(previous_path).records if previous_path else None
     return score_release(benchmark, records, previous_records=previous_records)
+
+
+def _assert_production_planner_health(record: dict[str, Any]) -> None:
+    if record.get("planner_mode") != "production_live":
+        return
+    for turn in record.get("turns", []):
+        trace = turn.get("trace") or {}
+        attempts = trace.get("planner_attempts") or []
+        if not attempts or trace.get("parsed_json_plan"):
+            continue
+        error_kinds = [attempt.get("error_kind") for attempt in attempts]
+        if all(error_kinds):
+            kinds = ", ".join(sorted({str(kind) for kind in error_kinds}))
+            raise RuntimeError(
+                "production planner unavailable; release case was not saved "
+                f"and can be retried ({kinds})"
+            )
 
 
 def _load_case_results(path: Path | None) -> dict[str, CaseResult]:
@@ -562,20 +580,23 @@ def main() -> int:
     if args.release or args.replay:
         if args.output is None:
             parser.error("--release and --replay require --output")
-        report = (
-            replay_accuracy_release(
-                args.benchmark,
-                output_path=args.output,
-                previous_path=args.previous,
+        try:
+            report = (
+                replay_accuracy_release(
+                    args.benchmark,
+                    output_path=args.output,
+                    previous_path=args.previous,
+                )
+                if args.replay
+                else run_accuracy_release(
+                    args.benchmark,
+                    output_path=args.output,
+                    previous_path=args.previous,
+                    fresh=args.fresh,
+                )
             )
-            if args.replay
-            else run_accuracy_release(
-                args.benchmark,
-                output_path=args.output,
-                previous_path=args.previous,
-                fresh=args.fresh,
-            )
-        )
+        except RuntimeError as error:
+            parser.exit(2, f"error: {error}\n")
         if args.summary:
             args.summary.parent.mkdir(parents=True, exist_ok=True)
             args.summary.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")

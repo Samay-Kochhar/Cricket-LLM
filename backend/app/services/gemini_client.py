@@ -161,6 +161,15 @@ class GeminiClient:
             )
             response.raise_for_status()
             response_payload = response.json()
+        except httpx.HTTPStatusError as error:
+            return GeminiStructuredResult(
+                text=None,
+                selected_model=model_name,
+                model_version=None,
+                finish_reason=None,
+                latency_ms=(perf_counter() - started_at) * 1000,
+                error_kind=f"http_{error.response.status_code}",
+            )
         except (httpx.HTTPError, ValueError):
             return GeminiStructuredResult(
                 text=None,

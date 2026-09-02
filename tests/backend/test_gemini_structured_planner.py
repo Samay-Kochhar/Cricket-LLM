@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
+import httpx
+
 from backend.app.config import AppConfig
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
 from backend.app.cricket_analytics.semantic_service import SemanticAnalyticsService
@@ -62,6 +64,27 @@ def test_structured_generation_sends_schema_and_reports_safe_metadata(monkeypatc
     assert result.prompt_token_count == 50
     assert result.output_token_count == 25
     assert result.latency_ms >= 0
+    assert "secret-test-key" not in repr(result)
+
+
+def test_structured_generation_reports_safe_http_status_for_quota_failure(monkeypatch) -> None:
+    def quota_response(url: str, **kwargs: Any) -> httpx.Response:
+        return httpx.Response(
+            429,
+            request=httpx.Request("POST", url),
+            json={"error": {"status": "RESOURCE_EXHAUSTED"}},
+        )
+
+    monkeypatch.setattr("backend.app.services.gemini_client.httpx.post", quota_response)
+    client = GeminiClient(
+        api_key="secret-test-key",
+        default_model="gemini-default",
+        complex_model="gemini-complex",
+    )
+
+    result = client.generate_structured("Return a plan", response_schema={"type": "object"})
+
+    assert result.error_kind == "http_429"
     assert "secret-test-key" not in repr(result)
 
 
