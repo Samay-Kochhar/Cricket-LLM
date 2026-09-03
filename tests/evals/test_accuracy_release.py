@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -8,10 +10,34 @@ import yaml
 from scripts import odi_correctness_gate
 from scripts.accuracy_release import (
     AccuracyArtifactStore,
+    classify_first_failing_stage,
     reconcile_summary,
     score_release,
     validate_unique_case_ids,
 )
+
+
+ROOT = Path(__file__).resolve().parents[2]
+FROZEN_INPUT_SHA256 = {
+    "tests/evals/dl4nlp_cricket_analyst_supported_100.yaml": (
+        "c1d55391a1f9e7ebf14b86f148e654004f7d62116c3d479467ef4c7e01a15cf9"
+    ),
+    "tests/benchmarks/odi_unseen_paraphrases_v1.yaml": (
+        "c9c1d3b8cf7f3d5199dce5a67e3fdfac9681a055e0c15044e777ef1c909569f0"
+    ),
+    "tests/evals/results/aryaman_stats_desk_presentation_100.jsonl": (
+        "287e845ecd1f8876c725a835338d78dda662052c95fd5b6c5d43a22cc5034a29"
+    ),
+}
+
+
+def test_accuracy_release_inputs_and_saved_external_responses_are_immutable() -> None:
+    actual = {
+        relative_path: hashlib.sha256((ROOT / relative_path).read_bytes()).hexdigest()
+        for relative_path in FROZEN_INPUT_SHA256
+    }
+
+    assert actual == FROZEN_INPUT_SHA256
 
 
 def test_artifact_store_resumes_completed_cases_without_repeating_calls(tmp_path) -> None:
@@ -141,6 +167,29 @@ def test_summary_reconciliation_rejects_inconsistent_totals() -> None:
 
     with pytest.raises(ValueError, match="Family totals"):
         reconcile_summary(summary)
+
+
+def test_failure_stage_reports_compilation_when_canonical_candidate_cannot_compile() -> None:
+    expected_plan = {
+        "query_type": "aggregate",
+        "metric": "runs_scored",
+        "players": ["Virat Kohli"],
+    }
+    record = {
+        "case_id": "compile-failure",
+        "turns": [
+            {
+                "errors": ["compiled plan is missing"],
+                "canonical_meaning": {"plan": expected_plan},
+                "raw_structured_candidate": expected_plan,
+                "compiled_plan": None,
+                "trace": {"validation_result": {"valid": True}},
+                "response": {"status": "unsupported"},
+            }
+        ],
+    }
+
+    assert classify_first_failing_stage(record) == "compilation"
 
 
 def test_release_runner_resumes_without_repeating_completed_case_calls(tmp_path, monkeypatch) -> None:

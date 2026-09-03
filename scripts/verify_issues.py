@@ -271,6 +271,18 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "25": [
+        Check(
+            "production-accuracy-release-gate",
+            "Verify atomic resume, offline replay, diagnostic evidence, immutable inputs, and release scoring.",
+            (
+                "pytest",
+                "tests/evals/test_accuracy_release.py",
+                "tests/backend/test_odi_correctness_gate.py",
+                "tests/backend/test_gemini_structured_planner.py",
+            ),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [

@@ -250,16 +250,18 @@ def classify_first_failing_stage(record: dict[str, Any] | None) -> str:
             return "meaning extraction"
         if expected_plan and not _contains_meaning(raw_candidate, expected_plan):
             return "meaning extraction"
-        if expected_plan and not _contains_meaning(compiled_plan, expected_plan):
+        if expected_plan and compiled_plan is not None and not _contains_meaning(
+            compiled_plan, expected_plan
+        ):
             return "canonicalization"
+        if not compiled_plan:
+            return "compilation"
         if validation.get("valid") is False:
             return "validation"
         if status in {"query_execution_failed", "comparison_failed", "tactical_workup_failed"}:
             return "execution"
         if "validation" in status or status.startswith("no_") or status.endswith("_no_rows"):
             return "result validation"
-        if not compiled_plan:
-            return "canonicalization"
         if not trace.get("selected_executor") or (
             turn.get("response", {}).get("status") == "supported"
             and not trace.get("final_sql_or_method")
