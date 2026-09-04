@@ -7,6 +7,11 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from backend.app.cricket_analytics.canonical_meaning import (
+    CanonicalMeaningResolver,
+    MeaningStatus,
+    compile_canonical_meaning,
+)
 from backend.app.cricket_analytics.ontology import METRICS, ontology_context
 from backend.app.cricket_analytics.plan_normalizer import (
     is_passive_dismissal_question,
@@ -58,7 +63,16 @@ class SemanticQueryPlanner:
         self.available_teams = available_teams or []
         self.allow_dev_fallback = allow_dev_fallback
 
-    def plan(self, question: str, trace: QueryTrace) -> PlannerResult:
+    def plan(
+        self,
+        question: str,
+        trace: QueryTrace,
+        conversation_state: Any | None = None,
+    ) -> PlannerResult:
+        canonical = self._plan_canonical_slice(question, trace, conversation_state)
+        if canonical is not None:
+            return canonical
+
         use_fast_local_plan = (
             self.allow_dev_fallback
             and self._has_explicit_deterministic_intent(question)
@@ -103,6 +117,87 @@ class SemanticQueryPlanner:
             return PlannerResult(plan=None, validation=validation, used_gemini=self.gemini_client.is_configured())
 
         return self._plan_with_deterministic_fallback(question, trace)
+
+    def _plan_canonical_slice(
+        self,
+        question: str,
+        trace: QueryTrace,
+        conversation_state: Any | None,
+    ) -> PlannerResult | None:
+        language_resolver = CanonicalMeaningResolver(
+            available_players=self.available_players,
+            available_venues=self.available_venues,
+            available_teams=self.available_teams,
+        )
+        language_resolution = language_resolver.resolve(question, conversation_state)
+        if language_resolution.status != MeaningStatus.resolved:
+            return None
+
+        gemini_result: PlannerResult | None = None
+        repair_outcome = "not_needed"
+        extractors = []
+        if self.gemini_client.is_configured() and not self.allow_dev_fallback:
+            gemini_result = self._plan_with_gemini(
+                question,
+                trace,
+                prefer_complex=self._needs_complex_model(question),
+            )
+            if gemini_result.plan is None or not gemini_result.validation.valid:
+                repaired = self._repair_with_gemini(
+                    question,
+                    gemini_result.plan,
+                    gemini_result.validation,
+                    trace,
+                )
+                repair_outcome = (
+                    "succeeded"
+                    if repaired.plan is not None and repaired.validation.valid
+                    else "failed"
+                )
+                if repaired.plan is not None and repaired.validation.valid:
+                    gemini_result = repaired
+            if gemini_result.plan is not None and gemini_result.validation.valid:
+                candidate_plan = gemini_result.plan
+                extractors.append(("gemini", lambda _question, _state: candidate_plan))
+
+        resolver = CanonicalMeaningResolver(
+            available_players=self.available_players,
+            available_venues=self.available_venues,
+            available_teams=self.available_teams,
+            candidate_extractors=extractors,
+        )
+        resolution = resolver.resolve(question, conversation_state)
+        if resolution.status != MeaningStatus.resolved or resolution.meaning is None:
+            return None
+
+        plan = compile_canonical_meaning(resolution.meaning)
+        validation = validate_plan(plan, question)
+        validation = self._validate_explicit_scope(plan, question, validation)
+        trace.canonical_meaning = resolution.meaning.model_dump(mode="json")
+        trace.meaning_resolution = resolution.model_dump(
+            mode="json",
+            exclude={"meaning"},
+        )
+        trace.normalized_plan = plan.model_dump(mode="json")
+        trace.validation_result = validation.model_dump(mode="json")
+        trace.operation_type = plan.operation
+        if self.gemini_client.is_configured() and not self.allow_dev_fallback:
+            self._finalize_planner_trace(trace, repair_outcome=repair_outcome)
+        else:
+            trace.planner_outcome = {
+                "attempt_count": 0,
+                "selected_model": None,
+                "finish_reason": None,
+                "parse_outcome": "canonical_meaning",
+                "validation_outcome": "valid" if validation.valid else "invalid",
+                "repair_outcome": "not_needed",
+                "latency_ms": 0.0,
+            }
+        return PlannerResult(
+            plan=plan,
+            validation=validation,
+            used_gemini=self.gemini_client.is_configured() and not self.allow_dev_fallback,
+        )
 
     def _plan_with_deterministic_fallback(self, question: str, trace: QueryTrace) -> PlannerResult:
         fallback = self._fallback_plan(question)

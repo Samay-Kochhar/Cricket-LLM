@@ -283,6 +283,18 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "26": [
+        Check(
+            "canonical-direct-and-ranking-meaning",
+            "Verify direct metrics and rankings resolve through one canonical meaning before execution.",
+            (
+                "pytest",
+                "tests/backend/test_canonical_meaning.py",
+                "tests/backend/test_gemini_structured_planner.py",
+                "tests/backend/test_odi_correctness_gate.py",
+            ),
+        ),
+    ],
 }
 
 BACKEND_FULL_CHECKS = [

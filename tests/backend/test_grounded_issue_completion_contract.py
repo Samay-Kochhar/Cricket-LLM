@@ -93,9 +93,9 @@ def test_failure_states_distinguish_data_limitation_unsupported_and_planner_unce
         app_env="production",
         allow_dev_fallback=False,
     ).answer_question("What is Kohli's strike rate against Australia?")
-    assert no_llm.status.value == "unsupported"
-    assert no_llm.failure_state == "planner_uncertainty"
-    assert "not confident" in no_llm.insufficiencies[0].detail.lower()
+    assert no_llm.status.value == "supported"
+    assert no_llm.failure_state is None
+    assert no_llm.evidence_queries
 
 
 def test_tactical_bowling_plan_returns_checked_evidence_probes(
@@ -222,7 +222,7 @@ def test_invalid_llm_plan_can_be_repaired_before_execution(
     assert trace["normalized_plan"]["metric"] == "batting_strike_rate"
 
 
-def test_invalid_llm_plan_fails_when_repair_is_still_invalid(
+def test_invalid_llm_plan_does_not_discard_valid_canonical_direct_meaning(
     semantic_service: SemanticAnalyticsService,
 ) -> None:
     service = SemanticAnalyticsService(
@@ -237,9 +237,9 @@ def test_invalid_llm_plan_fails_when_repair_is_still_invalid(
 
     response = service.answer_question("What is Kohli's strike rate against Australia?")
 
-    assert response.status.value == "unsupported"
-    assert response.failure_state == "planner_uncertainty"
-    assert "not confident" in response.insufficiencies[0].detail.lower()
+    assert response.status.value == "supported"
+    assert response.failure_state is None
+    assert response.evidence_queries
 
 
 def test_production_semantic_v2_disables_dev_fallback_by_default(monkeypatch: pytest.MonkeyPatch) -> None:

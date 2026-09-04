@@ -157,6 +157,29 @@ def test_saved_run_replays_deterministically_and_reports_release_views(tmp_path)
     assert first["regressions"] == ["meaning-two-a"]
 
 
+def test_release_comparison_accepts_the_saved_compact_baseline_format() -> None:
+    benchmark = {
+        "version": 1,
+        "cases": [
+            {"id": "still-passes", "family": "direct"},
+            {"id": "now-regresses", "family": "ranking"},
+        ],
+    }
+    current = [
+        {"case_id": "still-passes", "turns": [{"errors": []}]},
+        {"case_id": "now-regresses", "turns": [{"errors": ["new failure"]}]},
+    ]
+    compact_previous = [
+        {"case_id": "still-passes", "passed": True, "errors": []},
+        {"case_id": "now-regresses", "passed": True, "errors": []},
+    ]
+
+    report = score_release(benchmark, current, previous_records=compact_previous)
+
+    assert report["regressions"] == ["now-regresses"]
+
+
+
 def test_summary_reconciliation_rejects_inconsistent_totals() -> None:
     summary = {
         "strict_accuracy": {"passed": 1, "total": 2, "rate": 0.5},

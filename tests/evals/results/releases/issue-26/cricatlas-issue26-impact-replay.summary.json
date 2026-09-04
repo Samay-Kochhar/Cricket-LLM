@@ -1,0 +1,917 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "unseen-break-rohit-length-dots-b",
+      "errors": [
+        "turn 1: plan.metric expected 'batter_dot_ball_percentage', got 'dot_balls'"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-break-babar-style-sr-a",
+      "errors": [
+        "turn 1: mode expected 'analysis', got 'clarification'",
+        "turn 1: status expected 'supported', got None",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query",
+        "turn 1: supported answer has no Semantic V2 evidence trace"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-break-starc-line-dots-b",
+      "errors": [
+        "turn 1: plan.metric expected 'bowler_dot_ball_percentage', got 'bowler_dot_balls'"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-break-rashid-phase-econ-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.bowler expected 'Rashid Khan', got 'Rashid'",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-break-boult-hand-wickets-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'insufficient_evidence'",
+        "turn 1: plan.operation expected 'aggregate', got 'split_compare'",
+        "turn 1: plan.group_by expected semantic set ['batter_hand'], got []",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-break-warner-year-sr-a",
+      "errors": [
+        "turn 1: mode expected 'analysis', got 'clarification'",
+        "turn 1: status expected 'supported', got None",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query",
+        "turn 1: supported answer has no Semantic V2 evidence trace"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-kohli-starc-a",
+      "errors": [
+        "turn 1: plan.entity expected 'batter', got 'matchup'",
+        "turn 1: plan.metric expected 'batting_strike_rate', got 'runs_scored'"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-kohli-starc-b",
+      "errors": [
+        "turn 1: plan.entity expected 'batter', got 'matchup'",
+        "turn 1: plan.metric expected 'batting_strike_rate', got 'wickets_taken'"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-smith-bumrah-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'insufficient_evidence'",
+        "turn 1: plan.metric expected 'batting_strike_rate', got 'runs_scored'",
+        "turn 1: plan.filters.batter expected 'Steven Smith', got 'Smith'",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-smith-bumrah-b",
+      "errors": [
+        "turn 1: plan.entity expected 'batter', got 'matchup'",
+        "turn 1: plan.metric expected 'batting_strike_rate', got 'dismissals'"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-maxwell-ashwin-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'insufficient_evidence'",
+        "turn 1: plan.operation expected 'matchup', got 'aggregate'",
+        "turn 1: plan.filters.bowler expected 'Ravichandran Ashwin', got 'Ashwin'",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-warner-dismissers-b",
+      "errors": [
+        "turn 1: plan.entity expected 'bowler', got 'batter'"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-miller-false-a",
+      "errors": [
+        "turn 1: plan.minimum_sample_explicit expected True, got False"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-miller-false-b",
+      "errors": [
+        "turn 1: plan.minimum_sample_explicit expected True, got False"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-match-rashid-boundary-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'insufficient_evidence'",
+        "turn 1: plan.filters.bowler expected 'Rashid Khan', got 'Rashid'",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-kohli-rohit-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-kohli-rohit-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-babar-smith-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-babar-smith-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-buttler-klaasen-spin-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.bowling_style expected 'spin', got ['spin']",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-buttler-klaasen-spin-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-rohit-warner-pp-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-rohit-warner-pp-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: plan.filters.compare_players is missing",
+        "turn 1: plan.filters.comparison_metrics is missing",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-death-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-death-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-rashid-ashwin-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-rashid-ashwin-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-rabada-shaheen-pp-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-compare-rabada-shaheen-pp-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-bumrah-phase-econ-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-bumrah-phase-econ-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-starc-hand-econ-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-starc-hand-econ-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-kohli-phase-sr-a",
+      "errors": [
+        "turn 1: mode expected 'analysis', got 'clarification'",
+        "turn 1: status expected 'supported', got None",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query",
+        "turn 1: supported answer has no Semantic V2 evidence trace"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-kohli-phase-sr-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-b",
+      "errors": [
+        "turn 1: mode expected 'analysis', got 'clarification'",
+        "turn 1: status expected 'supported', got None",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query",
+        "turn 1: supported answer has no Semantic V2 evidence trace"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-boult-hand-dots-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-boult-hand-dots-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-miller-phase-boundary-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-miller-phase-boundary-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-team-phase-runrate-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-split-team-phase-runrate-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-kohli-sr-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-kohli-sr-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-rohit-runs-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-rohit-runs-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-bumrah-econ-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-bumrah-econ-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-starc-death-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-starc-death-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-rashid-wickets-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-trend-rashid-wickets-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: Semantic V2 trace does not contain a normalized plan",
+        "turn 1: supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-kohli-phase-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-kohli-phase-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-bumrah-phase-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-bumrah-phase-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-kohli-starc-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-kohli-starc-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-comparison-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-comparison-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-trend-a",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-context-trend-b",
+      "errors": [
+        "turn 1: status expected 'supported', got 'unsupported'",
+        "turn 1: supported answer has no database evidence query",
+        "turn 2: status expected 'supported', got 'unsupported'",
+        "turn 2: Semantic V2 trace does not contain a normalized plan",
+        "turn 2: supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-ambiguous-bumrah-sr-b",
+      "errors": [
+        "turn 1: mode expected 'clarification', got 'analysis'",
+        "turn 1: clarification_labels expected semantic set ['Batting strike rate', 'Bowling strike rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-ambiguous-best-b",
+      "errors": [
+        "turn 1: mode expected 'clarification', got 'analysis'",
+        "turn 1: clarification_labels expected semantic set ['Runs scored', 'Batting strike rate', 'Wickets taken', 'Economy rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-a",
+      "errors": [
+        "turn 1: mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-b",
+      "errors": [
+        "turn 1: mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-missing-catches-a",
+      "errors": [
+        "turn 1: status expected 'insufficient_evidence', got 'unsupported'",
+        "turn 1: failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-missing-catches-b",
+      "errors": [
+        "turn 1: status expected 'insufficient_evidence', got 'unsupported'",
+        "turn 1: failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-a",
+      "errors": [
+        "turn 1: failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-b",
+      "errors": [
+        "turn 1: failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-prediction-a",
+      "errors": [
+        "turn 1: failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-prediction-b",
+      "errors": [
+        "turn 1: failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-weather-a",
+      "errors": [
+        "turn 1: mode expected 'analysis', got 'clarification'",
+        "turn 1: status expected 'unsupported', got None",
+        "turn 1: failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-weather-b",
+      "errors": [
+        "turn 1: failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-missing-captain-a",
+      "errors": [
+        "turn 1: status expected 'insufficient_evidence', got 'unsupported'",
+        "turn 1: failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-missing-captain-b",
+      "errors": [
+        "turn 1: status expected 'insufficient_evidence', got 'unsupported'",
+        "turn 1: failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-salary-a",
+      "errors": [
+        "turn 1: failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-unsupported-salary-b",
+      "errors": [
+        "turn 1: failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-ambiguous-comparison-a",
+      "errors": [
+        "turn 1: mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    },
+    {
+      "case_id": "unseen-ambiguous-comparison-b",
+      "errors": [
+        "turn 1: mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "captured baseline"
+    }
+  ],
+  "families": {
+    "behavior": {
+      "passed": 2,
+      "rate": 0.1,
+      "total": 20
+    },
+    "breakdown": {
+      "passed": 14,
+      "rate": 0.7,
+      "total": 20
+    },
+    "comparison": {
+      "passed": 0,
+      "rate": 0.0,
+      "total": 16
+    },
+    "context": {
+      "passed": 0,
+      "rate": 0.0,
+      "total": 10
+    },
+    "direct": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "matchup": {
+      "passed": 7,
+      "rate": 0.4375,
+      "total": 16
+    },
+    "ranking": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "split": {
+      "passed": 0,
+      "rate": 0.0,
+      "total": 14
+    },
+    "trend": {
+      "passed": 0,
+      "rate": 0.0,
+      "total": 10
+    }
+  },
+  "improvements": [],
+  "paraphrase_pair_consistency": {
+    "both_fail": 36,
+    "both_pass": 28,
+    "consistent_pairs": 64,
+    "one_pass": 11,
+    "total_pairs": 75
+  },
+  "planner_overlap": {
+    "both_fail": 0,
+    "both_pass": 123,
+    "deterministic_only": 0,
+    "production_only": 27,
+    "total": 150
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 67,
+    "rate": 0.44666666666666666,
+    "total": 150
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 67,
+    "rate": 0.44666666666666666,
+    "total": 150
+  },
+  "strict_accuracy": {
+    "passed": 67,
+    "rate": 0.44666666666666666,
+    "total": 150
+  }
+}

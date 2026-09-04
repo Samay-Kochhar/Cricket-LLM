@@ -42,9 +42,12 @@ def get_services():
         allow_dev_fallback=config.semantic_v2_dev_fallback,
     )
 
-    def query_handler(question: str):
+    def query_handler(question: str, conversation_state=None):
         if config.use_semantic_analytics_v2:
-            semantic_response = semantic_service.answer_question(question)
+            semantic_response = semantic_service.answer_question(
+                question,
+                conversation_state=conversation_state,
+            )
             grounded_notes, grounded_citations = grounded_context.gather(question, semantic_response)
             query_class = QueryClass(semantic_response.interpretation.query_class)
             follow_ups = suggest_follow_ups(query_class)

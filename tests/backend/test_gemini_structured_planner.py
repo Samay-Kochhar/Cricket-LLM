@@ -545,12 +545,14 @@ def test_canonical_typed_planner_questions_pass_through_live_chat() -> None:
         _structured_result("not-json"),
         _structured_result("still-not-json"),
     ])
-    invalid = _live_chat(invalid_client).reply(
+    recovered = _live_chat(invalid_client).reply(
         "What is Virat Kohli's batting average in ODIs?",
         history=[],
     )
-    assert invalid.query_response is not None
-    assert invalid.query_response.failure_state == "planner_uncertainty"
+    assert recovered.query_response is not None
+    assert recovered.query_response.status.value == "supported"
+    assert recovered.query_response.failure_state is None
+    assert len(invalid_client.calls) == 2
 
     ambiguous_client = _ScriptedStructuredClient([])
     ambiguous = _live_chat(ambiguous_client).reply(

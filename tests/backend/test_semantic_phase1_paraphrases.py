@@ -119,7 +119,7 @@ def test_phase1_paraphrases_share_the_same_plan_and_sql_evidence(
             assert column in result_columns
 
 
-def test_semantic_v2_can_disable_dev_fallback_when_llm_planning_is_unavailable() -> None:
+def test_canonical_direct_meaning_survives_when_llm_and_dev_fallback_are_unavailable() -> None:
     config = AppConfig.from_env()
     service = SemanticAnalyticsService(
         repository=AnalyticsRepository(config.duckdb_path),
@@ -130,6 +130,6 @@ def test_semantic_v2_can_disable_dev_fallback_when_llm_planning_is_unavailable()
 
     response = service.answer_question("What is Kohli's strike rate against Australia?")
 
-    assert response.status.value == "unsupported"
-    assert response.insufficiencies
-    assert "could not produce a validated LLM plan" in response.insufficiencies[0].detail
+    assert response.status.value == "supported"
+    assert response.failure_state is None
+    assert response.evidence_queries

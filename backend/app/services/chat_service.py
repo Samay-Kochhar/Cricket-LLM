@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import re
 from dataclasses import dataclass, field
 
@@ -262,7 +263,7 @@ class ChatService:
                 conversation_state=conversation_state,
                 activity_trace=["Gemini reasoning"] if used_gemini else [],
             )
-        query_response = self.query_handler(contextual_message)
+        query_response = self._query(contextual_message, conversation_state)
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
         resolved_input = contextual_message if contextual_message != normalized_message else None
@@ -342,11 +343,36 @@ class ChatService:
     @staticmethod
     def _has_ambiguous_strike_rate(message: str) -> bool:
         lowered = message.lower()
+        batting_context = re.search(
+            r"\b(?:batter|batters|batsman|batting|score|scorer|kohli|rohit|babar|"
+            r"klaasen|buttler|warner|miller)\b",
+            lowered,
+        )
+        bowling_context = re.search(r"\b(?:bowler|bowlers|bowling)\b", lowered)
         return (
             "strike rate" in lowered
+            and "strike rates" not in lowered
             and "batting strike rate" not in lowered
             and "bowling strike rate" not in lowered
+            and batting_context is None
+            and bowling_context is None
         )
+
+    def _query(
+        self,
+        message: str,
+        conversation_state: ConversationState | None,
+    ) -> QueryResponse:
+        try:
+            parameters = inspect.signature(self.query_handler).parameters
+        except (TypeError, ValueError):
+            parameters = {}
+        if "conversation_state" in parameters:
+            return self.query_handler(
+                message,
+                conversation_state=conversation_state,
+            )
+        return self.query_handler(message)
 
     @staticmethod
     def _has_ambiguous_ranking_metric(message: str) -> bool:

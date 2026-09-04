@@ -1,0 +1,895 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "unseen-break-kohli-line-runs-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['line'], got ['batter']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-break-rohit-length-dots-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['length'], got ['batter']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-break-babar-style-sr-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['bowling_style'], got ['batter']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-break-buttler-shot-runs-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['shot_type'], got ['batter']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-break-buttler-shot-runs-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['shot_type'], got ['batter']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-break-klaasen-zone-boundary-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['field_zone'], got ['batter']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-break-bumrah-length-wickets-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['length'], got ['bowler']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-break-bumrah-length-wickets-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['length'], got ['bowler']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-break-starc-line-dots-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['line'], got ['bowler']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-break-starc-line-dots-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['line'], got ['bowler']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-break-rashid-phase-econ-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['phase'], got ['bowler']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-break-rashid-phase-econ-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.group_by expected semantic set ['phase'], got ['bowler']",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-break-boult-hand-wickets-b",
+      "errors": [
+        "plan.group_by expected semantic set ['batter_hand'], got ['bowler']"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-kohli-starc-a",
+      "errors": [
+        "plan.metric expected 'batting_strike_rate', got 'runs_scored'"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-kohli-starc-b",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.entity expected 'batter', got 'matchup'",
+        "plan.metric expected 'batting_strike_rate', got 'bowling_average'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-smith-bumrah-a",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.metric expected 'batting_strike_rate', got 'runs_scored'",
+        "plan.filters.batter expected 'Steven Smith', got 'Smith'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-smith-bumrah-b",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.entity expected 'batter', got 'matchup'",
+        "plan.metric expected 'batting_strike_rate', got 'batting_average'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-maxwell-ashwin-b",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.filters.batter expected 'Glenn Maxwell', got 'GD Maxwell'",
+        "plan.filters.bowler expected 'Ravichandran Ashwin', got 'R Ashwin'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-warner-dismissers-b",
+      "errors": [
+        "plan.entity expected 'bowler', got 'batter'"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-klaasen-dots-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.batter is missing",
+        "plan.minimum_sample expected an object, got None",
+        "plan.minimum_sample_explicit expected True, got False",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-match-klaasen-dots-b",
+      "errors": [
+        "plan.filters.batter is missing",
+        "plan.minimum_sample expected an object, got None",
+        "plan.minimum_sample_explicit expected True, got False"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-match-miller-false-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.entity expected 'bowler', got 'batter'",
+        "plan.group_by expected semantic set ['bowler'], got ['batter']",
+        "plan.minimum_sample expected an object, got None",
+        "plan.minimum_sample_explicit expected True, got False",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-match-miller-false-b",
+      "errors": [
+        "plan.entity expected 'bowler', got 'batter'",
+        "plan.group_by expected semantic set ['bowler'], got ['batter']",
+        "plan.minimum_sample expected an object, got None",
+        "plan.minimum_sample_explicit expected True, got False"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-rashid-boundary-a",
+      "errors": [
+        "plan.filters.bowler is missing",
+        "plan.minimum_sample expected an object, got None",
+        "plan.minimum_sample_explicit expected True, got False"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-match-rashid-boundary-b",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.filters.bowler expected 'Rashid Khan', got 'Rashid'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-match-kohli-pace-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.metric expected 'boundary_percentage', got 'economy_rate'",
+        "plan.filters.batter is missing",
+        "plan.filters.bowling_style is missing",
+        "plan.minimum_sample expected an object, got None",
+        "plan.minimum_sample_explicit expected True, got False",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-match-kohli-pace-b",
+      "errors": [
+        "plan.entity expected 'bowler', got 'batter'",
+        "plan.group_by expected semantic set ['bowler'], got ['batter']",
+        "plan.minimum_sample expected an object, got None",
+        "plan.minimum_sample_explicit expected True, got False"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-kohli-rohit-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-kohli-rohit-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-babar-smith-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-babar-smith-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-buttler-klaasen-spin-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-buttler-klaasen-spin-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-rohit-warner-pp-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-rohit-warner-pp-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-death-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.phase is missing",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-bumrah-starc-death-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.phase is missing",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-rashid-ashwin-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.bowling_style is missing",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-rashid-ashwin-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-rabada-shaheen-pp-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-compare-rabada-shaheen-pp-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.compare_players is missing",
+        "plan.filters.comparison_metrics is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-bumrah-phase-econ-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.operation expected 'split_compare', got 'aggregate'",
+        "plan.split_by expected 'phase', got None",
+        "plan.compare_values expected a list, got None",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-split-starc-hand-econ-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.operation expected 'split_compare', got 'aggregate'",
+        "plan.split_by expected 'batter_hand', got None",
+        "plan.compare_values expected a list, got None",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-starc-hand-econ-b",
+      "errors": [
+        "plan.compare_values expected a list, got None"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-kohli-phase-sr-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.operation expected 'split_compare', got 'aggregate'",
+        "plan.split_by expected 'phase', got None",
+        "plan.compare_values expected a list, got None",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-kohli-phase-sr-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.compare_values[0] expected 'powerplay', got 'Powerplay'",
+        "plan.compare_values[1] expected 'death', got 'Death'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.compare_values[0] expected 'wrist_spin', got 'wrist-spin'",
+        "plan.compare_values[1] expected 'finger_spin', got 'finger-spin'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.split_by expected 'bowling_style_group', got 'bowling_style'",
+        "plan.compare_values[0] expected 'wrist_spin', got 'wrist-spin'",
+        "plan.compare_values[1] expected 'finger_spin', got 'finger-spin'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-boult-hand-dots-a",
+      "errors": [
+        "plan.operation expected 'split_compare', got 'aggregate'",
+        "plan.split_by expected 'batter_hand', got None",
+        "plan.compare_values expected a list, got None"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-boult-hand-dots-b",
+      "errors": [
+        "plan.compare_values expected a list, got None"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-miller-phase-boundary-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.operation expected 'split_compare', got 'aggregate'",
+        "plan.split_by expected 'phase', got None",
+        "plan.compare_values expected a list, got None",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-split-team-phase-runrate-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.compare_values[0] expected 'powerplay', got 'Powerplay'",
+        "plan.compare_values[1] expected 'death', got 'Death Overs'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-trend-rohit-runs-a",
+      "errors": [
+        "plan.group_by expected semantic set ['year'], got ['batter']"
+      ],
+      "family": "trend",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-trend-rohit-runs-b",
+      "errors": [
+        "plan.group_by expected semantic set ['year'], got ['batter']"
+      ],
+      "family": "trend",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-trend-bumrah-econ-b",
+      "errors": [
+        "plan.group_by expected semantic set ['year'], got ['bowler']"
+      ],
+      "family": "trend",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-trend-starc-death-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.years is missing",
+        "plan.filters.year_mode is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-trend-starc-death-b",
+      "errors": [
+        "plan.group_by expected semantic set ['year'], got ['bowler']",
+        "plan.filters.year_mode is missing"
+      ],
+      "family": "trend",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-trend-rashid-wickets-b",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.filters.bowler expected 'Rashid Khan', got 'Rashid'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-context-kohli-starc-a",
+      "errors": [
+        "plan.entity expected 'batter', got 'matchup'",
+        "plan.metric expected 'batting_strike_rate', got 'runs_scored'"
+      ],
+      "family": "context",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-context-kohli-starc-b",
+      "errors": [
+        "plan.entity expected 'batter', got 'matchup'",
+        "plan.metric expected 'batting_strike_rate', got 'runs_scored'"
+      ],
+      "family": "context",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-context-comparison-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "supported answer has no database evidence query",
+        "plan.operation expected 'player_compare', got 'aggregate'",
+        "plan.filters.compare_players is missing"
+      ],
+      "family": "context",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-context-comparison-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "supported answer has no database evidence query",
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-ambiguous-bumrah-sr-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'",
+        "clarification_labels expected semantic set ['Batting strike rate', 'Bowling strike rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-ambiguous-best-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'",
+        "clarification_labels expected semantic set ['Runs scored', 'Batting strike rate', 'Wickets taken', 'Economy rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-a",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "result validation"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-missing-catches-a",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-missing-catches-b",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-b",
+      "errors": [
+        "failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-prediction-a",
+      "errors": [
+        "failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-weather-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-unsupported-weather-b",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-missing-captain-a",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-missing-captain-b",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-salary-b",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-ambiguous-comparison-a",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-ambiguous-comparison-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    }
+  ],
+  "families": {
+    "behavior": {
+      "passed": 4,
+      "rate": 0.2,
+      "total": 20
+    },
+    "breakdown": {
+      "passed": 7,
+      "rate": 0.35,
+      "total": 20
+    },
+    "comparison": {
+      "passed": 0,
+      "rate": 0.0,
+      "total": 16
+    },
+    "context": {
+      "passed": 6,
+      "rate": 0.6,
+      "total": 10
+    },
+    "direct": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "matchup": {
+      "passed": 2,
+      "rate": 0.125,
+      "total": 16
+    },
+    "ranking": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "split": {
+      "passed": 3,
+      "rate": 0.21428571428571427,
+      "total": 14
+    },
+    "trend": {
+      "passed": 4,
+      "rate": 0.4,
+      "total": 10
+    }
+  },
+  "improvements": [],
+  "paraphrase_pair_consistency": {
+    "both_fail": 32,
+    "both_pass": 27,
+    "consistent_pairs": 59,
+    "one_pass": 16,
+    "total_pairs": 75
+  },
+  "planner_overlap": {
+    "both_fail": 48,
+    "both_pass": 51,
+    "deterministic_only": 16,
+    "production_only": 35,
+    "total": 150
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 70,
+    "rate": 0.4666666666666667,
+    "total": 150
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 70,
+    "rate": 0.4666666666666667,
+    "total": 150
+  },
+  "strict_accuracy": {
+    "passed": 70,
+    "rate": 0.4666666666666667,
+    "total": 150
+  }
+}

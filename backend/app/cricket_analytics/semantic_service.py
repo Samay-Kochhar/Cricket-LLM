@@ -72,7 +72,11 @@ class SemanticAnalyticsService:
             allow_dev_fallback=self.allow_dev_fallback,
         )
 
-    def answer_question(self, question: str) -> QueryResponse:
+    def answer_question(
+        self,
+        question: str,
+        conversation_state: Any | None = None,
+    ) -> QueryResponse:
         profile_response = self._maybe_answer_batting_profile(question)
         if profile_response is not None:
             return profile_response
@@ -80,7 +84,7 @@ class SemanticAnalyticsService:
         if position_response is not None:
             return position_response
         trace = QueryTrace(original_user_question=question)
-        planner_result = self.planner.plan(question, trace)
+        planner_result = self.planner.plan(question, trace, conversation_state)
         plan = planner_result.plan
         if plan is None:
             return self._invalid_plan_response(question, trace, planner_result.validation)
@@ -1216,10 +1220,23 @@ class SemanticAnalyticsService:
         )
 
     def _trace_notes(self, trace: QueryTrace, plan: CricketQueryPlan | None) -> list[EvidenceNote]:
+        raw_trace = trace.as_dict()
+        public_trace = _public_object(raw_trace)
+        if isinstance(public_trace, dict):
+            for field in ("canonical_meaning", "parsed_json_plan", "normalized_plan"):
+                raw_plan = raw_trace.get(field)
+                public_plan = public_trace.get(field)
+                if isinstance(raw_plan, dict) and isinstance(public_plan, dict):
+                    raw_filters = raw_plan.get("filters")
+                    public_filters = public_plan.get("filters")
+                    if isinstance(raw_filters, dict) and isinstance(public_filters, dict):
+                        for key, value in raw_filters.items():
+                            if isinstance(value, str) and value in {"LHB", "RHB"}:
+                                public_filters[key] = value
         notes = [
             EvidenceNote(
                 title="Semantic V2 trace",
-                detail=json.dumps(_public_object(trace.as_dict()), sort_keys=True, default=str)[:50000],
+                detail=json.dumps(public_trace, sort_keys=True, default=str)[:50000],
             )
         ]
         if plan and plan.question_subject == "yearly_trend":

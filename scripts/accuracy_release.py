@@ -283,6 +283,8 @@ def _index_records(records: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 
 
 def _record_passed(record: dict[str, Any]) -> bool:
+    if isinstance(record.get("passed"), bool):
+        return bool(record["passed"])
     turns = record.get("turns") or []
     return bool(turns) and all(not turn.get("errors") for turn in turns)
 
@@ -308,6 +310,8 @@ def _production_planner_passed(record: dict[str, Any] | None, *, fallback: bool)
 def _record_errors(record: dict[str, Any] | None) -> list[str]:
     if record is None:
         return ["missing completed artifact"]
+    if isinstance(record.get("errors"), list):
+        return [str(error) for error in record["errors"]]
     return [str(error) for turn in record.get("turns") or [] for error in turn.get("errors") or []]
 
 

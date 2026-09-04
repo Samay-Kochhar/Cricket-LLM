@@ -258,9 +258,10 @@ def requested_sort_direction(
     group_by: list[str] | None = None,
     filters: dict[str, object] | None = None,
 ) -> str | None:
-    if any(token in lowered_question for token in ("highest", "biggest", "fastest")):
+    ranking_wording = re.sub(r"\bat least\b", "minimum", lowered_question)
+    if any(token in ranking_wording for token in ("highest", "biggest", "fastest")):
         return "desc"
-    if any(token in lowered_question for token in ("lowest", "fewest", "smallest", "slowest")):
+    if any(token in ranking_wording for token in ("lowest", "fewest", "smallest", "slowest")):
         return "asc"
 
     metric_definition = METRICS.get(metric)
@@ -286,15 +287,15 @@ def requested_sort_direction(
     ):
         good_direction = "asc" if good_direction == "desc" else "desc"
 
-    if "worst" in lowered_question or re.search(r"\bbottom\s+(?:\d+|\w+)", lowered_question):
+    if "worst" in ranking_wording or re.search(r"\bbottom\s+(?:\d+|\w+)", ranking_wording):
         return "asc" if good_direction == "desc" else "desc"
-    if "best" in lowered_question or "top" in lowered_question:
+    if "best" in ranking_wording or "top" in ranking_wording:
         return good_direction
-    if "most" in lowered_question:
-        if "most economical" in lowered_question or "most effective" in lowered_question:
+    if "most" in ranking_wording:
+        if "most economical" in ranking_wording or "most effective" in ranking_wording:
             return good_direction
         return "desc"
-    if "least" in lowered_question:
+    if "least" in ranking_wording:
         return "asc"
     return None
 

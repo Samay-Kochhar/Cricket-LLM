@@ -369,12 +369,16 @@ cases:
 
   - id: planner-unavailable
     family: planner_failure
-    outcome: planner_failure
+    outcome: supported
     planner_mode: production_unavailable
     turns:
       - prompt: What is Virat Kohli's batting strike rate against Australia?
         expected:
           mode: analysis
-          status: unsupported
-          failure_state: planner_uncertainty
-          message_contains: ["not confident"]
+          status: supported
+          plan:
+            operation: aggregate
+            entity: batter
+            metric: batting_strike_rate
+            filters: {batter: Virat Kohli, opposition: Australia}
+          evidence: required
