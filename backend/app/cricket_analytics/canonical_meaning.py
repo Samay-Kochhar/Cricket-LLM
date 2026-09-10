@@ -32,7 +32,7 @@ class MeaningStatus(str, Enum):
 class CanonicalCricketMeaning(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    family: Literal["direct", "ranking"]
+    family: Literal["direct", "ranking", "breakdown"]
     role: Literal["batter", "bowler"]
     metric: str
     filters: dict[str, object] = Field(default_factory=dict)
@@ -103,17 +103,14 @@ _CANONICAL_PLAYER_ALIASES = {
 _RANKING_WORDS = re.compile(
     r"\b(?:rank|top|bottom|leading|highest|lowest|largest|best|worst|most|fewest|fastest|slowest|leads?)\b"
 )
-_BREAKDOWN_WORDS = re.compile(
-    r"\b(?:breakdown|split|by line|by length|by year|year[- ]wise|which line|which length|which shot)\b"
-)
 _OTHER_FAMILY_WORDS = re.compile(
-    r"\b(?:compare|comparison|matchup|head[- ]to[- ]head|trend|over time)\b"
+    r"\b(?:compare|comparison|matchup|head[- ]to[- ]head|trend|over time|"
+    r"distribution|concentrated|concentration)\b"
 )
 _OUTSIDE_SLICE_WORDING = re.compile(
     r"\b(?:"
     r"by venue|which venue|which ground|by ground|"
-    r"shot type|which shot|what shot|field zone|scoring zone|bowling type|"
-    r"short balls?|good length|delivery length|"
+    r"short balls?|good length|"
     r"(?:since|after|from) \d{4}(?: onward| onwards)?|"
     r"false shots? per over|wicket opportunity|immediately after|"
     r"after facing|dot balls? (?:has|have).* faced|"
@@ -203,7 +200,19 @@ class CanonicalMeaningResolver:
             return language.meaning
         filters = dict(plan.filters)
         player = filters.get(plan.entity)
-        family = "direct" if isinstance(player, str) else "ranking"
+        dimensions = [
+            item for item in list(plan.group_by or []) if item in _BREAKDOWN_DIMENSIONS
+        ]
+        has_player_filter = any(
+            isinstance(filters.get(role), str) for role in ("batter", "bowler")
+        )
+        family: Literal["direct", "ranking", "breakdown"] = (
+            "breakdown"
+            if has_player_filter and dimensions
+            else "direct"
+            if isinstance(player, str)
+            else "ranking"
+        )
         if plan.entity not in {"batter", "bowler"}:
             return None
         return CanonicalCricketMeaning(
@@ -211,11 +220,11 @@ class CanonicalMeaningResolver:
             role=plan.entity,
             metric=plan.metric,
             filters=filters,
-            group_by=list(plan.group_by or [plan.entity]),
+            group_by=dimensions or list(plan.group_by or [plan.entity]),
             limit=plan.limit or 10,
             sort_direction=plan.sort.direction if plan.sort else get_metric(plan.metric).default_sort,
-            minimum_sample=plan.minimum_sample if family == "ranking" else None,
-            minimum_sample_explicit=plan.minimum_sample_explicit if family == "ranking" else False,
+            minimum_sample=plan.minimum_sample if family != "direct" else None,
+            minimum_sample_explicit=plan.minimum_sample_explicit if family != "direct" else False,
         )
 
     def _meaning_from_language(
@@ -224,11 +233,7 @@ class CanonicalMeaningResolver:
         state: Mapping[str, object] | None,
     ) -> MeaningResolution:
         lowered = _normalized_text(question)
-        if (
-            _BREAKDOWN_WORDS.search(lowered)
-            or _OTHER_FAMILY_WORDS.search(lowered)
-            or _OUTSIDE_SLICE_WORDING.search(lowered)
-        ):
+        if _OTHER_FAMILY_WORDS.search(lowered) or _OUTSIDE_SLICE_WORDING.search(lowered):
             return MeaningResolution(status=MeaningStatus.not_applicable)
         if re.search(r"\bteams?\b", lowered):
             return MeaningResolution(status=MeaningStatus.not_applicable)
@@ -247,6 +252,11 @@ class CanonicalMeaningResolver:
         if len(players) > 1:
             return MeaningResolution(status=MeaningStatus.not_applicable)
         player = players[0] if players else None
+        if player is None and re.search(r"\bdismiss(?:ed|es|ing)\b", lowered):
+            # A passive/active dismissal question can contain a named batter that this
+            # resolver does not know. Do not silently drop that entity and reinterpret
+            # the request as a global ranking; let the broader planner resolve it.
+            return MeaningResolution(status=MeaningStatus.not_applicable)
         if player is not None and re.search(r"\bwhich\s+(?:bowler|batter)\b", lowered):
             return MeaningResolution(status=MeaningStatus.not_applicable)
         state_players = state.get("players") if state else None
@@ -254,6 +264,7 @@ class CanonicalMeaningResolver:
             state_player = state_players[0]
             if isinstance(state_player, str) and state_player in self.available_players:
                 player = state_player
+        breakdown_dimensions = _breakdown_dimensions(lowered)
         ranking = bool(_RANKING_WORDS.search(lowered)) and player is None
         state_group_by = state.get("group_by") if state else None
         state_ranking = (
@@ -263,8 +274,14 @@ class CanonicalMeaningResolver:
             and isinstance(state_group_by, list)
             and any(item in {"batter", "bowler"} for item in state_group_by)
         )
-        family: Literal["direct", "ranking"] | None = (
-            "ranking" if ranking or state_ranking else "direct" if player else None
+        family: Literal["direct", "ranking", "breakdown"] | None = (
+            "breakdown"
+            if player and breakdown_dimensions
+            else "ranking"
+            if ranking or state_ranking
+            else "direct"
+            if player
+            else None
         )
         if family is None:
             return MeaningResolution(status=MeaningStatus.not_applicable)
@@ -282,6 +299,10 @@ class CanonicalMeaningResolver:
             )
 
         metric, role = _metric_and_role(lowered, player)
+        if breakdown_dimensions and re.search(
+            r"\b(?:dismiss(?:al|als|ed|es|ing)?)\b", lowered
+        ):
+            metric, role = "wickets_taken", "bowler"
         state_metric = state.get("metric") if state else None
         if metric is None and isinstance(state_metric, str):
             try:
@@ -309,12 +330,30 @@ class CanonicalMeaningResolver:
                 reason="No supported direct or ranking metric was identified.",
             )
 
+        player_filter_role = role
+        if (
+            family == "breakdown"
+            and player is not None
+            and _named_player_is_batting_object(lowered, player)
+        ):
+            player_filter_role = "batter"
+            if metric == "batter_dot_ball_percentage":
+                metric = "bowler_dot_ball_percentage"
+            elif metric == "dot_balls":
+                metric = "bowler_dot_balls"
+            role = "bowler"
+
         filters = _state_filters(state)
         filters.update(self._explicit_filters(question, lowered))
         filters.pop("batter", None)
         filters.pop("bowler", None)
         if player:
-            filters[role] = player
+            filters[player_filter_role] = player
+
+        if "phase" in breakdown_dimensions and _multiple_phase_values(lowered):
+            filters.pop("phase", None)
+        if "batter_hand" in breakdown_dimensions and _multiple_hand_values(lowered):
+            filters.pop("batter_hand", None)
 
         limit = _ranking_limit(lowered) if family == "ranking" else 10
         direction = (
@@ -324,14 +363,14 @@ class CanonicalMeaningResolver:
                 re.sub(r"\bat least\b", "minimum", lowered),
                 metric,
                 role,
-                group_by=[role],
+                group_by=breakdown_dimensions or [role],
                 filters=filters,
             )
             or get_metric(metric, entity=role, filters=filters).default_sort
         )
-        sample = _explicit_sample(lowered, metric) if family == "ranking" else None
+        sample = _explicit_sample(lowered, metric) if family != "direct" else None
         sample_is_explicit = sample is not None
-        if family == "ranking" and sample is None:
+        if family != "direct" and sample is None:
             defaults = get_metric(metric, entity=role, filters=filters).minimum_sample.as_dict()
             sample = MinimumSampleSpec(**defaults) if defaults else None
         return MeaningResolution(
@@ -341,7 +380,7 @@ class CanonicalMeaningResolver:
                 role=role,
                 metric=metric,
                 filters=filters,
-                group_by=[role],
+                group_by=breakdown_dimensions or [role],
                 limit=limit,
                 sort_direction=direction,
                 minimum_sample=sample,
@@ -390,6 +429,21 @@ class CanonicalMeaningResolver:
 
 
 def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
+    if meaning.family == "breakdown":
+        return _compile_breakdown_meaning(meaning)
+    return _compile_aggregate_meaning(meaning)
+
+
+def _compile_breakdown_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
+    dimensions = meaning.group_by
+    if not dimensions or any(item not in _BREAKDOWN_DIMENSIONS for item in dimensions):
+        raise ValueError("A canonical breakdown requires supported breakdown dimensions.")
+    if len(dimensions) > 1 and dimensions != ["line", "length"]:
+        raise ValueError("Only the line-and-length matrix supports two breakdown dimensions.")
+    return _compile_aggregate_meaning(meaning)
+
+
+def _compile_aggregate_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
     return CricketQueryPlan(
         operation="aggregate",
         entity=meaning.role,
@@ -407,6 +461,7 @@ def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryP
 
 
 def _metric_and_role(lowered: str, player: str | None) -> tuple[str | None, str | None]:
+    lowered = lowered.replace("-", " ")
     if "yorker" in lowered:
         count = bool(
             re.search(
@@ -430,23 +485,100 @@ def _metric_and_role(lowered: str, player: str | None) -> tuple[str | None, str 
         bowling = bool(
             re.search(r"\b(?:bowlers?|legal (?:balls|deliveries)|to (?:left|right)[- ]hand)\b", lowered)
         ) or player in _KNOWN_BOWLERS
+        is_count = bool(
+            re.search(
+                r"\b(?:how many|number of|count of|total)\s+(?:the\s+)?dot(?:[- ]balls?)?\b|"
+                r"\bdot[- ]ball count\b",
+                lowered,
+            )
+        )
+        if is_count:
+            return ("bowler_dot_balls" if bowling else "dot_balls"), (
+                "bowler" if bowling else "batter"
+            )
         return (
             "bowler_dot_ball_percentage" if bowling else "batter_dot_ball_percentage",
             "bowler" if bowling else "batter",
         )
     if "bowling strike rate" in lowered:
         return "bowling_strike_rate", "bowler"
-    if "strike rate" in lowered or "fastest scorer" in lowered or "fastest" in lowered or "quickly" in lowered:
-        if re.search(r"\bbowlers?\b", lowered):
+    if (
+        "strike rate" in lowered
+        or "scoring rate" in lowered
+        or "fastest scorer" in lowered
+        or "fastest" in lowered
+        or "quickly" in lowered
+    ):
+        if player in _KNOWN_BOWLERS or re.search(
+            r"\b(?:rank|top|bottom|best|worst|fastest|slowest|which)\b.{0,30}\bbowlers?\b",
+            lowered,
+        ):
             return "bowling_strike_rate", "bowler"
         return "batting_strike_rate", "batter"
     if "bowling average" in lowered:
         return "bowling_average", "bowler"
     if "average" in lowered:
         return "batting_average", "batter"
-    if re.search(r"\b(?:runs?|run tally|run totals?|scorers?)\b", lowered):
+    if re.search(
+        r"\b(?:runs?|run output|run tally|run totals?|scores?|scoring|scorers?|productive shots?)\b",
+        lowered,
+    ):
         return "runs_scored", "batter"
     return None, None
+
+
+_BREAKDOWN_DIMENSIONS = frozenset(
+    {"line", "length", "bowling_style", "shot_type", "field_zone", "phase", "batter_hand", "year"}
+)
+
+
+def _breakdown_dimensions(lowered: str) -> list[str]:
+    patterns = (
+        ("batter_hand", r"\b(?:batter|batting)?\s*hand(?:edness)?\b|\blefties\b.{0,30}\brighties\b|\brighties\b.{0,30}\blefties\b"),
+        ("bowling_style", r"\b(?:bowling|bowler)\s+(?:styles?|types?|kinds?)\b"),
+        ("shot_type", r"\b(?:shot|stroke)\s*(?:types?|selection)?\b|\bwhich shots?\b"),
+        ("field_zone", r"\b(?:field|scoring|wagon)\s+(?:zones?|areas?)\b|\bby zones?\b|\baround the ground\b"),
+        (
+            "phase",
+            r"\b(?:by|across|through|between|per)\s+(?:innings\s+)?(?:phases?|stages?)\b|"
+            r"\b(?:for|in)\s+(?:each|every|all)\s+(?:innings\s+)?(?:phases?|stages?)\b|"
+            r"\b(?:innings\s+)?(?:phase|stage)\s+(?:breakdown|split)\b|"
+            r"\bpowerplay\b.{0,40}\b(?:middle|death)\b",
+        ),
+        ("year", r"\b(?:year by year|year[- ]wise|annual(?:ly)?|season by season|each year|every year)\b"),
+        ("line", r"\b(?:bowling\s+)?lines?\b"),
+        ("length", r"\b(?:delivery\s+)?lengths?\b"),
+    )
+    matches = [dimension for dimension, pattern in patterns if re.search(pattern, lowered)]
+    if "false shot" in lowered or "false-shot" in lowered:
+        matches = [dimension for dimension in matches if dimension != "shot_type"]
+    return matches
+
+
+def _named_player_is_batting_object(lowered: str, player: str) -> bool:
+    aliases = {player.lower(), player.rsplit(" ", 1)[-1].lower()}
+    aliases.update(
+        alias for alias, canonical in _CANONICAL_PLAYER_ALIASES.items() if canonical == player
+    )
+    for alias in sorted(aliases, key=len, reverse=True):
+        for match in re.finditer(rf"(?<!\w){re.escape(alias)}(?:'s)?(?!\w)", lowered):
+            before = lowered[max(0, match.start() - 50) : match.start()]
+            after = lowered[match.end() : match.end() + 35]
+            if re.search(r"\b(?:against|dismiss(?:es|ed|ing)?)\s+(?:\w+\s+){0,2}$", before):
+                return True
+            if re.match(r"\s+(?:(?:is|was|has been)\s+)?dismissed\b", after):
+                return True
+    return False
+
+
+def _multiple_phase_values(lowered: str) -> bool:
+    return sum(token in lowered for token in ("powerplay", "middle", "death")) > 1
+
+
+def _multiple_hand_values(lowered: str) -> bool:
+    left = bool(re.search(r"\b(?:lefties|lhb|left[- ]hand)", lowered))
+    right = bool(re.search(r"\b(?:righties|rhb|right[- ]hand)", lowered))
+    return left and right
 
 
 def _extract_player(question: str, available_players: Sequence[str]) -> str | None:
