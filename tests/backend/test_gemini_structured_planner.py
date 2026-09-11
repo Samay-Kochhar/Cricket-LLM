@@ -134,7 +134,7 @@ def _plan_json(**overrides: Any) -> str:
 def _planner(client: _ScriptedStructuredClient) -> SemanticQueryPlanner:
     return SemanticQueryPlanner(
         gemini_client=client,  # type: ignore[arg-type]
-        available_players=["Virat Kohli", "Rohit Sharma", "Mitchell Starc"],
+        available_players=["Virat Kohli", "Rohit Sharma", "Mitchell Starc", "Jasprit Bumrah", "David Miller"],
         available_venues=["R Premadasa Stadium, Colombo"],
         available_teams=["Sri Lanka", "Australia", "India"],
         allow_dev_fallback=False,
@@ -331,7 +331,7 @@ def test_production_repairs_silently_broadened_bowling_style_filter() -> None:
     assert trace.planner_outcome["repair_outcome"] == "succeeded"
 
 
-def test_production_repairs_named_bowler_false_shot_rate_perspective() -> None:
+def test_production_canonicalizes_named_bowler_false_shot_rate_perspective() -> None:
     batter_plan = _plan_json(
         entity="batter",
         metric="false_shot_percentage",
@@ -361,11 +361,11 @@ def test_production_repairs_named_bowler_false_shot_rate_perspective() -> None:
     assert result.plan.entity == "bowler"
     assert result.plan.metric == "false_shots_per_over"
     assert result.plan.filters["bowler"] == "Jasprit Bumrah"
-    assert len(client.calls) == 2
-    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+    assert len(client.calls) == 1
+    assert trace.meaning_resolution["fallback_reason"] == "malformed_flash"
 
 
-def test_production_repairs_passive_dismissal_player_ownership() -> None:
+def test_production_canonicalizes_passive_dismissal_player_ownership() -> None:
     wrong_player_role = _plan_json(
         entity="bowler",
         metric="wickets_taken",
@@ -394,8 +394,8 @@ def test_production_repairs_passive_dismissal_player_ownership() -> None:
     assert result.plan is not None
     assert result.plan.filters["batter"] == "David Miller"
     assert "bowler" not in result.plan.filters
-    assert len(client.calls) == 2
-    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+    assert len(client.calls) == 1
+    assert trace.meaning_resolution["fallback_reason"] == "malformed_flash"
 
 
 def test_production_canonical_resolver_preserves_ranking_limit_and_explicit_sample() -> None:

@@ -99,11 +99,11 @@ def test_chat_named_batter_dismissal_by_length_keeps_batter_filter(
 
     assert payload["mode"] == "analysis"
     assert result["status"] == "supported"
-    assert filters["semantic_metric"] == "wickets_taken"
+    assert filters["semantic_metric"] == "dismissals"
     assert filters["semantic_group_by"] == ["length"]
     assert filters["batter"] == "David Miller"
     assert "bowler" not in filters
-    assert result["tables"][0]["columns"][:2] == ["Length", "Wickets Taken"]
+    assert result["tables"][0]["columns"][:2] == ["Length", "Dismissals"]
 
 
 def test_chat_named_bowler_dot_count_by_length_uses_bowler_denominator(

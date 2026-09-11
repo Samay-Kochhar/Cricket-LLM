@@ -68,6 +68,8 @@ def replay_capture(
         with (
             patch.object(GeminiClient, "generate_structured", side_effect=generate),
             patch.object(GeminiClient, "generate_text", return_value=None),
+            # Planner replay verifies database answers; web grounding is not captured.
+            patch.object(GeminiClient, "ground_with_google_search", return_value=None),
             patch.object(GeminiClient, "is_configured", return_value=True),
             patch(
                 "httpx.post",

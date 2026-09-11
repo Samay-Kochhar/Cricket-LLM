@@ -290,6 +290,13 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("pytest", "tests/backend/test_language_meaning.py", "tests/backend/test_canonical_meaning.py", "tests/backend/test_gemini_structured_planner.py", "tests/evals/test_accuracy_release.py", "tests/evals/test_language_capture_replay.py"),
         ),
     ],
+    "27": [
+        Check(
+            "canonical-breakdown-meaning",
+            "Verify breakdown dimensions, metric ownership, filters, sample policy and complete aggregates.",
+            ("pytest", "tests/backend/test_canonical_breakdowns.py", "tests/backend/test_canonical_meaning.py"),
+        ),
+    ],
     "26": [
         Check(
             "canonical-direct-and-ranking-meaning",

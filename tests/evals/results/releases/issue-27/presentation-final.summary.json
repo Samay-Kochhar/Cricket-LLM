@@ -1,0 +1,180 @@
+{
+  "benchmark": "presentation-supported-100",
+  "by_category": {
+    "breakdown": {
+      "answer_correct": 24,
+      "answer_rate": 0.8571428571428571,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 28,
+      "supported_rate": 1.0,
+      "total": 28
+    }
+  },
+  "failures": [
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-style",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-length",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-shot",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-kohli-zone",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-rohit-phase",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-rohit-style-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-babar-line-false",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-babar-length-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-buttler-zone-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-buttler-shot-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-klaasen-spin-lines",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-klaasen-style-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-miller-length-dismiss",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-maxwell-style-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-bumrah-phase-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-bumrah-length-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-starc-line-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-malinga-length-yorker",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-rashid-hand-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-bd-boult-phase-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-warner-style-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-smith-shot-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-ab-zone-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-warner-line-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-rabada-length-wickets",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-shaheen-line-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-ashwin-phase-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "breakdown",
+      "id": "analyst-extra-southee-hand-wickets",
+      "reason": "plan mismatch"
+    }
+  ],
+  "git_commit": "fd45d9f7e4456d45df6319d7f96ff626ccc3f5e5",
+  "gold_cases": 28,
+  "plan_exact_match": {
+    "correct": 0,
+    "rate": 0.0,
+    "total": 28
+  },
+  "predictions": 28,
+  "scored_at": "2026-09-11T11:23:19.373179+00:00",
+  "status_accuracy": {
+    "correct": 28,
+    "rate": 1.0,
+    "total": 28
+  },
+  "top_row_exact_match": {
+    "correct": 2,
+    "rate": 0.07142857142857142,
+    "total": 28
+  },
+  "top_row_semantic_match": {
+    "correct": 24,
+    "rate": 0.8571428571428571,
+    "total": 28
+  }
+}

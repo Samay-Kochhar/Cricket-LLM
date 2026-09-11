@@ -1,0 +1,31 @@
+benchmark: dl4nlp_cricket_analyst_supported_100 (28 breakdown cases)
+source: issue-27/presentation-final.jsonl; live production planner and local ODI DuckDB
+reviewed_all_records: true
+reviewer: Codex
+numeric_note: >-
+  Review preserves the existing semantic rubric. Rounded percentages and public
+  labels (including RHB as right-hand batter) are equivalent. Returning every
+  category instead of the old limit of ten is required by issue 27. Numeric
+  values were compared with the stored database answer keys; the two unresolved
+  expectation differences below remain failures, rather than being waived.
+defaults:
+  semantic_capability: pass
+  safeguard_aware: pass
+overrides:
+  analyst-bd-klaasen-spin-lines:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: >-
+      The stored answer key restricts spin, but the frozen question says
+      "Against Heinrich Klaasen, which line has the highest dot-ball percentage?"
+      without a spin restriction. The canonical answer preserves that wording
+      and computes the unrestricted line breakdown. Retained as a failure
+      against the old expectation; no hidden spin filter is invented.
+  analyst-extra-warner-line-dots:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: >-
+      The frozen wording asks which line creates the most dot balls against
+      Warner. The answer reports a dot-ball count; the saved expectation uses
+      batter dot-ball percentage. Retained as a metric mismatch against that
+      expectation; counts are not silently relabelled as percentages.

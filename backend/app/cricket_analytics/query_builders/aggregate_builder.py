@@ -100,7 +100,8 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
     sort = plan.sort
     direction = sort.direction.upper() if sort else METRICS[plan.metric].default_sort.upper()
     sort_expression = plan.metric if not sort or sort.by == plan.metric else sort.by
-    limit = plan.limit or 10
+    limit = plan.limit
+    limit_sql = "LIMIT ?" if limit is not None else ""
 
     having_clauses = []
     if plan.minimum_sample:
@@ -167,9 +168,10 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
             FROM aggregate_rows
             {having_sql}
             {order_sql}
-            LIMIT ?
+            {limit_sql}
             """
-    params.append(limit)
+    if limit is not None:
+        params.append(limit)
     output_columns = [
         *columns,
         "matches",

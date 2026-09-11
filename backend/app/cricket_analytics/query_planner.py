@@ -467,7 +467,8 @@ class SemanticQueryPlanner:
         inferred = self._infer_filters(question, lowered, plan.metric)
         expected_split, expected_values = self._infer_split(lowered, inferred)
         errors = list(validation.errors)
-        if expected_split is not None:
+        canonical_breakdown = plan.question_subject == "breakdown" and plan.explanation_intent == "canonical cricket meaning"
+        if expected_split is not None and not (canonical_breakdown and expected_split in plan.group_by):
             if plan.operation != "split_compare":
                 errors.append(
                     f"Question requests a {expected_split} split comparison, but the plan uses {plan.operation}."
@@ -492,6 +493,8 @@ class SemanticQueryPlanner:
             "bowling_style",
         }
         for key in scope_keys:
+            if canonical_breakdown and key in plan.group_by and key not in plan.filters:
+                continue
             if key == "phase" and plan.filters.get("comparison_view") == "phase":
                 continue
             expected = inferred.get(key)

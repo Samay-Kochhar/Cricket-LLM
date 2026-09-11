@@ -1,0 +1,56 @@
+{
+  "benchmark": "dl4nlp_cricket_analyst_supported_100 (28 breakdown cases)",
+  "source": "issue-27/presentation-final.jsonl; live production planner and local ODI DuckDB",
+  "records": 28,
+  "semantic_capability": {
+    "correct": 26,
+    "total": 28,
+    "rate": 0.9285714285714286,
+    "by_category": {
+      "breakdown": {
+        "correct": 26,
+        "total": 28,
+        "rate": 0.9285714285714286
+      }
+    }
+  },
+  "safeguard_aware": {
+    "correct": 26,
+    "total": 28,
+    "rate": 0.9285714285714286,
+    "by_category": {
+      "breakdown": {
+        "correct": 26,
+        "total": 28,
+        "rate": 0.9285714285714286
+      }
+    }
+  },
+  "failures": {
+    "semantic_capability": [
+      {
+        "id": "analyst-bd-klaasen-spin-lines",
+        "category": "breakdown",
+        "reason": "The stored answer key restricts spin, but the frozen question says \"Against Heinrich Klaasen, which line has the highest dot-ball percentage?\" without a spin restriction. The canonical answer preserves that wording and computes the unrestricted line breakdown. Retained as a failure against the old expectation; no hidden spin filter is invented."
+      },
+      {
+        "id": "analyst-extra-warner-line-dots",
+        "category": "breakdown",
+        "reason": "The frozen wording asks which line creates the most dot balls against Warner. The answer reports a dot-ball count; the saved expectation uses batter dot-ball percentage. Retained as a metric mismatch against that expectation; counts are not silently relabelled as percentages."
+      }
+    ],
+    "safeguard_aware": [
+      {
+        "id": "analyst-bd-klaasen-spin-lines",
+        "category": "breakdown",
+        "reason": "The stored answer key restricts spin, but the frozen question says \"Against Heinrich Klaasen, which line has the highest dot-ball percentage?\" without a spin restriction. The canonical answer preserves that wording and computes the unrestricted line breakdown. Retained as a failure against the old expectation; no hidden spin filter is invented."
+      },
+      {
+        "id": "analyst-extra-warner-line-dots",
+        "category": "breakdown",
+        "reason": "The frozen wording asks which line creates the most dot balls against Warner. The answer reports a dot-ball count; the saved expectation uses batter dot-ball percentage. Retained as a metric mismatch against that expectation; counts are not silently relabelled as percentages."
+      }
+    ]
+  },
+  "review_method": "Codex review of all 28 stored production responses, with database answer-key comparison and disclosed unresolved fixture differences"
+}

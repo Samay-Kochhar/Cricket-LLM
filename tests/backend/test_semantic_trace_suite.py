@@ -21,11 +21,11 @@ TRACE_CASES = [
     {
         "question": "Which length dismisses David Miller most often?",
         "operation": "aggregate",
-        "entity": "bowler",
-        "metric": "wickets_taken",
+        "entity": "batter",
+        "metric": "dismissals",
         "group_by": ["length"],
         "filters": {"batter": "David Miller"},
-        "columns": {"length", "wickets_taken", "balls"},
+        "columns": {"length", "dismissals", "balls"},
     },
     {
         "question": "Against which bowling type does Heinrich Klaasen score fastest?",
