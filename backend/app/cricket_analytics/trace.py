@@ -27,6 +27,7 @@ class QueryTrace:
     gemini_raw_response: str | None = None
     planner_attempts: list[dict[str, Any]] = field(default_factory=list)
     planner_outcome: dict[str, Any] = field(default_factory=dict)
+    language_meaning_candidate: dict[str, Any] | None = None
     parsed_json_plan: dict[str, Any] | None = None
     normalized_plan: dict[str, Any] | None = None
     canonical_meaning: dict[str, Any] | None = None
@@ -45,6 +46,7 @@ class QueryTrace:
                 "gemini_raw_response": self.gemini_raw_response,
                 "planner_attempts": self.planner_attempts,
                 "planner_outcome": self.planner_outcome,
+                "language_meaning_candidate": self.language_meaning_candidate,
                 "parsed_json_plan": self.parsed_json_plan,
                 "normalized_plan": self.normalized_plan,
                 "canonical_meaning": self.canonical_meaning,

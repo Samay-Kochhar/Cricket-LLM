@@ -13,7 +13,7 @@ from backend.app.cricket_analytics.canonical_meaning import (
     compile_canonical_meaning,
 )
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
-from backend.app.cricket_analytics.schemas import CricketQueryPlan, SortSpec
+from backend.app.cricket_analytics.language_meaning import LanguageMeaningCandidate
 from backend.app.cricket_analytics.trace import QueryTrace
 from backend.app.services.gemini_client import GeminiStructuredResult
 
@@ -144,7 +144,7 @@ def test_canonical_meaning_inherits_structured_conversation_state_without_losing
 
 
 def test_valid_language_candidate_survives_a_failed_secondary_extractor() -> None:
-    def unavailable(*args: object) -> CricketQueryPlan | None:
+    def unavailable(*args: object) -> LanguageMeaningCandidate | None:
         raise RuntimeError("candidate unavailable")
 
     resolver = CanonicalMeaningResolver(
@@ -160,22 +160,14 @@ def test_valid_language_candidate_survives_a_failed_secondary_extractor() -> Non
 
 
 def test_two_valid_ambiguous_candidates_request_targeted_clarification() -> None:
-    def plan(role: str, metric: str) -> CricketQueryPlan:
-        return CricketQueryPlan(
-            operation="aggregate",
-            entity=role,
-            metric=metric,
-            group_by=[role],
-            filters={},
-            sort=SortSpec(by=metric, direction="asc"),
-            limit=10,
-        )
+    def candidate(role: str, metric: str) -> LanguageMeaningCandidate:
+        return LanguageMeaningCandidate(version=1, family="ranking", role=role, metric_concept=metric)
 
     resolver = CanonicalMeaningResolver(
         available_players=EXPECTED_PLAYERS,
         candidate_extractors=[
-            ("batting", lambda *_: plan("batter", "batting_strike_rate")),
-            ("bowling", lambda *_: plan("bowler", "bowling_strike_rate")),
+            ("batting", lambda *_: candidate("batter", "batting_strike_rate")),
+            ("bowling", lambda *_: candidate("bowler", "bowling_strike_rate")),
         ],
     )
 

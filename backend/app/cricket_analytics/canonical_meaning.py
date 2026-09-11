@@ -3,10 +3,11 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Mapping, Sequence
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from backend.app.cricket_analytics.language_meaning import ExpressedFilter, LanguageMeaningCandidate
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.plan_normalizer import (
     requested_bowling_style,
@@ -52,9 +53,10 @@ class MeaningResolution(BaseModel):
     clarification_options: list[str] = Field(default_factory=list)
     reason: str | None = None
     candidate_sources: list[str] = Field(default_factory=list)
+    fallback_reason: Literal["malformed_flash", "unavailable_flash", "explicit_language_authoritative"] | None = None
 
 
-CandidateExtractor = Callable[[str, Mapping[str, object] | None], CricketQueryPlan | None]
+CandidateExtractor = Callable[[str, Mapping[str, object] | None], LanguageMeaningCandidate | None]
 
 
 _NUMBER_WORDS = {
@@ -104,10 +106,13 @@ _RANKING_WORDS = re.compile(
     r"\b(?:rank|top|bottom|leading|highest|lowest|largest|best|worst|most|fewest|fastest|slowest|leads?)\b"
 )
 _BREAKDOWN_WORDS = re.compile(
-    r"\b(?:breakdown|split|by line|by length|by year|year[- ]wise|which line|which length|which shot)\b"
+    r"\b(?:breakdown|split|year[- ]wise|"
+    r"(?:by|across|each|every|which|what)\s+(?:(?:bowling|innings|shot|delivery|each|every)\s+){0,2}"
+    r"(?:lines?|lengths?|years?|shots?|zones?|styles?|phases?))\b"
 )
 _OTHER_FAMILY_WORDS = re.compile(
-    r"\b(?:compare|comparison|matchup|head[- ]to[- ]head|trend|over time)\b"
+    r"\b(?:compare|compared|comparison|matchup|head[- ]to[- ]head|trend|over time|"
+    r"annual|year over year|season by season|season to season|dismissor)\b"
 )
 _OUTSIDE_SLICE_WORDING = re.compile(
     r"\b(?:"
@@ -151,12 +156,14 @@ class CanonicalMeaningResolver:
 
         for source, extractor in self.candidate_extractors:
             try:
-                plan = extractor(question, state)
+                extracted = extractor(question, state)
             except Exception:
                 continue
-            candidate = self._meaning_from_plan(question, state, plan)
-            if candidate is not None:
-                candidates.append((source, candidate))
+            if extracted is None:
+                continue
+            resolution = self.resolve_candidate(question, state, extracted, source=source)
+            if resolution.meaning is not None:
+                candidates.append((source, resolution.meaning))
 
         if not candidates:
             return deterministic
@@ -176,10 +183,26 @@ class CanonicalMeaningResolver:
 
         # Explicit language is authoritative. Candidate disagreement only remains material
         # when the question itself cannot choose between two valid metric/role meanings.
-        if deterministic.status == MeaningStatus.resolved and deterministic.meaning is not None:
+        if (
+            deterministic.status == MeaningStatus.resolved
+            and deterministic.meaning is not None
+        ):
+            merged = deterministic.meaning.model_copy(deep=True)
+            for _, candidate in candidates:
+                for key, value in candidate.filters.items():
+                    if key in merged.filters and merged.filters[key] != value:
+                        return MeaningResolution(
+                            status=MeaningStatus.clarification,
+                            clarification=f"Which {key.replace('_', ' ')} constraint do you mean?",
+                            candidate_sources=list(dict.fromkeys(sources)),
+                        )
+                    merged.filters[key] = value
+                if candidate.minimum_sample_explicit:
+                    merged.minimum_sample = candidate.minimum_sample
+                    merged.minimum_sample_explicit = True
             return MeaningResolution(
                 status=MeaningStatus.resolved,
-                meaning=deterministic.meaning,
+                meaning=merged,
                 candidate_sources=list(dict.fromkeys(sources)),
             )
         options = sorted({f"{item.role} {item.metric}" for item in distinct.values()})
@@ -190,33 +213,387 @@ class CanonicalMeaningResolver:
             candidate_sources=list(dict.fromkeys(sources)),
         )
 
-    def _meaning_from_plan(
+    def accepts(self, question: str, state: Mapping[str, object] | BaseModel | None = None) -> bool:
+        """A compiler-owned boundary, independent of model output or its validity."""
+        resolution = self._meaning_from_language(question, _state_mapping(state))
+        if resolution.status == MeaningStatus.not_applicable:
+            return False
+        if resolution.status == MeaningStatus.unsupported:
+            return bool(
+                resolution.reason
+                == "No supported direct or ranking metric was identified."
+                and re.search(
+                    r"\b(?:scoring pace|rank players|statistics?|numbers)\b",
+                    question.lower(),
+                )
+                and not re.search(
+                    r"\b(?:approach|profile|strategy|plan|analysis)\b", question.lower()
+                )
+            )
+        return resolution.status in {
+            MeaningStatus.resolved,
+            MeaningStatus.clarification,
+        }
+
+    def resolve_candidate(
         self,
         question: str,
-        state: Mapping[str, object] | None,
-        plan: CricketQueryPlan | None,
-    ) -> CanonicalCricketMeaning | None:
-        if plan is None or plan.operation != "aggregate":
-            return None
-        language = self._meaning_from_language(question, state)
-        if language.status == MeaningStatus.resolved:
-            return language.meaning
-        filters = dict(plan.filters)
-        player = filters.get(plan.entity)
-        family = "direct" if isinstance(player, str) else "ranking"
-        if plan.entity not in {"batter", "bowler"}:
-            return None
-        return CanonicalCricketMeaning(
-            family=family,
-            role=plan.entity,
-            metric=plan.metric,
-            filters=filters,
-            group_by=list(plan.group_by or [plan.entity]),
-            limit=plan.limit or 10,
-            sort_direction=plan.sort.direction if plan.sort else get_metric(plan.metric).default_sort,
-            minimum_sample=plan.minimum_sample if family == "ranking" else None,
-            minimum_sample_explicit=plan.minimum_sample_explicit if family == "ranking" else False,
+        state: Mapping[str, object] | BaseModel | None,
+        candidate: LanguageMeaningCandidate,
+        *,
+        source: str = "flash",
+    ) -> MeaningResolution:
+        deterministic = self._meaning_from_language(question, _state_mapping(state))
+        sources = list(dict.fromkeys([*deterministic.candidate_sources, source]))
+
+        def unclear(reason: str, options: list[str] | None = None) -> MeaningResolution:
+            return MeaningResolution(
+                status=MeaningStatus.clarification,
+                reason=reason,
+                clarification=reason,
+                clarification_options=options or [],
+                candidate_sources=sources,
+            )
+
+        if not self.accepts(question, state):
+            return deterministic
+        # A model cannot make an explicitly ambiguous question unambiguous by guessing.
+        if deterministic.status == MeaningStatus.clarification:
+            return deterministic.model_copy(update={"candidate_sources": sources})
+        base = deterministic.meaning
+        if (
+            candidate.family not in {"direct", "ranking", "unknown"}
+            or candidate.breakdown_dimensions
+            or candidate.split_dimensions
+        ):
+            return unclear(
+                "The requested relationships or dimensions need a different cricket meaning."
+            )
+        if candidate.ambiguity_candidates and base is None:
+            return unclear(
+                "Which cricket meaning do you intend?", candidate.ambiguity_candidates
+            )
+
+        lowered = _normalized_text(question)
+        players = _extract_players(question, self.available_players)
+        if not players and base and isinstance(base.filters.get(base.role), str):
+            players = [str(base.filters[base.role])]
+        filters = _state_filters(_state_mapping(state))
+        explicit_filters = self._explicit_filters(question, lowered)
+        filters.update(explicit_filters)
+        if base:
+            filters.update(base.filters)
+        metric, role = _metric_and_role(
+            _normalized_text(candidate.metric_concept or "").replace("_", " "), None
         )
+        if candidate.metric_concept:
+            try:
+                rule = get_metric(candidate.metric_concept)
+            except KeyError:
+                pass
+            else:
+                metric = rule.metric_id
+                role = (
+                    rule.owner if rule.owner in {"batter", "bowler"} else candidate.role
+                )
+        if base:
+            # Explicit question wording outranks a contradictory surface gloss.
+            metric, role = base.metric, base.role
+        else:
+            role = candidate.role or role
+        if metric is None or role not in {"batter", "bowler"}:
+            return unclear("Which batting or bowling statistic do you mean?")
+        rule = get_metric(metric, entity=role, filters=filters)
+        if rule.owner not in {role, "batter_or_bowler"}:
+            return unclear("The requested metric and player role disagree.")
+
+        for entity in candidate.entities:
+            if entity.kind == "player":
+                if (
+                    base
+                    and base.family == "ranking"
+                    and _normalized_text(entity.name)
+                    in {
+                        "player",
+                        "players",
+                        "batter",
+                        "batters",
+                        "bowler",
+                        "bowlers",
+                        "batsman",
+                        "batsmen",
+                        "null",
+                        "none",
+                        "",
+                    }
+                ):
+                    continue
+                matches = _extract_players(entity.name, self.available_players)
+                if len(matches) != 1:
+                    cohort = self._explicit_filters(
+                        entity.name, _normalized_text(entity.name)
+                    )
+                    if cohort and all(
+                        filters.get(key) == value for key, value in cohort.items()
+                    ):
+                        continue
+                    return unclear(f"Which player do you mean by {entity.name}?")
+                player = matches[0]
+                # Require an actual mention; invented participants cannot broaden scope.
+                if player not in players:
+                    return unclear(f"Please confirm the player {entity.name}.")
+                entity_role = entity.role or role
+                if entity.relationship == "opponent" or entity_role != role:
+                    return unclear(
+                        "Please clarify the batting and bowling roles in this relationship."
+                    )
+                filters[role] = player
+            elif entity.kind == "team":
+                team = _extract_team(entity.name, self.available_teams)
+                if not team or team != _extract_team(question, self.available_teams):
+                    return unclear(f"Which team do you mean by {entity.name}?")
+                if entity.relationship != "opponent":
+                    return unclear(
+                        "Should this team filter select the player's team or the opposition?"
+                    )
+                filters["opposition"] = team
+            elif entity.kind == "venue":
+                venues = venue_alias_matches(entity.name, self.available_venues)
+                if not venues:
+                    venues = [
+                        v
+                        for v in self.available_venues
+                        if _normalized_lookup_text(v)
+                        == _normalized_lookup_text(entity.name)
+                    ]
+                if len(venues) != 1 or venues[0] not in {
+                    filters.get("venue"),
+                    *cast(list[str], filters.get("venues") or []),
+                }:
+                    return unclear(f"Which venue do you mean by {entity.name}?")
+        candidate_filters: dict[str, object] = {}
+        for fact in candidate.filters:
+            if not fact.evidence or _normalized_text(fact.evidence) not in lowered:
+                return unclear(f"Please clarify the requested {fact.concept} filter.")
+            # ODI is the fixed dataset scope, so stating it adds no row filter.
+            if _normalized_text(fact.concept).replace("_", " ") in {
+                "format",
+                "match format",
+                "match type",
+                "competition",
+            }:
+                if (
+                    all(
+                        _normalized_text(str(v))
+                        in {
+                            "odi",
+                            "odis",
+                            "one day international",
+                            "one day internationals",
+                        }
+                        for v in fact.values
+                    )
+                    and fact.values
+                ):
+                    continue
+            if _normalized_text(fact.concept) == "city" and isinstance(
+                filters.get("venue"), str
+            ):
+                if fact.values and all(
+                    _normalized_lookup_text(str(value))
+                    in _normalized_lookup_text(str(filters["venue"]))
+                    for value in fact.values
+                ):
+                    continue
+            if "deliver" in fact.concept.lower() or "ball" in fact.concept.lower():
+                values = {_normalized_text(str(v)) for v in fact.values}
+                if (
+                    values
+                    and values <= {"legal", "legal balls", "legal deliveries"}
+                    and rule.denominator == "legal_balls"
+                ):
+                    continue
+                if (
+                    values
+                    and values <= {"yorker", "yorkers"}
+                    and metric in {"yorker_count", "yorker_percentage"}
+                ):
+                    continue
+            normalized = self._candidate_filter(fact)
+            if not normalized:
+                return unclear(
+                    f"The requested {fact.concept} filter could not be resolved."
+                )
+            for key, value in normalized.items():
+                # Keep directly extracted constraints when the surface candidate disagrees.
+                if key in explicit_filters:
+                    continue
+                if key in candidate_filters and candidate_filters[key] != value:
+                    return unclear(f"Which {key.replace('_', ' ')} constraint do you mean?")
+                candidate_filters[key] = value
+                filters[key] = value
+        family = base.family if base else ("direct" if players else candidate.family)
+        if family not in {"direct", "ranking"}:
+            return unclear("Do you want a player's statistic or a player ranking?")
+        if players:
+            filters[role] = players[0]
+        if family == "direct" and role not in filters:
+            return unclear("Which player should this statistic describe?")
+        limit = base.limit if base else _ranking_limit(lowered)
+        direction = base.sort_direction if base else rule.default_sort
+        sample = base.minimum_sample if base else _explicit_sample(lowered, metric)
+        sample_explicit = base.minimum_sample_explicit if base else sample is not None
+        if candidate.sample_threshold and not sample_explicit:
+            threshold = candidate.sample_threshold
+            if (
+                _normalized_text(threshold.evidence) not in lowered
+                or not threshold.evidence
+            ):
+                return unclear("Please clarify the minimum sample.")
+            sample = MinimumSampleSpec(
+                **{threshold.unit.replace(" ", "_"): threshold.value}
+            )
+            sample_explicit = True
+        if family == "ranking":
+            if candidate.ordering and not base:
+                ordering_directions: dict[str, Literal["asc", "desc"]] = {
+                    "highest": "desc",
+                    "lowest": "asc",
+                    "ascending": "asc",
+                    "descending": "desc",
+                    "best": rule.default_sort,
+                    "worst": "asc" if rule.default_sort == "desc" else "desc",
+                }
+                direction = ordering_directions[candidate.ordering]
+            if sample is None:
+                defaults = rule.minimum_sample.as_dict()
+                sample = MinimumSampleSpec(**defaults) if defaults else None
+        return MeaningResolution(
+            status=MeaningStatus.resolved,
+            candidate_sources=sources,
+            meaning=CanonicalCricketMeaning(
+                family=cast(Literal["direct", "ranking"], family),
+                role=cast(Literal["batter", "bowler"], role),
+                metric=metric,
+                filters=filters,
+                group_by=[role],
+                limit=limit,
+                sort_direction=cast(Literal["asc", "desc"], direction),
+                minimum_sample=sample,
+                minimum_sample_explicit=sample_explicit,
+            ),
+        )
+
+    def resolve_refinement(
+        self,
+        question: str,
+        state: Mapping[str, object] | BaseModel | None,
+        previous: LanguageMeaningCandidate,
+        refinement: LanguageMeaningCandidate,
+    ) -> MeaningResolution:
+        # No new user evidence arrived. Distinct viable alternatives cannot be
+        # resolved just because the second model happens to prefer one of them.
+        alternatives = {
+            _metric_and_role(_normalized_text(option).replace("_", " "), None)
+            for option in previous.ambiguity_candidates
+        }
+        if len(alternatives) > 1:
+            result = self.resolve_candidate(question, state, previous)
+        else:
+            merged = refinement.model_copy(
+                update={
+                    "entities": list(
+                        {
+                            e.model_dump_json(): e
+                            for e in [*previous.entities, *refinement.entities]
+                        }.values()
+                    ),
+                    "filters": list(
+                        {
+                            f.model_dump_json(): f
+                            for f in [*previous.filters, *refinement.filters]
+                        }.values()
+                    ),
+                    "breakdown_dimensions": list(
+                        dict.fromkeys(
+                            [
+                                *previous.breakdown_dimensions,
+                                *refinement.breakdown_dimensions,
+                            ]
+                        )
+                    ),
+                    "split_dimensions": list(
+                        dict.fromkeys(
+                            [*previous.split_dimensions, *refinement.split_dimensions]
+                        )
+                    ),
+                    "sample_threshold": previous.sample_threshold
+                    or refinement.sample_threshold,
+                }
+            )
+            result = self.resolve_candidate(question, state, merged, source="pro")
+        result.candidate_sources = list(
+            dict.fromkeys([*result.candidate_sources, "flash", "pro"])
+        )
+        return result
+
+    def _candidate_filter(self, fact: ExpressedFilter) -> dict[str, object]:
+        concept = _normalized_text(fact.concept).replace("_", " ")
+        values = fact.values
+        # Language labels are intentionally not database column names. Normalize
+        # categories and their source wording before interpreting requested values.
+        if "phase" in concept or "over" in concept:
+            evidence = _normalized_text(fact.evidence)
+            phase = _phase(evidence)
+            if phase:
+                return {"phase": phase}
+            over_range = _over_range(evidence)
+            if over_range:
+                return {"over_range": over_range}
+            concept = "phase" if "phase" in concept else "overs"
+        elif "bowl" in concept and any(word in concept for word in {"style", "type"}):
+            concept = "bowling style"
+        elif "hand" in concept and ("batt" in concept or "opponent" in concept):
+            concept = "batter hand"
+        elif "year" in concept:
+            concept = "years"
+        if concept in {"year", "years"}:
+            try:
+                years = sorted({int(v) for v in values})
+            except (ValueError, TypeError):
+                return {}
+            return (
+                {"years": years}
+                if years and all(1900 <= y <= 2100 for y in years)
+                else {}
+            )
+        if concept == "innings" and len(values) == 1 and str(values[0]) in {"1", "2"}:
+            return {"innings": int(values[0])}
+        if concept in {"over range", "overs"} and len(values) == 2:
+            try:
+                start, end = [int(v) for v in values]
+            except (ValueError, TypeError):
+                return {}
+            return {"over_range": [start, end]} if 1 <= start <= end <= 50 else {}
+        text = " ".join(str(v) for v in values)
+        if concept in {
+            "phase",
+            "bowling style",
+            "batter hand",
+            "venue",
+            "opposition",
+            "opponent",
+        }:
+            normalized = self._explicit_filters(
+                fact.evidence, _normalized_text(fact.evidence)
+            )
+            if not normalized:
+                normalized = self._explicit_filters(text, _normalized_text(text))
+            key = "opposition" if concept == "opponent" else concept.replace(" ", "_")
+            if key == "bowling_style" and text.lower() in {"pace", "spin"}:
+                return {key: text.lower()}
+            return {key: normalized[key]} if key in normalized else {}
+        return {}
 
     def _meaning_from_language(
         self,
@@ -224,10 +601,21 @@ class CanonicalMeaningResolver:
         state: Mapping[str, object] | None,
     ) -> MeaningResolution:
         lowered = _normalized_text(question)
+        phases = {
+            phase
+            for phase in ("powerplay", "middle", "death")
+            if re.search(rf"\b{phase}\b", lowered)
+        }
+        both_hands = bool(
+            re.search(r"\b(?:left|lefties|lhb)", lowered)
+            and re.search(r"\b(?:right|righties|rhb)", lowered)
+        )
         if (
             _BREAKDOWN_WORDS.search(lowered)
             or _OTHER_FAMILY_WORDS.search(lowered)
             or _OUTSIDE_SLICE_WORDING.search(lowered)
+            or len(phases) > 1
+            or both_hands
         ):
             return MeaningResolution(status=MeaningStatus.not_applicable)
         if re.search(r"\bteams?\b", lowered):
@@ -247,6 +635,8 @@ class CanonicalMeaningResolver:
         if len(players) > 1:
             return MeaningResolution(status=MeaningStatus.not_applicable)
         player = players[0] if players else None
+        if player and re.search(r"\b(?:rank (?:opposing )?bowlers|toughest bowler|which (?:pace |spin )?bowler|who controls|who finds|scoring record)\b", lowered):
+            return MeaningResolution(status=MeaningStatus.not_applicable)
         if player is not None and re.search(r"\bwhich\s+(?:bowler|batter)\b", lowered):
             return MeaningResolution(status=MeaningStatus.not_applicable)
         state_players = state.get("players") if state else None
@@ -329,7 +719,7 @@ class CanonicalMeaningResolver:
             )
             or get_metric(metric, entity=role, filters=filters).default_sort
         )
-        sample = _explicit_sample(lowered, metric) if family == "ranking" else None
+        sample = _explicit_sample(lowered, metric)
         sample_is_explicit = sample is not None
         if family == "ranking" and sample is None:
             defaults = get_metric(metric, entity=role, filters=filters).minimum_sample.as_dict()
@@ -337,13 +727,13 @@ class CanonicalMeaningResolver:
         return MeaningResolution(
             status=MeaningStatus.resolved,
             meaning=CanonicalCricketMeaning(
-                family=family,
-                role=role,
+                family=cast(Literal["direct", "ranking"], family),
+                role=cast(Literal["batter", "bowler"], role),
                 metric=metric,
                 filters=filters,
                 group_by=[role],
                 limit=limit,
-                sort_direction=direction,
+                sort_direction=cast(Literal["asc", "desc"], direction),
                 minimum_sample=sample,
                 minimum_sample_explicit=sample_is_explicit,
             ),
@@ -352,6 +742,10 @@ class CanonicalMeaningResolver:
 
     def _explicit_filters(self, question: str, lowered: str) -> dict[str, object]:
         filters: dict[str, object] = {}
+        if re.search(r"\b(?:chasing|second innings|innings 2)\b", lowered):
+            filters["innings"] = 2
+        elif re.search(r"\b(?:batting first|first innings|innings 1)\b", lowered):
+            filters["innings"] = 1
         phase = _phase(lowered)
         if phase:
             filters["phase"] = phase
@@ -407,6 +801,16 @@ def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryP
 
 
 def _metric_and_role(lowered: str, player: str | None) -> tuple[str | None, str | None]:
+    if "runs conceded" in lowered or "runs given away" in lowered:
+        return ("economy_rate" if "per over" in lowered else "runs_conceded"), "bowler"
+    if "wickets per over" in lowered:
+        return "wickets_per_over", "bowler"
+    if "balls faced" in lowered or ("balls" in lowered and "faced" in lowered):
+        return "balls_faced", "batter"
+    if "overs" in lowered and "bowled" in lowered and "most" in lowered:
+        return "overs_bowled", "bowler"
+    if "dismissal count" in lowered:
+        return "dismissals", "batter"
     if "yorker" in lowered:
         count = bool(
             re.search(
@@ -430,6 +834,8 @@ def _metric_and_role(lowered: str, player: str | None) -> tuple[str | None, str 
         bowling = bool(
             re.search(r"\b(?:bowlers?|legal (?:balls|deliveries)|to (?:left|right)[- ]hand)\b", lowered)
         ) or player in _KNOWN_BOWLERS
+        if re.search(r"\b(?:how many|number of|count|most|fewest)\b", lowered) and not re.search(r"\b(?:percentage|rate|share)\b", lowered):
+            return ("bowler_dot_balls" if bowling else "dot_balls"), "bowler" if bowling else "batter"
         return (
             "bowler_dot_ball_percentage" if bowling else "batter_dot_ball_percentage",
             "bowler" if bowling else "batter",
@@ -446,6 +852,8 @@ def _metric_and_role(lowered: str, player: str | None) -> tuple[str | None, str 
         return "batting_average", "batter"
     if re.search(r"\b(?:runs?|run tally|run totals?|scorers?)\b", lowered):
         return "runs_scored", "batter"
+    if "legal balls" in lowered:
+        return "legal_balls", "bowler"
     return None, None
 
 
@@ -528,6 +936,8 @@ def _explicit_sample(lowered: str, metric: str) -> MinimumSampleSpec | None:
         if not match:
             continue
         value = int(match.group(1))
+        if "inning" in match.group(0):
+            return MinimumSampleSpec(innings=value)
         explicit_legal = len(match.groups()) > 1 and bool(match.group(2))
         denominator = get_metric(metric).denominator
         if explicit_legal or denominator == "legal_balls":

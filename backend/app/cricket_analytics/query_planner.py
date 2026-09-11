@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal, cast
 
 from pydantic import ValidationError
 
@@ -11,6 +11,9 @@ from backend.app.cricket_analytics.canonical_meaning import (
     CanonicalMeaningResolver,
     MeaningStatus,
     compile_canonical_meaning,
+)
+from backend.app.cricket_analytics.language_meaning import (
+    LanguageMeaningCandidate, MeaningCallReason, extraction_prompt,
 )
 from backend.app.cricket_analytics.ontology import METRICS, ontology_context
 from backend.app.cricket_analytics.plan_normalizer import (
@@ -23,7 +26,7 @@ from backend.app.cricket_analytics.plan_normalizer import (
     requested_sort_direction,
 )
 from backend.app.cricket_analytics.plan_validator import validate_plan
-from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, SortSpec, ValidationResult
+from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, OperationType, SortSpec, ValidationResult
 from backend.app.cricket_analytics.venue_resolution import venue_alias_matches
 from backend.app.cricket_analytics.trace import QueryTrace
 from backend.app.services.gemini_client import GeminiClient, GeminiStructuredResult
@@ -130,45 +133,64 @@ class SemanticQueryPlanner:
             available_teams=self.available_teams,
         )
         language_resolution = language_resolver.resolve(question, conversation_state)
-        if language_resolution.status != MeaningStatus.resolved:
+        if not language_resolver.accepts(question, conversation_state):
             return None
 
-        gemini_result: PlannerResult | None = None
-        repair_outcome = "not_needed"
-        extractors = []
-        if self.gemini_client.is_configured() and not self.allow_dev_fallback:
-            gemini_result = self._plan_with_gemini(
-                question,
-                trace,
-                prefer_complex=self._needs_complex_model(question),
-            )
-            if gemini_result.plan is None or not gemini_result.validation.valid:
-                repaired = self._repair_with_gemini(
-                    question,
-                    gemini_result.plan,
-                    gemini_result.validation,
-                    trace,
+        resolution = language_resolution
+        used_gemini = self.gemini_client.is_configured() and not self.allow_dev_fallback
+        if used_gemini:
+            candidate = self._extract_meaning(question, conversation_state, trace)
+            if candidate is None:
+                parse_outcome = trace.planner_attempts[-1]["parse_outcome"]
+                resolution.fallback_reason = (
+                    "unavailable_flash"
+                    if parse_outcome == "unavailable"
+                    else "malformed_flash"
                 )
-                repair_outcome = (
-                    "succeeded"
-                    if repaired.plan is not None and repaired.validation.valid
-                    else "failed"
+            if candidate is not None:
+                resolution = language_resolver.resolve_candidate(
+                    question, conversation_state, candidate
                 )
-                if repaired.plan is not None and repaired.validation.valid:
-                    gemini_result = repaired
-            if gemini_result.plan is not None and gemini_result.validation.valid:
-                candidate_plan = gemini_result.plan
-                extractors.append(("gemini", lambda _question, _state: candidate_plan))
-
-        resolver = CanonicalMeaningResolver(
-            available_players=self.available_players,
-            available_venues=self.available_venues,
-            available_teams=self.available_teams,
-            candidate_extractors=extractors,
-        )
-        resolution = resolver.resolve(question, conversation_state)
+                if (
+                    language_resolution.status != MeaningStatus.resolved
+                    and resolution.status == MeaningStatus.clarification
+                ):
+                    reason = (
+                        MeaningCallReason.ambiguous
+                        if resolution.clarification_options
+                        else MeaningCallReason.unresolved
+                    )
+                    secondary = self._extract_meaning(
+                        question,
+                        conversation_state,
+                        trace,
+                        reason=reason,
+                        previous=candidate,
+                    )
+                    if secondary is not None:
+                        resolution = language_resolver.resolve_refinement(
+                            question,
+                            conversation_state,
+                            candidate,
+                            secondary,
+                        )
         if resolution.status != MeaningStatus.resolved or resolution.meaning is None:
-            return None
+            validation = ValidationResult(
+                valid=False,
+                errors=[
+                    resolution.clarification
+                    or resolution.reason
+                    or "Unresolved cricket meaning"
+                ],
+            )
+            trace.meaning_resolution = resolution.model_dump(
+                mode="json", exclude={"meaning"}
+            )
+            trace.validation_result = validation.model_dump(mode="json")
+            self._finalize_planner_trace(trace, repair_outcome="not_needed")
+            return PlannerResult(
+                plan=None, validation=validation, used_gemini=used_gemini
+            )
 
         plan = compile_canonical_meaning(resolution.meaning)
         validation = validate_plan(plan, question)
@@ -182,7 +204,7 @@ class SemanticQueryPlanner:
         trace.validation_result = validation.model_dump(mode="json")
         trace.operation_type = plan.operation
         if self.gemini_client.is_configured() and not self.allow_dev_fallback:
-            self._finalize_planner_trace(trace, repair_outcome=repair_outcome)
+            self._finalize_planner_trace(trace, repair_outcome="not_needed")
         else:
             trace.planner_outcome = {
                 "attempt_count": 0,
@@ -196,12 +218,100 @@ class SemanticQueryPlanner:
         return PlannerResult(
             plan=plan,
             validation=validation,
-            used_gemini=self.gemini_client.is_configured() and not self.allow_dev_fallback,
+            used_gemini=self.gemini_client.is_configured()
+            and not self.allow_dev_fallback,
         )
 
-    def _plan_with_deterministic_fallback(self, question: str, trace: QueryTrace) -> PlannerResult:
+    def _extract_meaning(
+        self,
+        question: str,
+        conversation_state: Any | None,
+        trace: QueryTrace,
+        *,
+        reason: MeaningCallReason = MeaningCallReason.initial_extraction,
+        previous: LanguageMeaningCandidate | None = None,
+    ) -> LanguageMeaningCandidate | None:
+        prompt = extraction_prompt(question, conversation_state)
+        if previous is not None:
+            prompt += f"\nResolve the remaining meaning uncertainty using this prior language evidence: {previous.model_dump_json()}"
+        model_name = (
+            getattr(self.gemini_client, "meaning_model", "gemini-2.5-flash")
+            if reason == MeaningCallReason.initial_extraction
+            else getattr(self.gemini_client, "complex_model", "gemini-2.5-pro")
+        )
+        try:
+            generator = getattr(self.gemini_client, "generate_structured", None)
+            if callable(generator):
+                generated = generator(
+                    prompt,
+                    response_schema=LanguageMeaningCandidate.model_json_schema(),
+                    prefer_complex=reason != MeaningCallReason.initial_extraction,
+                    model_name=model_name,
+                    max_output_tokens=2048,
+                )
+            else:
+                raw = self.gemini_client.generate_text(
+                    prompt,
+                    prefer_complex=reason != MeaningCallReason.initial_extraction,
+                )
+                generated = GeminiStructuredResult(
+                    text=raw,
+                    selected_model=model_name,
+                    model_version=None,
+                    finish_reason="STOP" if raw else None,
+                    latency_ms=0,
+                    schema_constrained=False,
+                )
+        except (RuntimeError, ValueError):
+            generated = GeminiStructuredResult(
+                text=None,
+                selected_model=model_name,
+                model_version=None,
+                finish_reason=None,
+                latency_ms=0,
+                error_kind="extraction_unavailable",
+            )
+        trace.gemini_raw_response = generated.text
+        attempt = {
+            "attempt": "meaning_extraction",
+            "reason": reason.value,
+            "selected_model": generated.selected_model,
+            "model_version": generated.model_version,
+            "finish_reason": generated.finish_reason,
+            "latency_ms": round(generated.latency_ms, 3),
+            "error_kind": generated.error_kind,
+            "schema_constrained": generated.schema_constrained,
+            "prompt_token_count": generated.prompt_token_count,
+            "output_token_count": generated.output_token_count,
+            "parse_outcome": "not_started",
+            "validation_outcome": "not_run",
+            "raw_response": generated.text,
+        }
+        trace.planner_attempts.append(attempt)
+        if generated.finish_reason != "STOP" or not generated.text:
+            attempt["parse_outcome"] = (
+                "truncated"
+                if generated.finish_reason == "MAX_TOKENS"
+                else "unavailable"
+            )
+            return None
+        try:
+            candidate = LanguageMeaningCandidate.model_validate_json(generated.text)
+        except ValidationError:
+            attempt["parse_outcome"] = "schema_invalid"
+            return None
+        attempt["parse_outcome"] = "parsed"
+        attempt["validation_outcome"] = "valid"
+        trace.language_meaning_candidate = candidate.model_dump(mode="json")
+        return candidate
+
+    def _plan_with_deterministic_fallback(
+        self, question: str, trace: QueryTrace
+    ) -> PlannerResult:
         fallback = self._fallback_plan(question)
-        normalized = self._normalize_and_resolve_players(fallback, question, infer_meaning=True)
+        normalized = self._normalize_and_resolve_players(
+            fallback, question, infer_meaning=True
+        )
         validation = validate_plan(normalized, question)
         validation = self._validate_explicit_scope(normalized, question, validation)
         trace.parsed_json_plan = fallback.model_dump(mode="json")
@@ -424,6 +534,7 @@ class SemanticQueryPlanner:
             "parse_outcome": last_attempt.get("parse_outcome", "not_attempted"),
             "validation_outcome": last_attempt.get("validation_outcome", "not_run"),
             "repair_outcome": repair_outcome,
+            "model_call_reasons": [item.get("reason", "legacy_plan_repair" if item.get("attempt") == "repair" else "legacy_plan_generation") for item in trace.planner_attempts],
             "latency_ms": round(
                 sum(float(item.get("latency_ms", 0.0)) for item in trace.planner_attempts),
                 3,
@@ -655,7 +766,7 @@ class SemanticQueryPlanner:
             else None
         )
         sort = (
-            SortSpec(by=plan.metric, direction=requested_direction)
+            SortSpec(by=plan.metric, direction=cast(Literal["asc", "desc"], requested_direction))
             if requested_direction
             else plan.sort
         )
@@ -782,7 +893,7 @@ class SemanticQueryPlanner:
         requested_minimum_sample = self._infer_minimum_sample(lowered, metric)
         split_by, compare_values = self._infer_split(lowered, filters)
         event, window = self._infer_event(lowered, filters)
-        default_sort = METRICS.get(metric).default_sort if metric in METRICS else "desc"
+        default_sort: str = METRICS[metric].default_sort if metric in METRICS else "desc"
         if (
             metric == "runs_scored"
             and "which length" in lowered
@@ -874,7 +985,7 @@ class SemanticQueryPlanner:
 
         minimum_sample = requested_minimum_sample or (MinimumSampleSpec(**METRICS[metric].minimum_sample.as_dict()) if metric in METRICS else None)
         return CricketQueryPlan(
-            operation=operation,
+            operation=cast(OperationType, operation),
             entity=entity,
             metric=metric,
             group_by=group_by,
@@ -883,7 +994,7 @@ class SemanticQueryPlanner:
             compare_values=compare_values,
             event=event,
             window=window,
-            sort=SortSpec(by=metric, direction=default_sort),
+            sort=SortSpec(by=metric, direction=cast(Literal["asc", "desc"], default_sort)),
             limit=requested_limit,
             minimum_sample=minimum_sample,
             minimum_sample_explicit=requested_minimum_sample is not None,
@@ -1328,7 +1439,7 @@ class SemanticQueryPlanner:
         return (
             metric in {"economy_rate", "bowling_strike_rate", "wickets_taken", "wickets_per_over", "bowler_dot_ball_percentage"}
             or any(token in lowered for token in ("economy", "wicket rate", "dot-ball percentage"))
-            or (players and all(player in bowler_names for player in players))
+            or (bool(players) and all(player in bowler_names for player in players))
         )
 
     @staticmethod

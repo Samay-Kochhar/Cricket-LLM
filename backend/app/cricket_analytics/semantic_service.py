@@ -1137,6 +1137,20 @@ class SemanticAnalyticsService:
         validation: ValidationResult,
         plan: CricketQueryPlan | None = None,
     ) -> QueryResponse:
+        meaning = trace.meaning_resolution or {}
+        if meaning.get("status") == "clarification":
+            question_text = str(meaning.get("clarification") or "Please clarify the requested statistic.")
+            trace.final_answer_metadata = {"status": "meaning_clarification"}
+            trace.log()
+            return QueryResponse(
+                status=EvidenceStatus.unsupported,
+                failure_state="planner_uncertainty",
+                clarification_question=question_text,
+                clarification_options=meaning.get("clarification_options") or [],
+                interpretation=self._interpretation(question, None),
+                summaries=[SummaryBlock(title="Clarify cricket meaning", body=question_text)],
+                evidence_notes=self._trace_notes(trace, None),
+            )
         trace.final_answer_metadata = {"status": "invalid_plan", "errors": validation.errors}
         trace.log()
         return QueryResponse(

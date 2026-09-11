@@ -201,7 +201,7 @@ def test_empty_raw_total_result_is_not_reported_as_minimum_sample_failure(
     assert "minimum sample" not in response.insufficiencies[0].detail.lower()
 
 
-def test_invalid_llm_plan_can_be_repaired_before_execution(
+def test_invalid_migrated_output_uses_canonical_meaning_without_repair(
     semantic_service: SemanticAnalyticsService,
 ) -> None:
     service = SemanticAnalyticsService(
@@ -218,7 +218,9 @@ def test_invalid_llm_plan_can_be_repaired_before_execution(
     trace = _trace(response)
 
     assert response.status.value == "supported"
-    assert "REPAIR:" in trace["gemini_raw_response"]
+    assert "REPAIR:" not in trace["gemini_raw_response"]
+    assert trace["planner_outcome"]["attempt_count"] == 1
+    assert trace["planner_outcome"]["repair_outcome"] == "not_needed"
     assert trace["normalized_plan"]["metric"] == "batting_strike_rate"
 
 

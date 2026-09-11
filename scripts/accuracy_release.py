@@ -209,8 +209,59 @@ def score_release(
         ),
         "failures": failures,
     }
+    report["stage_accuracy"] = stage_accuracy(records)
+    call_reasons: dict[str, int] = defaultdict(int)
+    for record in records:
+        for turn in record.get("turns", []):
+            for attempt in (turn.get("trace") or {}).get("planner_attempts", []):
+                reason = attempt.get("reason") or (
+                    "legacy_plan_repair" if attempt.get("attempt") == "repair" else "legacy_plan_generation"
+                )
+                call_reasons[str(reason)] += 1
+    report["model_call_reasons"] = dict(sorted(call_reasons.items()))
     reconcile_summary(report)
     return report
+
+
+def stage_accuracy(records: list[dict[str, Any]]) -> dict[str, Any]:
+    """Score observable stage contracts against the independently frozen expectations.
+
+    Extraction measures schema validity, not whether Flash alone understood every
+    fact. Meaning accuracy measures the reconciled canonical interpretation.
+    """
+    results: dict[str, list[bool]] = defaultdict(list)
+    for record in records:
+        for turn in record.get("turns", []):
+            trace = turn.get("trace") or {}
+            expected = (turn.get("canonical_meaning") or {}).get("plan")
+            if not expected:
+                continue
+            attempts = trace.get("planner_attempts") or []
+            if attempts:
+                results["extraction_contract"].append(any(a.get("parse_outcome") == "parsed" for a in attempts))
+            meaning = trace.get("canonical_meaning")
+            if meaning:
+                results["canonical_meaning"].append(_contains_meaning(
+                    _meaning_plan_fields(meaning), {k: v for k, v in expected.items() if k != "operation"}
+                ))
+            elif trace.get("language_meaning_candidate"):
+                results["canonical_meaning"].append(False)
+            compiled = turn.get("compiled_plan") or trace.get("normalized_plan")
+            results["compilation"].append(bool(compiled) and _contains_meaning(compiled, expected))
+            results["validation"].append((trace.get("validation_result") or {}).get("valid") is True)
+            results["database_evidence"].append(bool(turn.get("database_evidence")))
+            results["response_contract"].append(not bool(turn.get("errors")))
+    return {stage: _score(sum(outcomes), len(outcomes)) for stage, outcomes in sorted(results.items())}
+
+
+def _meaning_plan_fields(meaning: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "entity": meaning.get("role"), "metric": meaning.get("metric"),
+        "filters": meaning.get("filters"), "group_by": meaning.get("group_by"),
+        "limit": meaning.get("limit"), "minimum_sample": meaning.get("minimum_sample"),
+        "minimum_sample_explicit": meaning.get("minimum_sample_explicit"),
+        "sort": {"by": meaning.get("metric"), "direction": meaning.get("sort_direction")},
+    }
 
 
 def reconcile_summary(summary: dict[str, Any]) -> None:
@@ -248,7 +299,12 @@ def classify_first_failing_stage(record: dict[str, Any] | None) -> str:
         compiled_plan = turn.get("compiled_plan") or trace.get("normalized_plan")
         if not raw_candidate:
             return "meaning extraction"
-        if expected_plan and not _contains_meaning(raw_candidate, expected_plan):
+        compact = trace.get("language_meaning_candidate")
+        if compact and expected_plan:
+            canonical = trace.get("canonical_meaning")
+            if not canonical or not _contains_meaning(_meaning_plan_fields(canonical), {k: v for k, v in expected_plan.items() if k != "operation"}):
+                return "canonicalization"
+        elif expected_plan and not _contains_meaning(raw_candidate, expected_plan):
             return "meaning extraction"
         if expected_plan and compiled_plan is not None and not _contains_meaning(
             compiled_plan, expected_plan

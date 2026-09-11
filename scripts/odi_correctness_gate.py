@@ -113,10 +113,15 @@ class GateReport:
         }
 
 
-def load_benchmark(path: Path = DEFAULT_BENCHMARK) -> dict[str, Any]:
+def load_benchmark(path: Path = DEFAULT_BENCHMARK, *, families: set[str] | None = None) -> dict[str, Any]:
     benchmark = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(benchmark, dict) or not isinstance(benchmark.get("cases"), list):
         raise ValueError(f"Invalid ODI benchmark: {path}")
+    if families:
+        available = {str(case.get("family")) for case in benchmark["cases"]}
+        if not families <= available:
+            raise ValueError(f"Unknown benchmark families: {sorted(families - available)}")
+        benchmark["cases"] = [case for case in benchmark["cases"] if case.get("family") in families]
     return benchmark
 
 
@@ -151,8 +156,9 @@ def run_accuracy_release(
     output_path: Path,
     previous_path: Path | None = None,
     fresh: bool = False,
+    families: set[str] | None = None,
 ) -> dict[str, Any]:
-    benchmark = load_benchmark(path)
+    benchmark = load_benchmark(path, families=families)
     validate_unique_case_ids(benchmark["cases"])
     store = AccuracyArtifactStore(output_path)
     if fresh:
@@ -197,8 +203,9 @@ def replay_accuracy_release(
     *,
     output_path: Path,
     previous_path: Path | None = None,
+    families: set[str] | None = None,
 ) -> dict[str, Any]:
-    benchmark = load_benchmark(path)
+    benchmark = load_benchmark(path, families=families)
     records = AccuracyArtifactStore(output_path).records
     previous_records = AccuracyArtifactStore(previous_path).records if previous_path else None
     return score_release(benchmark, records, previous_records=previous_records)
@@ -210,7 +217,7 @@ def _assert_production_planner_health(record: dict[str, Any]) -> None:
     for turn in record.get("turns", []):
         trace = turn.get("trace") or {}
         attempts = trace.get("planner_attempts") or []
-        if not attempts or trace.get("parsed_json_plan"):
+        if not attempts or trace.get("parsed_json_plan") or trace.get("language_meaning_candidate"):
             continue
         error_kinds = [attempt.get("error_kind") for attempt in attempts]
         if all(error_kinds):
@@ -324,7 +331,8 @@ def _run_case_evidence(case: dict[str, Any]) -> dict[str, Any]:
                     "resolved_input": resolved_input,
                     "selected_planning_path": _planning_path(trace, mode=payload.get("mode")),
                     "safe_model_metadata": _safe_model_metadata(trace),
-                    "raw_structured_candidate": trace.get("parsed_json_plan"),
+                    "raw_structured_candidate": trace.get("language_meaning_candidate") or trace.get("parsed_json_plan"),
+                    "resolved_canonical_meaning": trace.get("canonical_meaning"),
                     "deterministic_candidate": deterministic_candidate,
                     "deterministic_validation": deterministic_validation,
                     "canonical_meaning": turn.get("expected"),
@@ -401,6 +409,7 @@ def _safe_model_metadata(trace: dict[str, Any]) -> dict[str, Any]:
         key: outcome.get(key)
         for key in (
             "attempt_count",
+            "model_call_reasons",
             "selected_model",
             "finish_reason",
             "parse_outcome",
@@ -575,6 +584,7 @@ def main() -> int:
     )
     parser.add_argument("--previous", type=Path, help="Previous release artifact for regressions and improvements.")
     parser.add_argument("--fresh", action="store_true", help="Atomically replace the release artifact before running.")
+    parser.add_argument("--family", action="append", help="Select a family for a release or replay; repeat for multiple families.")
     args = parser.parse_args()
     logging.disable(logging.INFO)
     if args.release or args.replay:
@@ -586,12 +596,14 @@ def main() -> int:
                     args.benchmark,
                     output_path=args.output,
                     previous_path=args.previous,
+                    families=set(args.family) if args.family else None,
                 )
                 if args.replay
                 else run_accuracy_release(
                     args.benchmark,
                     output_path=args.output,
                     previous_path=args.previous,
+                    families=set(args.family) if args.family else None,
                     fresh=args.fresh,
                 )
             )

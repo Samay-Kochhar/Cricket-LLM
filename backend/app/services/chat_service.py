@@ -264,6 +264,17 @@ class ChatService:
                 activity_trace=["Gemini reasoning"] if used_gemini else [],
             )
         query_response = self._query(contextual_message, conversation_state)
+        if query_response.clarification_question:
+            return ChatReply(
+                mode="clarification",
+                message=query_response.clarification_question,
+                query_response=query_response,
+                clarification_options=[
+                    ClarificationOption(label=option, prompt=f"{contextual_message} Use {option}.")
+                    for option in query_response.clarification_options
+                ],
+                conversation_state=conversation_state,
+            )
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
         resolved_input = contextual_message if contextual_message != normalized_message else None

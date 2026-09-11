@@ -206,6 +206,8 @@ class QueryInterpretation(BaseModel):
 
 class QueryResponse(BaseModel):
     status: EvidenceStatus
+    clarification_question: str | None = None
+    clarification_options: list[str] = Field(default_factory=list)
     failure_state: Literal["data_limitation", "unsupported_capability", "planner_uncertainty"] | None = None
     interpretation: QueryInterpretation
     summaries: list[SummaryBlock] = Field(default_factory=list)

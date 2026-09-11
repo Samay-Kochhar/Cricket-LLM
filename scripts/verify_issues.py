@@ -91,7 +91,7 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             (
                 "pytest",
                 "tests/backend/test_grounded_issue_completion_contract.py::test_configured_llm_plan_executes_after_validation",
-                "tests/backend/test_grounded_issue_completion_contract.py::test_invalid_llm_plan_can_be_repaired_before_execution",
+                "tests/backend/test_grounded_issue_completion_contract.py::test_invalid_migrated_output_uses_canonical_meaning_without_repair",
                 "tests/backend/test_grounded_issue_completion_contract.py::test_invalid_llm_plan_fails_when_repair_is_still_invalid",
                 "tests/backend/test_grounded_issue_completion_contract.py::test_production_semantic_v2_disables_dev_fallback_by_default",
             ),
@@ -281,6 +281,13 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
                 "tests/backend/test_odi_correctness_gate.py",
                 "tests/backend/test_gemini_structured_planner.py",
             ),
+        ),
+    ],
+    "35": [
+        Check(
+            "compact-language-meaning",
+            "Migrated questions extract compact meaning, preserve constraints, and never repair executable plans.",
+            ("pytest", "tests/backend/test_language_meaning.py", "tests/backend/test_canonical_meaning.py", "tests/backend/test_gemini_structured_planner.py", "tests/evals/test_accuracy_release.py", "tests/evals/test_language_capture_replay.py"),
         ),
     ],
     "26": [

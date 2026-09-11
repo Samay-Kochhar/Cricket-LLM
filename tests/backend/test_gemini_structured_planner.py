@@ -161,7 +161,7 @@ def test_novel_named_player_question_still_uses_gemini() -> None:
     assert len(client.calls) == 1
 
 
-def test_truncated_plan_is_repaired_once_even_when_its_json_looks_valid() -> None:
+def test_truncated_migrated_output_uses_canonical_meaning_without_repair() -> None:
     client = _ScriptedStructuredClient([
         _structured_result(_plan_json(), finish_reason="MAX_TOKENS"),
         _structured_result(_plan_json()),
@@ -171,13 +171,13 @@ def test_truncated_plan_is_repaired_once_even_when_its_json_looks_valid() -> Non
     result = _planner(client).plan(trace.original_user_question, trace)
 
     assert result.validation.valid is True
-    assert len(client.calls) == 2
+    assert len(client.calls) == 1
     assert trace.planner_attempts[0]["parse_outcome"] == "truncated"
     assert trace.planner_attempts[0]["validation_outcome"] == "not_run"
     assert trace.planner_attempts[0]["schema_constrained"] is True
-    assert trace.planner_outcome["repair_outcome"] == "succeeded"
+    assert trace.planner_outcome["repair_outcome"] == "not_needed"
     assert trace.planner_outcome["selected_model"] == "gemini-planner"
-    assert trace.planner_outcome["latency_ms"] == 25.0
+    assert trace.planner_outcome["latency_ms"] == 12.5
     assert client.calls[0]["response_schema"]
     assert client.calls[0]["max_output_tokens"] >= 1024
 
@@ -210,7 +210,7 @@ def test_unknown_plan_fields_are_rejected_by_the_typed_contract() -> None:
 
     assert result.validation.valid is True
     assert trace.planner_attempts[0]["parse_outcome"] == "schema_invalid"
-    assert trace.planner_outcome["repair_outcome"] == "succeeded"
+    assert trace.planner_outcome["repair_outcome"] == "not_needed"
 
 
 def test_production_unqualified_comparison_uses_core_metrics_for_gemini_role() -> None:
@@ -398,7 +398,7 @@ def test_production_repairs_passive_dismissal_player_ownership() -> None:
     assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
 
 
-def test_production_repairs_dropped_ranking_limit_and_explicit_sample() -> None:
+def test_production_canonical_resolver_preserves_ranking_limit_and_explicit_sample() -> None:
     dropped_constraints = _plan_json(
         entity="bowler",
         metric="yorker_count",
@@ -438,11 +438,11 @@ def test_production_repairs_dropped_ranking_limit_and_explicit_sample() -> None:
     assert result.plan.minimum_sample is not None
     assert result.plan.minimum_sample.legal_balls == 100
     assert result.plan.minimum_sample_explicit is True
-    assert len(client.calls) == 2
-    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+    assert len(client.calls) == 1
+    assert trace.planner_attempts[0]["parse_outcome"] == "schema_invalid"
 
 
-def test_production_repairs_dropped_ranking_scope_filters() -> None:
+def test_production_canonical_resolver_preserves_ranking_scope_filters() -> None:
     dropped_scope = _plan_json(
         entity="batter",
         metric="false_shot_percentage",
@@ -492,8 +492,8 @@ def test_production_repairs_dropped_ranking_scope_filters() -> None:
         "years": [2009],
         "opposition": "Sri Lanka",
     }
-    assert len(client.calls) == 2
-    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
+    assert len(client.calls) == 1
+    assert trace.planner_attempts[0]["parse_outcome"] == "schema_invalid"
 
 
 def _live_chat(client: _ScriptedStructuredClient) -> ChatService:
@@ -552,7 +552,7 @@ def test_canonical_typed_planner_questions_pass_through_live_chat() -> None:
     assert recovered.query_response is not None
     assert recovered.query_response.status.value == "supported"
     assert recovered.query_response.failure_state is None
-    assert len(invalid_client.calls) == 2
+    assert len(invalid_client.calls) == 1
 
     ambiguous_client = _ScriptedStructuredClient([])
     ambiguous = _live_chat(ambiguous_client).reply(

@@ -48,6 +48,7 @@ class GeminiClient:
     complex_model: str
     api_base_url: str = "https://generativelanguage.googleapis.com/v1beta"
     timeout_seconds: float = 20.0
+    meaning_model: str = "gemini-2.5-flash"
 
     def is_configured(self) -> bool:
         return bool(self.api_key)
@@ -130,8 +131,9 @@ class GeminiClient:
         response_schema: dict[str, Any],
         prefer_complex: bool = False,
         max_output_tokens: int = 2048,
+        model_name: str | None = None,
     ) -> GeminiStructuredResult:
-        model_name = self.complex_model if prefer_complex else self.default_model
+        model_name = model_name or (self.complex_model if prefer_complex else self.default_model)
         started_at = perf_counter()
         if not self.is_configured():
             return GeminiStructuredResult(
