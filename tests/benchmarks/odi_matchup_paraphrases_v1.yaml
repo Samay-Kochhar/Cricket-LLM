@@ -11,7 +11,7 @@ cases:
           status: supported
           plan:
             operation: matchup
-            entity: matchup
+            entity: batter
             metric: batting_strike_rate
             filters: {batter: Steven Smith, bowler: Jasprit Bumrah}
           result:
@@ -41,7 +41,13 @@ cases:
     outcome: supported
     turns:
       - prompt: How many runs did Steve Smith score against Jasprit Bumrah?
-        expected: *smith_bumrah_expected
+        expected:
+          <<: *smith_bumrah_expected
+          plan:
+            operation: matchup
+            entity: batter
+            metric: runs_scored
+            filters: {batter: Steven Smith, bowler: Jasprit Bumrah}
 
   - id: smith-bumrah-head-to-head
     family: named_matchup
@@ -67,7 +73,7 @@ cases:
           status: supported
           plan:
             operation: matchup
-            entity: matchup
+            entity: batter
             metric: batting_strike_rate
             filters: {batter: Steven Smith, bowler: Rashid Khan}
           result:

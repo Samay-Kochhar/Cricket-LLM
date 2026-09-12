@@ -26,6 +26,7 @@ from backend.app.cricket_analytics.plan_normalizer import (
     requested_sort_direction,
 )
 from backend.app.cricket_analytics.plan_validator import validate_plan
+from backend.app.cricket_analytics.player_roles import PlayerParticipation, PlayerRoleResolver, Role
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, OperationType, SortSpec, ValidationResult
 from backend.app.cricket_analytics.venue_resolution import venue_alias_matches
 from backend.app.cricket_analytics.trace import QueryTrace
@@ -59,12 +60,14 @@ class SemanticQueryPlanner:
         available_teams: list[str] | None = None,
         *,
         allow_dev_fallback: bool = True,
+        player_participation: dict[str, PlayerParticipation] | None = None,
     ) -> None:
         self.gemini_client = gemini_client
         self.available_players = available_players
         self.available_venues = available_venues or []
         self.available_teams = available_teams or []
         self.allow_dev_fallback = allow_dev_fallback
+        self.player_roles = PlayerRoleResolver(player_participation)
 
     def plan(
         self,
@@ -131,6 +134,7 @@ class SemanticQueryPlanner:
             available_players=self.available_players,
             available_venues=self.available_venues,
             available_teams=self.available_teams,
+            player_participation=self.player_roles.participation,
         )
         language_resolution = language_resolver.resolve(question, conversation_state)
         if not language_resolver.accepts(question, conversation_state):
@@ -834,7 +838,7 @@ class SemanticQueryPlanner:
             compare_players,
             key=lambda player: lowered.find(player.lower()),
         )
-        named_matchup = self._named_batter_bowler_matchup(lowered, ordered_players)
+        named_matchup = self._named_batter_bowler_matchup(lowered, ordered_players) if operation != "player_compare" else None
         if named_matchup:
             batter, bowler = named_matchup
             operation = "matchup"
@@ -885,7 +889,10 @@ class SemanticQueryPlanner:
                 filters["comparison_view"] = "opposition"
             if not unsupported_reason and len(compare_players) < 2:
                 unsupported_reason = "Player comparison requires at least two named players."
-            if not unsupported_reason and self._comparison_has_mixed_roles(compare_players):
+            explicit_shared_role = bool(re.search(r"\b(?:batting|bowling)\b", lowered)) and all(
+                self.player_roles.supports(player, cast(Role, entity)) for player in compare_players
+            )
+            if not unsupported_reason and self._comparison_has_mixed_roles(compare_players) and not explicit_shared_role:
                 unsupported_reason = "Mixed batter-versus-bowler player comparisons are not supported in Semantic V2."
         if operation == "match_fact":
             entity = "team"
@@ -1436,13 +1443,11 @@ class SemanticQueryPlanner:
             return aliases
         return [venue for venue in self.available_venues if venue.lower() in lowered]
 
-    @staticmethod
-    def _comparison_looks_bowling(players: list[str], lowered: str, metric: str) -> bool:
-        bowler_names = {"Jasprit Bumrah", "Mitchell Starc", "Kagiso Rabada", "Pat Cummins", "Trent Boult"}
+    def _comparison_looks_bowling(self, players: list[str], lowered: str, metric: str) -> bool:
         return (
             metric in {"economy_rate", "bowling_strike_rate", "wickets_taken", "wickets_per_over", "bowler_dot_ball_percentage"}
             or any(token in lowered for token in ("economy", "wicket rate", "dot-ball percentage"))
-            or (bool(players) and all(player in bowler_names for player in players))
+            or (bool(players) and all(self.player_roles.primary_role(player) == "bowler" for player in players))
         )
 
     @staticmethod
@@ -1451,30 +1456,15 @@ class SemanticQueryPlanner:
             token in lowered for token in ("batting strike rate", "scores faster", "against spin", "short balls")
         )
 
-    @staticmethod
-    def _comparison_has_mixed_roles(players: list[str]) -> bool:
-        batter_names = {
-            "Virat Kohli",
-            "Rohit Sharma",
-            "Shreyas Iyer",
-            "KL Rahul",
-            "Hardik Pandya",
-            "Ravindra Jadeja",
-            "Steve Smith",
-            "Jos Buttler",
-            "Glenn Maxwell",
-            "Heinrich Klaasen",
-            "David Miller",
-        }
-        bowler_names = {"Jasprit Bumrah", "Mitchell Starc", "Kagiso Rabada", "Pat Cummins", "Trent Boult"}
-        return any(player in batter_names for player in players) and any(player in bowler_names for player in players)
+    def _comparison_has_mixed_roles(self, players: list[str]) -> bool:
+        roles = {self.player_roles.primary_role(player) for player in players}
+        return "batter" in roles and "bowler" in roles
 
-    @staticmethod
-    def _is_known_bowler(player: str) -> bool:
-        return player in {"Jasprit Bumrah", "Mitchell Starc", "Kagiso Rabada", "Pat Cummins", "Trent Boult", "Rashid Khan"}
+    def _is_known_bowler(self, player: str) -> bool:
+        return self.player_roles.primary_role(player) == "bowler"
 
-    @staticmethod
     def _named_batter_bowler_matchup(
+        self,
         lowered: str,
         ordered_players: list[str],
     ) -> tuple[str, str] | None:
@@ -1484,14 +1474,7 @@ class SemanticQueryPlanner:
         if not has_matchup_wording or len(ordered_players) != 2:
             return None
 
-        known_bowlers = [
-            player for player in ordered_players if SemanticQueryPlanner._is_known_bowler(player)
-        ]
-        if len(known_bowlers) != 1:
-            return None
-        bowler = known_bowlers[0]
-        batter = next(player for player in ordered_players if player != bowler)
-        return batter, bowler
+        return self.player_roles.default_pair(*ordered_players)
 
     @staticmethod
     def _unsupported_factual_reason(lowered: str) -> str | None:

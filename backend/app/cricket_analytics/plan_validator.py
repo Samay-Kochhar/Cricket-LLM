@@ -133,9 +133,15 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         )
     if requested_metric in METRICS:
         requested_owner = METRICS[requested_metric].owner
-        if requested_owner == "bowler" and "batter" in plan.filters and "bowler" not in plan.filters:
+        canonical_opponent_ranking = (
+            plan.question_subject == "matchup"
+            and plan.explanation_intent == "canonical cricket meaning"
+            and plan.group_by == [plan.entity]
+            and plan.entity == requested_owner
+        )
+        if not canonical_opponent_ranking and requested_owner == "bowler" and "batter" in plan.filters and "bowler" not in plan.filters:
             errors.append("The named player must be retained as a bowler for this bowler-owned metric.")
-        if requested_owner == "batter" and "bowler" in plan.filters and "batter" not in plan.filters:
+        if not canonical_opponent_ranking and requested_owner == "batter" and "bowler" in plan.filters and "batter" not in plan.filters:
             errors.append("The named player must be retained as a batter for this batter-owned metric.")
     requested_direction = requested_sort_direction(
         lowered,

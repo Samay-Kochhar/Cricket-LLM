@@ -24,6 +24,7 @@ from backend.app.cricket_analytics.schemas import (
 )
 from backend.app.cricket_analytics.venue_resolution import venue_alias_matches
 from backend.app.services.player_resolution import ALIASES
+from backend.app.cricket_analytics.player_roles import PlayerParticipation, PlayerRoleResolver
 
 
 class MeaningStatus(str, Enum):
@@ -37,7 +38,7 @@ class MeaningStatus(str, Enum):
 class CanonicalCricketMeaning(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    family: Literal["direct", "ranking", "breakdown"]
+    family: Literal["direct", "ranking", "breakdown", "matchup"]
     role: Literal["batter", "bowler"]
     metric: str
     filters: dict[str, object] = Field(default_factory=dict)
@@ -46,6 +47,7 @@ class CanonicalCricketMeaning(BaseModel):
     sort_direction: Literal["asc", "desc"]
     minimum_sample: MinimumSampleSpec | None = None
     minimum_sample_explicit: bool = False
+    relationship: Literal["named", "bowler_ranking", "batter_ranking"] | None = None
 
 
 class MeaningResolution(BaseModel):
@@ -85,18 +87,6 @@ _NUMBER_WORDS = {
     "fifteen": 15,
     "twenty": 20,
 }
-_KNOWN_BOWLERS = {
-    "Jasprit Bumrah",
-    "Mitchell Starc",
-    "Kagiso Rabada",
-    "Pat Cummins",
-    "Trent Boult",
-    "Rashid Khan",
-    "Lasith Malinga",
-    "Ravichandran Ashwin",
-    "Shaheen Shah Afridi",
-    "Tim Southee",
-}
 _CANONICAL_PLAYER_ALIASES = {
     "kohli": "Virat Kohli",
     "rohit": "Rohit Sharma",
@@ -114,6 +104,8 @@ _CANONICAL_PLAYER_ALIASES = {
     "miller": "David Miller",
     "rabada": "Kagiso Rabada",
     "shaheen": "Shaheen Shah Afridi",
+    "smith": "Steven Smith",
+    "jadeja": "Ravindra Jadeja",
 }
 _RANKING_WORDS = re.compile(
     r"\b(?:rank|top|bottom|leading|highest|lowest|largest|best|worst|most|fewest|fastest|slowest|leads?)\b"
@@ -197,11 +189,13 @@ class CanonicalMeaningResolver:
         available_venues: Sequence[str] = (),
         available_teams: Sequence[str] = (),
         candidate_extractors: Sequence[tuple[str, CandidateExtractor]] = (),
+        player_participation: Mapping[str, PlayerParticipation] | None = None,
     ) -> None:
         self.available_players = tuple(available_players)
         self.available_venues = tuple(available_venues)
         self.available_teams = tuple(available_teams)
         self.candidate_extractors = tuple(candidate_extractors)
+        self.player_roles = PlayerRoleResolver(player_participation)
 
     def resolve(
         self,
@@ -328,6 +322,20 @@ class CanonicalMeaningResolver:
         if deterministic.status == MeaningStatus.clarification:
             return deterministic.model_copy(update={"candidate_sources": sources})
         base = deterministic.meaning
+        if base and base.family == "matchup":
+            # Relationship, identity and metric are already resolved from explicit
+            # wording and repository participation. Surface family/role labels do
+            # not get to replace that relationship with a comparison or ranking.
+            meaning = base.model_copy(deep=True)
+            lowered = _normalized_text(question)
+            for fact in candidate.filters:
+                if not fact.evidence or _normalized_text(fact.evidence) not in lowered:
+                    continue
+                normalized = self._candidate_filter(fact)
+                for key, value in normalized.items():
+                    if key not in meaning.filters:
+                        meaning.filters[key] = value
+            return MeaningResolution(status=MeaningStatus.resolved, meaning=meaning, candidate_sources=sources)
         candidate_dimensions = (
             candidate.breakdown_dimensions or candidate.split_dimensions
         )
@@ -709,6 +717,10 @@ class CanonicalMeaningResolver:
         question: str,
         state: Mapping[str, object] | None,
     ) -> MeaningResolution:
+        from backend.app.cricket_analytics.canonical_matchups import resolve_matchup
+        matchup = resolve_matchup(self, question, state)
+        if matchup is not None:
+            return matchup
         lowered = _normalized_text(question)
         dimensions = breakdown_dimensions(lowered)
         phases = {
@@ -800,7 +812,7 @@ class CanonicalMeaningResolver:
             "strike rate" in lowered
             and "batting strike rate" not in lowered
             and "bowling strike rate" not in lowered
-            and player in _KNOWN_BOWLERS
+            and self.player_roles.primary_role(player) == "bowler"
         ):
             return MeaningResolution(
                 status=MeaningStatus.clarification,
@@ -825,7 +837,7 @@ class CanonicalMeaningResolver:
             metric_text = re.sub(
                 r"\bmost dot balls\b", "dot-ball percentage", metric_text
             )
-        metric, role = _metric_and_role(metric_text, player)
+        metric, role = _metric_and_role(metric_text, player, self.player_roles.primary_role(player))
         if pressure and metric in {
             "dot_balls",
             "batter_dot_ball_percentage",
@@ -998,6 +1010,9 @@ class CanonicalMeaningResolver:
 
 
 def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
+    if meaning.family == "matchup":
+        from backend.app.cricket_analytics.canonical_matchups import compile_matchup_meaning
+        return compile_matchup_meaning(meaning)
     if meaning.family == "breakdown":
         return compile_breakdown_meaning(meaning)
     return _compile_aggregate_meaning(meaning)
@@ -1030,7 +1045,7 @@ def _compile_aggregate_meaning(meaning: CanonicalCricketMeaning) -> CricketQuery
     )
 
 
-def _metric_and_role(lowered: str, player: str | None) -> tuple[str | None, str | None]:
+def _metric_and_role(lowered: str, player: str | None, role_hint: str | None = None) -> tuple[str | None, str | None]:
     if "runs conceded" in lowered or "runs given away" in lowered:
         return ("economy_rate" if "per over" in lowered else "runs_conceded"), "bowler"
     if "wickets per over" in lowered:
@@ -1070,7 +1085,7 @@ def _metric_and_role(lowered: str, player: str | None) -> tuple[str | None, str 
                     lowered,
                 )
             )
-            or player in _KNOWN_BOWLERS
+            or role_hint == "bowler"
         )
         if re.search(r"\b(?:as a batter|batting|faced)\b", lowered):
             bowling = False
@@ -1118,6 +1133,21 @@ def _extract_player(question: str, available_players: Sequence[str]) -> str | No
 
 def _extract_players(question: str, available_players: Sequence[str]) -> list[str]:
     lowered = question.lower().replace("’", "'")
+    aliases = _player_aliases(available_players)
+    matches = [
+        (match.start(), -len(alias), canonical)
+        for alias, canonical in aliases.items()
+        if (match := re.search(rf"(?<!\w){re.escape(alias)}(?:'s)?(?!\w)", lowered))
+        and canonical in available_players
+    ]
+    ordered: list[str] = []
+    for _, _, canonical in sorted(matches):
+        if canonical not in ordered:
+            ordered.append(canonical)
+    return ordered
+
+
+def _player_aliases(available_players: Sequence[str]) -> dict[str, str]:
     aliases: dict[str, str] = {key.lower(): value for key, value in ALIASES.items()}
     initial_aliases: dict[str, list[str]] = {}
     for player in available_players:
@@ -1131,17 +1161,7 @@ def _extract_players(question: str, available_players: Sequence[str]) -> list[st
             aliases[alias] = players[0]
             aliases[alias.replace(" ", ". ", 1)] = players[0]
     aliases.update(_CANONICAL_PLAYER_ALIASES)
-    matches = [
-        (match.start(), -len(alias), canonical)
-        for alias, canonical in aliases.items()
-        if (match := re.search(rf"(?<!\w){re.escape(alias)}(?:'s)?(?!\w)", lowered))
-        and canonical in available_players
-    ]
-    ordered: list[str] = []
-    for _, _, canonical in sorted(matches):
-        if canonical not in ordered:
-            ordered.append(canonical)
-    return ordered
+    return aliases
 
 
 def _extract_team(question: str, available_teams: Sequence[str]) -> str | None:

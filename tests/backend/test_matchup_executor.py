@@ -104,16 +104,22 @@ def test_matchup_executor_returns_supported_trace_and_shape(
     plan = trace["normalized_plan"]
 
     assert response.status.value == "supported"
-    assert plan["operation"] == "matchup"
+    canonical_ranking = plan["question_subject"] == "matchup" and plan["operation"] == "aggregate"
+    assert plan["operation"] == ("aggregate" if canonical_ranking else "matchup")
     assert plan["entity"] == entity
     assert plan["metric"] == metric
     for key, value in filters.items():
         assert plan["filters"].get(key) == value
     assert trace["selected_executor"] == "executors.matchup_executor.build_matchup_query"
     assert "analytics.deliveries_v1" in trace["final_sql_or_method"]
-    assert expected_columns.issubset(set(trace["result_columns"]))
-    assert "sample_size" in trace["result_columns"]
-    assert "low_sample" in trace["result_columns"]
+    if canonical_ranking:
+        assert expected_columns.issubset(set(trace["result_columns"]))
+        if "percentage" in metric:
+            assert plan["minimum_sample"]["legal_balls"] == 60
+    else:
+        assert expected_columns.issubset(set(trace["result_columns"]))
+        assert "sample_size" in trace["result_columns"]
+        assert "low_sample" in trace["result_columns"]
     assert response.tables
     assert response.tables[0].rows
 

@@ -102,6 +102,11 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
     sort_expression = plan.metric if not sort or sort.by == plan.metric else sort.by
     limit = plan.limit
     limit_sql = "LIMIT ?" if limit is not None else ""
+    dismissal_predicate = (
+        BOWLER_WICKET
+        if plan.question_subject == "matchup" and plan.entity == "bowler"
+        else "TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true'"
+    )
 
     having_clauses = []
     if plan.minimum_sample:
@@ -137,7 +142,7 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS runs_scored,
                 SUM(TRY_CAST(bowlruns AS INTEGER)) AS runs_conceded,
                 SUM(CASE WHEN {BOWLER_WICKET} THEN 1 ELSE 0 END) AS wickets,
-                SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+                SUM(CASE WHEN {dismissal_predicate} THEN 1 ELSE 0 END) AS dismissals,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
                 SUM(CASE WHEN {LEGAL_BALL} AND TRY_CAST(bowlruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS bowler_dot_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,

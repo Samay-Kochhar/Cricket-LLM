@@ -219,7 +219,11 @@ PLAYERS = sorted({row[1] for row in PACK})
 
 
 def resolver():
-    return CanonicalMeaningResolver(available_players=PLAYERS)
+    from backend.app.cricket_analytics.player_roles import PlayerParticipation
+    return CanonicalMeaningResolver(available_players=PLAYERS, player_participation={
+        row[1]: PlayerParticipation(100, 1000) if row[4] == "bowler" else PlayerParticipation(1000, 100)
+        for row in PACK
+    })
 
 
 @pytest.mark.parametrize("alias,player,words,metric,role,dimension,axis,filters", PACK)

@@ -1,0 +1,80 @@
+{
+  "benchmark": "presentation-supported-100",
+  "by_category": {
+    "matchup": {
+      "answer_correct": 1,
+      "answer_rate": 0.125,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 8,
+      "supported_rate": 1.0,
+      "total": 8
+    }
+  },
+  "failures": [
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-smith-bumrah",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-maxwell-ashwin",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-kohli-starc",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-warner-dismissers",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-klaasen-dot",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-miller-false",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-rashid-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "matchup",
+      "id": "analyst-matchup-kohli-pace-boundary",
+      "reason": "plan mismatch"
+    }
+  ],
+  "git_commit": "8b8f7b2641eba3ef0ff81995ff67aee775a81376",
+  "gold_cases": 8,
+  "plan_exact_match": {
+    "correct": 0,
+    "rate": 0.0,
+    "total": 8
+  },
+  "predictions": 8,
+  "scored_at": "2026-09-12T10:34:35.831024+00:00",
+  "status_accuracy": {
+    "correct": 8,
+    "rate": 1.0,
+    "total": 8
+  },
+  "top_row_exact_match": {
+    "correct": 1,
+    "rate": 0.125,
+    "total": 8
+  },
+  "top_row_semantic_match": {
+    "correct": 1,
+    "rate": 0.125,
+    "total": 8
+  }
+}

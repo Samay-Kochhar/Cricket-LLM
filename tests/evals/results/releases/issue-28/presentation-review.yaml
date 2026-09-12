@@ -1,0 +1,13 @@
+benchmark: dl4nlp_cricket_analyst_supported_100 (8 matchup cases)
+source: issue-28/presentation-matchups.jsonl; live production planner and local ODI DuckDB
+reviewed_all_records: true
+reviewer: Codex
+numeric_note: >-
+  Named matchup values match the stored database answers. Opponent rate rankings
+  deliberately enforce the issue 28 sample floor, so their leaders can differ
+  from old answer keys that ranked one-ball samples. The pace ranking also uses
+  the requested pace filter rather than accepting mislabeled spin rows.
+defaults:
+  semantic_capability: pass
+  safeguard_aware: pass
+overrides: {}

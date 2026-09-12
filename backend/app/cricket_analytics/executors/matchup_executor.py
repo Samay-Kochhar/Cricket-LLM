@@ -30,6 +30,14 @@ SUPPORTED_METRICS = {
     "dismissal_rate",
     "wickets",
     "wickets_taken",
+    "dot_balls",
+    "bowler_dot_balls",
+    "bowling_strike_rate",
+    "runs_conceded",
+    "economy_rate",
+    "bowling_average",
+    "false_shots_per_over",
+    "batting_average",
 }
 
 
@@ -69,6 +77,18 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
     soft_minimum = _soft_minimum_sample(plan)
     limit = plan.limit or 10
     sort_expression, sort_direction, ranking_note = _sort_expression(plan)
+    canonical_ranking = plan.question_subject == "matchup" and plan.operation == "aggregate"
+    if canonical_ranking and plan.entity == "bowler" and plan.metric == "dismissals":
+        sort_expression = "wickets"
+    if plan.sort:
+        sort_direction = plan.sort.direction.upper()
+    eligibility = []
+    apply_eligibility = plan.minimum_sample_explicit or canonical_ranking
+    if apply_eligibility and plan.minimum_sample:
+        for column, value in (("balls", plan.minimum_sample.balls), ("legal_balls", plan.minimum_sample.legal_balls), ("innings", plan.minimum_sample.innings)):
+            if value is not None:
+                eligibility.append(f"{column} >= ?")
+    eligibility_sql = "WHERE " + " AND ".join(eligibility) if eligibility else ""
     group_by_sql = "GROUP BY " + ", ".join(group_expressions) if group_expressions else ""
     select_dimension_sql = ",\n                ".join(select_dimensions) + "," if select_dimensions else ""
     metric_projection_sql = ",\n              ".join(matchup_projection_sql())
@@ -86,6 +106,7 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END) AS balls,
                 SUM(CASE WHEN {LEGAL_BALL} THEN 1 ELSE 0 END) AS legal_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS runs,
+                SUM(TRY_CAST(bowlruns AS INTEGER)) AS runs_conceded,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
                 SUM(CASE WHEN {BOWLER_WICKET} THEN 1 ELSE 0 END) AS wickets,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND COALESCE(TRY_CAST(batruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END) AS dot_balls,
@@ -103,15 +124,21 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
               runs,
               dismissals,
               wickets,
+              dot_balls,
+              bowler_dot_balls,
               {metric_projection_sql},
               balls AS sample_size,
               balls < ? AS low_sample,
               {sort_expression} AS rank_value
             FROM aggregate_rows
+            {eligibility_sql}
             {order_sql}
             LIMIT ?
             """
-    params.extend([soft_minimum, limit])
+    params.append(soft_minimum)
+    if apply_eligibility and plan.minimum_sample:
+        params.extend(value for value in (plan.minimum_sample.balls, plan.minimum_sample.legal_balls, plan.minimum_sample.innings) if value is not None)
+    params.append(limit)
     columns = [
         *dimension_columns,
         "balls",
@@ -119,6 +146,8 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
         "runs",
         "dismissals",
         "wickets",
+        "dot_balls",
+        "bowler_dot_balls",
         "strike_rate",
         "dot_percentage",
         "bowler_dot_percentage",

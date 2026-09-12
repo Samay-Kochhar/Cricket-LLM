@@ -57,7 +57,7 @@ cases:
           mode: analysis
           status: supported
           plan:
-            operation: matchup
+            operation: aggregate
             entity: bowler
             metric: wickets_taken
             group_by: [bowler]

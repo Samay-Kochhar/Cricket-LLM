@@ -8,6 +8,7 @@ from backend.app.cricket_analytics.canonical_meaning import (
     MeaningStatus,
 )
 from backend.app.cricket_analytics.language_meaning import LanguageMeaningCandidate
+from backend.app.cricket_analytics.player_roles import PlayerParticipation
 
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
 from backend.app.cricket_analytics.trace import QueryTrace
@@ -338,6 +339,12 @@ def test_independent_meaning_pack_normalizes_different_flash_surfaces(pack):
             ["Lord's, London"],
             ["Australia"],
             allow_dev_fallback=False,
+            player_participation={
+                "Virat Kohli": PlayerParticipation(1000, 10),
+                "Rohit Sharma": PlayerParticipation(1000, 10),
+                "Jasprit Bumrah": PlayerParticipation(10, 1000),
+                "Mitchell Starc": PlayerParticipation(10, 1000),
+            },
         )
         trace = QueryTrace(question)
         result = planner.plan(question, trace)

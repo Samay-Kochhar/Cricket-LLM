@@ -12,6 +12,7 @@ from backend.app.cricket_analytics.cricket_definitions import (
     public_label,
 )
 from backend.app.db.connection import get_connection
+from backend.app.cricket_analytics.player_roles import PlayerParticipation
 from backend.app.services.player_resolution import normalize_name
 
 RIGHT_HAND_WAGON_LABELS = {
@@ -152,6 +153,21 @@ class AnalyticsRepository:
     def list_player_names(self) -> list[str]:
         rows = self._fetchall("SELECT DISTINCT player_name FROM analytics.player_lookup ORDER BY player_name")
         return [str(row[0]) for row in rows]
+
+    def player_participation(self) -> dict[str, PlayerParticipation]:
+        rows = self._fetchall("""
+            SELECT player, SUM(faced), SUM(bowled) FROM (
+                SELECT bat AS player, COUNT(*) AS faced, 0 AS bowled
+                FROM analytics.deliveries_v1 GROUP BY bat
+                UNION ALL
+                SELECT bowl AS player, 0 AS faced, COUNT(*) AS bowled
+                FROM analytics.deliveries_v1 GROUP BY bowl
+            ) GROUP BY player
+        """)
+        return {
+            str(player): PlayerParticipation(int(faced), int(bowled))
+            for player, faced, bowled in rows if player
+        }
 
     def search_players(self, query: str, limit: int = 10) -> list[str]:
         normalized = normalize_name(query)

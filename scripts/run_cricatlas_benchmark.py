@@ -208,11 +208,14 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--summary", type=Path)
     parser.add_argument("--limit", type=int)
+    parser.add_argument("--category", action="append", help="Evaluate only the selected categories.")
     parser.add_argument("--delay", type=float, default=0.0)
     parser.add_argument("--fresh", action="store_true", help="Replace an existing result instead of resuming it.")
     args = parser.parse_args()
 
     gold = load_records(args.gold)
+    if args.category:
+        gold = [case for case in gold if case.get("category") in args.category]
     if args.limit is not None:
         gold = gold[: args.limit]
     args.output.parent.mkdir(parents=True, exist_ok=True)

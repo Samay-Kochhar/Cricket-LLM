@@ -290,6 +290,13 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("pytest", "tests/backend/test_language_meaning.py", "tests/backend/test_canonical_meaning.py", "tests/backend/test_gemini_structured_planner.py", "tests/evals/test_accuracy_release.py", "tests/evals/test_language_capture_replay.py"),
         ),
     ],
+    "28": [
+        Check(
+            "canonical-matchup-meaning",
+            "Verify data-derived roles, matchup direction, opponent rankings, metrics and sample floors.",
+            ("pytest", "tests/backend/test_canonical_matchups.py", "tests/backend/test_matchup_executor.py", "tests/backend/test_named_matchup_paraphrases.py"),
+        ),
+    ],
     "27": [
         Check(
             "canonical-breakdown-meaning",

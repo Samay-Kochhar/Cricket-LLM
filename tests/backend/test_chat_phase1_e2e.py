@@ -43,7 +43,7 @@ def client() -> Iterator[TestClient]:
     [
         ("what is dot ball percentage of virat kohli?", "aggregate"),
         ("Where does Hardik Pandya score the most and on which shots?", "batting_profile"),
-        ("Which bowler has dismissed David Miller most often?", "matchup"),
+        ("Which bowler has dismissed David Miller most often?", "aggregate"),
         ("Which bowler has the biggest difference between powerplay and death-over economy?", "split_compare"),
     ],
 )

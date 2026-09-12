@@ -234,6 +234,20 @@ def matchup_sort_expression(metric_id: str, *, filters: dict[str, object] | None
         return "runs", "DESC", None
     if canonical == "balls_faced":
         return "balls", "DESC", None
+    if canonical in {"dot_balls", "bowler_dot_balls"}:
+        return canonical, "DESC", None
+    if canonical == "bowling_strike_rate":
+        return "legal_balls / NULLIF(wickets, 0)", "ASC", None
+    if canonical == "runs_conceded":
+        return "runs_conceded", "DESC", None
+    if canonical == "economy_rate":
+        return "runs_conceded / NULLIF(legal_balls, 0) * 6.0", "ASC", None
+    if canonical == "bowling_average":
+        return "runs_conceded / NULLIF(wickets, 0)", "ASC", None
+    if canonical == "batting_average":
+        return "runs / NULLIF(dismissals, 0)", "DESC", None
+    if canonical == "false_shots_per_over":
+        return "false_shots / NULLIF(legal_balls, 0) * 6.0", "DESC", None
     if canonical == "dismissals":
         return "dismissals", "DESC", None
     if canonical == "wickets_taken":

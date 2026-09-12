@@ -70,6 +70,10 @@ class SemanticAnalyticsService:
             self.repository.list_venues(),
             self.repository.list_teams(),
             allow_dev_fallback=self.allow_dev_fallback,
+            player_participation=(
+                self.repository.player_participation()
+                if callable(getattr(self.repository, "player_participation", None)) else None
+            ),
         )
 
     def answer_question(
@@ -100,7 +104,14 @@ class SemanticAnalyticsService:
             return self._answer_player_compare(question, plan, trace)
         if plan.operation == "split_compare":
             return self._answer_split_compare(question, plan, trace)
-        if plan.operation == "matchup":
+        if plan.operation == "matchup" or (
+            plan.operation == "aggregate" and plan.question_subject == "matchup"
+            and plan.metric in {
+                "wickets_taken", "dismissals", "bowler_dot_ball_percentage",
+                "boundary_percentage", "false_shot_percentage", "batting_strike_rate",
+                "runs_scored", "dot_balls", "bowler_dot_balls",
+            }
+        ):
             return self._answer_matchup(question, plan, trace)
         if plan.operation == "match_fact":
             return self._answer_match_fact(question, plan, trace)
@@ -1576,6 +1587,8 @@ class SemanticAnalyticsService:
             "false_shot_percentage",
             "dismissal_rate",
         ]
+        if plan.metric in {"dot_balls", "bowler_dot_balls"}:
+            columns.append(plan.metric)
         return TableBlock(
             title="Semantic matchup result",
             columns=[_matchup_column_label(column) for column in columns],
@@ -1602,12 +1615,17 @@ class SemanticAnalyticsService:
                 if top.get("low_sample")
                 else f"The recorded ODI sample contains {balls} balls."
             )
+            requested_metric = ""
+            if plan.metric not in {"runs_scored", "balls_faced", "dismissals", "batting_strike_rate"}:
+                value = _display_value(top.get("rank_value"))
+                unit = "%" if "percentage" in plan.metric else ""
+                requested_metric = f" {_label(plan.metric)}: {value}{unit}."
             return SummaryBlock(
                 title="Semantic matchup answer",
                 body=(
                     f"{named_batter} scored {runs} runs from {balls} balls against {named_bowler}, "
                     f"with {dismissals} {dismissal_label} and a batting strike rate of {strike_rate}. "
-                    f"{sample_context}"
+                    f"{sample_context}{requested_metric}"
                 ),
             )
         subject_parts = [

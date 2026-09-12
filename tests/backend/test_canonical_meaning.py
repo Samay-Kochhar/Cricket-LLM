@@ -49,10 +49,13 @@ EXPECTED_PLAYERS = sorted(
 
 
 def _resolver() -> CanonicalMeaningResolver:
+    from backend.app.cricket_analytics.player_roles import PlayerParticipation
+    bowlers = {"Jasprit Bumrah", "Mitchell Starc", "Rashid Khan", "Lasith Malinga", "Ravichandran Ashwin"}
     return CanonicalMeaningResolver(
         available_players=EXPECTED_PLAYERS,
         available_venues=["Lord's, London"],
         available_teams=["Australia"],
+        player_participation={p: PlayerParticipation(0, 100) if p in bowlers else PlayerParticipation(100, 0) for p in EXPECTED_PLAYERS},
     )
 
 
