@@ -1,0 +1,75 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [],
+  "families": {
+    "context": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    }
+  },
+  "improvements": [],
+  "model_call_reasons": {
+    "initial_meaning_extraction": 10
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 0,
+    "both_pass": 5,
+    "consistent_pairs": 5,
+    "one_pass": 0,
+    "total_pairs": 5
+  },
+  "planner_overlap": {
+    "both_fail": 0,
+    "both_pass": 0,
+    "deterministic_only": 0,
+    "production_only": 10,
+    "total": 10
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 10,
+    "rate": 1.0,
+    "total": 10
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 10,
+    "rate": 1.0,
+    "total": 10
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "compilation": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "database_evidence": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "response_contract": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "validation": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    }
+  },
+  "strict_accuracy": {
+    "passed": 10,
+    "rate": 1.0,
+    "total": 10
+  }
+}

@@ -87,7 +87,10 @@ cases:
         expected:
           mode: analysis
           status: supported
-          resolved_input_contains: [Virat Kohli, batting strike rate, death overs]
+          meaning_patch:
+            version: 1
+            operations:
+              - {action: add, target: filter.phase, value: death}
           plan:
             operation: aggregate
             entity: batter

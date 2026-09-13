@@ -12,6 +12,10 @@ from backend.app.cricket_analytics.canonical_meaning import (
     MeaningStatus,
     compile_canonical_meaning,
 )
+from backend.app.cricket_analytics.canonical_patches import (
+    canonical_meaning_from_state,
+    interpret_meaning_patch,
+)
 from backend.app.cricket_analytics.language_meaning import (
     LanguageMeaningCandidate, MeaningCallReason, extraction_prompt,
 )
@@ -75,7 +79,15 @@ class SemanticQueryPlanner:
         trace: QueryTrace,
         conversation_state: Any | None = None,
     ) -> PlannerResult:
-        canonical = self._plan_canonical_slice(question, trace, conversation_state)
+        patched = self._plan_canonical_patch(question, trace, conversation_state)
+        if patched is not None:
+            return patched
+        canonical_state = (
+            None
+            if canonical_meaning_from_state(conversation_state) is not None
+            else conversation_state
+        )
+        canonical = self._plan_canonical_slice(question, trace, canonical_state)
         if canonical is not None:
             return canonical
 
@@ -123,6 +135,63 @@ class SemanticQueryPlanner:
             return PlannerResult(plan=None, validation=validation, used_gemini=self.gemini_client.is_configured())
 
         return self._plan_with_deterministic_fallback(question, trace)
+
+    def _plan_canonical_patch(
+        self,
+        question: str,
+        trace: QueryTrace,
+        conversation_state: Any | None,
+    ) -> PlannerResult | None:
+        previous = canonical_meaning_from_state(conversation_state)
+        if previous is None:
+            return None
+        resolver = CanonicalMeaningResolver(
+            available_players=self.available_players,
+            available_venues=self.available_venues,
+            available_teams=self.available_teams,
+            player_participation=self.player_roles.participation,
+        )
+        resolution = interpret_meaning_patch(resolver, question, previous)
+        if resolution.status == "not_applicable":
+            return None
+        trace.meaning_patch = (
+            resolution.patch.model_dump(mode="json") if resolution.patch else None
+        )
+        if resolution.status == "clarification" or resolution.meaning is None:
+            trace.meaning_resolution = {
+                "status": "clarification",
+                "clarification": resolution.clarification,
+                "clarification_options": resolution.clarification_options,
+                "candidate_sources": ["structured_patch"],
+            }
+            validation = ValidationResult(
+                valid=False,
+                errors=[resolution.clarification or "Clarify the contextual update."],
+            )
+            trace.validation_result = validation.model_dump(mode="json")
+            return PlannerResult(plan=None, validation=validation, used_gemini=False)
+
+        plan = compile_canonical_meaning(resolution.meaning)
+        validation = validate_plan(plan, question)
+        validation = self._validate_explicit_scope(plan, question, validation)
+        trace.canonical_meaning = resolution.meaning.model_dump(mode="json")
+        trace.meaning_resolution = {
+            "status": "resolved",
+            "candidate_sources": ["structured_patch"],
+        }
+        trace.normalized_plan = plan.model_dump(mode="json")
+        trace.validation_result = validation.model_dump(mode="json")
+        trace.operation_type = plan.operation
+        trace.planner_outcome = {
+            "attempt_count": 0,
+            "selected_model": None,
+            "finish_reason": None,
+            "parse_outcome": "canonical_meaning_patch",
+            "validation_outcome": "valid" if validation.valid else "invalid",
+            "repair_outcome": "not_needed",
+            "latency_ms": 0.0,
+        }
+        return PlannerResult(plan=plan, validation=validation, used_gemini=False)
 
     def _plan_canonical_slice(
         self,
@@ -477,8 +546,15 @@ class SemanticQueryPlanner:
             and plan.question_subject.startswith("split_")
             and plan.explanation_intent == "canonical cricket meaning"
         )
+        canonical_comparison_view = bool(
+            plan.question_subject == "comparison"
+            and plan.explanation_intent == "canonical cricket meaning"
+            and plan.filters.get("comparison_view") == expected_split
+        )
         if expected_split is not None and not (
-            canonical_split or (canonical_breakdown and expected_split in plan.group_by)
+            canonical_split
+            or canonical_comparison_view
+            or (canonical_breakdown and expected_split in plan.group_by)
         ):
             if plan.operation != "split_compare":
                 errors.append(

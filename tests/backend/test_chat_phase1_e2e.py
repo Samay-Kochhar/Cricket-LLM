@@ -688,6 +688,9 @@ def test_comparison_follow_up_replaces_time_scope_and_preserves_participants(
     first_payload = first.json()
     original_state = first_payload["conversation_state"]
     assert original_state is not None
+    assert original_state["version"] == 1
+    assert original_state["canonical_meaning"]["version"] == 1
+    assert original_state["canonical_meaning"]["meaning"]["family"] == "comparison"
 
     second = client.post(
         "/api/chat",

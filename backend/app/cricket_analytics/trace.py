@@ -31,6 +31,7 @@ class QueryTrace:
     parsed_json_plan: dict[str, Any] | None = None
     normalized_plan: dict[str, Any] | None = None
     canonical_meaning: dict[str, Any] | None = None
+    meaning_patch: dict[str, Any] | None = None
     meaning_resolution: dict[str, Any] | None = None
     validation_result: dict[str, Any] | None = None
     operation_type: str | None = None
@@ -50,6 +51,7 @@ class QueryTrace:
                 "parsed_json_plan": self.parsed_json_plan,
                 "normalized_plan": self.normalized_plan,
                 "canonical_meaning": self.canonical_meaning,
+                "meaning_patch": self.meaning_patch,
                 "meaning_resolution": self.meaning_resolution,
                 "validation_result": self.validation_result,
                 "operation_type": self.operation_type,

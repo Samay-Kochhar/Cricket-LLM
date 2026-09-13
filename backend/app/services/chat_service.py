@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 import inspect
+import json
 import re
 from dataclasses import dataclass, field
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from backend.app.cricket_analytics.canonical_meaning import CanonicalCricketMeaning
+from backend.app.cricket_analytics.canonical_patches import VersionedCanonicalMeaning
 from backend.app.cricket_analytics.venue_resolution import same_venue_family, venue_alias_matches
 from backend.app.domain.evidence_models import CitationSource, EvidenceStatus, QueryInterpretation, QueryResponse
 from backend.app.services.follow_up_suggester import suggest_follow_ups
@@ -74,6 +78,7 @@ class PendingClarification(BaseModel):
 
 
 class ConversationState(BaseModel):
+    version: Literal[1] = 1
     players: list[str] = Field(default_factory=list)
     operation: str | None = None
     metric: str | None = None
@@ -81,6 +86,7 @@ class ConversationState(BaseModel):
     comparison_participants: list[str] = Field(default_factory=list)
     comparison_metrics: list[str] = Field(default_factory=list)
     filters: dict[str, object] = Field(default_factory=dict)
+    canonical_meaning: VersionedCanonicalMeaning | None = None
     pending_clarification: PendingClarification | None = None
 
 
@@ -131,7 +137,7 @@ class ChatService:
                         for venue in pending.options
                     ],
                 )
-            normalized_message = pending.original_message
+            normalized_message = "What about at " + " and ".join(resolved_pending_venues) + "?"
             conversation_state = conversation_state.model_copy(
                 update={"pending_clarification": None}
             )
@@ -409,6 +415,20 @@ class ChatService:
             "semantic_metric",
             "semantic_group_by",
         }
+        canonical_meaning = None
+        trace_note = next(
+            (note for note in query_response.evidence_notes if note.title == "Semantic V2 trace"),
+            None,
+        )
+        if trace_note:
+            try:
+                raw_meaning = json.loads(trace_note.detail).get("canonical_meaning")
+                if raw_meaning:
+                    canonical_meaning = VersionedCanonicalMeaning(
+                        meaning=CanonicalCricketMeaning.model_validate(raw_meaning)
+                    )
+            except (json.JSONDecodeError, TypeError, ValueError):
+                canonical_meaning = None
         return ConversationState(
             players=list(dict.fromkeys(interpretation.entities)),
             operation=(
@@ -437,6 +457,7 @@ class ChatService:
                 else []
             ),
             filters={key: value for key, value in raw_filters.items() if key not in internal_keys},
+            canonical_meaning=canonical_meaning,
         )
 
     def _contextualize_follow_up(
@@ -522,6 +543,8 @@ class ChatService:
         venue_matches: list[str] | None = None,
     ) -> str:
         if state is None:
+            return message
+        if state.canonical_meaning is not None:
             return message
         lowered = message.lower()
         if venue_matches is None:

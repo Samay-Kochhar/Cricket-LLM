@@ -475,6 +475,10 @@ def score_turn(payload: dict[str, Any], expected: dict[str, Any]) -> list[str]:
         else:
             errors.extend(semantic_mismatches(plan, expected["plan"], "plan"))
 
+    if "meaning_patch" in expected:
+        patch = _semantic_trace(response).get("meaning_patch")
+        errors.extend(semantic_mismatches(patch, expected["meaning_patch"], "meaning_patch"))
+
     if "result" in expected:
         errors.extend(_score_result(response, expected["result"]))
 

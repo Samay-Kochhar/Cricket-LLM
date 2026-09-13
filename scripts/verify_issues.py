@@ -311,6 +311,19 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("pytest", "tests/backend/test_canonical_trends.py", "tests/backend/test_issue_18_trends.py", "tests/backend/test_canonical_breakdowns.py"),
         ),
     ],
+    "32": [
+        Check(
+            "structured-canonical-meaning-patches",
+            "Verify versioned meaning state, typed contextual patches, family preservation, clarification safety, and suggested follow-ups.",
+            (
+                "pytest",
+                "tests/backend/test_canonical_patches.py",
+                "tests/backend/test_chat_phase1_e2e.py",
+                "tests/backend/test_chat_service.py",
+                "tests/backend/test_query_route.py",
+            ),
+        ),
+    ],
     "30": [
         Check(
             "canonical-split-comparison-meaning",

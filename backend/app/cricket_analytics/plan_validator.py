@@ -200,7 +200,12 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         errors.append("Question asks for line but plan does not group or filter by line.")
     if ("field zone" in lowered or "scoring zone" in lowered or "wagon" in lowered) and "field_zone" not in grouped_or_filtered:
         errors.append("Question asks for field/scoring zone but plan does not group or filter by field_zone.")
-    if "phase" in lowered and "phase" not in grouped_or_filtered and plan.split_by != "phase":
+    if (
+        "phase" in lowered
+        and "phase" not in grouped_or_filtered
+        and plan.split_by != "phase"
+        and plan.filters.get("comparison_view") != "phase"
+    ):
         errors.append("Question asks for phase but plan does not group, filter, or split by phase.")
 
     is_matchup_question = "matchup" in lowered or "batter-bowler" in lowered

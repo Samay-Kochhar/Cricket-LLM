@@ -267,7 +267,32 @@ export type ClarificationOption = {
   message: string;
 };
 
+export type CanonicalCricketMeaning = {
+  family: "direct" | "ranking" | "breakdown" | "matchup" | "comparison" | "split" | "trend";
+  role: "batter" | "bowler";
+  metric: string;
+  filters: Record<string, unknown>;
+  group_by: string[];
+  limit?: number | null;
+  sort_direction: "asc" | "desc";
+  minimum_sample?: {
+    balls?: number | null;
+    legal_balls?: number | null;
+    innings?: number | null;
+  } | null;
+  minimum_sample_explicit: boolean;
+  relationship?: "named" | "bowler_ranking" | "batter_ranking" | null;
+  participants: string[];
+  comparison_metrics: string[];
+  subject?: "batter" | "bowler" | "team" | null;
+  split_by?: "phase" | "batter_hand" | "bowling_style_group" | "balls_faced_window" | "over_range" | null;
+  compare_values: string[];
+  split_intent?: "descriptive" | "ranking" | null;
+  split_direction?: "absolute" | "increase" | "decrease" | null;
+};
+
 export type ConversationState = {
+  version: 1;
   players: string[];
   operation?: string | null;
   metric?: string | null;
@@ -275,6 +300,10 @@ export type ConversationState = {
   comparison_participants: string[];
   comparison_metrics: string[];
   filters: Record<string, unknown>;
+  canonical_meaning?: {
+    version: 1;
+    meaning: CanonicalCricketMeaning;
+  } | null;
   pending_clarification?: {
     kind: string;
     original_message: string;
