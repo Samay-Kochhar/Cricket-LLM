@@ -169,14 +169,25 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         if actual_sample != explicit_sample or not plan.minimum_sample_explicit:
             errors.append("Plan does not preserve the explicitly requested minimum sample.")
     requested_style = requested_bowling_style(lowered)
-    if requested_style and plan.filters.get("bowling_style") != requested_style:
+    if (
+        requested_style
+        and plan.split_by != "bowling_style_group"
+        and plan.filters.get("bowling_style") != requested_style
+    ):
         errors.append(
             f"Question requests bowling style '{requested_style}', but the plan does not preserve that exact filter."
         )
     if "bowling type" in lowered or "bowling style" in lowered or "type of bowling" in lowered:
-        if "bowling_style" not in grouped_or_filtered:
+        if (
+            "bowling_style" not in grouped_or_filtered
+            and plan.split_by != "bowling_style_group"
+        ):
             errors.append("Question asks for bowling type but plan does not group or filter by bowling_style.")
-        if "bowler" in plan.group_by and "bowling_style" not in plan.group_by:
+        if (
+            "bowler" in plan.group_by
+            and "bowling_style" not in plan.group_by
+            and plan.split_by != "bowling_style_group"
+        ):
             errors.append("Question asks for bowling type but plan groups by bowler. Use bowling_style.")
     asks_shot_type = "shot" in lowered and "false shot" not in lowered and "false-shot" not in lowered
     if asks_shot_type and "shot_type" not in grouped_or_filtered:

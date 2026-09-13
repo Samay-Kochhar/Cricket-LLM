@@ -31,7 +31,7 @@ SPLIT_COMPARE_CASES = [
         "bowler",
         "economy_rate",
         "batter_hand",
-        ["left-hand batter", "right-hand batter"],
+        ["LHB", "RHB"],
         {"left_handers_value", "right_handers_value", "difference", "left_handers_sample", "right_handers_sample", "rank_value"},
     ),
     (
@@ -47,7 +47,7 @@ SPLIT_COMPARE_CASES = [
         "batter",
         "batting_strike_rate",
         "balls_faced_window",
-        ["first_20_balls", "after_20_balls"],
+        ["after_20_balls", "first_20_balls"],
         {
             "first_20_balls_value",
             "after_20_balls_value",
@@ -151,7 +151,7 @@ def test_named_bowler_handedness_split_preserves_subject_and_role(
     assert plan["operation"] == "split_compare"
     assert plan["entity"] == "bowler"
     assert plan["filters"]["bowler"] == "Jasprit Bumrah"
-    assert plan["compare_values"] == ["left-hand batter", "right-hand batter"]
+    assert plan["compare_values"] == ["LHB", "RHB"]
     assert response.tables[0].rows[0][0] == "Jasprit Bumrah"
 
 

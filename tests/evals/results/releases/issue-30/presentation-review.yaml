@@ -1,0 +1,13 @@
+benchmark: dl4nlp_cricket_analyst_supported_100
+category: split_compare
+review_method: complete semantic review of stored visible responses against their compiled plans and local database evidence
+cases:
+  analyst-split-batter-after20: {pass: true}
+  analyst-split-batter-wrist-finger: {pass: true}
+  analyst-split-bowler-power-death: {pass: true}
+  analyst-split-bowler-left-right: {pass: true}
+  analyst-split-team-middle-death: {pass: true}
+  analyst-split-batter-power-death-boundary: {pass: true}
+  analyst-split-bowler-dot-hands: {pass: true}
+  analyst-split-batter-overs15-20: {pass: true}
+  analyst-extra-split-team-power-death: {pass: true}

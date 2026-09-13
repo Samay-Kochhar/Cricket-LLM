@@ -304,6 +304,18 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("pytest", "tests/backend/test_canonical_comparisons.py", "tests/backend/test_gemini_structured_planner.py", "tests/backend/test_split_compare_executor.py"),
         ),
     ],
+    "30": [
+        Check(
+            "canonical-split-comparison-meaning",
+            "Verify split subjects, dimensions, values, metrics, filters, direction, eligibility and execution.",
+            (
+                "pytest",
+                "tests/backend/test_canonical_splits.py",
+                "tests/backend/test_split_compare_executor.py",
+                "tests/backend/test_gemini_structured_planner.py",
+            ),
+        ),
+    ],
     "27": [
         Check(
             "canonical-breakdown-meaning",

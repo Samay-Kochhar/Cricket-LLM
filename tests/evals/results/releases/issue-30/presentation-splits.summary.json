@@ -1,0 +1,85 @@
+{
+  "benchmark": "presentation-supported-100",
+  "by_category": {
+    "split_compare": {
+      "answer_correct": 6,
+      "answer_rate": 0.6666666666666666,
+      "correct": 0,
+      "rate": 0.0,
+      "supported": 9,
+      "supported_rate": 1.0,
+      "total": 9
+    }
+  },
+  "failures": [
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-after20",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-wrist-finger",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-bowler-power-death",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-bowler-left-right",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-team-middle-death",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-power-death-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-bowler-dot-hands",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-split-batter-overs15-20",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "split_compare",
+      "id": "analyst-extra-split-team-power-death",
+      "reason": "plan mismatch"
+    }
+  ],
+  "git_commit": "86357a9290ba6c21120b05767c17972dabc2e02b",
+  "gold_cases": 9,
+  "plan_exact_match": {
+    "correct": 0,
+    "rate": 0.0,
+    "total": 9
+  },
+  "predictions": 9,
+  "scored_at": "2026-09-13T09:36:30.291676+00:00",
+  "status_accuracy": {
+    "correct": 9,
+    "rate": 1.0,
+    "total": 9
+  },
+  "top_row_exact_match": {
+    "correct": 0,
+    "rate": 0.0,
+    "total": 9
+  },
+  "top_row_semantic_match": {
+    "correct": 6,
+    "rate": 0.6666666666666666,
+    "total": 9
+  }
+}

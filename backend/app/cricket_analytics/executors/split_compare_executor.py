@@ -263,6 +263,8 @@ def _sample_expression(plan: CricketQueryPlan) -> str:
 
 
 def _difference_expression(plan: CricketQueryPlan, value_a_column: str, value_b_column: str) -> str:
+    if plan.explanation_intent == "canonical cricket meaning":
+        return f"{value_a_column} - {value_b_column}"
     if plan.split_by == "balls_faced_window":
         return f"{value_b_column} - {value_a_column}"
     if plan.split_by == "batter_hand" and METRICS[plan.metric].good_direction == "asc":
@@ -271,6 +273,12 @@ def _difference_expression(plan: CricketQueryPlan, value_a_column: str, value_b_
 
 
 def _rank_expression(plan: CricketQueryPlan, difference_expression: str) -> str:
+    if plan.question_subject == "split_ranking_absolute":
+        return f"ABS({difference_expression})"
+    if plan.question_subject == "split_ranking_decrease":
+        return f"-({difference_expression})"
+    if plan.question_subject == "split_ranking_increase":
+        return difference_expression
     if plan.split_by == "phase":
         return f"ABS({difference_expression})"
     return difference_expression

@@ -543,7 +543,10 @@ class SemanticAnalyticsService:
                             table=table,
                         )
                     ],
-                    evidence_notes=self._trace_notes(trace, plan),
+                    evidence_notes=[
+                        *self._trace_notes(trace, plan),
+                        self._split_eligibility_note(plan, split_build.minimum_sample),
+                    ],
                     citations=[
                         Citation(
                             label="Semantic split comparison source",
@@ -586,7 +589,10 @@ class SemanticAnalyticsService:
                     table=table,
                 )
             ],
-            evidence_notes=self._trace_notes(trace, plan),
+            evidence_notes=[
+                *self._trace_notes(trace, plan),
+                self._split_eligibility_note(plan, split_build.minimum_sample),
+            ],
             citations=[
                 Citation(
                     label="Semantic split comparison source",
@@ -594,6 +600,25 @@ class SemanticAnalyticsService:
                     locator="analytics.deliveries_v1",
                 )
             ],
+        )
+
+    @staticmethod
+    def _split_eligibility_note(
+        plan: CricketQueryPlan, minimum_sample: int
+    ) -> EvidenceNote:
+        denominator = (
+            "legal balls"
+            if METRICS[plan.metric].denominator == "legal_balls"
+            or plan.metric in {"economy_rate", "run_rate", "wickets"}
+            else "balls"
+        )
+        return EvidenceNote(
+            title="Two-sided split eligibility",
+            detail=(
+                f"Each ranked result meets the minimum of {minimum_sample} {denominator} "
+                "on both requested sides. A named subject remains visible when one side is "
+                "below that threshold so the missing evidence can be disclosed."
+            ),
         )
 
     def _answer_tactical_recommendation(self, question: str, plan: CricketQueryPlan, trace: QueryTrace) -> QueryResponse:
@@ -1252,6 +1277,9 @@ class SemanticAnalyticsService:
                 raw_plan = raw_trace.get(field)
                 public_plan = public_trace.get(field)
                 if isinstance(raw_plan, dict) and isinstance(public_plan, dict):
+                    raw_values = raw_plan.get("compare_values")
+                    if isinstance(raw_values, list):
+                        public_plan["compare_values"] = raw_values
                     raw_filters = raw_plan.get("filters")
                     public_filters = public_plan.get("filters")
                     if isinstance(raw_filters, dict) and isinstance(public_filters, dict):
@@ -1475,18 +1503,35 @@ class SemanticAnalyticsService:
         sample_b = _display_value(top.get(split_build.sample_b_column))
         suffix = "%" if metric_unit == "percent" else ""
         is_named_comparison = plan.entity in plan.filters
+        sample_unit = (
+            "legal balls"
+            if METRICS[plan.metric].denominator == "legal_balls"
+            or plan.metric in {"economy_rate", "run_rate", "wickets"}
+            else "balls"
+        )
+        direction = (plan.question_subject or "").removeprefix("split_ranking_")
+        ranking_phrase = {
+            "increase": "largest increase",
+            "decrease": "largest decrease",
+            "absolute": "largest difference",
+        }.get(direction, "largest split")
         lead = (
             f"Within the available ODI dataset, {subject}'s {_label(plan.metric)} is"
             if is_named_comparison
-            else f"Within the available ODI dataset, {subject} has the largest split on {_label(plan.metric)}:"
+            else f"Within the available ODI dataset, {subject} has the {ranking_phrase} in {_label(plan.metric)}:"
+        )
+        interpretation = (
+            "This is a descriptive comparison, not a claim of statistical significance."
+            if is_named_comparison
+            else "The ranking compares only entities that meet the sample minimum on both sides."
         )
         return SummaryBlock(
             title="Semantic split comparison answer",
             body=(
                 f"{lead} {_label(split_build.split_a_label)} {value_a}{suffix} "
-                f"from {sample_a} balls, and {_label(split_build.split_b_label)} {value_b}{suffix} "
-                f"from {sample_b} balls; the calculated difference is {difference}{suffix}. "
-                "This is a descriptive comparison, not a claim of statistical significance."
+                f"from {sample_a} {sample_unit}, and {_label(split_build.split_b_label)} "
+                f"{value_b}{suffix} from {sample_b} {sample_unit}; the calculated difference "
+                f"is {difference}{suffix}. {interpretation}"
             ),
         )
 

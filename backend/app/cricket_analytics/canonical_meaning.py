@@ -41,7 +41,9 @@ class MeaningStatus(str, Enum):
 class CanonicalCricketMeaning(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    family: Literal["direct", "ranking", "breakdown", "matchup", "comparison"]
+    family: Literal[
+        "direct", "ranking", "breakdown", "matchup", "comparison", "split"
+    ]
     role: Literal["batter", "bowler"]
     metric: str
     filters: dict[str, object] = Field(default_factory=dict)
@@ -53,6 +55,17 @@ class CanonicalCricketMeaning(BaseModel):
     relationship: Literal["named", "bowler_ranking", "batter_ranking"] | None = None
     participants: list[str] = Field(default_factory=list)
     comparison_metrics: list[str] = Field(default_factory=list)
+    subject: Literal["batter", "bowler", "team"] | None = None
+    split_by: Literal[
+        "phase",
+        "batter_hand",
+        "bowling_style_group",
+        "balls_faced_window",
+        "over_range",
+    ] | None = None
+    compare_values: list[str] = Field(default_factory=list)
+    split_intent: Literal["descriptive", "ranking"] | None = None
+    split_direction: Literal["absolute", "increase", "decrease"] | None = None
 
 
 class MeaningResolution(BaseModel):
@@ -328,7 +341,7 @@ class CanonicalMeaningResolver:
         if deterministic.status == MeaningStatus.clarification:
             return deterministic.model_copy(update={"candidate_sources": sources})
         base = deterministic.meaning
-        if base and base.family in {"matchup", "comparison"}:
+        if base and base.family in {"matchup", "comparison", "split"}:
             # Relationship, identity and metric are already resolved from explicit
             # wording and repository participation. Surface family/role labels do
             # not get to replace that relationship with a comparison or ranking.
@@ -339,6 +352,12 @@ class CanonicalMeaningResolver:
                     continue
                 normalized = self._candidate_filter(fact)
                 for key, value in normalized.items():
+                    if base.family == "split" and key == {
+                        "phase": "phase",
+                        "batter_hand": "batter_hand",
+                        "bowling_style_group": "bowling_style",
+                    }.get(base.split_by):
+                        continue
                     if key not in meaning.filters:
                         meaning.filters[key] = value
             return MeaningResolution(
@@ -731,7 +750,11 @@ class CanonicalMeaningResolver:
             resolve_comparison,
         )
         from backend.app.cricket_analytics.canonical_matchups import resolve_matchup
+        from backend.app.cricket_analytics.canonical_splits import resolve_split
 
+        split = resolve_split(self, question, state)
+        if split is not None:
+            return split
         comparison = resolve_comparison(self, question, state)
         if comparison is not None:
             return comparison
@@ -1029,6 +1052,10 @@ class CanonicalMeaningResolver:
 
 
 def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
+    if meaning.family == "split":
+        from backend.app.cricket_analytics.canonical_splits import compile_split_meaning
+
+        return compile_split_meaning(meaning)
     if meaning.family == "comparison":
         from backend.app.cricket_analytics.canonical_comparisons import (
             compile_comparison_meaning,
