@@ -509,7 +509,7 @@ def test_pro_cannot_drop_a_flash_filter_it_does_not_understand():
     assert "delivery exclusion" in trace.meaning_resolution["clarification"]
 
 
-def test_unknown_explicit_scope_clarifies_without_pro_format_repair():
+def test_unknown_explicit_scope_returns_capability_failure_without_model_repair():
     client = ExtractionClient(
         {
             "version": 1,
@@ -524,8 +524,9 @@ def test_unknown_explicit_scope_clarifies_without_pro_format_repair():
     trace = QueryTrace("Kohli's runs in rain?")
     result = planner.plan(trace.original_user_question, trace)
     assert result.plan is None
-    assert trace.meaning_resolution["status"] == "clarification"
-    assert len(client.calls) == 1
+    assert trace.meaning_resolution["status"] == "unsupported"
+    assert trace.meaning_resolution["candidate_sources"] == ["response_policy"]
+    assert client.calls == []
 
 
 def test_generic_role_words_are_not_resolved_as_named_players():
@@ -652,7 +653,7 @@ def test_legality_and_yorker_measurement_do_not_filter_away_rate_denominator():
     assert result.plan.filters == {"bowler": "Lasith Malinga"}
 
 
-def test_chat_displays_meaning_clarification_without_running_database_query():
+def test_chat_displays_capability_failure_without_running_database_query():
     from test_gemini_structured_planner import _live_chat
 
     client = ExtractionClient(
@@ -666,10 +667,11 @@ def test_chat_displays_meaning_clarification_without_running_database_query():
         }
     )
     reply = _live_chat(client).reply("Kohli's runs in rain?", history=[])
-    assert reply.mode == "clarification"
-    assert "weather" in reply.message
+    assert reply.mode == "analysis"
+    assert "weather" in reply.message.lower()
     assert not reply.query_response.evidence_queries
-    assert len(client.calls) == 1
+    assert reply.query_response.failure_state == "unsupported_capability"
+    assert client.calls == []
 
 
 def test_conflicting_candidate_filters_do_not_silently_select_one_value():

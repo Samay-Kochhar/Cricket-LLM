@@ -31,6 +31,7 @@ from backend.app.cricket_analytics.plan_normalizer import (
 )
 from backend.app.cricket_analytics.plan_validator import validate_plan
 from backend.app.cricket_analytics.player_roles import PlayerParticipation, PlayerRoleResolver, Role
+from backend.app.cricket_analytics.response_policy import POLICY_SOURCE, apply_response_policy
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, OperationType, SortSpec, ValidationResult
 from backend.app.cricket_analytics.venue_resolution import venue_alias_matches
 from backend.app.cricket_analytics.trace import QueryTrace
@@ -206,12 +207,24 @@ class SemanticQueryPlanner:
             player_participation=self.player_roles.participation,
         )
         language_resolution = language_resolver.resolve(question, conversation_state)
-        if not language_resolver.accepts(question, conversation_state):
+        language_resolution = apply_response_policy(
+            question,
+            language_resolution,
+            available_players=self.available_players,
+            player_roles=self.player_roles,
+            conversation_state=conversation_state,
+        )
+        if language_resolution.status == MeaningStatus.not_applicable:
+            return None
+        if (
+            POLICY_SOURCE not in language_resolution.candidate_sources
+            and not language_resolver.accepts(question, conversation_state)
+        ):
             return None
 
         resolution = language_resolution
         used_gemini = self.gemini_client.is_configured() and not self.allow_dev_fallback
-        if used_gemini:
+        if used_gemini and POLICY_SOURCE not in resolution.candidate_sources:
             candidate = self._extract_meaning(question, conversation_state, trace)
             if candidate is None:
                 parse_outcome = trace.planner_attempts[-1]["parse_outcome"]

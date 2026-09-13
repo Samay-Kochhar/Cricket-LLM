@@ -74,6 +74,17 @@ def test_golden_factual_chat_contract(semantic_service: SemanticAnalyticsService
         return
 
     assert trace is not None
+    meaning_resolution = trace.get("meaning_resolution") or {}
+    if meaning_resolution.get("status") in {"unsupported", "data_limitation"}:
+        expected_failure = (
+            "data_limitation"
+            if case["status"] == "insufficient_evidence"
+            else "unsupported_capability"
+        )
+        assert response.failure_state == expected_failure
+        assert meaning_resolution.get("candidate_sources") == ["response_policy"]
+        assert response.summaries or response.insufficiencies
+        return
     plan = trace["normalized_plan"]
     assert plan["operation"] == expected_operation
     assert plan["entity"] == case["entity"]

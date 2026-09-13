@@ -1,0 +1,49 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [],
+  "families": {
+    "behavior": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    }
+  },
+  "improvements": [],
+  "model_call_reasons": {
+    "initial_meaning_extraction": 2
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 0,
+    "both_pass": 10,
+    "consistent_pairs": 10,
+    "one_pass": 0,
+    "total_pairs": 10
+  },
+  "planner_overlap": {
+    "both_fail": 0,
+    "both_pass": 20,
+    "deterministic_only": 0,
+    "production_only": 0,
+    "total": 20
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 20,
+    "rate": 1.0,
+    "total": 20
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 20,
+    "rate": 1.0,
+    "total": 20
+  },
+  "stage_accuracy": {},
+  "strict_accuracy": {
+    "passed": 20,
+    "rate": 1.0,
+    "total": 20
+  }
+}

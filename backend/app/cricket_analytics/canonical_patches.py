@@ -109,6 +109,7 @@ def interpret_meaning_patch(
     )
 
     text = _normalized_text(question)
+    metric_text = re.sub(r"\bsr\b", "strike rate", text)
     named_players = _extract_players(question, resolver.available_players)
     if named_players:
         return MeaningPatchResolution(status="not_applicable")
@@ -125,22 +126,25 @@ def interpret_meaning_patch(
             status="clarification",
             clarification=f"Changing {label} needs a complete standalone question.",
         )
-    explicit_metric, metric_role = _metric_and_role(text, None, previous.role)
+    contextual_strike_rate = bool(
+        re.search(r"\b(?:strike rate|sr)\b", metric_text)
+        and "batting strike rate" not in metric_text
+        and "bowling strike rate" not in metric_text
+    )
+    if contextual_strike_rate:
+        explicit_metric = (
+            "batting_strike_rate"
+            if previous.role == "batter"
+            else "bowling_strike_rate"
+        )
+        metric_role = previous.role
+    else:
+        explicit_metric, metric_role = _metric_and_role(
+            metric_text, None, previous.role
+        )
     sample = _explicit_sample(text, explicit_metric or previous.metric)
     limit = requested_limit_from_wording(text)
     removals = _requested_removals(text)
-
-    ambiguous_strike_rate = bool(
-        re.search(r"\b(?:strike rate|sr)\b", text)
-        and "batting strike rate" not in text
-        and "bowling strike rate" not in text
-    )
-    if ambiguous_strike_rate:
-        return MeaningPatchResolution(
-            status="clarification",
-            clarification="Should this patch use batting strike rate or bowling strike rate?",
-            clarification_options=["Batting strike rate", "Bowling strike rate"],
-        )
 
     changes_present = bool(
         explicit_filters or explicit_metric or sample or limit or removals

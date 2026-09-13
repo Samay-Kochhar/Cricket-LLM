@@ -324,6 +324,19 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "33": [
+        Check(
+            "post-interpretation-response-policy",
+            "Verify material ambiguity, capability and data failures, contextual role resolution, and ranking safeguards.",
+            (
+                "pytest",
+                "tests/backend/test_response_policy.py",
+                "tests/backend/test_canonical_patches.py",
+                "tests/backend/test_grounded_issue_completion_contract.py",
+                "tests/backend/test_odi_correctness_gate.py",
+            ),
+        ),
+    ],
     "30": [
         Check(
             "canonical-split-comparison-meaning",

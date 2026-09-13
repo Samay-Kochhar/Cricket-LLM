@@ -844,7 +844,10 @@ class ChatService:
         resolution_note: str | None,
     ) -> tuple[str, bool]:
         fallback = self._analysis_text(query_response, resolution_note)
-        if not self.gemini_client.is_configured():
+        if (
+            query_response.status != EvidenceStatus.supported
+            or not self.gemini_client.is_configured()
+        ):
             return fallback, False
         if self._requires_exact_numeric_response(query_response):
             return fallback, False

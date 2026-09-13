@@ -95,4 +95,5 @@ def test_normal_chat_does_not_fall_back_to_legacy_when_v2_is_unsupported(monkeyp
     payload = response.json()
     assert payload["mode"] == "analysis"
     assert payload["query_response"]["status"] == "unsupported"
-    assert payload["query_response"]["interpretation"]["filters"]["semantic_operation"] == "predictive_analysis"
+    assert payload["query_response"]["failure_state"] == "unsupported_capability"
+    assert "prediction" in payload["message"].lower()

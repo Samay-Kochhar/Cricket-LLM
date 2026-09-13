@@ -1174,6 +1174,41 @@ class SemanticAnalyticsService:
         plan: CricketQueryPlan | None = None,
     ) -> QueryResponse:
         meaning = trace.meaning_resolution or {}
+        if meaning.get("status") in {"unsupported", "data_limitation"}:
+            data_limitation = meaning["status"] == "data_limitation"
+            reason = str(
+                meaning.get("reason")
+                or "The requested evidence is unavailable in the current ODI analytics capability."
+            )
+            failure_state = (
+                "data_limitation" if data_limitation else "unsupported_capability"
+            )
+            title = "Data limitation" if data_limitation else "Unsupported capability"
+            trace.final_answer_metadata = {
+                "status": failure_state,
+                "reason": reason,
+            }
+            trace.log()
+            return QueryResponse(
+                status=(
+                    EvidenceStatus.insufficient_evidence
+                    if data_limitation
+                    else EvidenceStatus.unsupported
+                ),
+                failure_state=failure_state,
+                interpretation=self._interpretation(question, plan),
+                summaries=[SummaryBlock(title=title, body=reason)],
+                insufficiencies=[
+                    InsufficientEvidenceBlock(
+                        title=title,
+                        detail=reason,
+                        suggestions=[
+                            "Ask about a supported batting, bowling, matchup, split, comparison, or trend statistic."
+                        ],
+                    )
+                ],
+                evidence_notes=self._trace_notes(trace, plan),
+            )
         if meaning.get("status") == "clarification":
             question_text = str(meaning.get("clarification") or "Please clarify the requested statistic.")
             trace.final_answer_metadata = {"status": "meaning_clarification"}

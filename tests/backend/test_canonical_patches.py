@@ -216,13 +216,13 @@ def test_two_consecutive_patches_accumulate_without_replanning() -> None:
     }
 
 
-def test_ambiguous_patch_preserves_previous_meaning() -> None:
+def test_role_context_resolves_an_implicit_strike_rate_patch() -> None:
     previous = meaning("What is Bumrah's economy rate at the death?")
     result = interpret_meaning_patch(resolver(), "What about strike rate?", previous)
-    assert result.status == "clarification"
-    assert result.meaning is None
-    assert previous.metric == "economy_rate"
-    assert previous.filters["phase"] == "death"
+    assert result.status == "resolved"
+    assert result.meaning is not None
+    assert result.meaning.metric == "bowling_strike_rate"
+    assert result.meaning.filters["phase"] == "death"
 
 
 def test_split_axis_patch_requests_targeted_clarification() -> None:
