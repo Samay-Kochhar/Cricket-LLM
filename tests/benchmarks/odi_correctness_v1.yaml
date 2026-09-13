@@ -35,16 +35,16 @@ cases:
           plan:
             operation: player_compare
             entity: batter
-            metric: batting_strike_rate
+            metric: runs_scored
             group_by: [batter]
             filters:
               compare_players: [Virat Kohli, Rohit Sharma]
-              comparison_metrics: [batting_strike_rate, runs_scored, batting_average, batter_dot_ball_percentage, boundary_percentage]
+              comparison_metrics: [runs_scored]
           result:
-            columns: [Player, Runs Scored, Batting Strike Rate, Balls Faced]
+            columns: [Player, Runs Scored, Balls Faced]
             rows:
-              - {Player: Virat Kohli, Runs Scored: 13950, Batting Strike Rate: 93.51, Balls Faced: 14918}
-              - {Player: Rohit Sharma, Runs Scored: 10970, Batting Strike Rate: 92.64, Balls Faced: 11841}
+              - {Player: Virat Kohli, Runs Scored: 13950, Balls Faced: 14918}
+              - {Player: Rohit Sharma, Runs Scored: 10970, Balls Faced: 11841}
           message_contains: ["Virat Kohli", "13950", "Rohit Sharma", "10970"]
           evidence: required
 

@@ -1,6 +1,6 @@
 """Cricket participation facts, independent of question phrasing or player fame."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal, Mapping
 
 Role = Literal["batter", "bowler"]
@@ -10,6 +10,7 @@ Role = Literal["batter", "bowler"]
 class PlayerParticipation:
     balls_faced: int = 0
     balls_bowled: int = 0
+    bowling_kinds: frozenset[str] = field(default_factory=frozenset)
 
     def supports(self, role: Role) -> bool:
         return (self.balls_faced if role == "batter" else self.balls_bowled) > 0
@@ -53,3 +54,10 @@ class PlayerRoleResolver:
             and self.primary_role(pair[1]) == "bowler"
         ]
         return preferred[0] if len(preferred) == 1 else None
+
+    def shared_bowling_kind(self, players: list[str]) -> str | None:
+        facts = [self.participation.get(player) for player in players]
+        if any(fact is None for fact in facts):
+            return None
+        shared = set.intersection(*(set(fact.bowling_kinds) for fact in facts if fact))
+        return next(iter(shared)) if len(shared) == 1 else None

@@ -85,7 +85,7 @@ def test_golden_factual_chat_contract(semantic_service: SemanticAnalyticsService
 
     for key, value in dict(case.get("filters") or {}).items():
         actual = plan["filters"].get(key)
-        if key == "compare_players" and isinstance(actual, list) and isinstance(value, list):
+        if key in {"compare_players", "comparison_metrics"} and isinstance(actual, list) and isinstance(value, list):
             assert set(actual) == set(value)
             continue
         assert actual == value or actual == public_label(value)

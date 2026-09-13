@@ -297,6 +297,13 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("pytest", "tests/backend/test_canonical_matchups.py", "tests/backend/test_matchup_executor.py", "tests/backend/test_named_matchup_paraphrases.py"),
         ),
     ],
+    "29": [
+        Check(
+            "canonical-player-comparison-meaning",
+            "Verify comparison participants, shared roles, metrics, filters, clarifications and execution.",
+            ("pytest", "tests/backend/test_canonical_comparisons.py", "tests/backend/test_gemini_structured_planner.py", "tests/backend/test_split_compare_executor.py"),
+        ),
+    ],
     "27": [
         Check(
             "canonical-breakdown-meaning",

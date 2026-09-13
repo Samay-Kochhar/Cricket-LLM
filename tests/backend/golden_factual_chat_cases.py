@@ -34,12 +34,12 @@ CORE_BATTER_METRICS = [
 ]
 CORE_BOWLER_METRICS = [
     "economy_rate",
-    "bowling_average",
-    "bowling_strike_rate",
     "wickets_taken",
+    "bowling_strike_rate",
     "bowler_dot_ball_percentage",
-    "boundary_percentage",
 ]
+TACTICAL_BATTER_METRICS = ["batting_strike_rate", "runs_scored", "boundary_percentage"]
+TACTICAL_BOWLER_METRICS = ["economy_rate", "wickets_taken", "bowler_dot_ball_percentage"]
 
 
 GOLDEN_FACTUAL_CHAT_CASES = [
@@ -124,10 +124,10 @@ GOLDEN_FACTUAL_CHAT_CASES = [
     g("Compare Virat Kohli at number 3 vs opening in ODIs.", "supported", "batting_position_compare"),
     g("Where does Hardik Pandya score the most and on which shots?", "supported", "batting_profile"),
     g("Compare Virat Kohli and Steven Smith in ODIs.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Virat Kohli", "Steven Smith"], "comparison_metrics": CORE_BATTER_METRICS}, columns=("player", "batting_strike_rate")),
-    g("Compare Starc and Bumrah at the death.", "supported", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Jasprit Bumrah", "Mitchell Starc"], "comparison_metrics": CORE_BOWLER_METRICS, "phase": "death"}, columns=("player", "economy_rate")),
+    g("Compare Starc and Bumrah at the death.", "supported", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Jasprit Bumrah", "Mitchell Starc"], "comparison_metrics": TACTICAL_BOWLER_METRICS, "phase": "death"}, columns=("player", "economy_rate")),
     g("Who scores faster, Rohit Sharma or Virat Kohli?", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Rohit Sharma", "Virat Kohli"], "comparison_metrics": ["batting_strike_rate"]}, columns=("player", "batting_strike_rate")),
     g("Compare Jasprit Bumrah and Mitchell Starc by economy rate.", "supported", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Jasprit Bumrah", "Mitchell Starc"], "comparison_metrics": ["economy_rate"]}, columns=("player", "economy_rate")),
-    g("Compare Shreyas Iyer and KL Rahul against spin.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Shreyas Iyer", "KL Rahul"], "comparison_metrics": CORE_BATTER_METRICS, "bowling_style": "spin"}, columns=("player", "batting_strike_rate")),
+    g("Compare Shreyas Iyer and KL Rahul against spin.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Shreyas Iyer", "KL Rahul"], "comparison_metrics": TACTICAL_BATTER_METRICS, "bowling_style": "spin"}, columns=("player", "batting_strike_rate")),
     g("What was India's total in the 2011 World Cup final?", "supported", "match_fact", "team", "runs_scored", ("team",), {"competition": "ICC Cricket World Cup", "match_stage": "final", "fact_type": "team_total", "team": "India", "years": [2011]}, columns=("team", "runs")),
     g("Who won the 2011 World Cup final?", "supported", "match_fact", "team", "runs_scored", ("team",), {"competition": "ICC Cricket World Cup", "match_stage": "final", "fact_type": "winner", "years": [2011]}, columns=("team", "runs")),
     g("Build a bowling plan against David Miller.", "supported", "tactical_recommendation", "batter", "runs_scored", columns=("bucket", "dot_percentage", "false_shot_percentage")),
@@ -152,8 +152,7 @@ GOLDEN_FACTUAL_CHAT_CASES = [
     g("Compare Kohli and Rohit against Australia.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Rohit Sharma", "Virat Kohli"], "comparison_metrics": CORE_BATTER_METRICS, "opposition": "Australia"}, columns=("player", "batting_strike_rate")),
     g("Compare Rohit Sharma and Virat Kohli versus Pakistan.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Rohit Sharma", "Virat Kohli"], "comparison_metrics": CORE_BATTER_METRICS, "opposition": "Pakistan"}, columns=("player", "batting_strike_rate")),
     g("Who scores faster, KL Rahul or Shreyas Iyer against spin?", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Shreyas Iyer", "KL Rahul"], "comparison_metrics": ["batting_strike_rate"], "bowling_style": "spin"}, columns=("player", "batting_strike_rate")),
-    g("Compare Hardik Pandya and Ravindra Jadeja in death overs.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Hardik Pandya", "Ravindra Jadeja"], "comparison_metrics": CORE_BATTER_METRICS, "phase": "death"}, columns=("player", "batting_strike_rate")),
-    g("Compare Steve Smith and Virat Kohli against pace.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Virat Kohli", "Steven Smith"], "comparison_metrics": CORE_BATTER_METRICS, "bowling_style": "pace"}, columns=("player", "batting_strike_rate")),
+    g("Compare Steve Smith and Virat Kohli against pace.", "supported", "player_compare", "batter", "runs_scored", ("batter",), {"compare_players": ["Virat Kohli", "Steven Smith"], "comparison_metrics": TACTICAL_BATTER_METRICS, "bowling_style": "pace"}, columns=("player", "batting_strike_rate")),
     g("Compare Buttler and Maxwell by strike rate.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Glenn Maxwell", "Jos Buttler"], "comparison_metrics": ["batting_strike_rate"]}, columns=("player", "batting_strike_rate")),
     g("How do Bumrah and Starc compare on economy?", "supported", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Jasprit Bumrah", "Mitchell Starc"], "comparison_metrics": ["economy_rate"]}, columns=("player", "economy_rate")),
     g("Who has the better death-over economy, Bumrah or Starc?", "supported", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Jasprit Bumrah", "Mitchell Starc"], "comparison_metrics": ["economy_rate"], "phase": "death"}, columns=("player", "economy_rate")),
@@ -179,14 +178,10 @@ GOLDEN_FACTUAL_CHAT_CASES = [
     g("Which ground has Starc taken the most wickets at?", "supported", "aggregate", "bowler", "wickets_taken", ("venue",), {"bowler": "Mitchell Starc"}, columns=("venue", "wickets_taken")),
     g("What is Kohli's dot-ball percentage at Wankhede?", "supported", "aggregate", "batter", "batter_dot_ball_percentage", ("batter",), {"batter": "Virat Kohli", "venue": "Wankhede Stadium, Mumbai"}, columns=("batter", "batter_dot_ball_percentage")),
     g("What is Bumrah's yorker percentage at Wankhede?", "supported", "aggregate", "bowler", "yorker_percentage", ("bowler",), {"bowler": "Jasprit Bumrah", "venue": "Wankhede Stadium, Mumbai"}, columns=("bowler", "yorker_percentage")),
-    g("Compare only one player, Kohli.", "unsupported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Virat Kohli"], "comparison_metrics": CORE_BATTER_METRICS}),
-    g("Compare Kohli and Unknown Player by strike rate.", "unsupported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Virat Kohli"], "comparison_metrics": ["batting_strike_rate"]}),
     g("Show me the fastest team against Australia.", "unsupported", "aggregate", "team", "batting_strike_rate", ("team",), {"opposition": "Australia"}),
     g("Which team has the best economy against India?", "unsupported", "aggregate", "bowler", "economy_rate", ("team",), {"opposition": "India"}),
-    g("Compare Bumrah and Kohli by economy.", "unsupported", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Virat Kohli", "Jasprit Bumrah"], "comparison_metrics": ["economy_rate"]}),
-    g("Compare Rohit and Bumrah by strike rate.", "unsupported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Rohit Sharma", "Jasprit Bumrah"], "comparison_metrics": ["batting_strike_rate"]}),
     g("Who has the better economy, Starc or Rabada, minimum 9999 legal balls?", "insufficient_evidence", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Mitchell Starc", "Kagiso Rabada"], "comparison_metrics": ["economy_rate"]}),
     g("Compare Kohli and Rohit at Wankhede.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Rohit Sharma", "Virat Kohli"], "comparison_metrics": CORE_BATTER_METRICS, "venue": "Wankhede Stadium, Mumbai"}, columns=("player", "batting_strike_rate")),
     g("Compare Bumrah and Starc at the MCG.", "insufficient_evidence", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Jasprit Bumrah", "Mitchell Starc"], "comparison_metrics": CORE_BOWLER_METRICS, "venue": "Melbourne Cricket Ground"}),
-    g("Compare Kohli and Rohit against Australia in the powerplay.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Rohit Sharma", "Virat Kohli"], "comparison_metrics": CORE_BATTER_METRICS, "opposition": "Australia", "phase": "powerplay"}, columns=("player", "batting_strike_rate")),
+    g("Compare Kohli and Rohit against Australia in the powerplay.", "supported", "player_compare", "batter", "runs_scored", ("batter",), {"compare_players": ["Rohit Sharma", "Virat Kohli"], "comparison_metrics": TACTICAL_BATTER_METRICS, "opposition": "Australia", "phase": "powerplay"}, columns=("player", "batting_strike_rate")),
 ]

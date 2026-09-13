@@ -24,7 +24,10 @@ from backend.app.cricket_analytics.schemas import (
 )
 from backend.app.cricket_analytics.venue_resolution import venue_alias_matches
 from backend.app.services.player_resolution import ALIASES
-from backend.app.cricket_analytics.player_roles import PlayerParticipation, PlayerRoleResolver
+from backend.app.cricket_analytics.player_roles import (
+    PlayerParticipation,
+    PlayerRoleResolver,
+)
 
 
 class MeaningStatus(str, Enum):
@@ -38,7 +41,7 @@ class MeaningStatus(str, Enum):
 class CanonicalCricketMeaning(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    family: Literal["direct", "ranking", "breakdown", "matchup"]
+    family: Literal["direct", "ranking", "breakdown", "matchup", "comparison"]
     role: Literal["batter", "bowler"]
     metric: str
     filters: dict[str, object] = Field(default_factory=dict)
@@ -48,6 +51,8 @@ class CanonicalCricketMeaning(BaseModel):
     minimum_sample: MinimumSampleSpec | None = None
     minimum_sample_explicit: bool = False
     relationship: Literal["named", "bowler_ranking", "batter_ranking"] | None = None
+    participants: list[str] = Field(default_factory=list)
+    comparison_metrics: list[str] = Field(default_factory=list)
 
 
 class MeaningResolution(BaseModel):
@@ -89,6 +94,7 @@ _NUMBER_WORDS = {
 }
 _CANONICAL_PLAYER_ALIASES = {
     "kohli": "Virat Kohli",
+    "virat": "Virat Kohli",
     "rohit": "Rohit Sharma",
     "babar": "Babar Azam",
     "klaasen": "Heinrich Klaasen",
@@ -322,7 +328,7 @@ class CanonicalMeaningResolver:
         if deterministic.status == MeaningStatus.clarification:
             return deterministic.model_copy(update={"candidate_sources": sources})
         base = deterministic.meaning
-        if base and base.family == "matchup":
+        if base and base.family in {"matchup", "comparison"}:
             # Relationship, identity and metric are already resolved from explicit
             # wording and repository participation. Surface family/role labels do
             # not get to replace that relationship with a comparison or ranking.
@@ -335,7 +341,11 @@ class CanonicalMeaningResolver:
                 for key, value in normalized.items():
                     if key not in meaning.filters:
                         meaning.filters[key] = value
-            return MeaningResolution(status=MeaningStatus.resolved, meaning=meaning, candidate_sources=sources)
+            return MeaningResolution(
+                status=MeaningStatus.resolved,
+                meaning=meaning,
+                candidate_sources=sources,
+            )
         candidate_dimensions = (
             candidate.breakdown_dimensions or candidate.split_dimensions
         )
@@ -717,7 +727,14 @@ class CanonicalMeaningResolver:
         question: str,
         state: Mapping[str, object] | None,
     ) -> MeaningResolution:
+        from backend.app.cricket_analytics.canonical_comparisons import (
+            resolve_comparison,
+        )
         from backend.app.cricket_analytics.canonical_matchups import resolve_matchup
+
+        comparison = resolve_comparison(self, question, state)
+        if comparison is not None:
+            return comparison
         matchup = resolve_matchup(self, question, state)
         if matchup is not None:
             return matchup
@@ -837,7 +854,9 @@ class CanonicalMeaningResolver:
             metric_text = re.sub(
                 r"\bmost dot balls\b", "dot-ball percentage", metric_text
             )
-        metric, role = _metric_and_role(metric_text, player, self.player_roles.primary_role(player))
+        metric, role = _metric_and_role(
+            metric_text, player, self.player_roles.primary_role(player)
+        )
         if pressure and metric in {
             "dot_balls",
             "batter_dot_ball_percentage",
@@ -1010,8 +1029,17 @@ class CanonicalMeaningResolver:
 
 
 def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
+    if meaning.family == "comparison":
+        from backend.app.cricket_analytics.canonical_comparisons import (
+            compile_comparison_meaning,
+        )
+
+        return compile_comparison_meaning(meaning)
     if meaning.family == "matchup":
-        from backend.app.cricket_analytics.canonical_matchups import compile_matchup_meaning
+        from backend.app.cricket_analytics.canonical_matchups import (
+            compile_matchup_meaning,
+        )
+
         return compile_matchup_meaning(meaning)
     if meaning.family == "breakdown":
         return compile_breakdown_meaning(meaning)
@@ -1045,7 +1073,9 @@ def _compile_aggregate_meaning(meaning: CanonicalCricketMeaning) -> CricketQuery
     )
 
 
-def _metric_and_role(lowered: str, player: str | None, role_hint: str | None = None) -> tuple[str | None, str | None]:
+def _metric_and_role(
+    lowered: str, player: str | None, role_hint: str | None = None
+) -> tuple[str | None, str | None]:
     if "runs conceded" in lowered or "runs given away" in lowered:
         return ("economy_rate" if "per over" in lowered else "runs_conceded"), "bowler"
     if "wickets per over" in lowered:

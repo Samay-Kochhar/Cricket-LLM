@@ -1,0 +1,376 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "unseen-split-starc-hand-econ-a",
+      "errors": [
+        "plan.operation expected 'split_compare', got 'aggregate'",
+        "plan.split_by expected 'batter_hand', got None",
+        "plan.compare_values expected a list, got None"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-starc-hand-econ-b",
+      "errors": [
+        "mode expected 'analysis', got 'clarification'",
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-kohli-phase-sr-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.compare_values[0] expected 'powerplay', got 'Powerplay'",
+        "plan.compare_values[1] expected 'death', got 'Death'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-kohli-phase-sr-b",
+      "errors": [
+        "mode expected 'analysis', got 'clarification'",
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.compare_values[0] expected 'wrist_spin', got 'wrist-spin'",
+        "plan.compare_values[1] expected 'finger_spin', got 'finger-spin'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-b",
+      "errors": [
+        "mode expected 'analysis', got 'clarification'",
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-boult-hand-dots-a",
+      "errors": [
+        "mode expected 'analysis', got 'clarification'",
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-boult-hand-dots-b",
+      "errors": [
+        "mode expected 'analysis', got 'clarification'",
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-split-team-phase-runrate-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.compare_values[0] expected 'powerplay', got 'Powerplay'",
+        "plan.compare_values[1] expected 'death', got 'Death Overs'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-trend-starc-death-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "plan.filters.years is missing",
+        "plan.filters.year_mode is missing",
+        "supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-trend-rashid-wickets-b",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.filters.bowler expected 'Rashid Khan', got 'Rashid'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-ambiguous-bumrah-sr-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'",
+        "clarification_labels expected semantic set ['Batting strike rate', 'Bowling strike rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-ambiguous-best-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'",
+        "clarification_labels expected semantic set ['Runs scored', 'Batting strike rate', 'Wickets taken', 'Economy rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-a",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "result validation"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-missing-catches-a",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-missing-catches-b",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-b",
+      "errors": [
+        "failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-prediction-a",
+      "errors": [
+        "failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-weather-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-missing-captain-a",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-missing-captain-b",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-salary-b",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "meaning extraction"
+    }
+  ],
+  "families": {
+    "behavior": {
+      "passed": 7,
+      "rate": 0.35,
+      "total": 20
+    },
+    "breakdown": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "comparison": {
+      "passed": 16,
+      "rate": 1.0,
+      "total": 16
+    },
+    "context": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "direct": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "matchup": {
+      "passed": 16,
+      "rate": 1.0,
+      "total": 16
+    },
+    "ranking": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "split": {
+      "passed": 5,
+      "rate": 0.35714285714285715,
+      "total": 14
+    },
+    "trend": {
+      "passed": 8,
+      "rate": 0.8,
+      "total": 10
+    }
+  },
+  "improvements": [
+    "unseen-ambiguous-comparison-a",
+    "unseen-ambiguous-comparison-b",
+    "unseen-compare-babar-smith-a",
+    "unseen-compare-babar-smith-b",
+    "unseen-compare-bumrah-starc-a",
+    "unseen-compare-bumrah-starc-b",
+    "unseen-compare-bumrah-starc-death-a",
+    "unseen-compare-bumrah-starc-death-b",
+    "unseen-compare-buttler-klaasen-spin-a",
+    "unseen-compare-buttler-klaasen-spin-b",
+    "unseen-compare-kohli-rohit-a",
+    "unseen-compare-kohli-rohit-b",
+    "unseen-compare-rabada-shaheen-pp-a",
+    "unseen-compare-rabada-shaheen-pp-b",
+    "unseen-compare-rashid-ashwin-a",
+    "unseen-compare-rashid-ashwin-b",
+    "unseen-compare-rohit-warner-pp-a",
+    "unseen-compare-rohit-warner-pp-b",
+    "unseen-context-comparison-a",
+    "unseen-context-comparison-b"
+  ],
+  "model_call_reasons": {
+    "initial_meaning_extraction": 131,
+    "legacy_plan_generation": 27,
+    "legacy_plan_repair": 13
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 8,
+    "both_pass": 59,
+    "consistent_pairs": 67,
+    "one_pass": 8,
+    "total_pairs": 75
+  },
+  "planner_overlap": {
+    "both_fail": 8,
+    "both_pass": 66,
+    "deterministic_only": 3,
+    "production_only": 73,
+    "total": 150
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 126,
+    "rate": 0.84,
+    "total": 150
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 126,
+    "rate": 0.84,
+    "total": 150
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 110,
+      "rate": 0.990990990990991,
+      "total": 111
+    },
+    "compilation": {
+      "passed": 119,
+      "rate": 0.9153846153846154,
+      "total": 130
+    },
+    "database_evidence": {
+      "passed": 120,
+      "rate": 0.9230769230769231,
+      "total": 130
+    },
+    "extraction_contract": {
+      "passed": 108,
+      "rate": 0.8307692307692308,
+      "total": 130
+    },
+    "response_contract": {
+      "passed": 119,
+      "rate": 0.9153846153846154,
+      "total": 130
+    },
+    "validation": {
+      "passed": 121,
+      "rate": 0.9307692307692308,
+      "total": 130
+    }
+  },
+  "strict_accuracy": {
+    "passed": 126,
+    "rate": 0.84,
+    "total": 150
+  }
+}

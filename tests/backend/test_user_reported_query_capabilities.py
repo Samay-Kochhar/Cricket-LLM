@@ -336,7 +336,7 @@ def test_unqualified_batter_comparison_returns_core_metric_set(
 
     assert response.status.value == "supported"
     assert plan["minimum_sample"] is None
-    assert response.interpretation.entities == ["Virat Kohli", "Steven Smith"]
+    assert response.interpretation.entities == ["Steven Smith", "Virat Kohli"]
     assert response.tables[0].columns == [
         "Player",
         "Batting Strike Rate",
@@ -372,7 +372,7 @@ def test_live_gemini_compare_values_plan_is_repaired_to_core_comparison(
     plan = _trace(response)["normalized_plan"]
 
     assert response.status.value == "supported"
-    assert plan["filters"]["compare_players"] == ["Virat Kohli", "Steven Smith"]
+    assert plan["filters"]["compare_players"] == ["Steven Smith", "Virat Kohli"]
     assert plan["filters"]["comparison_metrics"] == [
         "batting_strike_rate",
         "runs_scored",
@@ -547,11 +547,8 @@ def test_unqualified_death_over_bowler_comparison_returns_core_metric_set(
     assert response.tables[0].columns == [
         "Player",
         "Economy Rate",
-        "Bowling Average",
-        "Bowling Strike Rate",
         "Wickets Taken",
         "Bowler Dot Ball Percentage",
-        "Boundary Percentage",
         "Legal Balls",
         "Runs Conceded",
         "Matches",

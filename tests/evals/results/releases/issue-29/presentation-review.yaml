@@ -1,0 +1,13 @@
+benchmark: dl4nlp_cricket_analyst_supported_100 (10 player-comparison cases)
+source: issue-29/presentation-comparisons.jsonl; live production planner and local ODI DuckDB
+reviewed_all_records: true
+reviewer: Codex
+numeric_note: >-
+  All ten visible answers preserve both requested players, the shared role,
+  requested filters, and the role-compatible core metrics. Differences from
+  the older exact plan keys are the canonical comparison operation and metric
+  selection introduced by issue 29; the displayed database values are valid.
+defaults:
+  semantic_capability: pass
+  safeguard_aware: pass
+overrides: {}

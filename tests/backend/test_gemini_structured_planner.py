@@ -7,6 +7,7 @@ import httpx
 
 from backend.app.config import AppConfig
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
+from backend.app.cricket_analytics.player_roles import PlayerParticipation
 from backend.app.cricket_analytics.semantic_service import SemanticAnalyticsService
 from backend.app.cricket_analytics.trace import QueryTrace
 from backend.app.db.repository import AnalyticsRepository
@@ -138,6 +139,13 @@ def _planner(client: _ScriptedStructuredClient) -> SemanticQueryPlanner:
         available_venues=["R Premadasa Stadium, Colombo"],
         available_teams=["Sri Lanka", "Australia", "India"],
         allow_dev_fallback=False,
+        player_participation={
+            "Virat Kohli": PlayerParticipation(1000, 10),
+            "Rohit Sharma": PlayerParticipation(1000, 10),
+            "Mitchell Starc": PlayerParticipation(10, 1000),
+            "Jasprit Bumrah": PlayerParticipation(10, 1000),
+            "David Miller": PlayerParticipation(1000, 0),
+        },
     )
 
 
@@ -301,9 +309,8 @@ def test_production_repairs_comparison_with_mixed_role_metrics() -> None:
     assert result.validation.valid is True
     assert result.plan is not None
     assert result.plan.filters["comparison_metrics"] == ["economy_rate", "bowling_average"]
-    assert len(client.calls) == 2
-    assert trace.planner_attempts[0]["validation_outcome"] == "invalid"
-    assert trace.planner_outcome["repair_outcome"] == "succeeded"
+    assert len(client.calls) == 1
+    assert trace.planner_outcome["repair_outcome"] == "not_needed"
 
 
 def test_production_repairs_silently_broadened_bowling_style_filter() -> None:
@@ -633,7 +640,7 @@ def test_typed_bowler_comparison_preserves_phase_and_bowler_metrics_in_live_chat
     assert reply.query_response is not None
     response = reply.query_response
     assert response.status.value == "supported"
-    assert response.interpretation.entities == ["Mitchell Starc", "Jasprit Bumrah"]
+    assert response.interpretation.entities == ["Jasprit Bumrah", "Mitchell Starc"]
     assert response.interpretation.filters["phase"] == "death"
     assert response.interpretation.filters["comparison_metrics"] == [
         "wickets_per_over",
@@ -680,11 +687,12 @@ def test_typed_materially_mixed_role_comparison_is_clearly_unsupported_in_live_c
         history=[],
     )
 
-    assert reply.mode == "analysis"
+    assert reply.mode == "clarification"
     assert reply.query_response is not None
     assert reply.query_response.status.value == "unsupported"
-    assert reply.query_response.failure_state == "unsupported_capability"
-    assert reply.query_response.summaries[0].body == reason
+    assert "batters" in reply.message
+    assert "bowlers" in reply.message
+    assert "matchup" in reply.message
 
 
 def test_production_repairs_named_phase_split_misclassified_as_aggregate() -> None:

@@ -270,7 +270,7 @@ class ChatService:
                 message=query_response.clarification_question,
                 query_response=query_response,
                 clarification_options=[
-                    ClarificationOption(label=option, prompt=f"{contextual_message} Use {option}.")
+                    ClarificationOption(label=option, message=f"{contextual_message} Use {option}.")
                     for option in query_response.clarification_options
                 ],
                 conversation_state=conversation_state,

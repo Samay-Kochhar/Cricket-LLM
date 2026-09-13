@@ -156,17 +156,23 @@ class AnalyticsRepository:
 
     def player_participation(self) -> dict[str, PlayerParticipation]:
         rows = self._fetchall("""
-            SELECT player, SUM(faced), SUM(bowled) FROM (
-                SELECT bat AS player, COUNT(*) AS faced, 0 AS bowled
+            SELECT player, SUM(faced), SUM(bowled), MAX(pace), MAX(spin) FROM (
+                SELECT bat AS player, COUNT(*) AS faced, 0 AS bowled, 0 AS pace, 0 AS spin
                 FROM analytics.deliveries_v1 GROUP BY bat
                 UNION ALL
-                SELECT bowl AS player, 0 AS faced, COUNT(*) AS bowled
+                SELECT bowl AS player, 0 AS faced, COUNT(*) AS bowled,
+                    MAX(CASE WHEN bowl_kind = 'pace bowler' THEN 1 ELSE 0 END) AS pace,
+                    MAX(CASE WHEN bowl_kind = 'spin bowler' THEN 1 ELSE 0 END) AS spin
                 FROM analytics.deliveries_v1 GROUP BY bowl
             ) GROUP BY player
         """)
         return {
-            str(player): PlayerParticipation(int(faced), int(bowled))
-            for player, faced, bowled in rows if player
+            str(player): PlayerParticipation(
+                int(faced),
+                int(bowled),
+                frozenset(kind for kind, present in (("pace", pace), ("spin", spin)) if present),
+            )
+            for player, faced, bowled, pace, spin in rows if player
         }
 
     def search_players(self, query: str, limit: int = 10) -> list[str]:
