@@ -304,6 +304,13 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ("pytest", "tests/backend/test_canonical_comparisons.py", "tests/backend/test_gemini_structured_planner.py", "tests/backend/test_split_compare_executor.py"),
         ),
     ],
+    "31": [
+        Check(
+            "canonical-annual-trend-meaning",
+            "Verify annual meaning, preserved metrics and filters, chronological execution and per-year samples.",
+            ("pytest", "tests/backend/test_canonical_trends.py", "tests/backend/test_issue_18_trends.py", "tests/backend/test_canonical_breakdowns.py"),
+        ),
+    ],
     "30": [
         Check(
             "canonical-split-comparison-meaning",

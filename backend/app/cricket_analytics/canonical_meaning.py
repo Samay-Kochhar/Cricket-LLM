@@ -42,7 +42,7 @@ class CanonicalCricketMeaning(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     family: Literal[
-        "direct", "ranking", "breakdown", "matchup", "comparison", "split"
+        "direct", "ranking", "breakdown", "matchup", "comparison", "split", "trend"
     ]
     role: Literal["batter", "bowler"]
     metric: str
@@ -341,7 +341,7 @@ class CanonicalMeaningResolver:
         if deterministic.status == MeaningStatus.clarification:
             return deterministic.model_copy(update={"candidate_sources": sources})
         base = deterministic.meaning
-        if base and base.family in {"matchup", "comparison", "split"}:
+        if base and base.family in {"matchup", "comparison", "split", "trend"}:
             # Relationship, identity and metric are already resolved from explicit
             # wording and repository participation. Surface family/role labels do
             # not get to replace that relationship with a comparison or ranking.
@@ -751,7 +751,11 @@ class CanonicalMeaningResolver:
         )
         from backend.app.cricket_analytics.canonical_matchups import resolve_matchup
         from backend.app.cricket_analytics.canonical_splits import resolve_split
+        from backend.app.cricket_analytics.canonical_trends import resolve_trend
 
+        trend = resolve_trend(self, question, state)
+        if trend is not None:
+            return trend
         split = resolve_split(self, question, state)
         if split is not None:
             return split
@@ -1002,7 +1006,7 @@ class CanonicalMeaningResolver:
         )
         if years:
             filters["years"] = years
-            if re.search(r"\b(?:since|after)\s+\d{4}", lowered):
+            if re.search(r"\b(?:(?:since|after)\s+\d{4}|from\s+\d{4}\s+onwards?)", lowered):
                 filters["year_mode"] = "after"
             elif re.search(r"\bbefore\s+\d{4}", lowered):
                 filters["year_mode"] = "before"
@@ -1052,6 +1056,10 @@ class CanonicalMeaningResolver:
 
 
 def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
+    if meaning.family == "trend":
+        from backend.app.cricket_analytics.canonical_trends import compile_trend_meaning
+
+        return compile_trend_meaning(meaning)
     if meaning.family == "split":
         from backend.app.cricket_analytics.canonical_splits import compile_split_meaning
 

@@ -1,0 +1,236 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "unseen-ambiguous-bumrah-sr-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'",
+        "clarification_labels expected semantic set ['Batting strike rate', 'Bowling strike rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-ambiguous-best-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'",
+        "clarification_labels expected semantic set ['Runs scored', 'Batting strike rate', 'Wickets taken', 'Economy rate'], got []"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-a",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "result validation"
+    },
+    {
+      "case_id": "unseen-ambiguous-player-b",
+      "errors": [
+        "mode expected 'clarification', got 'analysis'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-missing-catches-a",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-missing-catches-b",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-b",
+      "errors": [
+        "failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-prediction-a",
+      "errors": [
+        "failure_state expected 'unsupported_capability', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-weather-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "unseen-missing-captain-a",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-missing-captain-b",
+      "errors": [
+        "status expected 'insufficient_evidence', got 'unsupported'",
+        "failure_state expected 'data_limitation', got 'planner_uncertainty'"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "validation"
+    },
+    {
+      "case_id": "unseen-unsupported-salary-b",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "meaning extraction"
+    }
+  ],
+  "families": {
+    "behavior": {
+      "passed": 7,
+      "rate": 0.35,
+      "total": 20
+    },
+    "breakdown": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "comparison": {
+      "passed": 16,
+      "rate": 1.0,
+      "total": 16
+    },
+    "context": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "direct": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "matchup": {
+      "passed": 16,
+      "rate": 1.0,
+      "total": 16
+    },
+    "ranking": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "split": {
+      "passed": 14,
+      "rate": 1.0,
+      "total": 14
+    },
+    "trend": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    }
+  },
+  "improvements": [],
+  "model_call_reasons": {
+    "initial_meaning_extraction": 145,
+    "legacy_plan_generation": 13,
+    "legacy_plan_repair": 7
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 4,
+    "both_pass": 66,
+    "consistent_pairs": 70,
+    "one_pass": 5,
+    "total_pairs": 75
+  },
+  "planner_overlap": {
+    "both_fail": 0,
+    "both_pass": 69,
+    "deterministic_only": 0,
+    "production_only": 81,
+    "total": 150
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 137,
+    "rate": 0.9133333333333333,
+    "total": 150
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 137,
+    "rate": 0.9133333333333333,
+    "total": 150
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 116,
+      "rate": 0.8923076923076924,
+      "total": 130
+    },
+    "compilation": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    },
+    "database_evidence": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    },
+    "extraction_contract": {
+      "passed": 106,
+      "rate": 0.8153846153846154,
+      "total": 130
+    },
+    "response_contract": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    },
+    "validation": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    }
+  },
+  "strict_accuracy": {
+    "passed": 137,
+    "rate": 0.9133333333333333,
+    "total": 150
+  }
+}

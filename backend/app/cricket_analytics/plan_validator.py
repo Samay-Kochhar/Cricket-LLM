@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from backend.app.cricket_analytics.capabilities import validate_capability
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS, OPERATION_TYPES
@@ -194,7 +196,7 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
         errors.append("Question asks for shot but plan does not group or filter by shot_type.")
     if "length" in lowered and "length" not in grouped_or_filtered:
         errors.append("Question asks for length but plan does not group or filter by length.")
-    if "line" in lowered and "line" not in grouped_or_filtered:
+    if re.search(r"\blines?\b", lowered) and "line" not in grouped_or_filtered:
         errors.append("Question asks for line but plan does not group or filter by line.")
     if ("field zone" in lowered or "scoring zone" in lowered or "wagon" in lowered) and "field_zone" not in grouped_or_filtered:
         errors.append("Question asks for field/scoring zone but plan does not group or filter by field_zone.")
