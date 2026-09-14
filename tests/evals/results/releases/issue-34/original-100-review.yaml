@@ -1,0 +1,20 @@
+benchmark: dl4nlp_cricket_analyst_supported_100
+source: current CricAtlas production planner and local ODI DuckDB, composed from the complete capture and the post-fix leaderboard recapture
+review_method: complete Codex semantic review of stored visible responses and database evidence; no numeric equality across datasets
+reviewed_all_records: true
+defaults:
+  semantic_capability: pass
+  safeguard_aware: pass
+overrides:
+  analyst-lb-team-run-rate:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: Team aggregate rankings remain outside the supported canonical player-analysis surface and return unsupported_capability.
+  analyst-bd-klaasen-spin-lines:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: The frozen answer key requires a spin filter that the question does not state; CricAtlas conservatively preserves the unrestricted wording.
+  analyst-extra-warner-line-dots:
+    semantic_capability: fail
+    safeguard_aware: fail
+    reason: The frozen wording asks for the most dot balls as a count while the answer key expects a percentage; CricAtlas does not silently change the metric.

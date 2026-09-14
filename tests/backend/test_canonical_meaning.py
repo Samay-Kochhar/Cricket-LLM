@@ -53,7 +53,11 @@ def _resolver() -> CanonicalMeaningResolver:
     bowlers = {"Jasprit Bumrah", "Mitchell Starc", "Rashid Khan", "Lasith Malinga", "Ravichandran Ashwin"}
     return CanonicalMeaningResolver(
         available_players=EXPECTED_PLAYERS,
-        available_venues=["Lord's, London"],
+        available_venues=[
+            "Lord's, London",
+            "M Chinnaswamy Stadium, Bangalore",
+            "M Chinnaswamy Stadium, Bengaluru",
+        ],
         available_teams=["Australia"],
         player_participation={p: PlayerParticipation(0, 100) if p in bowlers else PlayerParticipation(100, 0) for p in EXPECTED_PLAYERS},
     )
@@ -205,6 +209,59 @@ def test_direct_meaning_has_no_ranking_threshold_but_ranking_gets_the_default() 
     assert ranking.meaning is not None and ranking.meaning.minimum_sample is not None
     assert ranking.meaning.minimum_sample.balls == 60
     assert ranking.meaning.minimum_sample_explicit is False
+
+
+@pytest.mark.parametrize(
+    ("question", "metric", "role", "filters"),
+    [
+        (
+            "Which spin bowler has the lowest economy rate?",
+            "economy_rate",
+            "bowler",
+            {"bowling_style": "spin"},
+        ),
+        (
+            "Which pace bowler has the highest dot-ball percentage?",
+            "bowler_dot_ball_percentage",
+            "bowler",
+            {"bowling_style": "pace"},
+        ),
+        (
+            "At Chinnaswamy, which batter has the highest boundary percentage?",
+            "boundary_percentage",
+            "batter",
+            {
+                "venues": [
+                    "M Chinnaswamy Stadium, Bangalore",
+                    "M Chinnaswamy Stadium, Bengaluru",
+                ]
+            },
+        ),
+        (
+            "Which bowler has the lowest economy rate when bowling yorkers?",
+            "economy_rate",
+            "bowler",
+            {"length": "YORKER"},
+        ),
+        (
+            "Which bowler induces the highest false-shot percentage?",
+            "false_shot_percentage",
+            "bowler",
+            {},
+        ),
+    ],
+)
+def test_ranking_preserves_cohort_and_delivery_scope(
+    question: str, metric: str, role: str, filters: dict[str, object]
+) -> None:
+    resolution = _resolver().resolve(question, None)
+
+    assert resolution.status == MeaningStatus.resolved
+    assert resolution.meaning is not None
+    assert resolution.meaning.family == "ranking"
+    assert resolution.meaning.metric == metric
+    assert resolution.meaning.role == role
+    assert resolution.meaning.filters == filters
 
 
 def test_saved_issue_26_production_capture_and_impact_replay_reconcile() -> None:

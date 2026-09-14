@@ -161,6 +161,13 @@ SCENARIOS = [
         None,
     ),
     (
+        "What is Kohli's batting strike rate in death overs?",
+        "Now use all innings phases",
+        "filter.phase",
+        "remove",
+        None,
+    ),
+    (
         "What is Kohli's batting strike rate in 2018?",
         "Use all years",
         "filter.years",

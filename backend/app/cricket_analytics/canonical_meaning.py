@@ -931,6 +931,8 @@ class CanonicalMeaningResolver:
 
         filters = _state_filters(state)
         filters.update(self._explicit_filters(question, lowered))
+        if "yorker" in lowered and metric not in {"yorker_count", "yorker_percentage"}:
+            filters["length"] = "YORKER"
         filters.pop("batter", None)
         filters.pop("bowler", None)
         if player:
@@ -1027,6 +1029,9 @@ class CanonicalMeaningResolver:
         style = requested_bowling_style(lowered)
         if style is None and re.search(r"\b(?:facing|face)\s+spin\b", lowered):
             style = "spin"
+        if style is None:
+            cohort = re.search(r"\b(pace|spin) bowlers?\b", lowered)
+            style = cohort.group(1) if cohort else None
         if style:
             filters["bowling_style"] = style
         if re.search(
@@ -1121,7 +1126,10 @@ def _metric_and_role(
         return "overs_bowled", "bowler"
     if re.search(r"\bdismiss(?:al|als|es|ed)?\b", lowered):
         return "dismissals", "batter"
-    if "yorker" in lowered:
+    if "yorker" in lowered and not re.search(
+        r"\b(?:economy|expensive|wickets?|runs? conceded|false[- ]shots?|dot[- ]balls?|boundar(?:y|ies)|strike rate|average)\b",
+        lowered,
+    ):
         count = bool(
             re.search(
                 r"\b(?:(?:most|fewest) yorkers|yorker (?:count|volume)|how many yorkers)\b",
@@ -1141,7 +1149,8 @@ def _metric_and_role(
     if "false shots per over" in lowered or "false-shot per over" in lowered:
         return "false_shots_per_over", "bowler"
     if "false shot" in lowered or "false-shot" in lowered:
-        return "false_shot_percentage", "batter"
+        bowling = bool(re.search(r"\b(?:bowlers?|induces?|forces?|causes?)\b", lowered))
+        return "false_shot_percentage", "bowler" if bowling else "batter"
     if "dot" in lowered:
         bowling = (
             bool(
@@ -1319,13 +1328,18 @@ def _state_filters(state: Mapping[str, object] | None) -> dict[str, object]:
 
 
 def _normalized_text(value: str) -> str:
-    return " ".join(
+    normalized = " ".join(
         value.lower()
         .replace("’", "'")
         .replace("–", "-")
         .replace("strike-rate", "strike rate")
         .split()
     )
+    # Expand language-level cricket abbreviations before family and metric
+    # resolution so they receive exactly the same ownership and ambiguity rules
+    # as their long forms.
+    normalized = re.sub(r"\bs\.?r\.?\b", "strike rate", normalized)
+    return normalized
 
 
 def _normalized_lookup_text(value: str) -> str:

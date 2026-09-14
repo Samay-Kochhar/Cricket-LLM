@@ -1,0 +1,140 @@
+{
+  "benchmark": "presentation-supported-100",
+  "by_category": {
+    "leaderboard": {
+      "answer_correct": 25,
+      "answer_rate": 0.9615384615384616,
+      "correct": 6,
+      "rate": 0.23076923076923078,
+      "supported": 25,
+      "supported_rate": 0.9615384615384616,
+      "total": 26
+    }
+  },
+  "failures": [
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-death-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-middle-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-yorker-volume",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-spin-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-pace-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-since-2022-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-spin-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-death-batter-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-powerplay-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-chinnaswamy-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-team-run-rate",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-lb-venue-boundary",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-lowest-batter-dots",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-highest-false-batter",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-lowest-bowling-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-false-shots-bowler",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-good-length-runs",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-short-ball-sr",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-yorker-economy",
+      "reason": "plan mismatch"
+    },
+    {
+      "category": "leaderboard",
+      "id": "analyst-extra-lb-full-wickets",
+      "reason": "plan mismatch"
+    }
+  ],
+  "git_commit": "0314d11419e109c64bcf424908a2d1f5ce18c1c0",
+  "gold_cases": 26,
+  "plan_exact_match": {
+    "correct": 6,
+    "rate": 0.23076923076923078,
+    "total": 26
+  },
+  "predictions": 26,
+  "scored_at": "2026-09-14T07:44:44.841818+00:00",
+  "status_accuracy": {
+    "correct": 25,
+    "rate": 0.9615384615384616,
+    "total": 26
+  },
+  "top_row_exact_match": {
+    "correct": 13,
+    "rate": 0.5,
+    "total": 26
+  },
+  "top_row_semantic_match": {
+    "correct": 25,
+    "rate": 0.9615384615384616,
+    "total": 26
+  }
+}

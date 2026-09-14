@@ -337,6 +337,22 @@ ISSUE_CHECKS: dict[str, list[Check]] = {
             ),
         ),
     ],
+    "34": [
+        Check(
+            "competitive-odi-release-gate",
+            "Verify every aggregate score, holdout, metamorphic, stability, safety, and evidence requirement.",
+            (
+                "pytest",
+                "tests/evals/test_competitive_release_gate.py",
+                "tests/evals/test_issue34_holdout.py",
+                "tests/evals/test_issue34_stability_pack.py",
+                "tests/evals/test_odi_metamorphic_release.py",
+                "tests/backend/test_canonical_meaning.py",
+                "tests/backend/test_canonical_patches.py",
+                "tests/backend/test_odi_correctness_gate.py",
+            ),
+        ),
+    ],
     "30": [
         Check(
             "canonical-split-comparison-meaning",

@@ -52,7 +52,8 @@ def score_review(records: list[dict[str, Any]], review: dict[str, Any]) -> dict[
         "semantic_capability": _dimension_report(correct["semantic_capability"], totals, total),
         "safeguard_aware": _dimension_report(correct["safeguard_aware"], totals, total),
         "failures": failures,
-        "review_method": "complete human review of stored visible responses; no numeric equality across datasets",
+        "review_method": review.get("review_method")
+        or "complete human review of stored visible responses; no numeric equality across datasets",
     }
 
 

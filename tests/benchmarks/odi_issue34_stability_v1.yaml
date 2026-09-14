@@ -1,0 +1,545 @@
+version: 1
+name: ODI issue 34 production stability pack
+design: One frozen unseen case per family, independently executed three times
+repetitions: 3
+cases:
+- id: stability-direct-run-1
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli's ODI run tally versus Australia?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        filters:
+          batter: Virat Kohli
+          opposition: Australia
+  stability_source_id: unseen-direct-kohli-runs-aus-a
+  repetition: 1
+- id: stability-ranking-run-1
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Ten most economical death bowlers, at least 120 legal balls.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - bowler
+        filters:
+          phase: death
+        sort:
+          by: economy_rate
+          direction: asc
+        limit: 10
+        minimum_sample:
+          legal_balls: 120
+        minimum_sample_explicit: true
+  stability_source_id: unseen-rank-death-econ-a
+  repetition: 1
+- id: stability-breakdown-run-1
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Map Kohli's run output across bowling lines.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - line
+        filters:
+          batter: Virat Kohli
+  stability_source_id: unseen-break-kohli-line-runs-a
+  repetition: 1
+- id: stability-matchup-run-1
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli versus Starc head-to-head numbers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          bowler: Mitchell Starc
+  stability_source_id: unseen-match-kohli-starc-a
+  repetition: 1
+- id: stability-comparison-run-1
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Put Kohli and Rohit side by side as ODI batters.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          compare_players:
+          - Virat Kohli
+          - Rohit Sharma
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - batting_average
+          - batter_dot_ball_percentage
+          - boundary_percentage
+  stability_source_id: unseen-compare-kohli-rohit-a
+  repetition: 1
+- id: stability-split-run-1
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: How different is Bumrah's economy in powerplay versus death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: economy_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          bowler: Jasprit Bumrah
+  stability_source_id: unseen-split-bumrah-phase-econ-a
+  repetition: 1
+- id: stability-trend-run-1
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Trace Kohli's batting strike rate by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - year
+        filters:
+          batter: Virat Kohli
+  stability_source_id: unseen-trend-kohli-sr-a
+  repetition: 1
+- id: stability-context-run-1
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Virat Kohli's batting strike rate?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Now only at the death.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          phase: death
+  stability_source_id: unseen-context-kohli-phase-a
+  repetition: 1
+- id: stability-behavior-run-1
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: What's Bumrah's strike rate?
+    expected:
+      mode: clarification
+      clarification_labels:
+      - Batting strike rate
+      - Bowling strike rate
+  stability_source_id: unseen-ambiguous-bumrah-sr-a
+  repetition: 1
+- id: stability-direct-run-2
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli's ODI run tally versus Australia?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        filters:
+          batter: Virat Kohli
+          opposition: Australia
+  stability_source_id: unseen-direct-kohli-runs-aus-a
+  repetition: 2
+- id: stability-ranking-run-2
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Ten most economical death bowlers, at least 120 legal balls.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - bowler
+        filters:
+          phase: death
+        sort:
+          by: economy_rate
+          direction: asc
+        limit: 10
+        minimum_sample:
+          legal_balls: 120
+        minimum_sample_explicit: true
+  stability_source_id: unseen-rank-death-econ-a
+  repetition: 2
+- id: stability-breakdown-run-2
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Map Kohli's run output across bowling lines.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - line
+        filters:
+          batter: Virat Kohli
+  stability_source_id: unseen-break-kohli-line-runs-a
+  repetition: 2
+- id: stability-matchup-run-2
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli versus Starc head-to-head numbers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          bowler: Mitchell Starc
+  stability_source_id: unseen-match-kohli-starc-a
+  repetition: 2
+- id: stability-comparison-run-2
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Put Kohli and Rohit side by side as ODI batters.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          compare_players:
+          - Virat Kohli
+          - Rohit Sharma
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - batting_average
+          - batter_dot_ball_percentage
+          - boundary_percentage
+  stability_source_id: unseen-compare-kohli-rohit-a
+  repetition: 2
+- id: stability-split-run-2
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: How different is Bumrah's economy in powerplay versus death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: economy_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          bowler: Jasprit Bumrah
+  stability_source_id: unseen-split-bumrah-phase-econ-a
+  repetition: 2
+- id: stability-trend-run-2
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Trace Kohli's batting strike rate by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - year
+        filters:
+          batter: Virat Kohli
+  stability_source_id: unseen-trend-kohli-sr-a
+  repetition: 2
+- id: stability-context-run-2
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Virat Kohli's batting strike rate?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Now only at the death.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          phase: death
+  stability_source_id: unseen-context-kohli-phase-a
+  repetition: 2
+- id: stability-behavior-run-2
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: What's Bumrah's strike rate?
+    expected:
+      mode: clarification
+      clarification_labels:
+      - Batting strike rate
+      - Bowling strike rate
+  stability_source_id: unseen-ambiguous-bumrah-sr-a
+  repetition: 2
+- id: stability-direct-run-3
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli's ODI run tally versus Australia?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        filters:
+          batter: Virat Kohli
+          opposition: Australia
+  stability_source_id: unseen-direct-kohli-runs-aus-a
+  repetition: 3
+- id: stability-ranking-run-3
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Ten most economical death bowlers, at least 120 legal balls.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: bowler
+        metric: economy_rate
+        group_by:
+        - bowler
+        filters:
+          phase: death
+        sort:
+          by: economy_rate
+          direction: asc
+        limit: 10
+        minimum_sample:
+          legal_balls: 120
+        minimum_sample_explicit: true
+  stability_source_id: unseen-rank-death-econ-a
+  repetition: 3
+- id: stability-breakdown-run-3
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Map Kohli's run output across bowling lines.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: runs_scored
+        group_by:
+        - line
+        filters:
+          batter: Virat Kohli
+  stability_source_id: unseen-break-kohli-line-runs-a
+  repetition: 3
+- id: stability-matchup-run-3
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Kohli versus Starc head-to-head numbers?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: matchup
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          bowler: Mitchell Starc
+  stability_source_id: unseen-match-kohli-starc-a
+  repetition: 3
+- id: stability-comparison-run-3
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Put Kohli and Rohit side by side as ODI batters.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: player_compare
+        entity: batter
+        filters:
+          compare_players:
+          - Virat Kohli
+          - Rohit Sharma
+          comparison_metrics:
+          - runs_scored
+          - batting_strike_rate
+          - batting_average
+          - batter_dot_ball_percentage
+          - boundary_percentage
+  stability_source_id: unseen-compare-kohli-rohit-a
+  repetition: 3
+- id: stability-split-run-3
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: How different is Bumrah's economy in powerplay versus death?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: split_compare
+        entity: bowler
+        metric: economy_rate
+        split_by: phase
+        compare_values:
+        - powerplay
+        - death
+        filters:
+          bowler: Jasprit Bumrah
+  stability_source_id: unseen-split-bumrah-phase-econ-a
+  repetition: 3
+- id: stability-trend-run-3
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Trace Kohli's batting strike rate by year.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        group_by:
+        - year
+        filters:
+          batter: Virat Kohli
+  stability_source_id: unseen-trend-kohli-sr-a
+  repetition: 3
+- id: stability-context-run-3
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Virat Kohli's batting strike rate?
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+  - prompt: Now only at the death.
+    expected:
+      mode: analysis
+      status: supported
+      evidence: required
+      plan:
+        operation: aggregate
+        entity: batter
+        metric: batting_strike_rate
+        filters:
+          batter: Virat Kohli
+          phase: death
+  stability_source_id: unseen-context-kohli-phase-a
+  repetition: 3
+- id: stability-behavior-run-3
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: What's Bumrah's strike rate?
+    expected:
+      mode: clarification
+      clarification_labels:
+      - Batting strike rate
+      - Bowling strike rate
+  stability_source_id: unseen-ambiguous-bumrah-sr-a
+  repetition: 3

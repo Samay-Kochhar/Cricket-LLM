@@ -1,0 +1,96 @@
+{
+  "release": "issue-34-competitive-odi-release",
+  "original": {
+    "baseline_semantic_capability": {"correct": 77, "total": 100},
+    "semantic_capability": {"correct": 97, "total": 100},
+    "safeguard_aware": {"correct": 97, "total": 100},
+    "critical_errors": []
+  },
+  "unseen": {
+    "baseline_strict_accuracy": {"passed": 42, "total": 150},
+    "strict_accuracy": {"passed": 150, "total": 150},
+    "families": {
+      "direct": {"passed": 20, "total": 20},
+      "ranking": {"passed": 24, "total": 24},
+      "breakdown": {"passed": 20, "total": 20},
+      "matchup": {"passed": 16, "total": 16},
+      "comparison": {"passed": 16, "total": 16},
+      "split": {"passed": 14, "total": 14},
+      "trend": {"passed": 10, "total": 10},
+      "context": {"passed": 10, "total": 10},
+      "behavior": {"passed": 20, "total": 20}
+    },
+    "paraphrase_pair_consistency": {"both_pass": 75, "total_pairs": 75},
+    "critical_errors": []
+  },
+  "holdout": {
+    "first_run_strict_accuracy": {"passed": 16, "total": 20},
+    "semantic_capability": {"correct": 19, "total": 20},
+    "safeguard_aware": {"correct": 19, "total": 20},
+    "critical_errors": [],
+    "frozen_sha256": "d783a9e0f323345b76ad560a5857a9f4eadb2fb0688be6aa78baa03ef0b32b38"
+  },
+  "metamorphic": {
+    "covered_transformations": [
+      "aliases",
+      "synonyms",
+      "abbreviations",
+      "punctuation",
+      "word_order",
+      "active_passive_voice",
+      "explicit_over_ranges",
+      "participant_order",
+      "filter_placement",
+      "equivalent_temporal_language"
+    ],
+    "equivalent": {"passed": 10, "total": 10},
+    "distinct": {"passed": 4, "total": 4},
+    "lost_constraints": [],
+    "critical_errors": []
+  },
+  "stability": {
+    "minimum_repetitions": 3,
+    "cases": 9,
+    "captured_outputs": 27,
+    "strict_accuracy": {"passed": 27, "total": 27},
+    "replayable_offline": true,
+    "observed_strict_variance_cases": []
+  },
+  "stats_desk": {
+    "semantic_score": 96,
+    "safeguard_aware_score": 87,
+    "queried_again": false,
+    "saved_response_sha256": "287e845ecd1f8876c725a835338d78dda662052c95fd5b6c5d43a22cc5034a29"
+  },
+  "full_suite": {
+    "passed": true,
+    "tests_passed": 960,
+    "command": "python -m pytest tests -q"
+  },
+  "approved_ui": {
+    "unchanged": true,
+    "frontend_build_passed": true,
+    "evidence": "No frontend or Streamlit files changed; the Next.js production build passed."
+  },
+  "runtime": {
+    "planner_model": "gemini-2.5-flash",
+    "python": "3.12.13",
+    "duckdb": "1.5.3",
+    "pydantic": "2.13.4",
+    "fastapi": "0.136.3"
+  },
+  "artifact_paths": [
+    "tests/evals/results/releases/issue-34/original-100-final.jsonl",
+    "tests/evals/results/releases/issue-34/original-100-semantic.summary.json",
+    "tests/evals/results/releases/issue-34/original-100-review.yaml",
+    "tests/evals/results/releases/issue-34/holdout-production.jsonl",
+    "tests/evals/results/releases/issue-34/holdout-production.summary.json",
+    "tests/evals/results/releases/issue-34/holdout-semantic.summary.json",
+    "tests/evals/results/releases/issue-34/metamorphic.summary.json",
+    "tests/evals/results/releases/issue-34/stability-production.jsonl",
+    "tests/evals/results/releases/issue-34/stability-production.summary.json",
+    "tests/evals/results/releases/issue-34/stability-offline-replay.summary.json",
+    "tests/evals/results/releases/issue-34/unseen-150-final-replay.jsonl",
+    "tests/evals/results/releases/issue-34/unseen-150-final-replay.summary.json"
+  ]
+}

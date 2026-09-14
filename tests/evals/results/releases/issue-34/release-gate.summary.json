@@ -1,0 +1,187 @@
+{
+  "checks": [
+    {
+      "actual": "97/100",
+      "id": "original_semantic",
+      "passed": true,
+      "required": "> 96/100 and >= 97/100"
+    },
+    {
+      "actual": "97/100",
+      "id": "original_safeguards",
+      "passed": true,
+      "required": ">= 95/100"
+    },
+    {
+      "actual": "150/150",
+      "id": "unseen_strict",
+      "passed": true,
+      "required": ">= 135/150"
+    },
+    {
+      "actual": "20/20",
+      "id": "unseen_family_direct",
+      "passed": true,
+      "required": ">= 18/20"
+    },
+    {
+      "actual": "24/24",
+      "id": "unseen_family_ranking",
+      "passed": true,
+      "required": ">= 22/24"
+    },
+    {
+      "actual": "20/20",
+      "id": "unseen_family_breakdown",
+      "passed": true,
+      "required": ">= 18/20"
+    },
+    {
+      "actual": "16/16",
+      "id": "unseen_family_matchup",
+      "passed": true,
+      "required": ">= 15/16"
+    },
+    {
+      "actual": "16/16",
+      "id": "unseen_family_comparison",
+      "passed": true,
+      "required": ">= 15/16"
+    },
+    {
+      "actual": "14/14",
+      "id": "unseen_family_split",
+      "passed": true,
+      "required": ">= 13/14"
+    },
+    {
+      "actual": "10/10",
+      "id": "unseen_family_trend",
+      "passed": true,
+      "required": ">= 9/10"
+    },
+    {
+      "actual": "10/10",
+      "id": "unseen_family_context",
+      "passed": true,
+      "required": ">= 9/10"
+    },
+    {
+      "actual": "20/20",
+      "id": "unseen_family_behavior",
+      "passed": true,
+      "required": ">= 18/20"
+    },
+    {
+      "actual": "75/75",
+      "id": "unseen_paraphrase_pairs",
+      "passed": true,
+      "required": ">= 68/75"
+    },
+    {
+      "actual": "19/20",
+      "id": "untouched_holdout",
+      "passed": true,
+      "required": ">= 90%"
+    },
+    {
+      "actual": {
+        "covered": [
+          "abbreviations",
+          "active_passive_voice",
+          "aliases",
+          "equivalent_temporal_language",
+          "explicit_over_ranges",
+          "filter_placement",
+          "participant_order",
+          "punctuation",
+          "synonyms",
+          "word_order"
+        ],
+        "missing": []
+      },
+      "id": "metamorphic_coverage",
+      "passed": true,
+      "required": [
+        "abbreviations",
+        "active_passive_voice",
+        "aliases",
+        "equivalent_temporal_language",
+        "explicit_over_ranges",
+        "filter_placement",
+        "participant_order",
+        "punctuation",
+        "synonyms",
+        "word_order"
+      ]
+    },
+    {
+      "actual": "10/10",
+      "id": "metamorphic_equivalence",
+      "passed": true,
+      "required": "all equivalent meanings pass"
+    },
+    {
+      "actual": "4/4",
+      "id": "metamorphic_distinctions",
+      "passed": true,
+      "required": "all materially different meanings remain distinct"
+    },
+    {
+      "actual": [],
+      "id": "metamorphic_constraints",
+      "passed": true,
+      "required": "no lost metrics or filters"
+    },
+    {
+      "actual": [],
+      "id": "critical_errors",
+      "passed": true,
+      "required": "zero"
+    },
+    {
+      "actual": {
+        "captured_outputs": 27,
+        "cases": 9,
+        "minimum_repetitions": 3,
+        "replayable_offline": true
+      },
+      "id": "production_stability",
+      "passed": true,
+      "required": "at least 3 runs per case with replayable captures"
+    },
+    {
+      "actual": false,
+      "id": "saved_stats_desk_only",
+      "passed": true,
+      "required": false
+    },
+    {
+      "actual": {
+        "command": "python -m pytest tests -q",
+        "passed": true,
+        "tests_passed": 960
+      },
+      "id": "complete_test_suite",
+      "passed": true,
+      "required": {
+        "passed": true
+      }
+    },
+    {
+      "actual": {
+        "evidence": "No frontend or Streamlit files changed; the Next.js production build passed.",
+        "frontend_build_passed": true,
+        "unchanged": true
+      },
+      "id": "approved_ui_unchanged",
+      "passed": true,
+      "required": {
+        "unchanged": true
+      }
+    }
+  ],
+  "failed_checks": [],
+  "gate": "issue-34-competitive-odi-release",
+  "passed": true
+}

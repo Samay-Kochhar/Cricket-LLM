@@ -1,0 +1,129 @@
+version: 1
+name: ODI issue 34 untouched holdout
+frozen_at: '2026-09-14'
+design: 20 independently written questions frozen before their first production execution; results are not used for implementation tuning
+cases:
+- id: holdout-direct-smith-england-runs
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Steven Smith's ODI runs against England?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: batter, metric: runs_scored, filters: {batter: Steven Smith, opposition: England}}}
+- id: holdout-direct-boult-opening-economy
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: What is Trent Boult's economy during the opening ten overs?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: bowler, metric: economy_rate, filters: {bowler: Trent Boult, phase: powerplay}}}
+- id: holdout-direct-maxwell-death-boundaries
+  family: direct
+  planner_mode: production_live
+  turns:
+  - prompt: Glenn Maxwell boundary percentage after over 40?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: batter, metric: boundary_percentage, filters: {batter: Glenn Maxwell, phase: death}}}
+- id: holdout-ranking-controlled-batters
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: List the six batters with the lowest false-shot percentage, minimum 120 balls.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: batter, metric: false_shot_percentage, limit: 6, minimum_sample: {balls: 120}, minimum_sample_explicit: true, sort: {by: false_shot_percentage, direction: asc}}}
+- id: holdout-ranking-middle-economy
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Four most economical bowlers in overs 11-40 with at least 300 legal deliveries?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: bowler, metric: economy_rate, filters: {phase: middle}, limit: 4, minimum_sample: {legal_balls: 300}, minimum_sample_explicit: true, sort: {by: economy_rate, direction: asc}}}
+- id: holdout-ranking-wickets-india
+  family: ranking
+  planner_mode: production_live
+  turns:
+  - prompt: Which five bowlers have taken the most ODI wickets against India?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: bowler, metric: wickets_taken, filters: {opposition: India}, limit: 5, sort: {by: wickets_taken, direction: desc}}}
+- id: holdout-breakdown-babar-shots
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Break Babar Azam's run total down by shot type.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: batter, metric: runs_scored, group_by: [shot_type], filters: {batter: Babar Azam}}}
+- id: holdout-breakdown-shaheen-phase
+  family: breakdown
+  planner_mode: production_live
+  turns:
+  - prompt: Show Shaheen Shah Afridi's wickets across innings phases.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: bowler, metric: wickets_taken, group_by: [phase], filters: {bowler: Shaheen Shah Afridi}}}
+- id: holdout-matchup-warner-ashwin
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: How has David Warner scored against Ravichandran Ashwin in ODIs?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: matchup, entity: batter, metric: batting_strike_rate, filters: {batter: David Warner, bowler: Ravichandran Ashwin}}}
+- id: holdout-matchup-rohit-dismissers
+  family: matchup
+  planner_mode: production_live
+  turns:
+  - prompt: Which bowlers have dismissed Rohit Sharma most often?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: matchup, entity: bowler, metric: dismissals, filters: {batter: Rohit Sharma}}}
+- id: holdout-comparison-babar-smith
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Babar Azam and Steven Smith as ODI batters.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: player_compare, entity: batter, filters: {compare_players: [Babar Azam, Steven Smith]}}}
+- id: holdout-comparison-boult-rabada-death
+  family: comparison
+  planner_mode: production_live
+  turns:
+  - prompt: At the death, contrast Trent Boult's bowling with Kagiso Rabada's.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: player_compare, entity: bowler, filters: {phase: death, compare_players: [Trent Boult, Kagiso Rabada]}}}
+- id: holdout-split-kohli-hands
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Compare Virat Kohli's strike rate against left-arm versus right-arm bowlers.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: split_compare, entity: batter, metric: batting_strike_rate, split_by: bowling_style_group, compare_values: [left_arm, right_arm], filters: {batter: Virat Kohli}}}
+- id: holdout-split-starc-phases
+  family: split
+  planner_mode: production_live
+  turns:
+  - prompt: Mitchell Starc economy in the powerplay compared with the death?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: split_compare, entity: bowler, metric: economy_rate, split_by: phase, compare_values: [powerplay, death], filters: {bowler: Mitchell Starc}}}
+- id: holdout-trend-warner-boundaries
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Trace David Warner's boundary percentage year by year.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: batter, metric: boundary_percentage, group_by: [year], filters: {batter: David Warner}}}
+- id: holdout-trend-rabada-powerplay
+  family: trend
+  planner_mode: production_live
+  turns:
+  - prompt: Kagiso Rabada's annual powerplay economy since 2019?
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: bowler, metric: economy_rate, group_by: [year], filters: {bowler: Kagiso Rabada, phase: powerplay, years: [2019], year_mode: after}}}
+- id: holdout-context-venue
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: What is Virat Kohli's batting strike rate?
+    expected: {mode: analysis, status: supported, evidence: required}
+  - prompt: Only against Australia at Lord's.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: batter, metric: batting_strike_rate, filters: {batter: Virat Kohli, opposition: Australia, venue: "Lord's, London"}}}
+- id: holdout-context-remove-filter
+  family: context
+  planner_mode: production_live
+  turns:
+  - prompt: Show Jasprit Bumrah's economy in the powerplay.
+    expected: {mode: analysis, status: supported, evidence: required}
+  - prompt: Now use all innings phases.
+    expected: {mode: analysis, status: supported, evidence: required, plan: {operation: aggregate, entity: bowler, metric: economy_rate, filters: {bowler: Jasprit Bumrah}}}
+- id: holdout-behavior-ambiguous-sr
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Mohammed Shami's strike rate?
+    expected: {mode: clarification, clarification_labels: [Batting strike rate, Bowling strike rate]}
+- id: holdout-behavior-unsupported-contract
+  family: behavior
+  planner_mode: production_live
+  turns:
+  - prompt: Rank ODI players by the value of their endorsement contracts.
+    expected: {mode: analysis, status: unsupported, failure_state: unsupported_capability}

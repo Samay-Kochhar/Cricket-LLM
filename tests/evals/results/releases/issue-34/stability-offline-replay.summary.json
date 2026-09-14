@@ -1,0 +1,120 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI issue 34 production stability pack",
+  "benchmark_version": 1,
+  "failures": [],
+  "families": {
+    "behavior": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "breakdown": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "comparison": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "context": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "direct": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "matchup": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "ranking": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "split": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "trend": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    }
+  },
+  "improvements": [],
+  "model_call_reasons": {
+    "initial_meaning_extraction": 24
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 0,
+    "both_pass": 0,
+    "consistent_pairs": 0,
+    "one_pass": 0,
+    "total_pairs": 0
+  },
+  "planner_overlap": {
+    "both_fail": 0,
+    "both_pass": 18,
+    "deterministic_only": 0,
+    "production_only": 9,
+    "total": 27
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 27,
+    "rate": 1.0,
+    "total": 27
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 27,
+    "rate": 1.0,
+    "total": 27
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 21,
+      "rate": 0.875,
+      "total": 24
+    },
+    "compilation": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "database_evidence": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "extraction_contract": {
+      "passed": 21,
+      "rate": 1.0,
+      "total": 21
+    },
+    "response_contract": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "validation": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    }
+  },
+  "strict_accuracy": {
+    "passed": 27,
+    "rate": 1.0,
+    "total": 27
+  }
+}

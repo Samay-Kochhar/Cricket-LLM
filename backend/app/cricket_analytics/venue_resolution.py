@@ -18,6 +18,10 @@ VENUE_ALIASES = {
 def venue_alias_matches(message: str, available_venues: list[str] | tuple[str, ...]) -> list[str]:
     lowered = message.lower()
     available = set(available_venues)
+    if "chinnaswamy" in lowered:
+        matches = [venue for venue in available_venues if "chinnaswamy" in venue.lower()]
+        if matches:
+            return matches
     for alias, canonical in VENUE_ALIASES.items():
         if alias in lowered and (not available or canonical in available):
             return [canonical]

@@ -1,0 +1,26 @@
+{
+  "benchmark": "ODI issue 34 untouched holdout",
+  "first_run_strict_accuracy": {"passed": 16, "total": 20, "rate": 0.8},
+  "semantic_capability": {"correct": 19, "total": 20, "rate": 0.95},
+  "safeguard_aware": {"correct": 19, "total": 20, "rate": 0.95},
+  "critical_errors": [],
+  "review_method": "Complete Codex semantic review of the first-run stored outputs; the questions remained hash-locked and were not rewritten",
+  "semantic_failure": {
+    "case_id": "holdout-context-remove-filter",
+    "reason": "The phrase 'all innings phases' did not remove the existing phase filter on the first run."
+  },
+  "strict_only_mismatches": [
+    {
+      "case_id": "holdout-matchup-rohit-dismissers",
+      "reason": "The product correctly used bowler-credit wickets; the holdout expected the batter-dismissal metric and matchup operation."
+    },
+    {
+      "case_id": "holdout-split-kohli-hands",
+      "reason": "Left/right-arm bowling is not a stored supported split dimension, so the product conservatively returned insufficient evidence."
+    },
+    {
+      "case_id": "holdout-context-venue",
+      "reason": "The requested combined player/opposition/venue slice has no rows, so the product correctly returned insufficient evidence."
+    }
+  ]
+}

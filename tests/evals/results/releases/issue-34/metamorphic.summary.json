@@ -1,0 +1,122 @@
+{
+  "covered_transformations": [
+    "abbreviations",
+    "active_passive_voice",
+    "aliases",
+    "equivalent_temporal_language",
+    "explicit_over_ranges",
+    "filter_placement",
+    "participant_order",
+    "punctuation",
+    "synonyms",
+    "word_order"
+  ],
+  "critical_errors": [],
+  "distinct": {
+    "passed": 4,
+    "results": [
+      {
+        "id": "metric",
+        "left": "Virat Kohli runs?",
+        "passed": true,
+        "right": "Virat Kohli batting strike rate?"
+      },
+      {
+        "id": "count-rate",
+        "left": "Virat Kohli dot-ball count?",
+        "passed": true,
+        "right": "Virat Kohli dot-ball percentage?"
+      },
+      {
+        "id": "ownership",
+        "left": "Jasprit Bumrah batting strike rate?",
+        "passed": true,
+        "right": "Jasprit Bumrah bowling strike rate?"
+      },
+      {
+        "id": "sort-direction",
+        "left": "Highest batting strike rate with at least 60 balls?",
+        "passed": true,
+        "right": "Lowest batting strike rate with at least 60 balls?"
+      }
+    ],
+    "total": 4
+  },
+  "equivalent": {
+    "passed": 10,
+    "results": [
+      {
+        "base": "Virat Kohli ODI runs?",
+        "id": "alias",
+        "passed": true,
+        "transformation": "aliases",
+        "variant": "Kohli ODI runs?"
+      },
+      {
+        "base": "Virat Kohli runs?",
+        "id": "synonym",
+        "passed": true,
+        "transformation": "synonyms",
+        "variant": "Virat Kohli run tally?"
+      },
+      {
+        "base": "Jasprit Bumrah bowling strike rate?",
+        "id": "abbreviation",
+        "passed": true,
+        "transformation": "abbreviations",
+        "variant": "Bumrah bowling SR?"
+      },
+      {
+        "base": "Virat Kohli runs at Lord's?",
+        "id": "punctuation",
+        "passed": true,
+        "transformation": "punctuation",
+        "variant": "Virat Kohli runs \u2014 at Lord\u2019s?"
+      },
+      {
+        "base": "Virat Kohli runs against Australia?",
+        "id": "word-order",
+        "passed": true,
+        "transformation": "word_order",
+        "variant": "Against Australia, how many runs has Virat Kohli scored?"
+      },
+      {
+        "base": "How many wickets has Jasprit Bumrah taken?",
+        "id": "voice",
+        "passed": true,
+        "transformation": "active_passive_voice",
+        "variant": "Wickets taken by Jasprit Bumrah?"
+      },
+      {
+        "base": "Rohit Sharma batting strike rate in the powerplay?",
+        "id": "over-range",
+        "passed": true,
+        "transformation": "explicit_over_ranges",
+        "variant": "Rohit Sharma batting strike rate in overs 1-10?"
+      },
+      {
+        "base": "Compare Virat Kohli and Rohit Sharma as batters.",
+        "id": "participant-order",
+        "passed": true,
+        "transformation": "participant_order",
+        "variant": "Compare Rohit Sharma and Virat Kohli as batters."
+      },
+      {
+        "base": "Virat Kohli runs in the powerplay versus Australia?",
+        "id": "filter-placement",
+        "passed": true,
+        "transformation": "filter_placement",
+        "variant": "Against Australia in overs 1-10, Virat Kohli run tally?"
+      },
+      {
+        "base": "Mitchell Starc annual economy at the death since 2018?",
+        "id": "temporal",
+        "passed": true,
+        "transformation": "equivalent_temporal_language",
+        "variant": "From 2018 onward, Mitchell Starc death-over economy year by year?"
+      }
+    ],
+    "total": 10
+  },
+  "lost_constraints": []
+}

@@ -313,7 +313,7 @@ def _looks_contextual(text: str) -> bool:
 def _requested_removals(text: str) -> list[str]:
     removals: list[str] = []
     patterns = {
-        "phase": r"\b(?:all|any) phases?\b|\b(?:overall|remove|drop|without) (?:the )?phase\b",
+        "phase": r"\b(?:all|any) (?:innings )?phases?\b|\b(?:overall|remove|drop|without) (?:the )?phase\b",
         "venue": r"\b(?:any|all) venues?\b|\b(?:regardless of|remove|drop|without) (?:the )?venue\b",
         "years": r"\b(?:all years|career(?: totals?)?)\b|\b(?:remove|drop|without) (?:the )?year(?: filter)?\b",
         "opposition": r"\b(?:any|all) (?:opposition|opponents?|teams?)\b|\b(?:remove|drop|without) (?:the )?opposition\b",

@@ -1,0 +1,162 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI issue 34 untouched holdout",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "holdout-matchup-rohit-dismissers",
+      "errors": [
+        "plan.operation expected 'matchup', got 'aggregate'",
+        "plan.metric expected 'dismissals', got 'wickets_taken'"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "holdout-split-kohli-hands",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "plan.split_by expected 'bowling_style_group', got 'bowler_hand'",
+        "plan.compare_values[0] expected 'left_arm', got 'left-arm'",
+        "plan.compare_values[1] expected 'right_arm', got 'right-arm'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "meaning extraction"
+    },
+    {
+      "case_id": "holdout-context-venue",
+      "errors": [
+        "status expected 'supported', got 'insufficient_evidence'",
+        "supported answer has no database evidence query"
+      ],
+      "family": "context",
+      "first_failing_stage": "conversation-state application"
+    },
+    {
+      "case_id": "holdout-context-remove-filter",
+      "errors": [
+        "plan.entity expected 'bowler', got 'batter'",
+        "plan.metric expected 'economy_rate', got 'batting_strike_rate'",
+        "plan.filters.bowler is missing"
+      ],
+      "family": "context",
+      "first_failing_stage": "conversation-state application"
+    }
+  ],
+  "families": {
+    "behavior": {
+      "passed": 2,
+      "rate": 1.0,
+      "total": 2
+    },
+    "breakdown": {
+      "passed": 2,
+      "rate": 1.0,
+      "total": 2
+    },
+    "comparison": {
+      "passed": 2,
+      "rate": 1.0,
+      "total": 2
+    },
+    "context": {
+      "passed": 0,
+      "rate": 0.0,
+      "total": 2
+    },
+    "direct": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "matchup": {
+      "passed": 1,
+      "rate": 0.5,
+      "total": 2
+    },
+    "ranking": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "split": {
+      "passed": 1,
+      "rate": 0.5,
+      "total": 2
+    },
+    "trend": {
+      "passed": 2,
+      "rate": 1.0,
+      "total": 2
+    }
+  },
+  "improvements": [],
+  "model_call_reasons": {
+    "initial_meaning_extraction": 17,
+    "legacy_plan_generation": 3
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 0,
+    "both_pass": 0,
+    "consistent_pairs": 0,
+    "one_pass": 0,
+    "total_pairs": 0
+  },
+  "planner_overlap": {
+    "both_fail": 3,
+    "both_pass": 10,
+    "deterministic_only": 0,
+    "production_only": 7,
+    "total": 20
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 16,
+    "rate": 0.8,
+    "total": 20
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 16,
+    "rate": 0.8,
+    "total": 20
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 14,
+      "rate": 0.875,
+      "total": 16
+    },
+    "compilation": {
+      "passed": 15,
+      "rate": 0.8333333333333334,
+      "total": 18
+    },
+    "database_evidence": {
+      "passed": 16,
+      "rate": 0.8888888888888888,
+      "total": 18
+    },
+    "extraction_contract": {
+      "passed": 16,
+      "rate": 0.9411764705882353,
+      "total": 17
+    },
+    "response_contract": {
+      "passed": 14,
+      "rate": 0.7777777777777778,
+      "total": 18
+    },
+    "validation": {
+      "passed": 18,
+      "rate": 1.0,
+      "total": 18
+    }
+  },
+  "strict_accuracy": {
+    "passed": 16,
+    "rate": 0.8,
+    "total": 20
+  }
+}

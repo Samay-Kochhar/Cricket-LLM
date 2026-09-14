@@ -1,0 +1,116 @@
+{
+  "benchmark": "dl4nlp_cricket_analyst_supported_100",
+  "failures": {
+    "safeguard_aware": [
+      {
+        "category": "leaderboard",
+        "id": "analyst-lb-team-run-rate",
+        "reason": "Team aggregate rankings remain outside the supported canonical player-analysis surface and return unsupported_capability."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-klaasen-spin-lines",
+        "reason": "The frozen answer key requires a spin filter that the question does not state; CricAtlas conservatively preserves the unrestricted wording."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-extra-warner-line-dots",
+        "reason": "The frozen wording asks for the most dot balls as a count while the answer key expects a percentage; CricAtlas does not silently change the metric."
+      }
+    ],
+    "semantic_capability": [
+      {
+        "category": "leaderboard",
+        "id": "analyst-lb-team-run-rate",
+        "reason": "Team aggregate rankings remain outside the supported canonical player-analysis surface and return unsupported_capability."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-bd-klaasen-spin-lines",
+        "reason": "The frozen answer key requires a spin filter that the question does not state; CricAtlas conservatively preserves the unrestricted wording."
+      },
+      {
+        "category": "breakdown",
+        "id": "analyst-extra-warner-line-dots",
+        "reason": "The frozen wording asks for the most dot balls as a count while the answer key expects a percentage; CricAtlas does not silently change the metric."
+      }
+    ]
+  },
+  "records": 100,
+  "review_method": "complete Codex semantic review of stored visible responses and database evidence; no numeric equality across datasets",
+  "safeguard_aware": {
+    "by_category": {
+      "breakdown": {
+        "correct": 26,
+        "rate": 0.9285714285714286,
+        "total": 28
+      },
+      "leaderboard": {
+        "correct": 25,
+        "rate": 0.9615384615384616,
+        "total": 26
+      },
+      "matchup": {
+        "correct": 8,
+        "rate": 1.0,
+        "total": 8
+      },
+      "player_comparison": {
+        "correct": 10,
+        "rate": 1.0,
+        "total": 10
+      },
+      "single_metric": {
+        "correct": 19,
+        "rate": 1.0,
+        "total": 19
+      },
+      "split_compare": {
+        "correct": 9,
+        "rate": 1.0,
+        "total": 9
+      }
+    },
+    "correct": 97,
+    "rate": 0.97,
+    "total": 100
+  },
+  "semantic_capability": {
+    "by_category": {
+      "breakdown": {
+        "correct": 26,
+        "rate": 0.9285714285714286,
+        "total": 28
+      },
+      "leaderboard": {
+        "correct": 25,
+        "rate": 0.9615384615384616,
+        "total": 26
+      },
+      "matchup": {
+        "correct": 8,
+        "rate": 1.0,
+        "total": 8
+      },
+      "player_comparison": {
+        "correct": 10,
+        "rate": 1.0,
+        "total": 10
+      },
+      "single_metric": {
+        "correct": 19,
+        "rate": 1.0,
+        "total": 19
+      },
+      "split_compare": {
+        "correct": 9,
+        "rate": 1.0,
+        "total": 9
+      }
+    },
+    "correct": 97,
+    "rate": 0.97,
+    "total": 100
+  },
+  "source": "current CricAtlas production planner and local ODI DuckDB, composed from the complete capture and the post-fix leaderboard recapture"
+}
