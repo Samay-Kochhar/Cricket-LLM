@@ -114,6 +114,12 @@ METRIC_SYNONYMS = {
     "sr": "batting_strike_rate",
     "fastest": "batting_strike_rate",
     "runs": "runs_scored",
+    "fours": "four_count",
+    "number_of_fours": "four_count",
+    "sixes": "six_count",
+    "number_of_sixes": "six_count",
+    "boundary_count": "boundary_ball_count",
+    "boundary_balls": "boundary_ball_count",
     "wickets_taken": "wickets",
     "dot_percentage": "dot_ball_percentage",
     "bowler_dot_percentage": "bowler_dot_ball_percentage",
@@ -167,6 +173,16 @@ def requested_bowling_style(lowered_question: str) -> str | None:
 
 
 def requested_metric_from_wording(lowered_question: str) -> str | None:
+    if requests_six_count(lowered_question):
+        return "six_count"
+    if requests_four_count(lowered_question):
+        return "four_count"
+    if "boundary runs" in lowered_question:
+        return "boundary_runs"
+    if requests_boundary_percentage(lowered_question):
+        return "boundary_percentage"
+    if re.search(r"\b(?:how many|number of|count of|most|fewest)\s+boundar(?:y|ies)\b", lowered_question):
+        return "boundary_ball_count"
     if (
         re.search(r"\b(?:most|fewest)\s+yorkers\b", lowered_question)
         or "yorker count" in lowered_question
@@ -195,6 +211,46 @@ def requested_metric_from_wording(lowered_question: str) -> str | None:
             else "dot_balls"
         )
     return None
+
+
+def requests_six_count(lowered_question: str) -> bool:
+    return bool(
+        re.search(r"\b(?:sixes|6s)\b", lowered_question)
+        or re.search(r"\bsix[- ](?:hitting|hitter)(?: count| tally| total)?\b", lowered_question)
+        or re.search(r"\b(?:six count|how many six(?:es)?|number of six(?:es)?|count of six(?:es)?)\b", lowered_question)
+        or re.search(r"\b(?:hit|hits|hitting|struck|smacked)\s+(?:a\s+)?six\b", lowered_question)
+    )
+
+
+def requests_four_count(lowered_question: str) -> bool:
+    return bool(
+        re.search(r"\b(?:fours|4s)\b", lowered_question)
+        or re.search(r"\bfour[- ](?:hitting|hitter)(?: count| tally| total)?\b", lowered_question)
+        or re.search(r"\b(?:four count|how many four(?:s)?|number of four(?:s)?|count of four(?:s)?)\b", lowered_question)
+        or re.search(r"\b(?:hit|hits|hitting|struck|smacked)\s+(?:a\s+)?four\b", lowered_question)
+    )
+
+
+def requests_boundary_percentage(lowered_question: str) -> bool:
+    return bool(
+        re.search(
+            r"\bboundar(?:y|ies)\s+(?:percentage|percent|rate|frequency|share)\b",
+            lowered_question,
+        )
+        or re.search(
+            r"\b(?:percentage|percent|rate|share)\s+of\s+boundar(?:y|ies)\b",
+            lowered_question,
+        )
+        or re.search(
+            r"\bboundar(?:y|ies)\s+per\s+\d+\s+balls?\b",
+            lowered_question,
+        )
+        or re.search(
+            r"\bboundar(?:y|ies)\b.{0,24}\b(?:often|frequently)\b",
+            lowered_question,
+        )
+        or "find the rope" in lowered_question
+    )
 
 
 def requested_limit_from_wording(lowered_question: str) -> int | None:
@@ -259,9 +315,9 @@ def requested_sort_direction(
     filters: dict[str, object] | None = None,
 ) -> str | None:
     ranking_wording = re.sub(r"\bat least\b", "minimum", lowered_question)
-    if any(token in ranking_wording for token in ("highest", "biggest", "fastest")):
+    if any(token in ranking_wording for token in ("highest", "maximum", "biggest", "fastest")):
         return "desc"
-    if any(token in ranking_wording for token in ("lowest", "fewest", "smallest", "slowest")):
+    if any(token in ranking_wording for token in ("lowest", "minimum", "fewest", "smallest", "slowest")):
         return "asc"
 
     metric_definition = METRICS.get(metric)

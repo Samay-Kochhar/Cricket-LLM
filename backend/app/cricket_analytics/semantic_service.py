@@ -1440,10 +1440,16 @@ class SemanticAnalyticsService:
                 ),
             )
         if len(rows) == 1 and subject != "overall":
+            database_scope = (
+                "Within the ODI database, "
+                if plan.metric
+                in {"four_count", "six_count", "boundary_ball_count", "boundary_runs"}
+                else ""
+            )
             return SummaryBlock(
                 title="Semantic aggregate answer",
                 body=(
-                    f"{context}{subject}'s {_label(plan.metric)} is {metric_text}{sample_text}."
+                    f"{database_scope}{context}{subject}'s {_label(plan.metric)} is {metric_text}{sample_text}."
                 ),
             )
         return SummaryBlock(
@@ -1892,6 +1898,10 @@ def _metric_evidence_columns(metric: str, entity: str) -> list[str]:
         if entity == "bowler"
         else ["dot_balls", "balls_faced"],
         "boundary_percentage": ["boundary_balls", "balls_faced"],
+        "four_count": ["balls_faced"],
+        "six_count": ["balls_faced"],
+        "boundary_ball_count": ["balls_faced"],
+        "boundary_runs": ["four_count", "six_count", "balls_faced"],
         "false_shot_percentage": ["false_shots", "balls_faced"],
         "wickets_taken": ["wickets", "legal_balls"],
         "wickets": ["wickets", "legal_balls"],

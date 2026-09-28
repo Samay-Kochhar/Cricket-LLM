@@ -129,6 +129,10 @@ def _rule(
 
 METRIC_REGISTRY: dict[str, MetricRule] = {
     "runs_scored": _rule("runs_scored", "Runs Scored", "batter", "runs_scored", None, "sum", "desc", True, "runs_scored", unit="runs", formula="sum batter runs"),
+    "four_count": _rule("four_count", "Four Count", "batter", "four_count", None, "count", "desc", True, "four_count", unit="fours", formula="count batter-eligible delivery events with exactly four batter runs"),
+    "six_count": _rule("six_count", "Six Count", "batter", "six_count", None, "count", "desc", True, "six_count", unit="sixes", formula="count batter-eligible delivery events with exactly six batter runs"),
+    "boundary_ball_count": _rule("boundary_ball_count", "Boundary-Ball Count", "batter", "boundary_balls", None, "count", "desc", True, "boundary_balls", unit="balls", formula="count batter-eligible delivery events with exactly four or six batter runs"),
+    "boundary_runs": _rule("boundary_runs", "Boundary Runs", "batter", "boundary_runs", None, "sum", "desc", True, "boundary_runs", unit="runs", formula="sum batter runs on batter-eligible delivery events with exactly four or six batter runs"),
     "balls_faced": _rule("balls_faced", "Balls Faced", "batter", "balls_faced", None, "count", "desc", None, "balls_faced", unit="balls", formula="count balls faced"),
     "batting_strike_rate": _rule("batting_strike_rate", "Batting Strike Rate", "batter", "runs_scored", "balls_faced", "rate", "desc", True, "runs_scored / NULLIF(balls_faced, 0) * 100.0", minimum_sample=SamplePolicy(balls=60), unit="runs per 100 balls", formula="runs scored / balls faced * 100"),
     "batting_average": _rule("batting_average", "Batting Average", "batter", "runs_scored", "dismissals", "rate", "desc", True, "runs_scored / NULLIF(dismissals, 0)", unit="runs per dismissal", formula="runs scored / dismissals"),

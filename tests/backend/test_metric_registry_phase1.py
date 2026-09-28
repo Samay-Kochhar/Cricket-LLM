@@ -20,6 +20,10 @@ from backend.app.cricket_analytics.schemas import CricketQueryPlan
 
 EXPECTED_MIGRATED = {
     "runs_scored",
+    "four_count",
+    "six_count",
+    "boundary_ball_count",
+    "boundary_runs",
     "balls_faced",
     "batting_strike_rate",
     "batting_average",

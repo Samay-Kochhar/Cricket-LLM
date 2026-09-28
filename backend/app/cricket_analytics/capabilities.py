@@ -59,6 +59,10 @@ COMMON_OPTIONAL_FILTERS = (
 
 PLAYER_METRICS = (
     "runs_scored",
+    "four_count",
+    "six_count",
+    "boundary_ball_count",
+    "boundary_runs",
     "balls_faced",
     "batting_strike_rate",
     "runs_conceded",

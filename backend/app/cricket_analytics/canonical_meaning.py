@@ -15,6 +15,9 @@ from backend.app.cricket_analytics.language_meaning import (
 )
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.plan_normalizer import (
+    requests_boundary_percentage,
+    requests_four_count,
+    requests_six_count,
     requested_bowling_style,
     requested_limit_from_wording,
     requested_sort_direction,
@@ -133,7 +136,7 @@ _CANONICAL_PLAYER_ALIASES = {
     "jadeja": "Ravindra Jadeja",
 }
 _RANKING_WORDS = re.compile(
-    r"\b(?:rank|top|bottom|leading|highest|lowest|largest|best|worst|most|fewest|fastest|slowest|leads?)\b"
+    r"\b(?:rank|top|bottom|leading|highest|lowest|maximum|minimum|largest|best|worst|most|fewest|fastest|slowest|leads?)\b"
 )
 _BREAKDOWN_WORDS = re.compile(
     r"\b(?:breakdown|split|year[- ]wise|"
@@ -308,9 +311,12 @@ class CanonicalMeaningResolver:
             return bool(
                 resolution.reason
                 == "No supported direct or ranking metric was identified."
-                and re.search(
-                    r"\b(?:scoring pace|rank players|statistics?|numbers)\b",
-                    question.lower(),
+                and (
+                    "boundar" in question.lower()
+                    or re.search(
+                        r"\b(?:scoring pace|rank players|statistics?|numbers)\b",
+                        question.lower(),
+                    )
                 )
                 and not re.search(
                     r"\b(?:approach|profile|strategy|plan|analysis)\b", question.lower()
@@ -1664,6 +1670,22 @@ def _compile_aggregate_meaning(meaning: CanonicalCricketMeaning) -> CricketQuery
 def _metric_and_role(
     lowered: str, player: str | None, role_hint: str | None = None
 ) -> tuple[str | None, str | None]:
+    if requests_six_count(lowered):
+        return "six_count", "batter"
+    if requests_four_count(lowered):
+        return "four_count", "batter"
+    if "boundary runs" in lowered:
+        return "boundary_runs", "batter"
+    if requests_boundary_percentage(lowered):
+        bowling = bool(
+            re.search(r"\b(?:bowlers?|concede|conceded|concedes)\b", lowered)
+        )
+        return "boundary_percentage", "bowler" if bowling else "batter"
+    if re.search(
+        r"\b(?:how many|number of|count of|most|fewest)\s+boundar(?:y|ies)\b",
+        lowered,
+    ):
+        return "boundary_ball_count", "batter"
     if "runs conceded" in lowered or "runs given away" in lowered:
         return ("economy_rate" if "per over" in lowered else "runs_conceded"), "bowler"
     if "wickets per over" in lowered:
@@ -1685,11 +1707,11 @@ def _metric_and_role(
             )
         ) or ("not yorker rate" in lowered)
         return ("yorker_count" if count else "yorker_percentage"), "bowler"
-    if "boundar" in lowered or "find the rope" in lowered:
-        bowling = bool(
-            re.search(r"\b(?:bowlers?|concede|conceded|concedes)\b", lowered)
-        )
-        return "boundary_percentage", "bowler" if bowling else "batter"
+    if "boundar" in lowered:
+        # A boundary-related phrase that did not match a registered count, run,
+        # or percentage meaning must fail closed instead of borrowing another
+        # metric merely because words such as "average" also appear.
+        return None, None
     if "econom" in lowered or "expensive" in lowered or "concede" in lowered:
         return "economy_rate", "bowler"
     if re.search(r"\bwickets?\b", lowered):
