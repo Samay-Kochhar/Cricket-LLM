@@ -71,7 +71,9 @@ This creates `data/odi_analytics.duckdb` (gitignored) and refreshes
 ### 5. Run both services
 
 The launcher works from a normal shell as long as the named Conda environment
-exists; it starts and stops the backend and frontend together:
+exists. It deliberately uses Python and Node.js from `odi-analyst-workbench`
+instead of similarly named tools from Conda `base`, then starts and stops the
+backend and frontend together:
 
 ```powershell
 python scripts/run_local.py
@@ -169,6 +171,14 @@ Template: [`.env.example`](.env.example).
 ---
 
 ## Verification
+
+Run verification inside the project environment. If it is not already active,
+either run `conda activate odi-analyst-workbench` first or prefix a command with
+`conda run -n odi-analyst-workbench`, for example:
+
+```powershell
+conda run -n odi-analyst-workbench python -m pytest tests
+```
 
 Issue-resolution contracts:
 ```powershell

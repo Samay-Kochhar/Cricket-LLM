@@ -29,11 +29,16 @@ Run the smallest relevant checks while working, followed by the complete
 available suite before opening a pull request:
 
 ```bash
-pytest tests
+conda env create -f environment.local.yml  # first setup only
+conda run -n odi-analyst-workbench python -m pytest tests
 cd frontend
 npm ci
 npm run build
 ```
+
+Alternatively, activate `odi-analyst-workbench` once and run the Python commands
+normally. Do not use Conda `base` for CricAtlas checks: it can contain older,
+unrelated package versions.
 
 Tests that exercise real analytical answers require the generated DuckDB.
 

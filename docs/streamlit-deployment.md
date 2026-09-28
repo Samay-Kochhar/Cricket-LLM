@@ -6,12 +6,16 @@ not replace or modify the Next.js frontend.
 
 ## Local preview
 
-Install the Python requirements and run:
+Create the local environment once, then run the preview through that environment:
 
 ```bash
-pip install -r requirements.txt
-streamlit run streamlit_app.py
+conda env create -f environment.local.yml
+conda run --no-capture-output -n odi-analyst-workbench streamlit run streamlit_app.py
 ```
+
+If `odi-analyst-workbench` is already active, `streamlit run streamlit_app.py`
+is equivalent. `requirements.txt` remains the dependency source used by
+Streamlit Community Cloud; it is not a second local runtime.
 
 If the local DuckDB already exists, no download occurs.
 

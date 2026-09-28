@@ -16,25 +16,45 @@ DATABASE = ROOT / "data" / "odi_analytics.duckdb"
 CONDA_ENV = "odi-analyst-workbench"
 
 
-def _backend_command() -> list[str]:
-    if importlib.util.find_spec("uvicorn") is not None:
-        return [sys.executable, "-m", "uvicorn", "backend.app.main:app", "--host", "127.0.0.1", "--port", "8000"]
+def _conda_environment_executable(name: str) -> Path | None:
     conda_executable = shutil.which("conda")
-    if conda_executable:
-        conda_root = Path(conda_executable).resolve().parents[1]
-        environment_root = conda_root / "envs" / CONDA_ENV
-        environment_python = environment_root / ("python.exe" if sys.platform == "win32" else "bin/python")
-        if environment_python.exists():
-            return [
-                str(environment_python),
-                "-m",
-                "uvicorn",
-                "backend.app.main:app",
-                "--host",
-                "127.0.0.1",
-                "--port",
-                "8000",
-            ]
+    if not conda_executable:
+        return None
+    conda_root = Path(conda_executable).resolve().parents[1]
+    environment_root = conda_root / "envs" / CONDA_ENV
+    if sys.platform == "win32":
+        relative_path = "python.exe" if name == "python" else f"{name}.cmd"
+    else:
+        relative_path = f"bin/{name}"
+    executable = environment_root / relative_path
+    return executable if executable.exists() else None
+
+
+def _backend_command() -> list[str]:
+    environment_python = _conda_environment_executable("python")
+    if environment_python:
+        return [
+            str(environment_python),
+            "-m",
+            "uvicorn",
+            "backend.app.main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "8000",
+        ]
+    if importlib.util.find_spec("uvicorn") is not None:
+        return [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "backend.app.main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            "8000",
+        ]
+    conda_executable = shutil.which("conda")
     if conda_executable:
         return [
             "conda",
@@ -58,12 +78,12 @@ def _backend_command() -> list[str]:
 
 
 def _frontend_command() -> list[str]:
-    npm = shutil.which("npm")
+    npm = _conda_environment_executable("npm") or shutil.which("npm")
     if not npm:
         raise RuntimeError("npm is unavailable. Install Node.js or activate the project Conda environment.")
     if not (FRONTEND / "node_modules").exists():
         raise RuntimeError("Frontend dependencies are missing. Run npm install in frontend/ first.")
-    return [npm, "run", "dev", "--", "--hostname", "127.0.0.1", "--port", "3000"]
+    return [str(npm), "run", "dev", "--", "--hostname", "127.0.0.1", "--port", "3000"]
 
 
 def _terminate(processes: list[subprocess.Popen[bytes]]) -> None:
