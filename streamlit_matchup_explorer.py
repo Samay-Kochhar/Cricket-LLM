@@ -327,7 +327,7 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
         "Show matchup",
         disabled=not batter or not bowler,
         type="primary",
-        width="stretch",
+        use_container_width=True,
     )
     if submitted:
         try:
