@@ -8,8 +8,10 @@ from typing import Any, Literal, cast
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.app.cricket_analytics.language_meaning import (
+    AnalyticalFactDisposition,
     ExpressedFilter,
     LanguageMeaningCandidate,
+    MeaningCompletenessResult,
 )
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.plan_normalizer import (
@@ -56,13 +58,16 @@ class CanonicalCricketMeaning(BaseModel):
     participants: list[str] = Field(default_factory=list)
     comparison_metrics: list[str] = Field(default_factory=list)
     subject: Literal["batter", "bowler", "team"] | None = None
-    split_by: Literal[
-        "phase",
-        "batter_hand",
-        "bowling_style_group",
-        "balls_faced_window",
-        "over_range",
-    ] | None = None
+    split_by: (
+        Literal[
+            "phase",
+            "batter_hand",
+            "bowling_style_group",
+            "balls_faced_window",
+            "over_range",
+        ]
+        | None
+    ) = None
     compare_values: list[str] = Field(default_factory=list)
     split_intent: Literal["descriptive", "ranking"] | None = None
     split_direction: Literal["absolute", "increase", "decrease"] | None = None
@@ -83,6 +88,7 @@ class MeaningResolution(BaseModel):
         ]
         | None
     ) = None
+    completeness: MeaningCompletenessResult | None = None
 
 
 CandidateExtractor = Callable[
@@ -316,6 +322,17 @@ class CanonicalMeaningResolver:
         }
 
     def resolve_candidate(
+        self,
+        question: str,
+        state: Mapping[str, object] | BaseModel | None,
+        candidate: LanguageMeaningCandidate,
+        *,
+        source: str = "flash",
+    ) -> MeaningResolution:
+        resolution = self._resolve_candidate(question, state, candidate, source=source)
+        return self._account_for_candidate_facts(question, candidate, resolution)
+
+    def _resolve_candidate(
         self,
         question: str,
         state: Mapping[str, object] | BaseModel | None,
@@ -629,6 +646,428 @@ class CanonicalMeaningResolver:
                 minimum_sample_explicit=sample_explicit,
             ),
         )
+
+    def _account_for_candidate_facts(
+        self,
+        question: str,
+        candidate: LanguageMeaningCandidate,
+        resolution: MeaningResolution,
+    ) -> MeaningResolution:
+        """Account for every extracted fact before allowing a plan to compile."""
+        meaning = resolution.meaning
+        unresolved_disposition: Literal["clarification_required", "unsupported"] = (
+            "unsupported"
+            if resolution.status
+            in {MeaningStatus.unsupported, MeaningStatus.data_limitation}
+            else "clarification_required"
+        )
+        facts: list[AnalyticalFactDisposition] = []
+
+        def add(
+            fact_type: str,
+            concept: str,
+            requested: object | None,
+            *,
+            disposition: str,
+            target: str | None = None,
+            evidence: str | None = None,
+            reason: str | None = None,
+        ) -> None:
+            facts.append(
+                AnalyticalFactDisposition(
+                    fact_type=fact_type,
+                    concept=concept,
+                    requested=requested,
+                    evidence=evidence,
+                    disposition=disposition,
+                    canonical_target=target,
+                    reason=reason,
+                )
+            )
+
+        if meaning is None:
+            for fact_type, concept, requested, evidence in _candidate_fact_inventory(
+                candidate
+            ):
+                add(
+                    fact_type,
+                    concept,
+                    requested,
+                    disposition=unresolved_disposition,
+                    evidence=evidence,
+                    reason=resolution.reason or resolution.clarification,
+                )
+            resolution.completeness = MeaningCompletenessResult(
+                complete=True, allows_execution=False, facts=facts
+            )
+            return resolution
+
+        add(
+            "family",
+            candidate.family,
+            candidate.family,
+            disposition="compiled",
+            target=f"family.{meaning.family}",
+        )
+
+        if candidate.metric_concept:
+            metric_text = _normalized_text(candidate.metric_concept).replace("_", " ")
+            candidate_metric, _ = _metric_and_role(metric_text, None, meaning.role)
+            try:
+                candidate_metric = get_metric(candidate.metric_concept).metric_id
+            except KeyError:
+                pass
+            broad_comparison_metric = bool(
+                meaning.family == "comparison"
+                and meaning.comparison_metrics
+                and re.search(
+                    r"\b(?:numbers|statistics|stats|records|performance)\b", metric_text
+                )
+            )
+            canonical_metric_words = meaning.metric.replace("_", " ")
+            count_alias = bool(
+                meaning.metric == "yorker_count"
+                and "yorker" in metric_text
+                and re.search(
+                    r"\b(?:most|fewest|how many|count|number)\b",
+                    _normalized_text(question),
+                )
+            )
+            if (
+                candidate_metric == meaning.metric
+                or (
+                    candidate_metric is None
+                    and metric_text in _normalized_text(question)
+                )
+                or canonical_metric_words in metric_text
+                or count_alias
+                or broad_comparison_metric
+            ):
+                add(
+                    "metric",
+                    candidate.metric_concept,
+                    candidate.metric_concept,
+                    disposition="compiled",
+                    target=f"metric.{meaning.metric}",
+                )
+            elif metric_text not in _normalized_text(question):
+                add(
+                    "metric",
+                    candidate.metric_concept,
+                    candidate.metric_concept,
+                    disposition="explicitly_replaced_removed",
+                    target=f"metric.{meaning.metric}",
+                    reason="Explicit question wording replaced a contradictory extracted metric.",
+                )
+            else:
+                add(
+                    "metric",
+                    candidate.metric_concept,
+                    candidate.metric_concept,
+                    disposition="unsupported",
+                    reason="The extracted metric is not registered.",
+                )
+
+        if candidate.role:
+            disposition = (
+                "compiled"
+                if candidate.role == meaning.role
+                else "explicitly_replaced_removed"
+            )
+            add(
+                "role",
+                candidate.role,
+                candidate.role,
+                disposition=disposition,
+                target=f"role.{meaning.role}",
+            )
+
+        for entity in candidate.entities:
+            target = None
+            disposition = "unsupported"
+            if entity.kind == "player":
+                if (
+                    _normalized_text(entity.name)
+                    in {
+                        "player",
+                        "players",
+                        "batter",
+                        "batters",
+                        "bowler",
+                        "bowlers",
+                        "batsman",
+                        "batsmen",
+                    }
+                    and meaning.role in meaning.group_by
+                ):
+                    target = f"group_by.{meaning.role}"
+                    disposition = "compiled"
+                else:
+                    cohort = self._explicit_filters(
+                        entity.name, _normalized_text(entity.name)
+                    )
+                    cohort_matches = [
+                        key
+                        for key, value in cohort.items()
+                        if meaning.filters.get(key) == value
+                    ]
+                    if cohort_matches:
+                        target = f"filter.{cohort_matches[0]}"
+                        disposition = "compiled"
+                    matches = _extract_players(entity.name, self.available_players)
+                    if len(matches) == 1:
+                        player = matches[0]
+                        if (
+                            player in meaning.participants
+                            or player in meaning.filters.values()
+                        ):
+                            target = f"entity.player.{player}"
+                            disposition = "compiled"
+            elif entity.kind == "team":
+                if _normalized_text(entity.name) in {"team", "teams"} and (
+                    meaning.subject == "team" or "team" in meaning.group_by
+                ):
+                    target, disposition = "group_by.team", "compiled"
+                elif entity.name in meaning.filters.values():
+                    target, disposition = f"entity.team.{entity.name}", "compiled"
+            elif entity.kind == "venue":
+                matches = venue_alias_matches(entity.name, self.available_venues)
+                if any(venue in meaning.filters.values() for venue in matches):
+                    target, disposition = "filter.venue", "compiled"
+            add(
+                "entity",
+                entity.name,
+                entity.name,
+                disposition=disposition,
+                target=target,
+            )
+            add(
+                "relationship",
+                entity.relationship,
+                entity.relationship,
+                disposition=disposition,
+                target=target,
+            )
+            if entity.role:
+                add(
+                    "role",
+                    entity.role,
+                    entity.role,
+                    disposition=(
+                        "compiled"
+                        if entity.role == meaning.role
+                        else "explicitly_replaced_removed"
+                    ),
+                    target=f"role.{meaning.role}",
+                )
+
+        for dimension in [*candidate.breakdown_dimensions, *candidate.split_dimensions]:
+            normalized = breakdown_dimensions("by " + dimension.replace("_", " "))
+            target_dimension = normalized[0] if len(normalized) == 1 else dimension
+            if target_dimension in {"season", "annual"} and "year" in meaning.group_by:
+                target_dimension = "year"
+            compiled = (
+                target_dimension in meaning.group_by
+                or target_dimension == meaning.split_by
+            )
+            add(
+                "dimension",
+                dimension,
+                dimension,
+                disposition="compiled" if compiled else "unsupported",
+                target=f"dimension.{target_dimension}" if compiled else None,
+            )
+
+        for fact in candidate.filters:
+            normalized = self._candidate_filter(fact)
+            compiled_items = [
+                (key, value)
+                for key, value in normalized.items()
+                if meaning.filters.get(key) == value
+                or (
+                    meaning.family == "split"
+                    and key
+                    == {
+                        "phase": "phase",
+                        "batter_hand": "batter_hand",
+                        "bowling_style_group": "bowling_style",
+                        "over_range": "over_range",
+                    }.get(meaning.split_by)
+                )
+            ]
+            relationship_target = _relationship_filter_target(fact, meaning)
+            axis_target = _axis_filter_target(fact, meaning)
+            compiled = (
+                bool(compiled_items)
+                or relationship_target is not None
+                or axis_target is not None
+                or _is_semantic_noop_filter(fact, meaning)
+            )
+            target = (
+                f"filter.{compiled_items[0][0]}"
+                if compiled_items
+                else (
+                    relationship_target
+                    if relationship_target is not None
+                    else axis_target
+                    if axis_target is not None
+                    else "deterministic_scope" if compiled else None
+                )
+            )
+            add(
+                "filter",
+                fact.concept,
+                fact.values,
+                disposition="compiled" if compiled else "unsupported",
+                target=target,
+                evidence=fact.evidence,
+            )
+            if fact.operator:
+                operator_compiled = compiled and (
+                    fact.operator in {"eq", "in"}
+                    or (fact.operator == "between" and "over_range" in normalized)
+                )
+                add(
+                    "operator",
+                    fact.operator,
+                    fact.operator,
+                    disposition="compiled" if operator_compiled else "unsupported",
+                    target=target,
+                    evidence=fact.evidence,
+                )
+            for value in fact.values:
+                add(
+                    "value",
+                    fact.concept,
+                    value,
+                    disposition="compiled" if compiled else "unsupported",
+                    target=target,
+                    evidence=fact.evidence,
+                )
+
+        if candidate.intent:
+            expected_intent = (
+                "ranking"
+                if meaning.family == "ranking"
+                else "comparison"
+                if meaning.family in {"comparison", "split", "matchup"}
+                else "value"
+            )
+            intent_disposition = (
+                "compiled"
+                if candidate.intent == expected_intent
+                else "unsupported"
+                if candidate.intent in _normalized_text(question)
+                else "explicitly_replaced_removed"
+            )
+            add(
+                "intent",
+                candidate.intent,
+                candidate.intent,
+                disposition=intent_disposition,
+                target=f"family.{meaning.family}",
+            )
+        if candidate.ordering:
+            try:
+                default_sort = get_metric(
+                    meaning.metric, entity=meaning.role, filters=meaning.filters
+                ).default_sort
+            except KeyError:
+                default_sort = meaning.sort_direction
+            ordering_directions: dict[str, Literal["asc", "desc"]] = {
+                "highest": "desc",
+                "lowest": "asc",
+                "ascending": "asc",
+                "descending": "desc",
+                "best": default_sort,
+                "worst": "asc" if default_sort == "desc" else "desc",
+            }
+            requested_direction = ordering_directions[candidate.ordering]
+            ordering_disposition = (
+                "compiled"
+                if requested_direction == meaning.sort_direction
+                else "unsupported"
+                if candidate.ordering in _normalized_text(question)
+                else "explicitly_replaced_removed"
+            )
+            add(
+                "ordering",
+                candidate.ordering,
+                candidate.ordering,
+                disposition=ordering_disposition,
+                target=f"sort.{meaning.sort_direction}",
+            )
+        if candidate.limit is not None:
+            limit_disposition = (
+                "compiled"
+                if candidate.limit == meaning.limit
+                else "unsupported"
+                if requested_limit_from_wording(_normalized_text(question))
+                == candidate.limit
+                else "explicitly_replaced_removed"
+            )
+            add(
+                "limit",
+                "limit",
+                candidate.limit,
+                disposition=limit_disposition,
+                target="limit" if candidate.limit == meaning.limit else None,
+                reason=(
+                    None
+                    if candidate.limit == meaning.limit
+                    else "The extracted limit was not explicitly requested."
+                ),
+            )
+        if candidate.sample_threshold is not None:
+            unit = candidate.sample_threshold.unit.replace(" ", "_")
+            actual = (
+                getattr(meaning.minimum_sample, unit, None)
+                if meaning.minimum_sample
+                else None
+            )
+            actual_unit = unit
+            if (
+                actual is None
+                and meaning.minimum_sample is not None
+                and unit == "balls"
+            ):
+                actual = meaning.minimum_sample.legal_balls
+                actual_unit = "legal_balls"
+            add(
+                "sample_threshold",
+                unit,
+                candidate.sample_threshold.value,
+                disposition=(
+                    "compiled"
+                    if actual == candidate.sample_threshold.value
+                    else "unsupported"
+                ),
+                target=(
+                    f"minimum_sample.{actual_unit}"
+                    if actual == candidate.sample_threshold.value
+                    else None
+                ),
+                evidence=candidate.sample_threshold.evidence,
+            )
+
+        blocking = [
+            fact
+            for fact in facts
+            if fact.disposition in {"unsupported", "clarification_required"}
+        ]
+        completeness = MeaningCompletenessResult(
+            complete=True, allows_execution=not blocking, facts=facts
+        )
+        if blocking:
+            labels = ", ".join(dict.fromkeys(fact.concept for fact in blocking))
+            return MeaningResolution(
+                status=MeaningStatus.unsupported,
+                reason=f"Unsupported extracted analytical fact: {labels}.",
+                candidate_sources=resolution.candidate_sources,
+                completeness=completeness,
+            )
+        resolution.completeness = completeness
+        return resolution
 
     def resolve_refinement(
         self,
@@ -1008,7 +1447,9 @@ class CanonicalMeaningResolver:
         )
         if years:
             filters["years"] = years
-            if re.search(r"\b(?:(?:since|after)\s+\d{4}|from\s+\d{4}\s+onwards?)", lowered):
+            if re.search(
+                r"\b(?:(?:since|after)\s+\d{4}|from\s+\d{4}\s+onwards?)", lowered
+            ):
                 filters["year_mode"] = "after"
             elif re.search(r"\bbefore\s+\d{4}", lowered):
                 filters["year_mode"] = "before"
@@ -1058,6 +1499,113 @@ class CanonicalMeaningResolver:
         if opposition:
             filters["opposition"] = opposition
         return filters
+
+
+def _candidate_fact_inventory(
+    candidate: LanguageMeaningCandidate,
+) -> list[tuple[str, str, object | None, str | None]]:
+    facts: list[tuple[str, str, object | None, str | None]] = [
+        ("family", candidate.family, candidate.family, None)
+    ]
+    if candidate.metric_concept:
+        facts.append(
+            ("metric", candidate.metric_concept, candidate.metric_concept, None)
+        )
+    if candidate.role:
+        facts.append(("role", candidate.role, candidate.role, None))
+    for entity in candidate.entities:
+        facts.append(("entity", entity.name, entity.name, None))
+        facts.append(("relationship", entity.relationship, entity.relationship, None))
+        if entity.role:
+            facts.append(("role", entity.role, entity.role, None))
+    for dimension in [*candidate.breakdown_dimensions, *candidate.split_dimensions]:
+        facts.append(("dimension", dimension, dimension, None))
+    for fact in candidate.filters:
+        facts.append(("filter", fact.concept, fact.values, fact.evidence))
+        if fact.operator:
+            facts.append(("operator", fact.operator, fact.operator, fact.evidence))
+        facts.extend(
+            ("value", fact.concept, value, fact.evidence) for value in fact.values
+        )
+    if candidate.intent:
+        facts.append(("intent", candidate.intent, candidate.intent, None))
+    if candidate.ordering:
+        facts.append(("ordering", candidate.ordering, candidate.ordering, None))
+    if candidate.limit is not None:
+        facts.append(("limit", "limit", candidate.limit, None))
+    if candidate.sample_threshold:
+        facts.append(
+            (
+                "sample_threshold",
+                candidate.sample_threshold.unit,
+                candidate.sample_threshold.value,
+                candidate.sample_threshold.evidence,
+            )
+        )
+    return facts
+
+
+def _is_semantic_noop_filter(
+    fact: ExpressedFilter, meaning: CanonicalCricketMeaning
+) -> bool:
+    concept = _normalized_text(fact.concept).replace("_", " ")
+    values = {_normalized_text(str(value)) for value in fact.values}
+    if concept in {"format", "match format", "match type", "competition"}:
+        return bool(values) and values <= {
+            "odi",
+            "odis",
+            "one day international",
+            "one day internationals",
+        }
+    if "deliver" in concept or "ball" in concept:
+        if values and values <= {"legal", "legal balls", "legal deliveries"}:
+            return get_metric(meaning.metric).denominator == "legal_balls"
+        if values and values <= {"yorker", "yorkers"}:
+            return meaning.metric in {"yorker_count", "yorker_percentage"}
+    if concept in {"player", "batter", "bowler"}:
+        return any(value in meaning.filters.values() for value in fact.values)
+    return False
+
+
+def _relationship_filter_target(
+    fact: ExpressedFilter, meaning: CanonicalCricketMeaning
+) -> str | None:
+    concept = _normalized_text(fact.concept).replace("_", " ")
+    values = {_normalized_lookup_text(str(value)) for value in fact.values}
+    relationship_keys = {
+        "batter dismissed": "batter",
+        "dismissed batter": "batter",
+        "batter": "batter",
+        "bowler faced": "bowler",
+        "opposing bowler": "bowler",
+        "bowler": "bowler",
+    }
+    key = relationship_keys.get(concept)
+    if key is None:
+        return None
+    canonical = meaning.filters.get(key)
+    if isinstance(canonical, str) and _normalized_lookup_text(canonical) in values:
+        return f"filter.{key}"
+    return None
+
+
+def _axis_filter_target(
+    fact: ExpressedFilter, meaning: CanonicalCricketMeaning
+) -> str | None:
+    concept = _normalized_text(fact.concept).replace("_", " ")
+    axes = (
+        ("phase", "phase"),
+        ("bowling type", "bowling_style_group"),
+        ("bowling style", "bowling_style_group"),
+        ("batter hand", "batter_hand"),
+        ("handedness", "batter_hand"),
+    )
+    for phrase, canonical in axes:
+        if phrase not in concept:
+            continue
+        if canonical == meaning.split_by or canonical in meaning.group_by:
+            return f"dimension.{canonical}"
+    return None
 
 
 def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:
@@ -1267,8 +1815,20 @@ def _phase(lowered: str) -> str | None:
 
 
 def _over_range(lowered: str) -> list[int] | None:
-    match = re.search(r"\bovers?\s*(\d{1,2})\s*(?:-|to|–)\s*(\d{1,2})\b", lowered)
-    return [int(match.group(1)), int(match.group(2))] if match else None
+    ordinal = r"(?:st|nd|rd|th)?"
+    patterns = (
+        r"\bbetween\s+overs?\s+(\d{1,2})\s*(?:and|to|&|[-–—])\s*(\d{1,2})\b",
+        r"\bovers?\s*(\d{1,2})\s*(?:-|to|–|—)\s*(\d{1,2})\b",
+        rf"\bfrom\s+(?:over\s+)?(?:the\s+)?(\d{{1,2}}){ordinal}\s+"
+        rf"(?:through|to|until)\s+(?:over\s+)?(?:the\s+)?(\d{{1,2}}){ordinal}\b",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, lowered)
+        if not match:
+            continue
+        start, end = int(match.group(1)), int(match.group(2))
+        return [start, end] if 1 <= start <= end <= 50 else None
+    return None
 
 
 def _ranking_limit(lowered: str) -> int:

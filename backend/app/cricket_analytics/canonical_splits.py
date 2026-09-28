@@ -102,7 +102,9 @@ def resolve_split(
     filters.pop("bowler", None)
     _remove_split_filter(filters, split_by)
     if split_by == "over_range":
-        filters["over_range"] = _over_range_from_values(compare_values)
+        filters.pop("phase", None)
+        if any(value.startswith("before_over_") for value in compare_values):
+            filters["over_range"] = _over_range_from_values(compare_values)
     if player:
         filters[role] = player
 
@@ -227,6 +229,20 @@ def _split_dimension_and_values(text: str) -> tuple[SplitDimension, list[str]] |
     if balls:
         return "balls_faced_window", ["after_20_balls", "first_20_balls"]
 
+    explicit_ranges = [
+        (int(match.group(1)), int(match.group(2)))
+        for match in re.finditer(
+            r"\bovers?\s*(\d{1,2})\s*(?:-|to|–|—)\s*(\d{1,2})\b",
+            text,
+        )
+    ]
+    if len(explicit_ranges) == 2 and all(
+        1 <= start <= end <= 50 for start, end in explicit_ranges
+    ):
+        return "over_range", [
+            f"overs_{start}_to_{end}" for start, end in explicit_ranges
+        ]
+
     over_range = re.search(
         r"\bbetween overs?\s+(\d{1,2})\s+(?:and|to|-)\s+(\d{1,2})\b",
         text,
@@ -255,7 +271,7 @@ def _has_split_intent(
     if re.search(r"^does\b.+\b(?:more|fewer|less)\b.+\bor\b", text):
         return False
     if len(compare_values) == 2 and re.search(
-        r"\b(?:versus|vs\.?|compared|compare|difference|different|gap|or|from|between|"
+        r"\b(?:versus|vs\.?|compared|compare|difference|different|gap|or|"
         r"improv\w*|increas\w*|decreas\w*|accelerat\w*|chang\w*|"
         r"struggl\w*|dominat\w*|better|faster)\b",
         text,

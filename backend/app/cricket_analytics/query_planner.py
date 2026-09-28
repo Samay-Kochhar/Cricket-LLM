@@ -158,6 +158,33 @@ class SemanticQueryPlanner:
         trace.meaning_patch = (
             resolution.patch.model_dump(mode="json") if resolution.patch else None
         )
+        if resolution.patch is not None:
+            trace.completeness_result = {
+                "complete": True,
+                "allows_execution": resolution.status == "resolved",
+                "facts": [
+                    {
+                        "fact_type": (
+                            "filter"
+                            if operation.target.startswith("filter.")
+                            else "sample_threshold"
+                            if operation.target == "minimum_sample"
+                            else operation.target
+                        ),
+                        "concept": operation.target,
+                        "requested": operation.value,
+                        "evidence": question,
+                        "disposition": (
+                            "explicitly_replaced_removed"
+                            if operation.action in {"replace", "remove"}
+                            else "compiled"
+                        ),
+                        "canonical_target": operation.target,
+                        "reason": f"Conversation state {operation.action} operation.",
+                    }
+                    for operation in resolution.patch.operations
+                ],
+            }
         if resolution.status == "clarification" or resolution.meaning is None:
             trace.meaning_resolution = {
                 "status": "clarification",
@@ -261,6 +288,8 @@ class SemanticQueryPlanner:
                             secondary,
                         )
         if resolution.status != MeaningStatus.resolved or resolution.meaning is None:
+            if resolution.completeness is not None:
+                trace.completeness_result = resolution.completeness.model_dump(mode="json")
             validation = ValidationResult(
                 valid=False,
                 errors=[
@@ -279,6 +308,8 @@ class SemanticQueryPlanner:
             )
 
         plan = compile_canonical_meaning(resolution.meaning)
+        if resolution.completeness is not None:
+            trace.completeness_result = resolution.completeness.model_dump(mode="json")
         validation = validate_plan(plan, question)
         validation = self._validate_explicit_scope(plan, question, validation)
         trace.canonical_meaning = resolution.meaning.model_dump(mode="json")
@@ -1134,7 +1165,15 @@ class SemanticQueryPlanner:
             return "bowling_style_group", ["pace", "spin"]
         if "after facing 20 balls" in lowered or "after 20 balls" in lowered:
             return "balls_faced_window", ["first_20_balls", "after_20_balls"]
-        if "between overs" in lowered and "over_range" in filters:
+        if (
+            "between overs" in lowered
+            and "over_range" in filters
+            and re.search(
+                r"\b(?:accelerat\w*|compare|difference|gap|chang\w*|improv\w*|"
+                r"increas\w*|decreas\w*|better|faster|slower)\b",
+                lowered,
+            )
+        ):
             return "over_range", ["requested_over_range"]
         return None, None
 
@@ -1183,7 +1222,6 @@ class SemanticQueryPlanner:
             or ("wrist spin" in lowered and "finger spin" in lowered)
             or "after facing 20 balls" in lowered
             or "after 20 balls" in lowered
-            or "between overs" in lowered
         ):
             return "split_compare"
         if lowered.startswith("compare ") or " compare " in lowered or "who has the better" in lowered or "who scores faster" in lowered:
@@ -1202,7 +1240,7 @@ class SemanticQueryPlanner:
             or "dominates left arm pace" in lowered
         ):
             return "matchup"
-        if any(token in lowered for token in ("difference", "compare", "better against", "left-handers than right-handers", "wrist spin", "finger spin", "after 20 balls", "after facing 20 balls", "accelerates", "between overs")):
+        if any(token in lowered for token in ("difference", "compare", "better against", "left-handers than right-handers", "wrist spin", "finger spin", "after 20 balls", "after facing 20 balls", "accelerates")):
             return "split_compare"
         return "aggregate"
 
@@ -1448,9 +1486,11 @@ class SemanticQueryPlanner:
             filters["phase"] = "middle"
         elif "death" in lowered or "final overs" in lowered or "final over" in lowered:
             filters["phase"] = "death"
-        over_range = re.search(r"between overs?\s+(\d{1,2})\s+(?:and|to|-)\s+(\d{1,2})", lowered)
+        from backend.app.cricket_analytics.canonical_meaning import _over_range
+
+        over_range = _over_range(lowered)
         if over_range:
-            filters["over_range"] = [int(over_range.group(1)), int(over_range.group(2))]
+            filters["over_range"] = over_range
         if "yorker" in lowered and metric not in {"yorker_percentage", "yorker_count"}:
             filters.setdefault("length", "YORKER")
         elif "short ball" in lowered or "short balls" in lowered or "short-ball" in lowered or "short-balls" in lowered:

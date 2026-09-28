@@ -28,6 +28,7 @@ PatchTarget = Literal[
     "filter.bowling_style",
     "filter.batter_hand",
     "filter.comparison_view",
+    "filter.over_range",
     "metric",
     "limit",
     "minimum_sample",
@@ -43,6 +44,7 @@ PATCHABLE_FILTERS = {
     "bowling_style",
     "batter_hand",
     "comparison_view",
+    "over_range",
 }
 
 
@@ -252,6 +254,7 @@ def apply_meaning_patch(
                 "phase": "phase",
                 "batter_hand": "batter_hand",
                 "bowling_style": "bowling_style_group",
+                "over_range": "over_range",
             }.get(key)
             if meaning.family == "split" and meaning.split_by == split_filter:
                 return MeaningPatchResolution(
@@ -321,6 +324,7 @@ def _requested_removals(text: str) -> list[str]:
         "batter_hand": r"\b(?:both|any) hands?\b|\b(?:regardless of|remove|drop|without) (?:the )?handedness\b",
         "minimum_sample": r"\b(?:no|remove|drop|without) (?:the )?(?:minimum|sample threshold|sample floor)\b",
         "limit": r"\b(?:no|remove|drop|without) (?:the )?limit\b|\ball results\b",
+        "over_range": r"\b(?:all|any) overs\b|\b(?:overall|remove|drop|without) (?:the )?over range\b",
     }
     for key, pattern in patterns.items():
         if re.search(pattern, text):

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Any
 
@@ -223,6 +224,23 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
         )
         return split_case, split_a, split_b, split_a, split_b, []
     if plan.split_by == "over_range":
+        explicit_ranges = [_parse_over_range_label(value) for value in compare_values]
+        if len(explicit_ranges) >= 2 and all(item is not None for item in explicit_ranges[:2]):
+            first = explicit_ranges[0]
+            second = explicit_ranges[1]
+            assert first is not None and second is not None
+            split_a, split_b = compare_values[0], compare_values[1]
+            split_case = (
+                "CASE WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) < ? THEN "
+                f"'{split_a}' WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) < ? THEN "
+                f"'{split_b}' ELSE NULL END"
+            )
+            return split_case, split_a, split_b, split_a, split_b, [
+                float(first[0] - 1),
+                float(first[1]),
+                float(second[0] - 1),
+                float(second[1]),
+            ]
         start, end = _over_range(plan)
         split_a = f"overs_{start}_to_{end}"
         split_b = f"before_over_{start}"
@@ -247,6 +265,14 @@ def _over_range(plan: CricketQueryPlan) -> tuple[int, int]:
         end = int(value[-1])
         return start, end
     return 15, 20
+
+
+def _parse_over_range_label(value: str) -> tuple[int, int] | None:
+    match = re.fullmatch(r"overs_(\d{1,2})_to_(\d{1,2})", value)
+    if not match:
+        return None
+    start, end = int(match.group(1)), int(match.group(2))
+    return (start, end) if 1 <= start <= end <= 50 else None
 
 
 def _metric_expression(plan: CricketQueryPlan) -> str:

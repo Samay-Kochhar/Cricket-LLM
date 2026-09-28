@@ -1839,6 +1839,14 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
     if isinstance(phase, str):
         contexts.append(phase_labels.get(phase, f"in {phase.replace('_', ' ')}"))
 
+    over_range = plan.filters.get("over_range")
+    if (
+        isinstance(over_range, list)
+        and len(over_range) == 2
+        and all(isinstance(value, int) for value in over_range)
+    ):
+        contexts.append(f"in inclusive overs {over_range[0]}–{over_range[1]}")
+
     style = plan.filters.get("bowling_style")
     if isinstance(style, str):
         contexts.append(f"against {style.replace('_', ' ')}")

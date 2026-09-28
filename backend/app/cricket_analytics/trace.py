@@ -33,6 +33,7 @@ class QueryTrace:
     canonical_meaning: dict[str, Any] | None = None
     meaning_patch: dict[str, Any] | None = None
     meaning_resolution: dict[str, Any] | None = None
+    completeness_result: dict[str, Any] | None = None
     validation_result: dict[str, Any] | None = None
     operation_type: str | None = None
     selected_executor: str | None = None
@@ -53,6 +54,7 @@ class QueryTrace:
                 "canonical_meaning": self.canonical_meaning,
                 "meaning_patch": self.meaning_patch,
                 "meaning_resolution": self.meaning_resolution,
+                "completeness_result": self.completeness_result,
                 "validation_result": self.validation_result,
                 "operation_type": self.operation_type,
                 "selected_executor": self.selected_executor,
@@ -63,7 +65,10 @@ class QueryTrace:
         )
 
     def log(self) -> None:
-        LOGGER.info("semantic_v2_query_trace=%s", json.dumps(self.as_dict(), sort_keys=True, default=str))
+        LOGGER.info(
+            "semantic_v2_query_trace=%s",
+            json.dumps(self.as_dict(), sort_keys=True, default=str),
+        )
 
     def compact_json(self, max_chars: int = 3500) -> str:
         payload = json.dumps(self.as_dict(), sort_keys=True, default=str)
