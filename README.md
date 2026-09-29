@@ -163,8 +163,8 @@ Find your laptop's LAN IP (`ipconfig` → IPv4, e.g. `192.168.1.42`) and open
 | `GEMINI_API_KEY` | optional | Enables Gemini interpretation, grounding, and narrative; DB answers work without it |
 | `GEMINI_DEFAULT_MODEL` | no | Default Gemini model for interpretation and concise narrative (default `gemini-2.5-pro`) |
 | `GEMINI_COMPLEX_MODEL` | no | Higher-reasoning Gemini model for harder questions (default `gemini-2.5-pro`) |
-| `BACKEND_INTERNAL_URL` | Docker only | Internal URL the Next.js proxy uses to reach the backend container |
-| `NEXT_PUBLIC_API_BASE_URL` | optional | Browser override for direct API calls; leave blank for same-origin proxy |
+| `BACKEND_INTERNAL_URL` | no (local) / set in Docker | The one internal URL the Next.js `/api` proxy uses to reach the CricAtlas API; local default `http://127.0.0.1:8000` |
+| `NEXT_PUBLIC_API_BASE_URL` | optional | Explicit public backend for browser calls; leave blank so browsers use the same-origin `/api` proxy |
 
 Template: [`.env.example`](.env.example).
 
@@ -198,8 +198,14 @@ Frontend:
 ```powershell
 cd frontend
 npm run build
-npm run test:e2e
+npm run test:e2e:mocked       # fast UI tests; some intercept /api responses
+npm run test:e2e:integration  # real browser -> /api proxy -> CricAtlas API, no interception
 ```
+
+Mocked browser tests are UI evidence only. Backend connectivity is proven by
+the integration project. It starts the API on `PLAYWRIGHT_BACKEND_PORT`
+(default 8000), using `PLAYWRIGHT_PYTHON` as the interpreter, and points the
+proxy's `BACKEND_INTERNAL_URL` at it.
 
 The golden-query set pins down **trust behavior** (unsupported questions must
 return `insufficient_evidence`, never invented analysis), not coverage. See

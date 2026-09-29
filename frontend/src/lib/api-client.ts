@@ -1,39 +1,23 @@
+import { internalBackendUrl, publicApiBaseUrl, SAME_ORIGIN } from "@/lib/backend-routing";
+
 const DEFAULT_REQUEST_TIMEOUT_MS = 10000;
 const LONG_REQUEST_TIMEOUT_MS = 25000;
 
-function configuredApiBaseUrl() {
-  return process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
-}
-
-function unique(values: string[]) {
-  return values.filter((value, index) => values.indexOf(value) === index);
-}
-
-function getClientApiCandidates() {
-  const configured = configuredApiBaseUrl();
-
+/**
+ * One routing target per environment (see `backend-routing.ts`). The browser
+ * keeps the intentional same-origin value (an empty base URL) unless a public
+ * backend is configured explicitly; it never falls through to guessed hosts.
+ */
+function getClientApiCandidates(): string[] {
   if (typeof window === "undefined") {
-    return unique(
-      [configured, "http://127.0.0.1:8000", "http://localhost:8000"].filter(Boolean),
-    );
+    const configured = publicApiBaseUrl();
+    return [configured !== SAME_ORIGIN ? configured : internalBackendUrl()];
   }
-
-  const { hostname, protocol } = window.location;
-  const sameHostBackend = `${protocol}//${hostname}:8000`;
-
-  return unique(
-    [
-      "",
-      configured,
-      sameHostBackend,
-      "http://localhost:8000",
-      "http://127.0.0.1:8000",
-    ].filter(Boolean),
-  );
+  return [publicApiBaseUrl()];
 }
 
 function joinUrl(baseUrl: string, path: string) {
-  if (!baseUrl) {
+  if (baseUrl === SAME_ORIGIN) {
     return path;
   }
   return `${baseUrl}${path}`;

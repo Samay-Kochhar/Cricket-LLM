@@ -27,8 +27,23 @@ The compose stack does three things:
 - `GEMINI_API_KEY`: optional Gemini API key for grounded external context
 - `GEMINI_DEFAULT_MODEL`: default Gemini model for interpretation and concise narrative; defaults to `gemini-2.5-pro`
 - `GEMINI_COMPLEX_MODEL`: higher-reasoning Gemini model for harder questions; defaults to `gemini-2.5-pro`
-- `BACKEND_INTERNAL_URL`: internal URL used by the Next.js proxy route inside the frontend container
-- `NEXT_PUBLIC_API_BASE_URL`: optional browser override for direct API calls; leave blank for same-origin proxy mode
+- `BACKEND_INTERNAL_URL`: the one internal URL the Next.js `/api` proxy uses to reach the CricAtlas API (local default `http://127.0.0.1:8000`, `http://backend:8000` in Compose)
+- `NEXT_PUBLIC_API_BASE_URL`: optional explicit public backend for browser calls; leave blank for same-origin proxy mode
+
+## Browser Routing Policy
+
+- **Browser requests** go to the same-origin `/api/...` proxy served by
+  Next.js, in local and deployed use alike. The only exception is an explicitly
+  set `NEXT_PUBLIC_API_BASE_URL`. There is no guessed fallback host, so a
+  service that happens to listen on port 8000 never receives CricAtlas browser
+  requests.
+- **The server-side proxy** forwards to `BACKEND_INTERNAL_URL`. It accepts only
+  responses carrying the CricAtlas `x-cricatlas-backend` header.
+  - If nothing answers there, the proxy returns HTTP 502 saying "CricAtlas
+    backend is unavailable".
+  - If a different service answers there, it returns the same HTTP 502,
+    naming the configured URL.
+- Policy source: `frontend/src/lib/backend-routing.ts`.
 - `CRICATLAS_DATA_URL`: optional direct CSV/ZIP override
 - `CRICATLAS_DATA_SHA256`: optional checksum of the downloaded artifact
 - `CRICATLAS_DATA_ARCHIVE_MEMBER`: CSV path/name inside a multi-file ZIP

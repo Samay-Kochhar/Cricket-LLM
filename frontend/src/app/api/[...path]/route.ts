@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { BACKEND_IDENTITY_HEADER, internalBackendUrl } from "@/lib/backend-routing";
 
-const BACKEND_INTERNAL_URL =
-  process.env.BACKEND_INTERNAL_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000";
+
+const BACKEND_INTERNAL_URL = internalBackendUrl();
 
 export const dynamic = "force-dynamic";
 
@@ -28,21 +29,37 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
     init.body = await request.text();
   }
 
+  let response: Response;
   try {
-    const response = await fetch(target, init);
-    const body = await response.text();
-    return new NextResponse(body, {
-      status: response.status,
-      headers: {
-        "content-type": response.headers.get("content-type") ?? "application/json",
-      },
-    });
+    response = await fetch(target, init);
   } catch {
     return NextResponse.json(
-      { error: "Backend is unavailable", target: target.toString() },
+      {
+        error: "CricAtlas backend is unavailable",
+        detail: `No response from BACKEND_INTERNAL_URL (${BACKEND_INTERNAL_URL}). Start the CricAtlas API there or set BACKEND_INTERNAL_URL to its address.`,
+        target: target.toString(),
+      },
       { status: 502 },
     );
   }
+  if (!response.headers.has(BACKEND_IDENTITY_HEADER)) {
+    // Another service at the internal URL must never answer CricAtlas requests.
+    return NextResponse.json(
+      {
+        error: "CricAtlas backend is unavailable",
+        detail: `The service at BACKEND_INTERNAL_URL (${BACKEND_INTERNAL_URL}) did not identify as the CricAtlas API. Set BACKEND_INTERNAL_URL to the CricAtlas backend address.`,
+        target: target.toString(),
+      },
+      { status: 502 },
+    );
+  }
+  const body = await response.text();
+  return new NextResponse(body, {
+    status: response.status,
+    headers: {
+      "content-type": response.headers.get("content-type") ?? "application/json",
+    },
+  });
 }
 
 

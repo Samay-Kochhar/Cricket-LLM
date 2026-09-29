@@ -39,6 +39,9 @@ def create_app() -> FastAPI:
         duration_ms = round((perf_counter() - started) * 1000, 2)
         finished_at = datetime.now(UTC).isoformat(timespec="seconds")
         response.headers["x-trace-id"] = trace_id
+        # Lets the frontend proxy confirm it reached CricAtlas, not another
+        # service on the configured internal URL.
+        response.headers["x-cricatlas-backend"] = "1"
         logger.info(
             "%s | %s | end %s %s status=%s duration_ms=%s",
             finished_at,

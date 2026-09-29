@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:mocked": "playwright test --project=mocked",
+    "test:e2e:integration": "playwright test --project=integration"
   },
   "dependencies": {
     "next": "16.2.3",
