@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 
 from backend.app.cricket_analytics.capabilities import validate_capability
+from backend.app.cricket_analytics.match_facts import MATCH_FACT_REGISTRY
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS, OPERATION_TYPES
 from backend.app.cricket_analytics.plan_normalizer import (
@@ -79,6 +80,9 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
     internal_filters = {"compare_players", "comparison_metrics", "comparison_view"} if plan.operation == "player_compare" else set()
     if plan.operation == "match_fact":
         internal_filters |= {"match_stage", "fact_type"}
+        fact_type = plan.filters.get("fact_type")
+        if fact_type not in MATCH_FACT_REGISTRY:
+            errors.append("Match facts require a registered fact_type.")
     for filter_name in plan.filters:
         if filter_name not in FILTER_DIMENSIONS and filter_name not in {"years", "year_mode", "competition"} and filter_name not in internal_filters:
             errors.append(f"Unsupported filter '{filter_name}'.")

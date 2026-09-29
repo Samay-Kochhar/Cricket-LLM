@@ -11,8 +11,12 @@ from backend.app.cricket_analytics.cricket_definitions import (
     phase_filter_clause,
     public_label,
 )
-from backend.app.db.connection import get_connection
+from backend.app.cricket_analytics.match_facts import (
+    MATCH_METADATA_CANDIDATES_SQL,
+    MatchMetadataCandidate,
+)
 from backend.app.cricket_analytics.player_roles import PlayerParticipation
+from backend.app.db.connection import get_connection
 from backend.app.services.player_resolution import normalize_name
 
 RIGHT_HAND_WAGON_LABELS = {
@@ -53,6 +57,30 @@ class AnalyticsRepository:
     def _fetchone(self, sql: str, params: list[Any] | None = None) -> tuple[Any, ...] | None:
         with get_connection(self.db_path) as conn:
             return conn.execute(sql, params or []).fetchone()
+
+    def match_metadata_candidates(
+        self, *, year: int, competition: str
+    ) -> list[MatchMetadataCandidate]:
+        rows = self._fetchall(
+            MATCH_METADATA_CANDIDATES_SQL,
+            [year, competition],
+        )
+
+        def values(raw: object) -> tuple[str, ...]:
+            return tuple(str(value) for value in (raw or []) if value is not None)
+
+        return [
+            MatchMetadataCandidate(
+                match_id=str(row[0]),
+                years=values(row[1]),
+                dates=values(row[2]),
+                competitions=values(row[3]),
+                grounds=values(row[4]),
+                winners=values(row[5]),
+                toss_winners=values(row[6]),
+            )
+            for row in rows
+        ]
 
     @staticmethod
     def _coverage_dict(total_balls: int, covered_balls: int, detail: str) -> dict[str, Any]:

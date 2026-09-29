@@ -17,8 +17,11 @@ from backend.app.cricket_analytics.canonical_patches import (
     interpret_meaning_patch,
 )
 from backend.app.cricket_analytics.language_meaning import (
-    LanguageMeaningCandidate, MeaningCallReason, extraction_prompt,
+    LanguageMeaningCandidate,
+    MeaningCallReason,
+    extraction_prompt,
 )
+from backend.app.cricket_analytics.match_facts import extract_match_fact_meaning
 from backend.app.cricket_analytics.ontology import METRICS, ontology_context
 from backend.app.cricket_analytics.plan_normalizer import (
     is_passive_dismissal_question,
@@ -83,6 +86,9 @@ class SemanticQueryPlanner:
         patched = self._plan_canonical_patch(question, trace, conversation_state)
         if patched is not None:
             return patched
+        match_fact = self._plan_registered_match_fact(question, trace)
+        if match_fact is not None:
+            return match_fact
         canonical_state = (
             None
             if canonical_meaning_from_state(conversation_state) is not None
@@ -136,6 +142,72 @@ class SemanticQueryPlanner:
             return PlannerResult(plan=None, validation=validation, used_gemini=self.gemini_client.is_configured())
 
         return self._plan_with_deterministic_fallback(question, trace)
+
+    def _plan_registered_match_fact(
+        self, question: str, trace: QueryTrace
+    ) -> PlannerResult | None:
+        meaning = extract_match_fact_meaning(question, tuple(self.available_teams))
+        if meaning is None:
+            return None
+        completeness = meaning.completeness(question)
+        trace.language_meaning_candidate = {
+            "version": 1,
+            "family": "match_fact",
+            "fact_type": meaning.fact_type,
+            "year": meaning.year,
+            "competition": meaning.competition,
+            "stage": meaning.stage,
+        }
+        trace.canonical_meaning = {
+            "family": "match_fact",
+            "fact_type": meaning.fact_type,
+            "year": meaning.year,
+            "competition": meaning.competition,
+            "stage": meaning.stage,
+            "team": meaning.team,
+        }
+        trace.completeness_result = completeness
+        if not meaning.complete:
+            missing = [
+                label
+                for label, value in (
+                    ("year", meaning.year),
+                    ("competition", meaning.competition),
+                    ("match stage", meaning.stage),
+                )
+                if value is None
+            ]
+            clarification = "Which " + ", ".join(missing) + " identifies the match?"
+            trace.meaning_resolution = {
+                "status": "clarification",
+                "clarification": clarification,
+                "clarification_options": [],
+                "candidate_sources": ["registered_match_fact_language"],
+            }
+            validation = ValidationResult(valid=False, errors=[clarification])
+            trace.validation_result = validation.model_dump(mode="json")
+            return PlannerResult(plan=None, validation=validation, used_gemini=False)
+
+        plan = meaning.compile()
+        validation = validate_plan(plan, question)
+        trace.meaning_resolution = {
+            "status": "resolved",
+            "candidate_sources": ["registered_match_fact_language"],
+        }
+        trace.parsed_json_plan = plan.model_dump(mode="json")
+        trace.normalized_plan = plan.model_dump(mode="json")
+        trace.validation_result = validation.model_dump(mode="json")
+        trace.operation_type = plan.operation
+        trace.planner_outcome = {
+            "attempt_count": 0,
+            "selected_model": None,
+            "finish_reason": None,
+            "parse_outcome": "registered_match_fact",
+            "validation_outcome": "valid" if validation.valid else "invalid",
+            "repair_outcome": "not_needed",
+            "latency_ms": 0.0,
+        }
+        return PlannerResult(plan=plan, validation=validation, used_gemini=False)
 
     def _plan_canonical_patch(
         self,
@@ -448,6 +520,7 @@ class SemanticQueryPlanner:
             r"wickets?|dismissals?|dismissed|dismisses|dot balls?|boundaries|boundary rate|"
             r"false shots?|yorkers?|control percentage|balls faced|legal balls|overs bowled|"
             r"fastest|slowest|destructive|dominates?|struggles?|weakness(?:es)?"
+            r"|toss"
             r")\b",
             lowered,
         )
@@ -954,6 +1027,7 @@ class SemanticQueryPlanner:
             "- An unqualified bowler comparison uses economy_rate, bowling_average, bowling_strike_rate, wickets_taken, bowler_dot_ball_percentage, and boundary_percentage.\n"
             "- If the question materially mixes player roles or does not establish one shared comparison role, set unsupported_reason and explain the ambiguity.\n"
             "- If unsupported, set unsupported_reason and choose the closest operation.\n\n"
+            "- Toss questions use operation match_fact and fact_type toss; never use winner for a toss.\n"
             f"User question: {question}"
         )
 
@@ -1200,6 +1274,8 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_operation(lowered: str) -> str:
+        if re.search(r"\btoss\b", lowered):
+            return "match_fact"
         if (
             ("world cup" in lowered or "final" in lowered or "match" in lowered)
             and any(token in lowered for token in ("total", "score", "won", "winner", "win"))
@@ -1633,11 +1709,21 @@ class SemanticQueryPlanner:
 
     def _infer_match_fact_filters(self, lowered: str) -> dict[str, object]:
         filters: dict[str, object] = {}
-        if "world cup" in lowered:
-            filters["competition"] = "ICC Cricket World Cup"
+        year_match = re.search(r"\b(20\d{2})\b", lowered)
+        year = int(year_match.group(1)) if year_match else None
+        if "world cup" in lowered and year is not None:
+            from backend.app.cricket_analytics.match_facts import (
+                WORLD_CUP_COMPETITIONS_BY_YEAR,
+            )
+
+            competition = WORLD_CUP_COMPETITIONS_BY_YEAR.get(year)
+            if competition:
+                filters["competition"] = competition
         if "final" in lowered:
             filters["match_stage"] = "final"
-        if any(token in lowered for token in ("won", "winner", " win")):
+        if "toss" in lowered:
+            filters["fact_type"] = "toss"
+        elif any(token in lowered for token in ("won", "winner", " win")):
             filters["fact_type"] = "winner"
         elif any(token in lowered for token in ("total", "score")):
             filters["fact_type"] = "team_total"

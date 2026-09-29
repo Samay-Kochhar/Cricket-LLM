@@ -15,9 +15,13 @@ from backend.app.cricket_analytics.executors import (
     split_compare_executor,
     tactical_executor,
 )
-from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.cricket_definitions import public_label
+from backend.app.cricket_analytics.match_facts import (
+    MATCH_METADATA_CANDIDATES_SQL,
+    resolve_match_fact,
+)
 from backend.app.cricket_analytics.metric_registry import get_metric
+from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.query_builders.aggregate_builder import build_aggregate_query
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
 from backend.app.cricket_analytics.presentation_policy import select_chart
@@ -700,31 +704,116 @@ class SemanticAnalyticsService:
                 "Match facts require a database-identifiable year and competition.",
             )
 
-        match_clauses = ["TRY_CAST(year AS INTEGER) = ?", "competition = ?"]
-        match_params: list[object] = [year, competition]
-        order_sql = "date DESC, p_match DESC" if plan.filters.get("match_stage") == "final" else "date DESC, p_match DESC"
-        match_sql = _clean_match_fact_sql(
-            f"""
-            SELECT p_match, date, competition, ground, winner
-            FROM analytics.deliveries_v1
-            WHERE {' AND '.join(match_clauses)}
-            GROUP BY p_match, date, competition, ground, winner
-            ORDER BY {order_sql}
-            LIMIT 1
-            """
+        fact_type = str(plan.filters.get("fact_type") or "")
+        stage = str(plan.filters.get("match_stage") or "")
+        resolved = resolve_match_fact(
+            self.repository,
+            year=year,
+            competition=competition,
+            stage=stage,
+            fact_type=fact_type,
         )
-        match_row = self.repository._fetchone(match_sql, match_params)
-        if match_row is None:
-            trace.final_answer_metadata = {"status": "match_fact_no_match"}
+        if resolved.status != "resolved" or resolved.match_id is None:
+            trace.final_answer_metadata = {
+                "status": f"match_fact_{resolved.status}",
+                "detail": resolved.detail,
+            }
             return self._insufficient_response(
                 question=question,
                 plan=plan,
                 trace=trace,
-                detail="No matching ODI database match metadata was found for the requested fact.",
-                suggestions=["Ask about a match, year, or competition present in the ODI dataset."],
+                detail=resolved.detail,
+                suggestions=["Specify one competition, year, and match stage present in the ODI dataset."],
+            )
+        match_id = resolved.match_id
+        matched_date = str(resolved.date)
+        matched_competition = str(resolved.competition)
+        ground = str(resolved.ground)
+        winner = resolved.winner
+        toss = resolved.toss
+        competition_label = _match_competition_label(year, competition)
+        match_params: list[object] = [year, competition]
+        match_sql = _clean_match_fact_sql(MATCH_METADATA_CANDIDATES_SQL)
+        trace.final_answer_metadata = {
+            "status": "supported",
+            "match_id": match_id,
+            "date": matched_date,
+            "competition": matched_competition,
+            "stage": stage,
+            "ground": ground,
+            "fact_type": fact_type,
+            "fact_value": resolved.fact_value,
+            "toss": toss,
+            "winner": winner,
+        }
+        if fact_type in {"toss", "winner"}:
+            value_column = "Toss Winner" if fact_type == "toss" else "Match Winner"
+            table = TableBlock(
+                title="Database match fact",
+                columns=[
+                    "Match ID",
+                    "Competition",
+                    "Stage",
+                    "Date",
+                    "Ground",
+                    value_column,
+                ],
+                rows=[
+                    [
+                        match_id,
+                        matched_competition,
+                        stage.title(),
+                        matched_date,
+                        ground,
+                        resolved.fact_value,
+                    ]
+                ],
+            )
+            summary_body = (
+                f"Within the ODI database, {toss} won the toss in the {competition_label} final "
+                f"(match {match_id}), recorded on {matched_date} at {ground}."
+                if fact_type == "toss"
+                else (
+                    f"Within the ODI database, {winner} won the {competition_label} match "
+                    f"recorded on {matched_date} at {ground}."
+                )
+            )
+            trace.final_sql_or_method = match_sql
+            trace.result_columns = [
+                "match_id",
+                "competition",
+                "stage",
+                "date",
+                "ground",
+                fact_type,
+            ]
+            trace.log()
+            return QueryResponse(
+                status=EvidenceStatus.supported,
+                interpretation=self._interpretation(question, plan),
+                summaries=[
+                    SummaryBlock(title="Database-backed match fact", body=summary_body)
+                ],
+                tables=[table],
+                evidence_queries=[
+                    EvidenceQueryBlock(
+                        title="Match metadata lookup",
+                        description=resolved.detail,
+                        sql=match_sql,
+                        parameters=_display_parameters(match_params),
+                        table=table,
+                    )
+                ],
+                evidence_notes=self._trace_notes(trace, plan),
+                citations=[
+                    Citation(
+                        label="ODI match fact source",
+                        source_type=CitationSource.database,
+                        locator="analytics.deliveries_v1",
+                    )
+                ],
             )
 
-        match_id, date, matched_competition, ground, winner = match_row
         innings_sql = _clean_match_fact_sql(
             """
             SELECT
@@ -744,7 +833,6 @@ class SemanticAnalyticsService:
         columns = ["team", "opposition", "innings", "runs", "wickets", "deliveries"]
         dict_rows = [dict(zip(columns, row)) for row in innings_rows]
         team = plan.filters.get("team")
-        fact_type = plan.filters.get("fact_type")
         if isinstance(team, str):
             dict_rows = [row for row in dict_rows if row.get("team") == team]
         if not dict_rows:
@@ -764,27 +852,14 @@ class SemanticAnalyticsService:
         )
         trace.final_sql_or_method = f"{match_sql}\n---\n{innings_sql}"
         trace.result_columns = columns
-        trace.final_answer_metadata = {
-            "status": "supported",
-            "match_id": match_id,
-            "date": date,
-            "competition": matched_competition,
-            "ground": ground,
-            "winner": winner,
-        }
-        if fact_type == "winner":
-            summary_body = (
-                f"Within the ODI database, {winner} won the {year} {competition} match "
-                f"recorded on {date} at {ground}."
-            )
-        elif isinstance(team, str) and dict_rows:
+        if isinstance(team, str) and dict_rows:
             row = dict_rows[0]
             summary_body = (
                 f"Within the ODI database, {team} made {row['runs']}/{row['wickets']} "
-                f"in innings {row['innings']} of the {year} {competition} match at {ground}."
+                f"in innings {row['innings']} of the {competition_label} match at {ground}."
             )
         else:
-            summary_body = f"Within the ODI database, this match fact is grounded in the {year} {competition} scorecard."
+            summary_body = f"Within the ODI database, this match fact is grounded in the {competition_label} scorecard."
         trace.log()
         return QueryResponse(
             status=EvidenceStatus.supported,
@@ -794,7 +869,7 @@ class SemanticAnalyticsService:
             evidence_queries=[
                 EvidenceQueryBlock(
                     title="Match metadata lookup",
-                    description="Finds the database match from year and competition metadata.",
+                    description=resolved.detail,
                     sql=match_sql,
                     parameters=_display_parameters(match_params),
                     table=table,
@@ -1931,6 +2006,10 @@ def _display_parameters(params: list[object]) -> list[str | int | float | None]:
 
 def _clean_match_fact_sql(sql: str) -> str:
     return " ".join(line.strip() for line in sql.strip().splitlines() if line.strip())
+
+
+def _match_competition_label(year: int, competition: str) -> str:
+    return competition if str(year) in competition else f"{year} {competition}"
 
 
 def _public_object(value: object) -> object:
