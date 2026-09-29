@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING, Literal, Mapping, cast
 
+from backend.app.cricket_analytics.match_lighting import requested_lighting_values
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.schemas import (
     CricketQueryPlan,
@@ -25,6 +26,7 @@ SplitDimension = Literal[
     "bowling_style_group",
     "balls_faced_window",
     "over_range",
+    "match_lighting",
 ]
 Subject = Literal["batter", "bowler", "team"]
 Role = Literal["batter", "bowler"]
@@ -188,6 +190,11 @@ def _split_dimension_and_values(text: str) -> tuple[SplitDimension, list[str]] |
         return None
     if re.search(r"\b(?:by phase|across phases|phase split)\b", text):
         return "phase", ["powerplay", "death"]
+
+    # Registered match-lighting categories (stored ``daynight`` labels).
+    lighting = requested_lighting_values(text)
+    if len(lighting) == 2:
+        return "match_lighting", lighting
 
     hands = _ordered_matches(
         text,
@@ -377,6 +384,7 @@ def _remove_split_filter(filters: dict[str, object], split_by: SplitDimension) -
         "bowling_style_group": "bowling_style",
         "balls_faced_window": "balls_faced_window",
         "over_range": "over_range",
+        "match_lighting": "match_lighting",
     }[split_by]
     filters.pop(key, None)
 

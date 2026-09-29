@@ -68,6 +68,8 @@ COMMON_FILTERS = frozenset(
         "opposition",
         # The subject's own side (batting team for batters, bowling team for bowlers).
         "player_team",
+        # Registered match-lighting category (stored daynight label).
+        "match_lighting",
         "innings",
         "over_range",
         "years",

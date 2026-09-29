@@ -22,6 +22,16 @@ from backend.app.cricket_analytics.match_facts import (
     resolve_match_fact,
 )
 from backend.app.cricket_analytics.cricket_definitions import LEGAL_BALL_PREDICATE
+from backend.app.cricket_analytics.match_lighting import (
+    CASUAL_NIGHT_DISCLOSURE,
+    DAY_NIGHT_DISCLOSURE,
+    DAY_NIGHT_MATCH,
+    LIGHTING_VALUES,
+    MATCH_LIGHTING,
+    PUBLIC_LABELS,
+    casual_night_used,
+    is_lighting_value,
+)
 from backend.app.cricket_analytics.match_result_conditions import (
     BATTING_RESULT_FILTER,
     NO_RESULT_WINNER,
@@ -655,6 +665,8 @@ class SemanticAnalyticsService:
             )
 
         table = self._split_table_for_rows(plan, split_build, dict_rows)
+        lighting_table = self._lighting_side_evidence(plan)
+        extra_tables = [lighting_table] if lighting_table is not None else []
         if plan.entity in plan.filters:
             row = dict_rows[0]
             insufficient_sides = []
@@ -685,7 +697,7 @@ class SemanticAnalyticsService:
                             body=f"The two requested slices are not yet comparable: {detail}",
                         )
                     ],
-                    tables=[table],
+                    tables=[table, *extra_tables],
                     metric_references=[self._metric_reference(plan.metric)],
                     evidence_queries=[
                         EvidenceQueryBlock(
@@ -730,7 +742,7 @@ class SemanticAnalyticsService:
             status=EvidenceStatus.supported,
             interpretation=self._interpretation(question, plan),
             summaries=[summary],
-            tables=[table],
+            tables=[table, *extra_tables],
             charts=[split_chart] if split_chart else [],
             metric_references=[self._metric_reference(plan.metric)],
             evidence_queries=[
@@ -1608,7 +1620,102 @@ class SemanticAnalyticsService:
         if plan:
             notes.extend(self._match_state_notes(plan))
             notes.extend(self._result_condition_notes(plan))
+            notes.extend(self._match_lighting_notes(plan, trace.original_user_question))
         return notes
+
+    def _match_lighting_notes(self, plan: CricketQueryPlan, question: str) -> list[EvidenceNote]:
+        """Disclose the literal recorded lighting categories and excluded rows."""
+        if plan.split_by == MATCH_LIGHTING:
+            values = [str(value) for value in plan.compare_values or []]
+        elif is_lighting_value(plan.filters.get(MATCH_LIGHTING)):
+            values = [str(plan.filters[MATCH_LIGHTING])]
+        else:
+            return []
+        quoted = " and ".join(f"'{PUBLIC_LABELS.get(value, value)}'" for value in values)
+        detail = (
+            f"Recorded match-lighting categor{'ies' if len(values) > 1 else 'y'} used: {quoted}, "
+            "taken literally from the stored daynight value (one per match)."
+        )
+        if DAY_NIGHT_MATCH in values:
+            detail += " " + DAY_NIGHT_DISCLOSURE
+        if casual_night_used(question):
+            detail += " " + CASUAL_NIGHT_DISCLOSURE
+        excluded = self._unrecorded_lighting_rows(plan)
+        if excluded is not None:
+            detail += (
+                f" {excluded:,} in-scope deliveries have no or an unexpected lighting "
+                "category; they are excluded, never reassigned."
+            )
+        return [EvidenceNote(title="Match lighting", detail=detail)]
+
+    def _unrecorded_lighting_rows(self, plan: CricketQueryPlan) -> int | None:
+        from backend.app.cricket_analytics.query_builders.aggregate_builder import _filter_clauses
+
+        scope = {
+            key: value
+            for key, value in plan.filters.items()
+            if key not in {MATCH_LIGHTING, "compare_players", "comparison_metrics", "comparison_view"}
+        }
+        where: list[str] = ["1 = 1"]
+        params: list[object] = []
+        for clause, clause_params in _filter_clauses(scope, entity=plan.entity):
+            where.append(clause)
+            params.extend(clause_params)
+        placeholders = ", ".join("?" for _ in LIGHTING_VALUES)
+        sql = (
+            "SELECT COUNT(*) FROM analytics.deliveries_v1 "
+            f"WHERE {' AND '.join(where)} AND (daynight IS NULL "
+            f"OR CAST(daynight AS VARCHAR) NOT IN ({placeholders}))"
+        )
+        try:
+            rows = self.repository._fetchall(sql, [*params, *LIGHTING_VALUES])
+        except Exception:  # pragma: no cover - disclosure must not break an answer.
+            return None
+        return int(rows[0][0] or 0) if rows else None
+
+    def _lighting_side_evidence(self, plan: CricketQueryPlan) -> TableBlock | None:
+        """Per-category numerator and denominator for a named lighting split."""
+        if plan.split_by != MATCH_LIGHTING or plan.entity not in plan.filters:
+            return None
+        from backend.app.cricket_analytics.query_builders.aggregate_builder import (
+            build_aggregate_query,
+        )
+
+        columns: list[str] | None = None
+        rows: list[list[object]] = []
+        for value in plan.compare_values or []:
+            side_plan = CricketQueryPlan(
+                operation="aggregate",
+                entity=plan.entity,
+                metric=plan.metric,
+                group_by=[plan.entity],
+                filters={**plan.filters, MATCH_LIGHTING: value},
+                sort=SortSpec(by=plan.metric, direction="desc"),
+                limit=1,
+            )
+            try:
+                build = build_aggregate_query(side_plan)
+                result = self.repository._fetchall(build.sql, build.params)
+            except Exception:  # pragma: no cover - evidence must not break an answer.
+                return None
+            if columns is None:
+                columns = [
+                    plan.metric,
+                    *_metric_evidence_columns(plan.metric, plan.entity),
+                    "matches",
+                ]
+            record = dict(zip(build.columns, result[0])) if result else {}
+            rows.append(
+                [PUBLIC_LABELS.get(str(value), str(value))]
+                + [_display_value(record.get(column)) if record else 0 for column in columns]
+            )
+        if columns is None:
+            return None
+        return TableBlock(
+            title="Recorded match-lighting evidence",
+            columns=["Match Lighting", *[_label(column) for column in columns]],
+            rows=rows,
+        )
 
     def _result_condition_notes(self, plan: CricketQueryPlan) -> list[EvidenceNote]:
         """Disclose the chase/result condition, its policy and its sample scope."""
@@ -2279,6 +2386,10 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
     player_team = plan.filters.get("player_team")
     if isinstance(player_team, str):
         contexts.append(f"for {player_team}")
+
+    lighting = plan.filters.get(MATCH_LIGHTING)
+    if is_lighting_value(lighting):
+        contexts.append(f"in recorded {PUBLIC_LABELS[str(lighting)]}es")
 
     opposition = plan.filters.get("opposition")
     if isinstance(opposition, str):

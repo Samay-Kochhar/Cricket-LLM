@@ -55,6 +55,7 @@ PatchTarget = Literal[
     "filter.required_run_rate",
     "filter.batting_result",
     "filter.innings",
+    "filter.match_lighting",
     "metric",
     "limit",
     "minimum_sample",
@@ -75,6 +76,7 @@ PATCHABLE_FILTERS = {
     *MATCH_STATE_FIELDS,
     BATTING_RESULT_FILTER,
     "innings",
+    "match_lighting",
 }
 
 
@@ -468,6 +470,10 @@ def _requested_removals(text: str) -> list[str]:
         "minimum_sample": r"\b(?:no|remove|drop|without) (?:the )?(?:minimum|sample threshold|sample floor)\b",
         "limit": r"\b(?:no|remove|drop|without) (?:the )?limit\b|\ball results\b",
         "over_range": r"\b(?:all|any) overs\b|\b(?:overall|remove|drop|without) (?:the )?over range\b",
+        "match_lighting": (
+            r"\b(?:all|any) (?:match )?lighting\b|\b(?:regardless of|remove|drop|without|ignore|ignoring) "
+            r"(?:the )?(?:match )?(?:lighting|day/night)(?: filter| condition)?\b"
+        ),
     }
     for key, pattern in patterns.items():
         if re.search(pattern, text):

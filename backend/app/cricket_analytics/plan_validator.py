@@ -8,6 +8,11 @@ from backend.app.cricket_analytics.dismissal_types import (
     requested_dismissal_types,
 )
 from backend.app.cricket_analytics.match_facts import MATCH_FACT_REGISTRY
+from backend.app.cricket_analytics.match_lighting import (
+    MATCH_LIGHTING,
+    is_lighting_value,
+    requested_lighting_values,
+)
 from backend.app.cricket_analytics.match_result_conditions import (
     BATTING_RESULT_FILTER,
     is_batting_result,
@@ -69,6 +74,7 @@ FILTER_DIMENSIONS = {
     "venues",
     "opposition",
     "player_team",
+    "match_lighting",
     "innings",
     "over_range",
     "team",
@@ -85,6 +91,7 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
     warnings: list[str] = []
     errors.extend(_match_state_errors(plan, original_question))
     errors.extend(_result_condition_errors(plan, original_question))
+    errors.extend(_match_lighting_errors(plan, original_question))
     # Threshold wording such as "at least 8" belongs to its typed predicate and
     # is never reread as a sample, ranking direction or metric request.
     lowered = strip_match_state_phrases(original_question)
@@ -338,6 +345,35 @@ def _result_condition_errors(plan: CricketQueryPlan, question: str) -> list[str]
         and BATTING_RESULT_FILTER in plan.filters
     ):
         errors.append("Question removes the match-result condition, but the plan still applies it.")
+    return errors
+
+
+def _match_lighting_errors(plan: CricketQueryPlan, question: str) -> list[str]:
+    """Requested lighting categories compile literally and are never dropped."""
+    errors: list[str] = []
+    value = plan.filters.get(MATCH_LIGHTING)
+    if MATCH_LIGHTING in plan.filters and not is_lighting_value(value):
+        errors.append("Filter 'match_lighting' must be a recorded lighting category.")
+    if plan.split_by == MATCH_LIGHTING and not (
+        len(plan.compare_values or []) == 2
+        and all(is_lighting_value(item) for item in plan.compare_values or [])
+    ):
+        errors.append("A match-lighting split needs two recorded lighting categories.")
+    if plan.operation not in {"aggregate", "matchup", "split_compare", "player_compare"}:
+        return errors
+    requested = requested_lighting_values(question)
+    if len(requested) == 2:
+        if plan.split_by != MATCH_LIGHTING or set(plan.compare_values or []) != set(requested):
+            errors.append(
+                "Question compares the match-lighting categories "
+                f"{requested}, but the plan does not split by exactly those categories."
+            )
+    elif len(requested) == 1:
+        in_split = plan.split_by == MATCH_LIGHTING and requested[0] in (plan.compare_values or [])
+        if value != requested[0] and not in_split:
+            errors.append(
+                f"Question requests match lighting {requested[0]!r}, but the plan does not preserve it."
+            )
     return errors
 
 

@@ -31,6 +31,8 @@ DISMISSAL_TYPE_FILTERS = frozenset(
         "opposition",
         # The dismissed batter's side is the batting team of the row.
         "player_team",
+        # Match-level lighting category applies to every row of the match.
+        "match_lighting",
         "innings",
         "phase",
         "over_range",

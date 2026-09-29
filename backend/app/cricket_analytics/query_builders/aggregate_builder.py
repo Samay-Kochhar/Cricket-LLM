@@ -9,6 +9,7 @@ from backend.app.cricket_analytics.cricket_definitions import (
     phase_case_expression,
     phase_filter_clause,
 )
+from backend.app.cricket_analytics.match_lighting import MATCH_LIGHTING, lighting_clause
 from backend.app.cricket_analytics.match_result_conditions import (
     BATTING_RESULT_FILTER,
     batting_result_clause,
@@ -268,6 +269,9 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
                 clauses.append(("team_bat = ?", [value]))
             else:
                 clauses.append(("team_bowl = ?", [value]))
+        elif key == MATCH_LIGHTING:
+            # Registered literal stored lighting category (daynight).
+            clauses.append(lighting_clause(value))
         elif key == "player_team":
             # The subject's own side: the batting team for batting statistics
             # and the bowling team for bowling statistics (mirror of opposition).

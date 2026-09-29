@@ -6,6 +6,10 @@ from typing import Any
 
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.cricket_definitions import phase_case_expression
+from backend.app.cricket_analytics.match_lighting import (
+    is_lighting_value,
+    split_case_expression as lighting_split_case_expression,
+)
 from backend.app.cricket_analytics.metric_registry import split_metric_expression
 from backend.app.cricket_analytics.query_builders.aggregate_builder import (
     BOWLER_WICKET,
@@ -16,7 +20,7 @@ from backend.app.cricket_analytics.query_builders.aggregate_builder import (
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, QueryBuildResult
 
 
-SUPPORTED_SPLITS = {"phase", "batter_hand", "bowling_style_group", "balls_faced_window", "over_range"}
+SUPPORTED_SPLITS = {"phase", "batter_hand", "bowling_style_group", "balls_faced_window", "over_range", "match_lighting"}
 SUPPORTED_METRICS = {
     "batting_strike_rate",
     "economy_rate",
@@ -216,6 +220,13 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
             "ELSE NULL END"
         )
         return split_case, split_a, split_b, split_a, split_b, []
+    if plan.split_by == "match_lighting":
+        # Literal stored categories only; the values are validated against the
+        # registry before they reach SQL.
+        if len(compare_values) != 2 or not all(is_lighting_value(value) for value in compare_values):
+            raise ValueError("Match-lighting splits require two recorded lighting categories.")
+        split_a, split_b = compare_values[0], compare_values[1]
+        return lighting_split_case_expression(), split_a, split_b, split_a, split_b, []
     if plan.split_by == "balls_faced_window":
         split_a, split_b = _two_values(compare_values, "after_20_balls", "first_20_balls")
         split_case = (
@@ -341,6 +352,8 @@ def _split_filter_keys(plan: CricketQueryPlan) -> set[str]:
         return {"bowling_style"}
     if plan.split_by == "over_range":
         return {"over_range"}
+    if plan.split_by == "match_lighting":
+        return {"match_lighting"}
     return set()
 
 

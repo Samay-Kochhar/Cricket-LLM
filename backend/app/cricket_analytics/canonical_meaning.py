@@ -19,6 +19,14 @@ from backend.app.cricket_analytics.dismissal_types import (
     is_dismissal_share_concept,
     is_dismissal_type_concept,
 )
+from backend.app.cricket_analytics.match_lighting import (
+    LIGHTING_SOURCE,
+    MATCH_LIGHTING,
+    is_lighting_concept,
+    lighting_problem,
+    lighting_values_from_language,
+    requested_lighting_values,
+)
 from backend.app.cricket_analytics.match_result_conditions import (
     BATTING_RESULT_FILTER,
     RESULT_CONDITION_SOURCE,
@@ -102,6 +110,7 @@ class CanonicalCricketMeaning(BaseModel):
             "bowling_style_group",
             "balls_faced_window",
             "over_range",
+            "match_lighting",
         ]
         | None
     ) = None
@@ -354,6 +363,9 @@ class CanonicalMeaningResolver:
         if RESULT_CONDITION_SOURCE in resolution.candidate_sources:
             # Likewise a stated chase/result condition that cannot compile.
             return True
+        if LIGHTING_SOURCE in resolution.candidate_sources:
+            # And unrecorded match-lighting wording.
+            return True
         if resolution.status == MeaningStatus.unsupported:
             return bool(
                 resolution.reason
@@ -415,6 +427,8 @@ class CanonicalMeaningResolver:
             # A chase/result condition that fails closed is never replaced by
             # a model reading either.
             return deterministic.model_copy(update={"candidate_sources": sources})
+        if LIGHTING_SOURCE in deterministic.candidate_sources:
+            return deterministic.model_copy(update={"candidate_sources": sources})
         # A model cannot make an explicitly ambiguous question unambiguous by guessing.
         if deterministic.status == MeaningStatus.clarification or (
             _is_dismissal_type_resolution(deterministic)
@@ -442,6 +456,7 @@ class CanonicalMeaningResolver:
                         "phase": "phase",
                         "batter_hand": "batter_hand",
                         "bowling_style_group": "bowling_style",
+                        "match_lighting": MATCH_LIGHTING,
                     }.get(base.split_by):
                         continue
                     if key not in meaning.filters:
@@ -1019,6 +1034,8 @@ class CanonicalMeaningResolver:
             target_dimension = normalized[0] if len(normalized) == 1 else dimension
             if not normalized and is_dismissal_type_concept(dimension):
                 target_dimension = "dismissal_type"
+            if not normalized and is_lighting_concept(dimension):
+                target_dimension = MATCH_LIGHTING
             if target_dimension in {"season", "annual"} and "year" in meaning.group_by:
                 target_dimension = "year"
             compiled = (
@@ -1117,6 +1134,7 @@ class CanonicalMeaningResolver:
                         "batter_hand": "batter_hand",
                         "bowling_style_group": "bowling_style",
                         "over_range": "over_range",
+                        "match_lighting": MATCH_LIGHTING,
                     }.get(meaning.split_by)
                 )
             ]
@@ -1359,6 +1377,11 @@ class CanonicalMeaningResolver:
             return {field.field_id: predicate.as_filter()} if predicate else {}
         concept = _normalized_text(fact.concept).replace("_", " ")
         values = fact.values
+        if is_lighting_concept(concept):
+            # Registered match lighting: literal stored categories read from
+            # the question wording; a single category is a filter.
+            lighting = lighting_values_from_language(list(values), fact.evidence or "")
+            return {MATCH_LIGHTING: lighting[0]} if len(lighting) == 1 else {}
         if is_outcome_concept(concept):
             # Registered result condition: the values and the evidence must
             # agree on one outcome (won or lost) or nothing compiles.
@@ -1449,6 +1472,13 @@ class CanonicalMeaningResolver:
                 status=MeaningStatus.unsupported,
                 reason=problem,
                 candidate_sources=[RESULT_CONDITION_SOURCE],
+            )
+        lighting_issue = lighting_problem(_normalized_text(question))
+        if lighting_issue is not None:
+            return MeaningResolution(
+                status=MeaningStatus.unsupported,
+                reason=lighting_issue,
+                candidate_sources=[LIGHTING_SOURCE],
             )
         resolution = self._meaning_from_language_families(question, state)
         requested = requested_result_filters(_normalized_text(question))
@@ -1842,6 +1872,9 @@ class CanonicalMeaningResolver:
         elif len(venues) > 1:
             filters["venues"] = venues
         filters.update(_team_filters(question, self.available_teams))
+        lighting = requested_lighting_values(question)
+        if len(lighting) == 1:
+            filters[MATCH_LIGHTING] = lighting[0]
         filters.update(match_state)
         filters.update(result_condition)
         return filters
@@ -2089,6 +2122,8 @@ def _axis_filter_target(
         ("bowling style", "bowling_style_group"),
         ("batter hand", "batter_hand"),
         ("handedness", "batter_hand"),
+        ("day night", MATCH_LIGHTING),
+        ("lighting", MATCH_LIGHTING),
     )
     for phrase, canonical in axes:
         if phrase not in concept:
