@@ -306,6 +306,20 @@ def is_passive_dismissal_question(lowered_question: str) -> bool:
     )
 
 
+# Sample qualifications ("minimum 300 balls", "100 balls minimum", "60-ball
+# minimum", "minimum sample of 120", "at least 10 innings", "no minimum") are
+# thresholds, not ranking direction, so they are removed before direction words
+# such as "minimum" are read.
+_SAMPLE_UNIT = r"(?:legal\s+)?(?:balls?|deliver(?:y|ies)|innings?|overs?|matches?|games?)"
+SAMPLE_THRESHOLD_PATTERN = re.compile(
+    r"\b(?:minimum|min\.?|at least|atleast)(?:\s+(?:sample|qualification|threshold))?"
+    r"(?:\s+of)?\s+\d[\d,]*(?:\s+" + _SAMPLE_UNIT + r")?\b"
+    r"|\b\d[\d,]*[\s-]+" + _SAMPLE_UNIT + r"\s+minimum\b"
+    r"|\b(?:no|without(?: a| any)?)\s+minimum\b"
+    r"|\bminimum\s+(?:sample|qualification|threshold)\b"
+)
+
+
 def requested_sort_direction(
     lowered_question: str,
     metric: str,
@@ -314,10 +328,10 @@ def requested_sort_direction(
     group_by: list[str] | None = None,
     filters: dict[str, object] | None = None,
 ) -> str | None:
-    ranking_wording = re.sub(r"\bat least\b", "minimum", lowered_question)
-    if any(token in ranking_wording for token in ("highest", "maximum", "biggest", "fastest")):
+    ranking_wording = SAMPLE_THRESHOLD_PATTERN.sub(" ", lowered_question)
+    if re.search(r"\b(?:highest|maximum|biggest|fastest)\b", ranking_wording):
         return "desc"
-    if any(token in ranking_wording for token in ("lowest", "minimum", "fewest", "smallest", "slowest")):
+    if re.search(r"\b(?:lowest|minimum|fewest|smallest|slowest)\b", ranking_wording):
         return "asc"
 
     metric_definition = METRICS.get(metric)
