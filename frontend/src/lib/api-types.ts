@@ -356,6 +356,22 @@ export type WorkbenchSearchResponse =
       players: TeamSquadPlayer[];
     }
   | {
+      kind: "analytics_result";
+      trace_id: string;
+      trace: string[];
+      query: string;
+      summary: string;
+      query_response: QueryResponse;
+    }
+  | {
+      kind: "clarification";
+      trace_id: string;
+      trace: string[];
+      query: string;
+      message: string;
+      options: { label: string; query: string }[];
+    }
+  | {
       kind: "unsupported" | "empty";
       trace_id: string;
       trace: string[];

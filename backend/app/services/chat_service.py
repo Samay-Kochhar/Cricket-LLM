@@ -141,58 +141,14 @@ class ChatService:
             conversation_state = conversation_state.model_copy(
                 update={"pending_clarification": None}
             )
-        if self._has_ambiguous_ranking_metric(normalized_message):
-            replacements = (
-                ("Runs scored", "most runs"),
-                ("Batting strike rate", "highest batting strike rate"),
-                ("Wickets taken", "most wickets"),
-                ("Economy rate", "best economy rate"),
-            )
+        metric_clarification = standalone_metric_clarification(normalized_message)
+        if metric_clarification is not None:
+            clarification_message, clarification_options = metric_clarification
             return ChatReply(
                 mode="clarification",
-                message="Which metric should I use to rank the ODI statistics?",
+                message=clarification_message,
                 conversation_state=conversation_state,
-                clarification_options=[
-                    ClarificationOption(
-                        label=label,
-                        message=re.sub(
-                            r"\bbest\s+(?:statistics|stats|numbers)\b",
-                            replacement,
-                            normalized_message,
-                            count=1,
-                            flags=re.IGNORECASE,
-                        ),
-                    )
-                    for label, replacement in replacements
-                ],
-            )
-        if self._has_ambiguous_strike_rate(normalized_message):
-            return ChatReply(
-                mode="clarification",
-                message="Do you mean batting strike rate or bowling strike rate?",
-                conversation_state=conversation_state,
-                clarification_options=[
-                    ClarificationOption(
-                        label="Batting strike rate",
-                        message=re.sub(
-                            r"\bstrike rate\b",
-                            "batting strike rate",
-                            normalized_message,
-                            count=1,
-                            flags=re.IGNORECASE,
-                        ),
-                    ),
-                    ClarificationOption(
-                        label="Bowling strike rate",
-                        message=re.sub(
-                            r"\bstrike rate\b",
-                            "bowling strike rate",
-                            normalized_message,
-                            count=1,
-                            flags=re.IGNORECASE,
-                        ),
-                    ),
-                ],
+                clarification_options=clarification_options,
             )
         venue_matches = (
             resolved_pending_venues
@@ -1057,3 +1013,59 @@ class ChatService:
                 "Break this result down by powerplay, middle, and death overs.",
             ]
         return suggest_follow_ups(query_class)
+
+
+def standalone_metric_clarification(
+    message: str,
+) -> tuple[str, list[ClarificationOption]] | None:
+    """Metric choices required before any analytics run, shared by Chat and Workbench."""
+    if ChatService._has_ambiguous_ranking_metric(message):
+        replacements = (
+            ("Runs scored", "most runs"),
+            ("Batting strike rate", "highest batting strike rate"),
+            ("Wickets taken", "most wickets"),
+            ("Economy rate", "best economy rate"),
+        )
+        return (
+            "Which metric should I use to rank the ODI statistics?",
+            [
+                ClarificationOption(
+                    label=label,
+                    message=re.sub(
+                        r"\bbest\s+(?:statistics|stats|numbers)\b",
+                        replacement,
+                        message,
+                        count=1,
+                        flags=re.IGNORECASE,
+                    ),
+                )
+                for label, replacement in replacements
+            ],
+        )
+    if ChatService._has_ambiguous_strike_rate(message):
+        return (
+            "Do you mean batting strike rate or bowling strike rate?",
+            [
+                ClarificationOption(
+                    label="Batting strike rate",
+                    message=re.sub(
+                        r"\bstrike rate\b",
+                        "batting strike rate",
+                        message,
+                        count=1,
+                        flags=re.IGNORECASE,
+                    ),
+                ),
+                ClarificationOption(
+                    label="Bowling strike rate",
+                    message=re.sub(
+                        r"\bstrike rate\b",
+                        "bowling strike rate",
+                        message,
+                        count=1,
+                        flags=re.IGNORECASE,
+                    ),
+                ),
+            ],
+        )
+    return None

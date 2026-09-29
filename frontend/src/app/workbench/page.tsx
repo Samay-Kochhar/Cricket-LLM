@@ -102,6 +102,11 @@ export default function WorkbenchPage() {
     await search(query);
   }
 
+  async function handleOptionSelect(nextQuery: string) {
+    setQuery(nextQuery);
+    await search(nextQuery);
+  }
+
   async function handleYearSelect(year: number) {
     if (!yearPromptTeam) {
       return;
@@ -221,6 +226,45 @@ export default function WorkbenchPage() {
               </ul>
             </div>
           </details>
+        </section>
+      ) : null}
+
+      {result?.kind === "analytics_result" ? (
+        <section className="workbench-grid">
+          <article className="panel workbench-card">
+            <span className="eyebrow">Resolved question</span>
+            <h3 className="section-title">{result.query}</h3>
+            {result.summary ? <p className="muted-copy">{result.summary}</p> : null}
+          </article>
+          <ChatResponseSections result={result.query_response} />
+          <details className="chat-details">
+            <summary>Search trace</summary>
+            <div className="chat-details-body">
+              <ul className="evidence-list">
+                {result.trace.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </details>
+        </section>
+      ) : null}
+
+      {result?.kind === "clarification" ? (
+        <section className="panel result-panel">
+          <p className="muted-copy">{result.message}</p>
+          <div className="chip-row">
+            {result.options.map((option) => (
+              <button
+                className="suggestion-chip"
+                key={option.label}
+                onClick={() => void handleOptionSelect(option.query)}
+                type="button"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </section>
       ) : null}
 

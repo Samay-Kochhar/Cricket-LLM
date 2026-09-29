@@ -78,8 +78,8 @@ def get_services():
     )
     workbench_service = WorkbenchService(
         repository=repository,
-        query_handler=legacy_query_handler,
-        gemini_client=gemini_client,
+        query_handler=query_handler,
+        profile_handler=legacy_query_handler,
     )
 
     return {
