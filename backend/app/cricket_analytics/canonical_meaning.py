@@ -19,6 +19,18 @@ from backend.app.cricket_analytics.dismissal_types import (
     is_dismissal_share_concept,
     is_dismissal_type_concept,
 )
+from backend.app.cricket_analytics.match_result_conditions import (
+    BATTING_RESULT_FILTER,
+    RESULT_CONDITION_SOURCE,
+    innings_from_language,
+    is_chase_outcome_concept,
+    is_innings_concept,
+    is_outcome_concept,
+    outcome_from_language,
+    requested_result_filters,
+    result_condition_problem,
+    unsupported_role_reason,
+)
 from backend.app.cricket_analytics.match_state_filters import (
     MATCH_STATE_FIELDS,
     MATCH_STATE_SOURCE,
@@ -339,6 +351,9 @@ class CanonicalMeaningResolver:
             # A stated match-state condition must fail closed here rather
             # than reach a planner that could drop it.
             return True
+        if RESULT_CONDITION_SOURCE in resolution.candidate_sources:
+            # Likewise a stated chase/result condition that cannot compile.
+            return True
         if resolution.status == MeaningStatus.unsupported:
             return bool(
                 resolution.reason
@@ -396,6 +411,10 @@ class CanonicalMeaningResolver:
             # An unresolved or unregistered numeric match-state condition in the
             # question itself is never replaced by a model reading.
             return deterministic.model_copy(update={"candidate_sources": sources})
+        if RESULT_CONDITION_SOURCE in deterministic.candidate_sources:
+            # A chase/result condition that fails closed is never replaced by
+            # a model reading either.
+            return deterministic.model_copy(update={"candidate_sources": sources})
         # A model cannot make an explicitly ambiguous question unambiguous by guessing.
         if deterministic.status == MeaningStatus.clarification or (
             _is_dismissal_type_resolution(deterministic)
@@ -414,6 +433,11 @@ class CanonicalMeaningResolver:
                     continue
                 normalized = self._candidate_filter(fact)
                 for key, value in normalized.items():
+                    if key == BATTING_RESULT_FILTER and key not in meaning.filters:
+                        # A result condition is only compiled from the
+                        # question's own registered wording; an unmatched
+                        # model reading stays unaccounted and blocks.
+                        continue
                     if base.family == "split" and key == {
                         "phase": "phase",
                         "batter_hand": "batter_hand",
@@ -548,11 +572,16 @@ class CanonicalMeaningResolver:
                 team = _extract_team(entity.name, self.available_teams)
                 if not team or team != _extract_team(question, self.available_teams):
                     return unclear(f"Which team do you mean by {entity.name}?")
-                if entity.relationship != "opponent":
+                stated = _team_filters(question, self.available_teams)
+                if entity.relationship == "opponent" and stated.get("player_team") != team:
+                    filters["opposition"] = team
+                elif entity.relationship == "subject" and stated.get("player_team") == team:
+                    # "for India" / "India's batters": the subject's own side.
+                    filters["player_team"] = team
+                else:
                     return unclear(
                         "Should this team filter select the player's team or the opposition?"
                     )
-                filters["opposition"] = team
             elif entity.kind == "venue":
                 venues = venue_alias_matches(entity.name, self.available_venues)
                 if not venues:
@@ -660,6 +689,21 @@ class CanonicalMeaningResolver:
                         f"Which {field.label} condition do you mean?",
                         [option for option in options if option],
                     )
+                if key in {BATTING_RESULT_FILTER, "innings"} and (
+                    BATTING_RESULT_FILTER in explicit_filters
+                    or BATTING_RESULT_FILTER in normalized
+                ):
+                    stated = explicit_filters.get(key)
+                    if stated != value:
+                        # The chase/result condition is compiled only from the
+                        # question's registered wording; a model reading that
+                        # adds or contradicts it must be confirmed.
+                        return unclear(
+                            "Which chase or match-result condition do you mean? "
+                            "Successful chases, unsuccessful chases, all chases, "
+                            "or matches the batting side won or lost?",
+                            ["Successful chases", "Unsuccessful chases", "All chases"],
+                        )
                 # Keep directly extracted constraints when the surface candidate disagrees.
                 if key in explicit_filters:
                     continue
@@ -1013,6 +1057,54 @@ class CanonicalMeaningResolver:
                     )
                 continue
             normalized = self._candidate_filter(fact)
+            if BATTING_RESULT_FILTER in normalized:
+                # A chase-result fact is two registered conditions: the chase
+                # innings and the batting side's result are accounted for
+                # separately (#37 invariant), so neither can hide the other.
+                components = [
+                    key for key in ("innings", BATTING_RESULT_FILTER) if key in normalized
+                ]
+                component_ok = {
+                    key: meaning.filters.get(key) == normalized[key] for key in components
+                }
+                for key in components:
+                    add(
+                        "filter",
+                        fact.concept if key == BATTING_RESULT_FILTER else f"{fact.concept} (chase innings)",
+                        normalized[key],
+                        disposition="compiled" if component_ok[key] else "unsupported",
+                        target=f"filter.{key}" if component_ok[key] else None,
+                        evidence=fact.evidence,
+                        reason=(
+                            None
+                            if component_ok[key]
+                            else "The compiled plan does not preserve this chase/result condition."
+                        ),
+                    )
+                every_component = all(component_ok.values())
+                if fact.operator:
+                    add(
+                        "operator",
+                        fact.operator,
+                        fact.operator,
+                        disposition=(
+                            "compiled"
+                            if every_component and fact.operator in {"eq", "in"}
+                            else "unsupported"
+                        ),
+                        target=f"filter.{BATTING_RESULT_FILTER}" if every_component else None,
+                        evidence=fact.evidence,
+                    )
+                for value in fact.values:
+                    add(
+                        "value",
+                        fact.concept,
+                        value,
+                        disposition="compiled" if every_component else "unsupported",
+                        target=f"filter.{BATTING_RESULT_FILTER}" if every_component else None,
+                        evidence=fact.evidence,
+                    )
+                continue
             compiled_items = [
                 (key, value)
                 for key, value in normalized.items()
@@ -1267,6 +1359,20 @@ class CanonicalMeaningResolver:
             return {field.field_id: predicate.as_filter()} if predicate else {}
         concept = _normalized_text(fact.concept).replace("_", " ")
         values = fact.values
+        if is_outcome_concept(concept):
+            # Registered result condition: the values and the evidence must
+            # agree on one outcome (won or lost) or nothing compiles.
+            outcome = outcome_from_language(list(values), fact.evidence or "")
+            if outcome is None:
+                return {}
+            condition: dict[str, object] = {BATTING_RESULT_FILTER: outcome}
+            stated = requested_result_filters(fact.evidence or "")
+            if is_chase_outcome_concept(concept) or stated.get("innings") == 2:
+                condition["innings"] = 2
+            return condition
+        if is_innings_concept(concept):
+            innings = innings_from_language(list(values), fact.evidence or "")
+            return {"innings": innings} if innings is not None else {}
         categories = [canonical_dismissal_type(value) for value in values]
         if is_dismissal_type_concept(concept) or (
             categories and all(categories)
@@ -1303,8 +1409,6 @@ class CanonicalMeaningResolver:
                 if years and all(1900 <= y <= 2100 for y in years)
                 else {}
             )
-        if concept == "innings" and len(values) == 1 and str(values[0]) in {"1", "2"}:
-            return {"innings": int(values[0])}
         if concept in {"over range", "overs"} and len(values) == 2:
             try:
                 start, end = [int(v) for v in values]
@@ -1332,6 +1436,55 @@ class CanonicalMeaningResolver:
         return {}
 
     def _meaning_from_language(
+        self,
+        question: str,
+        state: Mapping[str, object] | None,
+    ) -> MeaningResolution:
+        # A chase/result condition that cannot compile exactly (both outcomes,
+        # ties/no-results, unread result wording) fails closed with the
+        # condition named, before any family could drop it.
+        problem = result_condition_problem(_normalized_text(question))
+        if problem is not None and unresolved_mention(_normalized_text(question)) is None:
+            return MeaningResolution(
+                status=MeaningStatus.unsupported,
+                reason=problem,
+                candidate_sources=[RESULT_CONDITION_SOURCE],
+            )
+        resolution = self._meaning_from_language_families(question, state)
+        requested = requested_result_filters(_normalized_text(question))
+        meaning = resolution.meaning
+        if resolution.status != MeaningStatus.resolved or meaning is None:
+            return resolution
+        if BATTING_RESULT_FILTER in meaning.filters and meaning.role == "bowler":
+            return MeaningResolution(
+                status=MeaningStatus.unsupported,
+                reason=unsupported_role_reason(),
+                candidate_sources=[RESULT_CONDITION_SOURCE],
+            )
+        competition = _unregistered_competition(question)
+        if competition is not None and "competition" not in meaning.filters:
+            # A named tournament is a scope the canonical path cannot compile
+            # yet; answering over every ODI would silently drop it.
+            return MeaningResolution(
+                status=MeaningStatus.unsupported,
+                reason=(
+                    f"Filtering player statistics by competition ({competition}) is not a "
+                    "registered filter yet, so the question was not answered over all ODIs."
+                ),
+                candidate_sources=[RESULT_CONDITION_SOURCE],
+            )
+        if any(meaning.filters.get(key) != value for key, value in requested.items()):
+            return MeaningResolution(
+                status=MeaningStatus.unsupported,
+                reason=(
+                    "The requested chase/result condition cannot be applied to this "
+                    "kind of question yet, so it was not answered without it."
+                ),
+                candidate_sources=[RESULT_CONDITION_SOURCE],
+            )
+        return resolution
+
+    def _meaning_from_language_families(
         self,
         question: str,
         state: Mapping[str, object] | None,
@@ -1618,7 +1771,13 @@ class CanonicalMeaningResolver:
         # reread them.
         match_state = registered_predicates(_normalized_text(question))
         lowered = strip_match_state_phrases(lowered)
-        if re.search(r"\b(?:chasing|second innings|innings 2)\b", lowered):
+        # Registered chase/result condition: a successful chase is innings 2
+        # plus the batting side's stored result, never one without the other.
+        result_condition = requested_result_filters(_normalized_text(question))
+        if re.search(
+            r"\b(?:chasing|chases?|chased|second innings|innings 2|batting second)\b",
+            lowered,
+        ):
             filters["innings"] = 2
         elif re.search(r"\b(?:batting first|first innings|innings 1)\b", lowered):
             filters["innings"] = 1
@@ -1682,11 +1841,22 @@ class CanonicalMeaningResolver:
             filters["venue"] = venues[0]
         elif len(venues) > 1:
             filters["venues"] = venues
-        opposition = _extract_team(question, self.available_teams)
-        if opposition:
-            filters["opposition"] = opposition
+        filters.update(_team_filters(question, self.available_teams))
         filters.update(match_state)
+        filters.update(result_condition)
         return filters
+
+
+def _unregistered_competition(question: str) -> str | None:
+    """A registered tournament alias named in a player-statistics question."""
+    from backend.app.cricket_analytics.match_facts import COMPETITION_REGISTRY
+
+    lowered = _normalized_text(question)
+    for definition in COMPETITION_REGISTRY:
+        match = re.search(definition.alias_pattern, lowered)
+        if match:
+            return match.group(0)
+    return None
 
 
 def _is_dismissal_type_resolution(resolution: MeaningResolution) -> bool:
@@ -1986,6 +2156,8 @@ def _metric_and_role(
 ) -> tuple[str | None, str | None]:
     # "required run rate above 8" is a filter, not a runs/run-rate metric.
     lowered = strip_match_state_phrases(lowered)
+    # "run chases" names the chase condition, not the runs metric.
+    lowered = re.sub(r"\brun[- ]chas", "chas", lowered)
     if requests_six_count(lowered):
         return "six_count", "batter"
     if requests_four_count(lowered):
@@ -2122,6 +2294,51 @@ def _player_aliases(available_players: Sequence[str]) -> dict[str, str]:
             aliases[alias.replace(" ", ". ", 1)] = players[0]
     aliases.update(_CANONICAL_PLAYER_ALIASES)
     return aliases
+
+
+# Wording that names the subject's own side ("for India", "India's batters",
+# "representing India"); any other team mention keeps the established
+# opposition meaning.
+_OWN_TEAM_BEFORE = re.compile(
+    r"\b(?:for|representing|playing\s+for|batting\s+for|bowling\s+for)\s+(?:the\s+)?$"
+)
+_OPPOSITION_BEFORE = re.compile(
+    r"\b(?:against|vs\.?|versus|v|facing|faced|to|off|opposing)\s+(?:the\s+)?$"
+)
+_OWN_TEAM_AFTER = re.compile(
+    r"^(?:'s|s')?\s*(?:'s\s+)?(?:batters?|batsmen|batsman|bowlers?|players?|openers?|"
+    r"cricketers?|spinners?|seamers?|pacers?|keepers?|wicketkeepers?)\b|^'s\b|^s'\s"
+)
+
+
+def _team_filters(question: str, available_teams: Sequence[str]) -> dict[str, object]:
+    """Registered team filters: the subject's own side or the opposition."""
+    lowered = question.lower().replace("’", "'")
+    aliases = {"aus": "Australia", "aussies": "Australia"}
+    for team in available_teams:
+        aliases[team.lower()] = team
+    mentions: list[tuple[int, int, str]] = []
+    for alias, team in sorted(aliases.items(), key=lambda item: -len(item[0])):
+        for match in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", lowered):
+            start, end = match.span()
+            if any(start < m_end and m_start < end for m_start, m_end, _ in mentions):
+                continue
+            mentions.append((start, end, team))
+    filters: dict[str, object] = {}
+    for start, end, team in sorted(mentions):
+        before = lowered[max(0, start - 30):start]
+        after = lowered[end:end + 30]
+        own = (
+            _OPPOSITION_BEFORE.search(before) is None
+            and (_OWN_TEAM_BEFORE.search(before) or _OWN_TEAM_AFTER.search(after))
+        )
+        key = "player_team" if own else "opposition"
+        if key in filters and filters[key] != team:
+            # Two different teams on the same side cannot compile to one filter;
+            # keep the first so the completeness check reports the other.
+            continue
+        filters.setdefault(key, team)
+    return filters
 
 
 def _extract_team(question: str, available_teams: Sequence[str]) -> str | None:

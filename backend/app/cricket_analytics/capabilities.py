@@ -55,7 +55,9 @@ COMMON_OPTIONAL_FILTERS = (
     "innings",
     "competition",
     "opposition",
+    "player_team",
     "required_run_rate",
+    "batting_result",
 )
 
 PLAYER_METRICS = (
@@ -284,7 +286,7 @@ CAPABILITIES: dict[str, Capability] = {
         ("batter",),
         ("dismissals", "dismissal_type_percentage"),
         required_filters=("batter",),
-        optional_filters=("dismissal_type", "bowler", "phase", "over_range", "years", "year_mode", "venue", "venues", "opposition", "innings", "competition", "bowling_style"),
+        optional_filters=("dismissal_type", "bowler", "phase", "over_range", "years", "year_mode", "venue", "venues", "opposition", "player_team", "innings", "competition", "bowling_style", "batting_result"),
         allowed_groupings=("dismissal_type",),
         expected_executor="query_builders.dismissal_type_builder.build_dismissal_type_query",
         sample_size_rule="Counts have no threshold; a share uses all recorded dismissals of the same batter and scope as its denominator.",

@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Literal, cast
 
 from backend.app.cricket_analytics.dismissal_types import requested_dismissal_types
+from backend.app.cricket_analytics.match_result_conditions import strip_result_phrases
 from backend.app.cricket_analytics.plan_normalizer import (
     requested_limit_from_wording,
     requested_sort_direction,
@@ -120,14 +121,16 @@ def resolve_dismissal_types(
         )
 
     if re.search(
-        r"\b(?:chases?|chased|successful(?:ly)?|won|wins?|winning|lost|losing|defeats?)\b",
-        lowered,
+        r"\b(?:successful(?:ly)?|won|wins?|winning|lost|losing|defeats?)\b",
+        strip_result_phrases(lowered),
     ):
-        # Chase-outcome and match-result conditions are not registered filters
-        # yet ("chasing" alone is the registered second-innings filter).
+        # Registered chase/result conditions (successful or unsuccessful
+        # chases, the batting side's wins or losses) compile below; any other
+        # result wording is a named limitation, never silently dropped.
         return limitation(
-            "Match-result and chase-outcome conditions are not yet supported filters "
-            "for dismissal types; 'chasing' (second innings) and 'batting first' are."
+            "Only the registered chase-outcome and match-result conditions (successful "
+            "or unsuccessful chases, and matches the batting side won or lost) are "
+            "supported filters for dismissal types."
         )
     filters = _state_filters(state)
     filters.update(resolver._explicit_filters(question, lowered))

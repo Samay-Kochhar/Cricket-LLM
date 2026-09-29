@@ -8,6 +8,14 @@ from backend.app.cricket_analytics.dismissal_types import (
     requested_dismissal_types,
 )
 from backend.app.cricket_analytics.match_facts import MATCH_FACT_REGISTRY
+from backend.app.cricket_analytics.match_result_conditions import (
+    BATTING_RESULT_FILTER,
+    is_batting_result,
+    removes_result_condition,
+    requested_result_filters,
+    result_condition_problem,
+    unsupported_role_reason,
+)
 from backend.app.cricket_analytics.match_state_filters import (
     MATCH_STATE_FIELDS,
     predicate_from_filter,
@@ -60,18 +68,23 @@ FILTER_DIMENSIONS = {
     "venue",
     "venues",
     "opposition",
+    "player_team",
     "innings",
     "over_range",
     "team",
     "dismissal_type",
     *MATCH_STATE_FIELDS,
+    BATTING_RESULT_FILTER,
 }
+
+RESULT_CONDITION_OPERATIONS = {"aggregate", "matchup", "split_compare", "player_compare"}
 
 
 def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationResult:
     errors: list[str] = []
     warnings: list[str] = []
     errors.extend(_match_state_errors(plan, original_question))
+    errors.extend(_result_condition_errors(plan, original_question))
     # Threshold wording such as "at least 8" belongs to its typed predicate and
     # is never reread as a sample, ranking direction or metric request.
     lowered = strip_match_state_phrases(original_question)
@@ -291,6 +304,40 @@ def _match_state_errors(plan: CricketQueryPlan, question: str) -> list[str]:
             errors.append(
                 f"Question removes the {MATCH_STATE_FIELDS[key].label} filter, but the plan still applies it."
             )
+    return errors
+
+
+def _result_condition_errors(plan: CricketQueryPlan, question: str) -> list[str]:
+    """The chase/result condition compiles only from its registered shape and is
+    never dropped, changed or kept after the question removes it."""
+    errors: list[str] = []
+    value = plan.filters.get(BATTING_RESULT_FILTER)
+    if BATTING_RESULT_FILTER in plan.filters:
+        if not is_batting_result(value):
+            errors.append("Filter 'batting_result' must be the registered value 'won' or 'lost'.")
+        if plan.entity == "bowler":
+            errors.append(unsupported_role_reason())
+        innings = plan.filters.get("innings")
+        if innings is not None and innings not in {1, 2}:
+            errors.append("A result condition only combines with innings 1 or 2.")
+    if plan.operation not in RESULT_CONDITION_OPERATIONS:
+        return errors
+    problem = result_condition_problem(question)
+    if problem is not None:
+        errors.append(problem)
+        return errors
+    for key, requested in requested_result_filters(question).items():
+        if plan.filters.get(key) != requested:
+            errors.append(
+                f"Question requests the chase/result condition {key}={requested!r}, "
+                "but the plan does not preserve it exactly."
+            )
+    if (
+        removes_result_condition(question)
+        and not requested_result_filters(question)
+        and BATTING_RESULT_FILTER in plan.filters
+    ):
+        errors.append("Question removes the match-result condition, but the plan still applies it.")
     return errors
 
 

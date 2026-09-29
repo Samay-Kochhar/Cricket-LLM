@@ -1627,6 +1627,13 @@ class SemanticQueryPlanner:
         )
 
         filters.update(registered_predicates(question))
+        from backend.app.cricket_analytics.match_result_conditions import (
+            requested_result_filters,
+        )
+
+        # A stated chase/result condition is compiled from its registered
+        # wording, never dropped by the legacy planner.
+        filters.update(requested_result_filters(question))
         return filters
 
     def _extract_opposition(self, lowered: str) -> str | None:

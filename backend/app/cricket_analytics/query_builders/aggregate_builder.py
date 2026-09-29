@@ -9,6 +9,10 @@ from backend.app.cricket_analytics.cricket_definitions import (
     phase_case_expression,
     phase_filter_clause,
 )
+from backend.app.cricket_analytics.match_result_conditions import (
+    BATTING_RESULT_FILTER,
+    batting_result_clause,
+)
 from backend.app.cricket_analytics.match_state_filters import (
     MATCH_STATE_FIELDS,
     match_state_filter_clauses,
@@ -264,6 +268,13 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
                 clauses.append(("team_bat = ?", [value]))
             else:
                 clauses.append(("team_bowl = ?", [value]))
+        elif key == "player_team":
+            # The subject's own side: the batting team for batting statistics
+            # and the bowling team for bowling statistics (mirror of opposition).
+            if entity == "bowler" or ("bowler" in filters and "batter" not in filters):
+                clauses.append(("team_bowl = ?", [value]))
+            else:
+                clauses.append(("team_bat = ?", [value]))
         elif key == "innings":
             clauses.append(("inns = ?", [value]))
         elif key == "field_zone":
@@ -279,6 +290,11 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
                 clauses.append((f"TRY_CAST(year AS INTEGER) IN ({placeholders})", list(value)))
         elif key == "competition":
             clauses.append(("competition = ?", [value]))
+        elif key == BATTING_RESULT_FILTER:
+            # Registered derived result condition (batting side won/lost per
+            # the stored winner); ties, no-results and unmatched winners never
+            # qualify. Combined with innings = 2 it is a successful chase.
+            clauses.append(batting_result_clause(value))
         elif key in MATCH_STATE_FIELDS:
             # Registered numeric match-state predicate: parameterized SQL over
             # the registered column, excluding unavailable values.

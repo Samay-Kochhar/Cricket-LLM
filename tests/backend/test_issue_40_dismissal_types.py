@@ -560,7 +560,9 @@ def test_validator_rejects_plans_that_drop_or_misuse_dismissal_types() -> None:
         ("How often was Kohli caught against short balls?", "length filter"),
         ("Kohli caught to bowled ratio", "ratio"),
         ("How was Kohli out in the 2011 final?", "single match"),
-        ("How often was Kohli bowled in successful run chases?", "chase-outcome"),
+        # Registered chase/result conditions compile (issue 42); unread result
+        # wording is still a named limitation.
+        ("How often was Kohli bowled in matches India lost?", "match-result condition"),
     ],
 )
 def test_unsupported_dismissal_type_requests_name_the_missing_capability(repository, question, fragment) -> None:

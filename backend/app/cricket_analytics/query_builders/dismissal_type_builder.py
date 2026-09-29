@@ -29,6 +29,8 @@ DISMISSAL_TYPE_FILTERS = frozenset(
         "venue",
         "venues",
         "opposition",
+        # The dismissed batter's side is the batting team of the row.
+        "player_team",
         "innings",
         "phase",
         "over_range",
@@ -36,6 +38,8 @@ DISMISSAL_TYPE_FILTERS = frozenset(
         "bowling_style",
         # Delivery state recorded for every row, so it applies to non-strikers.
         "required_run_rate",
+        # The batting side's stored result applies to every row of the innings.
+        "batting_result",
     }
 )
 OUTPUT_COLUMNS = [

@@ -22,6 +22,16 @@ from backend.app.cricket_analytics.match_facts import (
     resolve_match_fact,
 )
 from backend.app.cricket_analytics.cricket_definitions import LEGAL_BALL_PREDICATE
+from backend.app.cricket_analytics.match_result_conditions import (
+    BATTING_RESULT_FILTER,
+    NO_RESULT_WINNER,
+    RESULT_POLICY,
+    batting_result_clause,
+    describe_condition,
+    is_batting_result,
+    result_condition_mentions,
+    summary_phrase,
+)
 from backend.app.cricket_analytics.match_state_filters import (
     MATCH_STATE_FIELDS,
     availability_note,
@@ -98,7 +108,9 @@ class SemanticAnalyticsService:
     ) -> QueryResponse:
         # Profile shortcuts have no filter support; a stated match-state
         # condition must reach the planner, which compiles or rejects it.
-        states_match_condition = bool(match_state_mentions(question))
+        states_match_condition = bool(
+            match_state_mentions(question) or result_condition_mentions(question)
+        )
         profile_response = (
             None if states_match_condition else self._maybe_answer_batting_profile(question)
         )
@@ -1595,7 +1607,92 @@ class SemanticAnalyticsService:
             notes.append(EvidenceNote(title="Semantic V2 assumptions", detail=" | ".join(plan.assumptions)))
         if plan:
             notes.extend(self._match_state_notes(plan))
+            notes.extend(self._result_condition_notes(plan))
         return notes
+
+    def _result_condition_notes(self, plan: CricketQueryPlan) -> list[EvidenceNote]:
+        """Disclose the chase/result condition, its policy and its sample scope."""
+        definition = describe_condition(plan.filters)
+        if definition is None:
+            return []
+        innings = plan.filters.get("innings")
+        result = plan.filters.get(BATTING_RESULT_FILTER)
+        title = (
+            ("Successful chase condition" if result == "won" else "Unsuccessful chase condition")
+            if innings == 2
+            else "Match result condition"
+        )
+        detail = f"{definition} {RESULT_POLICY}"
+        scope = self._result_condition_scope(plan)
+        if scope:
+            detail += " " + scope
+        return [EvidenceNote(title=title, detail=detail)]
+
+    def _result_condition_scope(self, plan: CricketQueryPlan) -> str | None:
+        """Count in-scope team innings that meet, miss or have no stored result."""
+        if plan.operation not in {"aggregate", "matchup", "split_compare", "player_compare"}:
+            return None
+        from backend.app.cricket_analytics.query_builders.aggregate_builder import _filter_clauses
+
+        result = plan.filters.get(BATTING_RESULT_FILTER)
+        if not is_batting_result(result):
+            return None
+        scope = {
+            name: value
+            for name, value in plan.filters.items()
+            if name not in {BATTING_RESULT_FILTER, "compare_players", "comparison_metrics", "comparison_view"}
+        }
+        where: list[str] = ["1 = 1"]
+        params: list[object] = []
+        for clause, clause_params in _filter_clauses(scope, entity=plan.entity):
+            where.append(clause)
+            params.extend(clause_params)
+        compare_players = plan.filters.get("compare_players")
+        if isinstance(compare_players, list) and compare_players:
+            placeholders = ", ".join("?" for _ in compare_players)
+            role_column = "bowl" if plan.entity == "bowler" else "bat"
+            where.append(f"{role_column} IN ({placeholders})")
+            params.extend(compare_players)
+        matched_clause, _ = batting_result_clause(result)
+        team_innings = "CAST(p_match AS VARCHAR) || ':' || CAST(inns AS VARCHAR)"
+        no_result = (
+            f"(NULLIF(TRIM(CAST(winner AS VARCHAR)), '') IS NULL "
+            f"OR TRIM(CAST(winner AS VARCHAR)) = '{NO_RESULT_WINNER}')"
+        )
+        unmatched = (
+            f"(NOT {no_result} AND CAST(winner AS VARCHAR) <> CAST(team_bat AS VARCHAR) "
+            "AND CAST(winner AS VARCHAR) <> CAST(team_bowl AS VARCHAR))"
+        )
+        sql = (
+            "SELECT "
+            f"COUNT(DISTINCT {team_innings}), "
+            f"COUNT(DISTINCT CASE WHEN {matched_clause} THEN {team_innings} END), "
+            f"COUNT(DISTINCT CASE WHEN {no_result} THEN {team_innings} END), "
+            f"COUNT(DISTINCT CASE WHEN {unmatched} THEN {team_innings} END), "
+            f"COUNT(DISTINCT CASE WHEN {matched_clause} AND TRY_CAST(rain AS INTEGER) IN (1, 9) "
+            f"THEN {team_innings} END) "
+            f"FROM analytics.deliveries_v1 WHERE {' AND '.join(where)}"
+        )
+        try:
+            rows = self.repository._fetchall(sql, params)
+        except Exception:  # pragma: no cover - disclosure must not break an answer.
+            return None
+        if not rows or rows[0][0] is None:
+            return None
+        total, matched, no_winner, unmatched_winner, rain = (int(value or 0) for value in rows[0])
+        unit = "chase" if plan.filters.get("innings") == 2 else "team innings"
+        plural = "s" if unit == "chase" else ""
+        label = {
+            ("won", 2): "successful",
+            ("lost", 2): "unsuccessful",
+        }.get((str(result), plan.filters.get("innings")), "qualifying")
+        return (
+            f"Sample scope: {matched:,} {label} {unit}{plural if matched != 1 else ''} out of "
+            f"{total:,} in-scope {unit}{plural if total != 1 else ''} for the other requested "
+            f"filters; {no_winner:,} had no stored winner (tie or no result) and "
+            f"{unmatched_winner:,} had a stored winner matching neither team, so they were "
+            f"excluded; {rain:,} of the included were rain-affected and use the stored result."
+        )
 
     def _match_state_notes(self, plan: CricketQueryPlan) -> list[EvidenceNote]:
         """Disclose each numeric match-state predicate and its unavailable rows."""
@@ -2171,9 +2268,17 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
     for state_field, predicate in match_state_filters_in(plan.filters):
         contexts.append(f"with {predicate.describe(state_field)}")
 
+    result_phrase = summary_phrase(plan.filters)
+    if result_phrase:
+        contexts.append(result_phrase)
+
     style = plan.filters.get("bowling_style")
     if isinstance(style, str):
         contexts.append(f"against {style.replace('_', ' ')}")
+
+    player_team = plan.filters.get("player_team")
+    if isinstance(player_team, str):
+        contexts.append(f"for {player_team}")
 
     opposition = plan.filters.get("opposition")
     if isinstance(opposition, str):
@@ -2221,7 +2326,7 @@ def _dismissal_type_summary(
         else:
             context_parts.append("in " + ", ".join(str(year) for year in years))
     innings = plan.filters.get("innings")
-    if innings in {1, 2}:
+    if innings in {1, 2} and summary_phrase(plan.filters) is None:
         context_parts.append("batting first" if innings == 1 else "batting second")
     context = _summary_context(plan).rstrip(" ,")
     if context:

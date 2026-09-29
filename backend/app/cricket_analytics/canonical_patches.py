@@ -17,6 +17,13 @@ from backend.app.cricket_analytics.dismissal_types import (
     unrecorded_reason,
     without_dismissal_categories,
 )
+from backend.app.cricket_analytics.match_result_conditions import (
+    BATTING_RESULT_FILTER,
+    removes_result_condition,
+    requested_result_filters,
+    result_condition_problem,
+    unsupported_role_reason,
+)
 from backend.app.cricket_analytics.match_state_filters import (
     MATCH_STATE_FIELDS,
     bare_predicate_match,
@@ -46,6 +53,8 @@ PatchTarget = Literal[
     "filter.over_range",
     "filter.dismissal_type",
     "filter.required_run_rate",
+    "filter.batting_result",
+    "filter.innings",
     "metric",
     "limit",
     "minimum_sample",
@@ -64,6 +73,8 @@ PATCHABLE_FILTERS = {
     "over_range",
     "dismissal_type",
     *MATCH_STATE_FIELDS,
+    BATTING_RESULT_FILTER,
+    "innings",
 }
 
 
@@ -142,6 +153,11 @@ def interpret_meaning_patch(
             status="clarification",
             clarification=match_state_problem.problem,
         )
+    result_problem = result_condition_problem(text)
+    if result_problem is not None:
+        if not _looks_contextual(text):
+            return MeaningPatchResolution(status="not_applicable")
+        return MeaningPatchResolution(status="clarification", clarification=result_problem)
     dismissal_operations: list[MeaningPatchOperation] = []
     if "dismissal_type" in previous.group_by:
         # The previous answer fixed the dismissed batter and the registered
@@ -192,6 +208,30 @@ def interpret_meaning_patch(
         if bare is not None and predicate_from_filter(bare[0].as_filter(), field):
             explicit_filters[field.field_id] = bare[0].as_filter()
             sample_text = bare[1]
+    stated_result = requested_result_filters(text)
+    if explicit_filters.get("innings") == previous.filters.get("innings"):
+        # Restating the same innings ("all chases", "unsuccessful chases")
+        # changes nothing about it.
+        explicit_filters.pop("innings", None)
+    if (
+        "innings" in explicit_filters
+        and BATTING_RESULT_FILTER in previous.filters
+        and BATTING_RESULT_FILTER not in stated_result
+        and not removes_result_condition(text)
+    ):
+        return MeaningPatchResolution(
+            status="clarification",
+            clarification=(
+                "The previous answer was limited by a chase/result condition. Should "
+                "the batting side's result still apply to the new innings, or should "
+                "every match be included?"
+            ),
+            clarification_options=["Keep the result condition", "All matches"],
+        )
+    if BATTING_RESULT_FILTER in explicit_filters and previous.role == "bowler":
+        return MeaningPatchResolution(
+            status="clarification", clarification=unsupported_role_reason()
+        )
     if all(phase in text for phase in ("powerplay", "middle", "death")):
         explicit_filters.pop("phase", None)
         if previous.family == "comparison":
@@ -223,6 +263,14 @@ def interpret_meaning_patch(
     limit = requested_limit_from_wording(text)
     removals = _requested_removals(text)
     removals.extend(key for key in removed_fields(text) if key not in removals)
+    if (
+        removes_result_condition(text)
+        and BATTING_RESULT_FILTER not in stated_result
+        and BATTING_RESULT_FILTER not in removals
+    ):
+        # "All chases now" lifts only the result condition; the chase
+        # (second-innings) condition and everything else stay.
+        removals.append(BATTING_RESULT_FILTER)
 
     if (
         "dismissal_type" in previous.group_by

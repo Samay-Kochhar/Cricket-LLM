@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from backend.app.cricket_analytics.match_result_conditions import BATTING_RESULT_FILTER
 from backend.app.cricket_analytics.match_state_filters import MATCH_STATE_FIELDS
 
 
@@ -65,6 +66,8 @@ COMMON_FILTERS = frozenset(
         "venue",
         "venues",
         "opposition",
+        # The subject's own side (batting team for batters, bowling team for bowlers).
+        "player_team",
         "innings",
         "over_range",
         "years",
@@ -72,6 +75,8 @@ COMMON_FILTERS = frozenset(
         "competition",
         # Registered numeric match-state predicates (typed field/operator/value).
         *MATCH_STATE_FIELDS,
+        # Registered derived result condition (successful/unsuccessful chases).
+        BATTING_RESULT_FILTER,
     }
 )
 COMMON_GROUPINGS = frozenset(
