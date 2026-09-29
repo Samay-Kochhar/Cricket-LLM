@@ -13,6 +13,12 @@ from backend.app.cricket_analytics.language_meaning import (
     LanguageMeaningCandidate,
     MeaningCompletenessResult,
 )
+from backend.app.cricket_analytics.dismissal_types import (
+    DISMISSAL_TYPE_REGISTRY,
+    canonical_dismissal_type,
+    is_dismissal_share_concept,
+    is_dismissal_type_concept,
+)
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.plan_normalizer import (
     requests_boundary_percentage,
@@ -169,6 +175,10 @@ BREAKDOWN_DIMENSIONS = {
     "phase": r"(?:innings |over )?phases?|stages? of (?:the )?innings",
     "batter_hand": r"(?:batter |batting )?(?:handedness|hands?)",
     "year": r"years?|annual|annually",
+    "dismissal_type": (
+        r"(?:dismissal|out) (?:types?|modes?|methods?|kinds?|categor(?:y|ies))"
+        r"|(?:types?|modes?|methods?|kinds?|forms?) of (?:dismissals?|getting out)"
+    ),
 }
 
 
@@ -307,6 +317,8 @@ class CanonicalMeaningResolver:
         resolution = self._meaning_from_language(question, _state_mapping(state))
         if resolution.status == MeaningStatus.not_applicable:
             return False
+        if _is_dismissal_type_resolution(resolution):
+            return True
         if resolution.status == MeaningStatus.unsupported:
             return bool(
                 resolution.reason
@@ -361,7 +373,10 @@ class CanonicalMeaningResolver:
         if not self.accepts(question, state):
             return deterministic
         # A model cannot make an explicitly ambiguous question unambiguous by guessing.
-        if deterministic.status == MeaningStatus.clarification:
+        if deterministic.status == MeaningStatus.clarification or (
+            _is_dismissal_type_resolution(deterministic)
+            and deterministic.status != MeaningStatus.resolved
+        ):
             return deterministic.model_copy(update={"candidate_sources": sources})
         base = deterministic.meaning
         if base and base.family in {"matchup", "comparison", "split", "trend"}:
@@ -388,6 +403,11 @@ class CanonicalMeaningResolver:
                 meaning=meaning,
                 candidate_sources=sources,
             )
+        if base and "dismissal_type" in base.group_by:
+            # The registered dismissal-type meaning is compiled from explicit
+            # wording; extracted facts are accounted for, not merged, so a
+            # family gloss such as "comparison" cannot reroute it.
+            return deterministic.model_copy(update={"candidate_sources": sources})
         candidate_dimensions = (
             candidate.breakdown_dimensions or candidate.split_dimensions
         )
@@ -587,7 +607,16 @@ class CanonicalMeaningResolver:
                 # Keep directly extracted constraints when the surface candidate disagrees.
                 if key in explicit_filters:
                     continue
-                if key in candidate_filters and candidate_filters[key] != value:
+                if key == "dismissal_type" and isinstance(
+                    candidate_filters.get(key), list
+                ):
+                    # Several requested categories of one registered dimension.
+                    value = list(
+                        dict.fromkeys(
+                            [*cast(list[str], candidate_filters[key]), *cast(list[str], value)]
+                        )
+                    )
+                elif key in candidate_filters and candidate_filters[key] != value:
                     return unclear(
                         f"Which {key.replace('_', ' ')} constraint do you mean?"
                     )
@@ -600,6 +629,19 @@ class CanonicalMeaningResolver:
                 if dimension not in base.filters:
                     filters.pop(dimension, None)
         family = base.family if base else ("direct" if players else candidate.family)
+        group_by = base.group_by if base else [role]
+        if "dismissal_type" in filters:
+            # Requested dismissal categories always use the registered
+            # dimension path for one dismissed batter.
+            if not (
+                players
+                and role == "batter"
+                and metric in {"dismissals", "dismissal_type_percentage"}
+            ):
+                return unclear(
+                    "Dismissal types are answered as one named batter's dismissal counts or shares."
+                )
+            family, group_by = "breakdown", ["dismissal_type"]
         if family not in {"direct", "ranking", "breakdown"}:
             return unclear("Do you want a player's statistic or a player ranking?")
         if players and not (
@@ -645,7 +687,7 @@ class CanonicalMeaningResolver:
                 role=cast(Literal["batter", "bowler"], role),
                 metric=metric,
                 filters=filters,
-                group_by=base.group_by if base else [role],
+                group_by=group_by,
                 limit=limit,
                 sort_direction=cast(Literal["asc", "desc"], direction),
                 minimum_sample=sample,
@@ -739,8 +781,13 @@ class CanonicalMeaningResolver:
                     _normalized_text(question),
                 )
             )
+            dismissal_share = bool(
+                meaning.metric == "dismissal_type_percentage"
+                and is_dismissal_share_concept(metric_text)
+            )
             if (
                 candidate_metric == meaning.metric
+                or dismissal_share
                 or (
                     candidate_metric is None
                     and metric_text in _normalized_text(question)
@@ -870,6 +917,8 @@ class CanonicalMeaningResolver:
         for dimension in [*candidate.breakdown_dimensions, *candidate.split_dimensions]:
             normalized = breakdown_dimensions("by " + dimension.replace("_", " "))
             target_dimension = normalized[0] if len(normalized) == 1 else dimension
+            if not normalized and is_dismissal_type_concept(dimension):
+                target_dimension = "dismissal_type"
             if target_dimension in {"season", "annual"} and "year" in meaning.group_by:
                 target_dimension = "year"
             compiled = (
@@ -901,6 +950,9 @@ class CanonicalMeaningResolver:
                     }.get(meaning.split_by)
                 )
             ]
+            dismissal_target = _dismissal_type_filter_target(normalized, meaning)
+            if dismissal_target is not None and not compiled_items:
+                compiled_items = [("dismissal_type", normalized["dismissal_type"])]
             relationship_target = _relationship_filter_target(fact, meaning)
             axis_target = _axis_filter_target(fact, meaning)
             compiled = (
@@ -910,7 +962,9 @@ class CanonicalMeaningResolver:
                 or _is_semantic_noop_filter(fact, meaning)
             )
             target = (
-                f"filter.{compiled_items[0][0]}"
+                dismissal_target
+                if dismissal_target is not None
+                else f"filter.{compiled_items[0][0]}"
                 if compiled_items
                 else (
                     relationship_target
@@ -1131,6 +1185,15 @@ class CanonicalMeaningResolver:
     def _candidate_filter(self, fact: ExpressedFilter) -> dict[str, object]:
         concept = _normalized_text(fact.concept).replace("_", " ")
         values = fact.values
+        categories = [canonical_dismissal_type(value) for value in values]
+        if is_dismissal_type_concept(concept) or (
+            categories and all(categories)
+        ):
+            # Registered categorical dimension: every value must map to one
+            # literal stored category or the whole filter stays unresolved.
+            if not categories or not all(categories):
+                return {}
+            return {"dismissal_type": list(dict.fromkeys(cast(list[str], categories)))}
         # Language labels are intentionally not database column names. Normalize
         # categories and their source wording before interpreting requested values.
         if "phase" in concept or "over" in concept:
@@ -1197,6 +1260,15 @@ class CanonicalMeaningResolver:
         from backend.app.cricket_analytics.canonical_matchups import resolve_matchup
         from backend.app.cricket_analytics.canonical_splits import resolve_split
         from backend.app.cricket_analytics.canonical_trends import resolve_trend
+        from backend.app.cricket_analytics.canonical_dismissals import (
+            resolve_dismissal_types,
+        )
+
+        # A one-batter categorical breakdown ("caught versus bowled") is not a
+        # two-player comparison or a matchup, so it is claimed first.
+        dismissal_types = resolve_dismissal_types(self, question, state)
+        if dismissal_types is not None:
+            return dismissal_types
 
         trend = resolve_trend(self, question, state)
         if trend is not None:
@@ -1507,6 +1579,14 @@ class CanonicalMeaningResolver:
         return filters
 
 
+def _is_dismissal_type_resolution(resolution: MeaningResolution) -> bool:
+    from backend.app.cricket_analytics.canonical_dismissals import (
+        DISMISSAL_TYPE_SOURCE,
+    )
+
+    return DISMISSAL_TYPE_SOURCE in resolution.candidate_sources
+
+
 def _candidate_fact_inventory(
     candidate: LanguageMeaningCandidate,
 ) -> list[tuple[str, str, object | None, str | None]]:
@@ -1570,7 +1650,38 @@ def _is_semantic_noop_filter(
             return meaning.metric in {"yorker_count", "yorker_percentage"}
     if concept in {"player", "batter", "bowler"}:
         return any(value in meaning.filters.values() for value in fact.values)
+    if "dismissal_type" in meaning.group_by and is_dismissal_type_concept(concept):
+        # "dismissed"/"out" restates the dismissal metric, not a category.
+        return bool(values) and values <= {
+            "dismissed",
+            "dismissal",
+            "dismissals",
+            "out",
+            "got out",
+        }
     return False
+
+
+def _dismissal_type_filter_target(
+    normalized: Mapping[str, object], meaning: CanonicalCricketMeaning
+) -> str | None:
+    """Every extracted category must be one the compiled meaning returns."""
+    requested = normalized.get("dismissal_type")
+    if not isinstance(requested, list) or "dismissal_type" not in meaning.group_by:
+        return None
+    compiled = meaning.filters.get("dismissal_type")
+    if isinstance(compiled, list):
+        return (
+            "filter.dismissal_type"
+            if set(requested) <= set(compiled)
+            else None
+        )
+    # An unrestricted breakdown enumerates every registered category.
+    return (
+        "dimension.dismissal_type"
+        if set(requested) <= set(DISMISSAL_TYPE_REGISTRY)
+        else None
+    )
 
 
 def _relationship_filter_target(

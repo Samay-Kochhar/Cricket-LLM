@@ -22,6 +22,7 @@ from backend.app.cricket_analytics.language_meaning import (
     MeaningCallReason,
     extraction_prompt,
 )
+from backend.app.cricket_analytics.canonical_dismissals import DISMISSAL_TYPE_SOURCE
 from backend.app.cricket_analytics.match_facts import (
     TOSS_PATTERN,
     WORLD_CUP_COMPETITIONS_BY_YEAR,
@@ -348,6 +349,7 @@ class SemanticQueryPlanner:
                 if (
                     language_resolution.status != MeaningStatus.resolved
                     and resolution.status == MeaningStatus.clarification
+                    and DISMISSAL_TYPE_SOURCE not in language_resolution.candidate_sources
                 ):
                     reason = (
                         MeaningCallReason.ambiguous

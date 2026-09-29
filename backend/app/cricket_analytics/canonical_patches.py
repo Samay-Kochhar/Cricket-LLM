@@ -9,6 +9,14 @@ from typing import TYPE_CHECKING, Literal, cast
 from pydantic import BaseModel, ConfigDict, Field
 
 from backend.app.cricket_analytics.canonical_meaning import CanonicalCricketMeaning
+from backend.app.cricket_analytics.dismissal_types import (
+    dismissal_type_mentions,
+    requests_all_dismissal_types,
+    requests_dismissal_counts,
+    requests_dismissal_share,
+    unrecorded_reason,
+    without_dismissal_categories,
+)
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.plan_normalizer import requested_limit_from_wording
 from backend.app.cricket_analytics.schemas import MinimumSampleSpec
@@ -29,6 +37,7 @@ PatchTarget = Literal[
     "filter.batter_hand",
     "filter.comparison_view",
     "filter.over_range",
+    "filter.dismissal_type",
     "metric",
     "limit",
     "minimum_sample",
@@ -45,6 +54,7 @@ PATCHABLE_FILTERS = {
     "batter_hand",
     "comparison_view",
     "over_range",
+    "dismissal_type",
 }
 
 
@@ -115,6 +125,42 @@ def interpret_meaning_patch(
     named_players = _extract_players(question, resolver.available_players)
     if named_players:
         return MeaningPatchResolution(status="not_applicable")
+    dismissal_operations: list[MeaningPatchOperation] = []
+    if "dismissal_type" in previous.group_by:
+        # The previous answer fixed the dismissed batter and the registered
+        # dismissal-type dimension; a follow-up may change categories, switch
+        # between counts and shares, or add ordinary scope filters.
+        categories, unrecorded = dismissal_type_mentions(question)
+        if unrecorded:
+            return MeaningPatchResolution(
+                status="clarification",
+                clarification=unrecorded_reason(unrecorded),
+            )
+        if requests_all_dismissal_types(question):
+            if "dismissal_type" in previous.filters:
+                dismissal_operations.append(
+                    MeaningPatchOperation(action="remove", target="filter.dismissal_type")
+                )
+        elif categories:
+            dismissal_operations.append(
+                MeaningPatchOperation(
+                    action="replace" if "dismissal_type" in previous.filters else "add",
+                    target="filter.dismissal_type",
+                    value=list(categories),
+                )
+            )
+        if requests_dismissal_share(question):
+            if previous.metric != "dismissal_type_percentage":
+                dismissal_operations.append(
+                    MeaningPatchOperation(
+                        action="replace", target="metric", value="dismissal_type_percentage"
+                    )
+                )
+        elif requests_dismissal_counts(question) and previous.metric != "dismissals":
+            dismissal_operations.append(
+                MeaningPatchOperation(action="replace", target="metric", value="dismissals")
+            )
+        metric_text = without_dismissal_categories(metric_text)
 
     explicit_filters = resolver._explicit_filters(question, text)
     if all(phase in text for phase in ("powerplay", "middle", "death")):
@@ -148,8 +194,27 @@ def interpret_meaning_patch(
     limit = requested_limit_from_wording(text)
     removals = _requested_removals(text)
 
+    if (
+        "dismissal_type" in previous.group_by
+        and explicit_metric is not None
+        and explicit_metric not in {"dismissals", "dismissal_type_percentage"}
+    ):
+        return MeaningPatchResolution(
+            status="clarification",
+            clarification=(
+                "Dismissal types are answered as dismissal counts or shares. "
+                f"Ask for {explicit_metric.replace('_', ' ')} as a standalone question."
+            ),
+        )
+    if dismissal_operations:
+        explicit_metric = None
     changes_present = bool(
-        explicit_filters or explicit_metric or sample or limit or removals
+        explicit_filters
+        or explicit_metric
+        or sample
+        or limit
+        or removals
+        or dismissal_operations
     )
     if not changes_present or not _looks_contextual(text):
         return MeaningPatchResolution(status="not_applicable")
@@ -163,7 +228,7 @@ def interpret_meaning_patch(
             ),
         )
 
-    operations: list[MeaningPatchOperation] = []
+    operations: list[MeaningPatchOperation] = list(dismissal_operations)
     for key in removals:
         if key == "minimum_sample":
             operations.append(

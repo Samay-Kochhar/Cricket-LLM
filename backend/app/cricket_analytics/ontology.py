@@ -74,6 +74,7 @@ DIMENSIONS: dict[str, str] = {
     "year": "year",
     "over_range": "derived from over",
     "matchup": "bat and bowl",
+    "dismissal_type": "dismissal (literal stored category, dismissed batter via p_out)",
 }
 
 

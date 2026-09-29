@@ -24,6 +24,8 @@ from backend.app.cricket_analytics.match_facts import (
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.query_builders.aggregate_builder import build_aggregate_query
+from backend.app.cricket_analytics.query_builders.dismissal_type_builder import build_dismissal_type_query
+from backend.app.cricket_analytics.dismissal_types import dismissal_type_label
 from backend.app.cricket_analytics.query_planner import SemanticQueryPlanner
 from backend.app.cricket_analytics.presentation_policy import select_chart
 from backend.app.cricket_analytics.result_validator import validate_result
@@ -122,6 +124,8 @@ class SemanticAnalyticsService:
             return self._answer_match_fact(question, plan, trace)
         if plan.operation != "aggregate":
             return self._unsupported_operation_response(question, plan, trace)
+        if "dismissal_type" in plan.group_by:
+            return self._answer_dismissal_types(question, plan, trace)
         return self._answer_aggregate(question, plan, trace)
 
     def answer_matchup_page(
@@ -273,6 +277,121 @@ class SemanticAnalyticsService:
             citations=[
                 Citation(
                     label="Semantic aggregate source",
+                    source_type=CitationSource.database,
+                    locator="analytics.deliveries_v1",
+                )
+            ],
+        )
+
+    def _answer_dismissal_types(self, question: str, plan: CricketQueryPlan, trace: QueryTrace) -> QueryResponse:
+        """One dismissed batter's counts (or shares) per recorded dismissal type."""
+        trace.selected_executor = "query_builders.dismissal_type_builder.build_dismissal_type_query"
+        try:
+            build = build_dismissal_type_query(plan)
+            trace.final_sql_or_method = build.sql
+            rows = self.repository._fetchall(build.sql, build.params)
+        except Exception as exc:  # pragma: no cover - kept safe for production.
+            trace.final_answer_metadata = {"status": "query_execution_failed", "error": str(exc)}
+            return self._insufficient_response(
+                question=question,
+                plan=plan,
+                trace=trace,
+                detail="The dismissal-type query could not be executed safely.",
+                suggestions=["Check the V2 query trace and supported database columns."],
+            )
+        dict_rows = [dict(zip(build.columns, row)) for row in rows]
+        trace.result_columns = build.columns
+        batter = str(plan.filters.get("batter"))
+        total = int(dict_rows[0]["total_dismissals"] or 0) if dict_rows else 0
+        result_validation = validate_result(plan, build, dict_rows)
+        if not dict_rows or total == 0 or not result_validation.valid:
+            trace.final_answer_metadata = {
+                "status": "result_validation_failed" if dict_rows and total else "no_recorded_dismissals",
+                "result_validation": result_validation.model_dump(mode="json"),
+            }
+            return self._insufficient_response(
+                question=question,
+                plan=plan,
+                trace=trace,
+                detail=f"No recorded dismissals of {batter} were found in the ODI data for the requested filters.",
+                suggestions=["Check the player name or broaden the filters."],
+            )
+
+        share = plan.metric == "dismissal_type_percentage"
+        columns = ["batter", "dismissal_type", "dismissals"]
+        if share:
+            columns.append("dismissal_type_percentage")
+        columns.append("total_dismissals")
+        labels = {
+            "batter": "Batter",
+            "dismissal_type": "Dismissal Type",
+            "dismissals": "Dismissals",
+            "dismissal_type_percentage": "Share of Dismissals (%)",
+            "total_dismissals": "All Recorded Dismissals",
+        }
+        table = TableBlock(
+            title="Batter dismissals by recorded dismissal type",
+            columns=[labels[column] for column in columns],
+            rows=[
+                [
+                    dismissal_type_label(row["dismissal_type"])
+                    if column == "dismissal_type"
+                    else _display_value(row.get(column))
+                    for column in columns
+                ]
+                for row in dict_rows
+            ],
+        )
+        summary = SummaryBlock(
+            title="Dismissal-type answer",
+            body=_dismissal_type_summary(plan, dict_rows, total),
+        )
+        trace.final_answer_metadata = {
+            "status": "supported",
+            "row_count": len(dict_rows),
+            "columns": build.columns,
+            "result_validation": result_validation.model_dump(mode="json"),
+        }
+        trace.log()
+        notes = self._trace_notes(trace, plan)
+        notes.append(
+            EvidenceNote(
+                title="Dismissal attribution",
+                detail=(
+                    "Counts use the dismissed batter recorded for each dismissal (p_out), so a "
+                    "non-striker run out counts for the batter who was run out. Categories are the "
+                    "literal stored dismissal types; the data has no separate caught-and-bowled "
+                    "category and does not record the catcher. 'Retired not out (hurt)' and 'not out' "
+                    "rows are not dismissals. Dismissals are not converted to bowler-credit wickets."
+                    + (
+                        " Each share divides the category count by all recorded dismissals of the "
+                        "batter in the same scope."
+                        if share
+                        else ""
+                    )
+                ),
+            )
+        )
+        return QueryResponse(
+            status=EvidenceStatus.supported,
+            interpretation=self._interpretation(question, plan),
+            summaries=[summary],
+            tables=[table],
+            charts=[],
+            metric_references=[self._metric_reference(plan.metric)],
+            evidence_queries=[
+                EvidenceQueryBlock(
+                    title="Semantic V2 dismissal-type query",
+                    description=build.description,
+                    sql=build.sql,
+                    parameters=_display_parameters(build.params),
+                    table=table,
+                )
+            ],
+            evidence_notes=notes,
+            citations=[
+                Citation(
+                    label="Semantic dismissal-type source",
                     source_type=CitationSource.database,
                     locator="analytics.deliveries_v1",
                 )
@@ -1991,6 +2110,64 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
         return ""
     text = ", ".join(contexts)
     return f"{text[0].upper()}{text[1:]}, "
+
+
+def _dismissal_type_summary(
+    plan: CricketQueryPlan, rows: list[dict[str, object]], total: int
+) -> str:
+    batter = str(plan.filters.get("batter"))
+    context_parts: list[str] = []
+    bowler = plan.filters.get("bowler")
+    if isinstance(bowler, str):
+        context_parts.append(f"on deliveries from {bowler}")
+    years = plan.filters.get("years")
+    if isinstance(years, list) and years:
+        year_mode = plan.filters.get("year_mode")
+        if year_mode == "after":
+            context_parts.append(f"since {min(int(year) for year in years)}")
+        elif year_mode == "before":
+            context_parts.append(f"up to {max(int(year) for year in years)}")
+        else:
+            context_parts.append("in " + ", ".join(str(year) for year in years))
+    innings = plan.filters.get("innings")
+    if innings in {1, 2}:
+        context_parts.append("batting first" if innings == 1 else "batting second")
+    context = _summary_context(plan).rstrip(" ,")
+    if context:
+        context_parts.append(context[0].lower() + context[1:])
+    scope = f", {' '.join(context_parts)}" if context_parts else ""
+
+    def label(row: dict[str, object]) -> str:
+        return dismissal_type_label(row["dismissal_type"]).lower()
+
+    def times(count: object) -> str:
+        return "1 time" if count == 1 else f"{count} times"
+
+    total_text = f"{total} recorded dismissal{'s' if total != 1 else ''} of all types"
+    if plan.metric == "dismissal_type_percentage":
+        parts = [
+            f"{label(row)} accounts for {_display_value(row['dismissal_type_percentage'])}% "
+            f"({row['dismissals']} of {total})"
+            for row in rows
+        ]
+        return (
+            f"Within the ODI database{scope}, of {batter}'s {total_text}, "
+            + "; ".join(parts)
+            + "."
+        )
+    if isinstance(plan.filters.get("dismissal_type"), list):
+        parts = [f"{label(row)} {times(row['dismissals'])}" for row in rows]
+        listed = parts[0] if len(parts) == 1 else ", ".join(parts[:-1]) + f" and {parts[-1]}"
+        return (
+            f"Within the ODI database{scope}, {batter} was dismissed {listed} "
+            f"(out of {total_text})."
+        )
+    parts = [f"{label(row)} {row['dismissals']}" for row in rows]
+    return (
+        f"Within the ODI database{scope}, {batter}'s {total_text} break down as: "
+        + ", ".join(parts)
+        + "."
+    )
 
 
 def _metric_evidence_columns(metric: str, entity: str) -> list[str]:

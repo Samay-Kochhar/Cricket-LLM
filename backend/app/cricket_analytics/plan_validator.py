@@ -3,6 +3,10 @@ from __future__ import annotations
 import re
 
 from backend.app.cricket_analytics.capabilities import validate_capability
+from backend.app.cricket_analytics.dismissal_types import (
+    DISMISSAL_TYPE_REGISTRY,
+    requested_dismissal_types,
+)
 from backend.app.cricket_analytics.match_facts import MATCH_FACT_REGISTRY
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS, OPERATION_TYPES
@@ -51,6 +55,7 @@ FILTER_DIMENSIONS = {
     "innings",
     "over_range",
     "team",
+    "dismissal_type",
 }
 
 
@@ -122,8 +127,30 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
                     )
 
     grouped_or_filtered = set(plan.group_by) | set(plan.filters)
+    dismissal_type_plan = "dismissal_type" in grouped_or_filtered
+    if dismissal_type_plan:
+        errors.extend(_dismissal_type_errors(plan))
+    dismissal_request = requested_dismissal_types(original_question)
+    if (
+        dismissal_request is not None
+        and not dismissal_request.fielding_perspective
+        and plan.operation in {"aggregate", "matchup", "split_compare", "player_compare"}
+    ):
+        if not dismissal_type_plan:
+            errors.append(
+                "Question requests batter dismissal types, but the plan does not group or filter by dismissal_type."
+            )
+        elif dismissal_request.categories and set(
+            plan.filters.get("dismissal_type") or []
+        ) != set(dismissal_request.categories):
+            errors.append(
+                "Plan does not preserve every requested dismissal type: "
+                + ", ".join(dismissal_request.categories)
+                + "."
+            )
     if (
         plan.operation == "aggregate"
+        and not dismissal_type_plan
         and is_passive_dismissal_question(lowered)
         and ("batter" not in plan.filters or "bowler" in plan.filters)
     ):
@@ -226,3 +253,36 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
     errors.extend(validate_capability(plan))
 
     return ValidationResult(valid=not errors, errors=errors, warnings=warnings)
+
+
+def _dismissal_type_errors(plan: CricketQueryPlan) -> list[str]:
+    """The registered dismissal-type dimension has one supported plan shape."""
+    from backend.app.cricket_analytics.query_builders.dismissal_type_builder import (
+        DISMISSAL_TYPE_FILTERS,
+        DISMISSAL_TYPE_METRICS,
+    )
+
+    errors: list[str] = []
+    if plan.operation != "aggregate" or plan.entity != "batter":
+        errors.append("Dismissal types are answered as a batter aggregate.")
+    if plan.group_by != ["dismissal_type"]:
+        errors.append("Dismissal-type plans must group by dismissal_type only.")
+    if plan.metric not in DISMISSAL_TYPE_METRICS:
+        errors.append(
+            f"Metric '{plan.metric}' is not registered by dismissal type; use dismissal counts or shares."
+        )
+    if not isinstance(plan.filters.get("batter"), str):
+        errors.append("Dismissal types require one named dismissed batter.")
+    requested = plan.filters.get("dismissal_type")
+    if requested is not None and (
+        not isinstance(requested, list)
+        or not requested
+        or any(value not in DISMISSAL_TYPE_REGISTRY for value in requested)
+    ):
+        errors.append("Dismissal-type filters must list registered stored categories.")
+    unsupported = sorted(key for key in plan.filters if key not in DISMISSAL_TYPE_FILTERS)
+    if unsupported:
+        errors.append(
+            "Dismissal types do not support filters: " + ", ".join(unsupported) + "."
+        )
+    return errors

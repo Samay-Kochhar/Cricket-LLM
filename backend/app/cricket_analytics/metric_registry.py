@@ -93,6 +93,11 @@ COMMON_GROUPINGS = frozenset(
 )
 
 
+# The registered dismissal-type dimension is only compiled for batter dismissal
+# counts and shares (see ``dismissal_types`` and ``dismissal_type_builder``).
+DISMISSAL_TYPE_DIMENSION = frozenset({"dismissal_type"})
+
+
 def _rule(
     metric_id: str,
     label: str,
@@ -107,6 +112,8 @@ def _rule(
     minimum_sample: SamplePolicy | None = None,
     unit: str | None = None,
     formula: str | None = None,
+    extra_filters: frozenset[str] = frozenset(),
+    extra_groupings: frozenset[str] = frozenset(),
 ) -> MetricRule:
     return MetricRule(
         metric_id=metric_id,
@@ -118,8 +125,8 @@ def _rule(
         default_sort=default_sort,
         higher_is_better=higher_is_better,
         minimum_sample=minimum_sample or SamplePolicy(),
-        allowed_filters=COMMON_FILTERS,
-        allowed_groupings=COMMON_GROUPINGS,
+        allowed_filters=COMMON_FILTERS | extra_filters,
+        allowed_groupings=COMMON_GROUPINGS | extra_groupings,
         sql_expression=sql_expression,
         result_field=metric_id,
         unit=unit,
@@ -149,7 +156,8 @@ METRIC_REGISTRY: dict[str, MetricRule] = {
     "bowler_dot_balls": _rule("bowler_dot_balls", "Bowler Dot Balls", "bowler", "bowler_dot_balls", None, "count", "desc", True, "bowler_dot_balls", unit="balls", formula="count legal balls with zero bowler runs"),
     "boundary_percentage": _rule("boundary_percentage", "Boundary Percentage", "batter_or_bowler", "boundary_balls", "balls", "percentage", "desc", True, "boundary_balls / NULLIF(sample_balls, 0) * 100.0", minimum_sample=SamplePolicy(balls=60), unit="percent", formula="boundary balls / sample balls * 100"),
     "false_shot_percentage": _rule("false_shot_percentage", "False Shot Percentage", "batter_or_bowler", "false_shots", "balls", "percentage", "desc", None, "false_shots / NULLIF(sample_balls, 0) * 100.0", minimum_sample=SamplePolicy(balls=60), unit="percent", formula="false shots / sample balls * 100"),
-    "dismissals": _rule("dismissals", "Dismissals", "batter_or_bowler", "dismissals", None, "count", "desc", None, "dismissals", unit="dismissals", formula="count dismissals"),
+    "dismissals": _rule("dismissals", "Dismissals", "batter_or_bowler", "dismissals", None, "count", "desc", None, "dismissals", unit="dismissals", formula="count dismissals", extra_filters=DISMISSAL_TYPE_DIMENSION, extra_groupings=DISMISSAL_TYPE_DIMENSION),
+    "dismissal_type_percentage": _rule("dismissal_type_percentage", "Share of Dismissals", "batter", "dismissals", "total_dismissals", "percentage", "desc", None, "dismissal_type_percentage", unit="percent", formula="dismissed-batter dismissals of the recorded dismissal type / all recorded dismissals of that batter in the same scope * 100", extra_filters=DISMISSAL_TYPE_DIMENSION, extra_groupings=DISMISSAL_TYPE_DIMENSION),
     "yorker_count": _rule("yorker_count", "Yorker Count", "bowler", "yorker_balls", None, "count", "desc", True, "yorker_balls", unit="balls", formula="count legal yorkers"),
     "yorker_percentage": _rule("yorker_percentage", "Yorker Percentage", "bowler", "yorker_balls", "legal_balls", "percentage", "desc", True, "yorker_balls / NULLIF(legal_balls, 0) * 100.0", minimum_sample=SamplePolicy(legal_balls=60), unit="percent", formula="legal yorkers / legal balls * 100"),
     "wickets_per_over": _rule("wickets_per_over", "Wickets Per Over", "bowler", "wickets", "legal_balls", "rate", "desc", True, "wickets / NULLIF(legal_balls / 6.0, 0)", minimum_sample=SamplePolicy(legal_balls=60), unit="wickets per over", formula="wickets / legal overs"),

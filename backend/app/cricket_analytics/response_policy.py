@@ -12,6 +12,7 @@ from backend.app.cricket_analytics.canonical_meaning import (
     MeaningStatus,
     _extract_players,
 )
+from backend.app.cricket_analytics.dismissal_types import requested_dismissal_types
 from backend.app.cricket_analytics.player_roles import PlayerRoleResolver
 
 
@@ -89,7 +90,9 @@ def _capability_outcome(
     text: str,
 ) -> tuple[MeaningStatus, str] | None:
     if re.search(
-        r"\b(?:catches|catcher|fielding|run[- ]outs?|captain(?:ed|cy|s)?)\b", text
+        r"\b(?:catches|catcher|fielding|captain(?:ed|cy|s)?)\b", text
+    ) or (
+        re.search(r"\brun[- ]outs?\b", text) and not _is_batter_run_out_dismissal(text)
     ):
         return (
             MeaningStatus.data_limitation,
@@ -128,6 +131,16 @@ def _capability_outcome(
             "Team analysis questions need explicit tested team semantics that are not yet supported.",
         )
     return None
+
+
+def _is_batter_run_out_dismissal(text: str) -> bool:
+    """"Was Kohli run out" is a recorded batter dismissal type, not fielding."""
+    request = requested_dismissal_types(text)
+    return bool(
+        request is not None
+        and not request.fielding_perspective
+        and "run out" in request.categories
+    )
 
 
 def _is_vague_metric_request(text: str) -> bool:
