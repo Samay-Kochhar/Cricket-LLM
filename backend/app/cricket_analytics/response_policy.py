@@ -17,6 +17,9 @@ from backend.app.cricket_analytics.player_roles import PlayerRoleResolver
 
 
 POLICY_SOURCE = "response_policy"
+TEAM_ANALYSIS_UNSUPPORTED = (
+    "Team analysis questions need explicit tested team semantics that are not yet supported."
+)
 
 
 def apply_response_policy(
@@ -126,10 +129,7 @@ def _capability_outcome(
             text,
         )
     ):
-        return (
-            MeaningStatus.unsupported,
-            "Team analysis questions need explicit tested team semantics that are not yet supported.",
-        )
+        return (MeaningStatus.unsupported, TEAM_ANALYSIS_UNSUPPORTED)
     return None
 
 

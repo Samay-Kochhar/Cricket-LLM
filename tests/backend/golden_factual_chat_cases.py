@@ -141,7 +141,7 @@ GOLDEN_FACTUAL_CHAT_CASES = [
     g("Which team wins most often after losing early wickets?", "unsupported", "predictive_analysis", "team", "wickets_taken"),
     g("Which batter should be targeted with short-ball tactics?", "unsupported", "tactical_recommendation", "batter", "runs_scored"),
     g("Which team scores fastest in the powerplay?", "unsupported", "aggregate", "team", "batting_strike_rate"),
-    g("Which team has the best economy rate?", "unsupported", "aggregate", "bowler", "economy_rate", ("team",)),
+    g("Which team has the best economy rate?", "supported", "aggregate", "team", "economy_rate", ("bowling_team",), columns=("bowling_team", "economy_rate")),
     g("Which batting team scores the most runs?", "unsupported", "aggregate", "team", "runs_scored"),
     g("Who has the most wickets at Melbourne Cricket Ground?", "supported", "aggregate", "bowler", "wickets_taken", ("bowler",), {"venue": "Melbourne Cricket Ground"}, columns=("bowler", "wickets_taken")),
     g("Against which line does Shreyas Iyer score fastest?", "supported", "aggregate", "batter", "batting_strike_rate", ("line",), {"batter": "Shreyas Iyer"}, columns=("line", "batting_strike_rate", "balls_faced")),
@@ -179,7 +179,8 @@ GOLDEN_FACTUAL_CHAT_CASES = [
     g("What is Kohli's dot-ball percentage at Wankhede?", "supported", "aggregate", "batter", "batter_dot_ball_percentage", ("batter",), {"batter": "Virat Kohli", "venue": "Wankhede Stadium, Mumbai"}, columns=("batter", "batter_dot_ball_percentage")),
     g("What is Bumrah's yorker percentage at Wankhede?", "supported", "aggregate", "bowler", "yorker_percentage", ("bowler",), {"bowler": "Jasprit Bumrah", "venue": "Wankhede Stadium, Mumbai"}, columns=("bowler", "yorker_percentage")),
     g("Show me the fastest team against Australia.", "unsupported", "aggregate", "team", "batting_strike_rate", ("team",), {"opposition": "Australia"}),
-    g("Which team has the best economy against India?", "unsupported", "aggregate", "bowler", "economy_rate", ("team",), {"opposition": "India"}),
+    # Issue 44: bowling-team economy is a registered team metric with explicit roles.
+    g("Which team has the best economy against India?", "supported", "aggregate", "team", "economy_rate", ("bowling_team",), {"batting_team": "India"}, columns=("bowling_team", "economy_rate")),
     g("Who has the better economy, Starc or Rabada, minimum 9999 legal balls?", "insufficient_evidence", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Mitchell Starc", "Kagiso Rabada"], "comparison_metrics": ["economy_rate"]}),
     g("Compare Kohli and Rohit at Wankhede.", "supported", "player_compare", "batter", "batting_strike_rate", ("batter",), {"compare_players": ["Rohit Sharma", "Virat Kohli"], "comparison_metrics": CORE_BATTER_METRICS, "venue": "Wankhede Stadium, Mumbai"}, columns=("player", "batting_strike_rate")),
     g("Compare Bumrah and Starc at the MCG.", "insufficient_evidence", "player_compare", "bowler", "economy_rate", ("bowler",), {"compare_players": ["Jasprit Bumrah", "Mitchell Starc"], "comparison_metrics": CORE_BOWLER_METRICS, "venue": "Melbourne Cricket Ground"}),

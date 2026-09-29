@@ -8,6 +8,10 @@ from backend.app.cricket_analytics.dismissal_types import (
     requested_dismissal_types,
 )
 from backend.app.cricket_analytics.match_facts import MATCH_FACT_REGISTRY
+from backend.app.cricket_analytics.team_metrics import (
+    team_metric_ownership_ok,
+    team_metric_plan_errors,
+)
 from backend.app.cricket_analytics.match_lighting import (
     MATCH_LIGHTING,
     is_lighting_value,
@@ -107,8 +111,13 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
             owner = get_metric(plan.metric, entity=plan.entity, filters=plan.filters).owner
         except KeyError:
             owner = METRICS[plan.metric].owner
-        if plan.entity in COMPATIBLE_OWNER and owner not in COMPATIBLE_OWNER[plan.entity]:
+        if (
+            plan.entity in COMPATIBLE_OWNER
+            and owner not in COMPATIBLE_OWNER[plan.entity]
+            and not team_metric_ownership_ok(plan)
+        ):
             errors.append(f"Metric '{plan.metric}' is owned by {owner}, not compatible with entity '{plan.entity}'.")
+    errors.extend(team_metric_plan_errors(plan))
 
     for dimension in plan.group_by:
         if dimension not in DIMENSIONS:

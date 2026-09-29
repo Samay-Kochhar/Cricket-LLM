@@ -99,6 +99,9 @@ class SemanticQueryPlanner:
         match_fact = self._plan_registered_match_fact(question, trace)
         if match_fact is not None:
             return match_fact
+        team_metric = self._plan_registered_team_metric(question, trace)
+        if team_metric is not None:
+            return team_metric
         canonical_state = (
             None
             if canonical_meaning_from_state(conversation_state) is not None
@@ -213,6 +216,83 @@ class SemanticQueryPlanner:
             "selected_model": None,
             "finish_reason": None,
             "parse_outcome": "registered_match_fact",
+            "validation_outcome": "valid" if validation.valid else "invalid",
+            "repair_outcome": "not_needed",
+            "latency_ms": 0.0,
+        }
+        return PlannerResult(plan=plan, validation=validation, used_gemini=False)
+
+    def _plan_registered_team_metric(
+        self, question: str, trace: QueryTrace
+    ) -> PlannerResult | None:
+        """Team rankings with explicit batting/bowling-team roles (no model call).
+
+        Only questions the capability policy would otherwise refuse as team
+        analysis are claimed, so no existing answer changes route; every other
+        capability outcome (for example prediction) keeps precedence.
+        """
+        from backend.app.cricket_analytics.response_policy import TEAM_ANALYSIS_UNSUPPORTED
+        from backend.app.cricket_analytics.team_metrics import (
+            TEAM_METRIC_SOURCE,
+            extract_team_metric_meaning,
+            names_team_role,
+        )
+
+        outcome = capability_outcome(question)
+        if outcome is not None and outcome[1] != TEAM_ANALYSIS_UNSUPPORTED:
+            return None
+        if outcome is None and not names_team_role(question):
+            # Explicit bowling/batting-side wording is always a team subject,
+            # never a player ranking.
+            return None
+        resolver = CanonicalMeaningResolver(
+            available_players=self.available_players,
+            available_venues=self.available_venues,
+            available_teams=self.available_teams,
+            player_participation=self.player_roles.participation,
+        )
+        meaning = extract_team_metric_meaning(question, resolver, self.available_teams)
+        if meaning is None:
+            return None
+        trace.language_meaning_candidate = {"version": 1, **meaning.canonical()}
+        trace.canonical_meaning = meaning.canonical()
+        trace.completeness_result = meaning.completeness(question)
+        result = meaning.outcome()
+        if result is not None:
+            status, message, options = result
+            trace.meaning_resolution = (
+                {
+                    "status": "clarification",
+                    "clarification": message,
+                    "clarification_options": options,
+                    "candidate_sources": [TEAM_METRIC_SOURCE],
+                }
+                if status == "clarification"
+                else {
+                    "status": status,
+                    "reason": message,
+                    "candidate_sources": [TEAM_METRIC_SOURCE],
+                }
+            )
+            validation = ValidationResult(valid=False, errors=[message])
+            trace.validation_result = validation.model_dump(mode="json")
+            return PlannerResult(plan=None, validation=validation, used_gemini=False)
+
+        plan = meaning.compile()
+        validation = validate_plan(plan, question)
+        trace.meaning_resolution = {
+            "status": "resolved",
+            "candidate_sources": [TEAM_METRIC_SOURCE],
+        }
+        trace.parsed_json_plan = plan.model_dump(mode="json")
+        trace.normalized_plan = plan.model_dump(mode="json")
+        trace.validation_result = validation.model_dump(mode="json")
+        trace.operation_type = plan.operation
+        trace.planner_outcome = {
+            "attempt_count": 0,
+            "selected_model": None,
+            "finish_reason": None,
+            "parse_outcome": "registered_team_metric",
             "validation_outcome": "valid" if validation.valid else "invalid",
             "repair_outcome": "not_needed",
             "latency_ms": 0.0,

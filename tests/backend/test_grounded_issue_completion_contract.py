@@ -83,9 +83,12 @@ def test_failure_states_distinguish_data_limitation_unsupported_and_planner_unce
     assert "fielding" in catches.insufficiencies[0].detail.lower()
     assert "missing" in catches.insufficiencies[0].detail.lower()
 
-    unsupported = semantic_service.answer_question("Which team has the best economy against India?")
+    # Issue 44 registered bowling-team economy; other team metrics still fail closed.
+    unsupported = semantic_service.answer_question("Which team has the highest run rate against India?")
     assert unsupported.status.value == "unsupported"
     assert unsupported.failure_state == "unsupported_capability"
+    team_economy = semantic_service.answer_question("Which team has the best economy against India?")
+    assert team_economy.status.value == "supported"
 
     no_llm = SemanticAnalyticsService(
         repository=semantic_service.repository,

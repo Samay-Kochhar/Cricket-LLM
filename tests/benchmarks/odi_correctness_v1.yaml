@@ -348,16 +348,36 @@ cases:
           clarification_labels: [Runs scored, Batting strike rate, Wickets taken, Economy rate]
           message_contains: ["Which metric"]
 
-  - id: unsupported-team-economy
+  - id: team-economy-against-india
+    family: ranking
+    outcome: supported
+    turns:
+      # Issue 44: registered bowling-team economy with explicit team roles.
+      # Independent query: Zimbabwe 4,099 bowler runs / 4,743 legal balls = 5.19.
+      - prompt: Which team has the best economy against India?
+        expected:
+          mode: analysis
+          status: supported
+          plan:
+            operation: aggregate
+            entity: team
+            metric: economy_rate
+            group_by: [bowling_team]
+            filters:
+              batting_team: India
+          message_contains: ["Zimbabwe", "5.19", "default minimum of 60 legal balls"]
+          evidence: required
+
+  - id: unsupported-team-run-rate
     family: unsupported
     outcome: unsupported
     turns:
-      - prompt: Which team has the best economy against India?
+      - prompt: Which team has the highest run rate against India?
         expected:
           mode: analysis
           status: unsupported
           failure_state: unsupported_capability
-          message_contains: ["need explicit tested team semantics"]
+          message_contains: ["not a registered team metric"]
 
   - id: missing-fielding-data
     family: missing_data

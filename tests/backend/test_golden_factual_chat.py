@@ -82,7 +82,12 @@ def test_golden_factual_chat_contract(semantic_service: SemanticAnalyticsService
             else "unsupported_capability"
         )
         assert response.failure_state == expected_failure
-        assert meaning_resolution.get("candidate_sources") == ["response_policy"]
+        # Unregistered team metrics fail closed in the registered team-metric
+        # stage (issue 44); everything else fails closed in the response policy.
+        assert meaning_resolution.get("candidate_sources") in (
+            ["response_policy"],
+            ["registered_team_metric_language"],
+        )
         assert response.summaries or response.insufficiencies
         return
     plan = trace["normalized_plan"]

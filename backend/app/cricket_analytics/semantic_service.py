@@ -1621,7 +1621,37 @@ class SemanticAnalyticsService:
             notes.extend(self._match_state_notes(plan))
             notes.extend(self._result_condition_notes(plan))
             notes.extend(self._match_lighting_notes(plan, trace.original_user_question))
+            notes.extend(self._team_metric_notes(plan))
         return notes
+
+    @staticmethod
+    def _team_metric_notes(plan: CricketQueryPlan) -> list[EvidenceNote]:
+        """Disclose team roles, the team metric definition and the qualification."""
+        if plan.question_subject != "team_ranking":
+            return []
+        from backend.app.cricket_analytics.team_metrics import TEAM_ECONOMY_DEFINITION
+
+        roles = ["Grouped subject: bowling team (team_bowl)."]
+        if isinstance(plan.filters.get("batting_team"), str):
+            roles.append(f"Batting opposition: {plan.filters['batting_team']} (team_bat).")
+        if isinstance(plan.filters.get("bowling_team"), str):
+            roles.append(f"Bowling team filter: {plan.filters['bowling_team']}.")
+        legal_balls = plan.minimum_sample.legal_balls if plan.minimum_sample else None
+        qualification = (
+            f"Qualification: at least {legal_balls} legal balls, as requested."
+            if plan.minimum_sample_explicit
+            else f"Qualification: at least {legal_balls} legal balls, the documented default "
+            "for rate rankings (not a user-provided threshold)."
+        )
+        order = "ascending (lowest first)" if plan.sort.direction == "asc" else "descending (highest first)"
+        return [
+            EvidenceNote(
+                title="Team metric definition",
+                detail=" ".join(
+                    [TEAM_ECONOMY_DEFINITION, *roles, qualification, f"Sorted {order}."]
+                ),
+            )
+        ]
 
     def _match_lighting_notes(self, plan: CricketQueryPlan, question: str) -> list[EvidenceNote]:
         """Disclose the literal recorded lighting categories and excluded rows."""
@@ -2387,6 +2417,13 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
     if isinstance(player_team, str):
         contexts.append(f"for {player_team}")
 
+    bowling_team = plan.filters.get("bowling_team")
+    if isinstance(bowling_team, str) and plan.question_subject == "team_ranking":
+        contexts.append(f"for {bowling_team}'s bowling")
+    batting_team = plan.filters.get("batting_team")
+    if isinstance(batting_team, str) and plan.question_subject == "team_ranking":
+        contexts.append(f"against {batting_team} batting")
+
     lighting = plan.filters.get(MATCH_LIGHTING)
     if is_lighting_value(lighting):
         contexts.append(f"in recorded {PUBLIC_LABELS[str(lighting)]}es")
@@ -2412,6 +2449,15 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
         for value, label in minimums:
             if value is not None:
                 contexts.append(f"with a minimum sample of {value} {label}")
+    elif (
+        plan.question_subject == "team_ranking"
+        and plan.minimum_sample
+        and plan.minimum_sample.legal_balls
+    ):
+        # A default qualification is shown as a default, never as user-provided.
+        contexts.append(
+            f"with the default minimum of {plan.minimum_sample.legal_balls} legal balls"
+        )
 
     if not contexts:
         return ""
