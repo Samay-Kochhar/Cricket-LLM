@@ -97,11 +97,13 @@ Champions Trophy 2006 249759, 2009 415287, 2013 566948, 2017 1022375; Asia Cup
 - Full suite: 1,057 passed, 11 failed. The same 11 fail on the unchanged parent
   commit and at 54a1821, and pass at f90a5ac; they are the "minimum N balls"
   sort-direction regression described under limitations, not match facts.
+  After the follow-up fix in d647c19 the full suite passes (1,075).
 - The saved 150-response capture
   (`tests/evals/results/releases/current-2026-09-27/fresh-150.jsonl`) was
   re-executed through the application and database offline: 145/150, identical to
   the unchanged baseline before this change. The five failures are pre-existing
   ranking sort-direction regressions unrelated to match facts (see limitations).
+  After the follow-up fix in d647c19 the replay is 150/150.
 - The saved priority-8 capture replays the toss tracer as a pass with no model
   call; no fresh Gemini evaluation was run.
 
@@ -116,5 +118,6 @@ Champions Trophy 2006 249759, 2009 415287, 2013 566948, 2017 1022375; Asia Cup
   `unseen-rank-pace-boundary-b`) fail offline replay at this change's baseline and
   at 54a1821; they pass at f90a5ac. All five use "minimum N legal balls" wording,
   and 54a1821 added "minimum" as an ascending-order word in
-  `requested_sort_direction`. This is outside issue 39 and is left for a separate
-  fix.
+  `requested_sort_direction`. This was outside issue 39 and was fixed separately
+  in d647c19, which removes sample-threshold clauses before reading direction
+  words.
