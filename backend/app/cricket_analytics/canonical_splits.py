@@ -309,7 +309,12 @@ def _split_metric_and_role(
     subject: Subject | None,
 ) -> tuple[str | None, str | None]:
     from backend.app.cricket_analytics.canonical_meaning import _metric_and_role
+    from backend.app.cricket_analytics.match_state_filters import (
+        strip_match_state_phrases,
+    )
 
+    # "required run rate above 8" is a filter, never the run-rate metric.
+    text = strip_match_state_phrases(text)
     if re.search(r"\brun[- ]rate\b", text) or (
         subject == "team" and re.search(r"\baccelerat", text)
     ):

@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from backend.app.cricket_analytics.match_state_filters import MATCH_STATE_FIELDS
+
 
 MetricOwner = Literal["batter", "bowler", "team", "batter_or_bowler"]
 SortDirection = Literal["asc", "desc"]
@@ -68,6 +70,8 @@ COMMON_FILTERS = frozenset(
         "years",
         "year_mode",
         "competition",
+        # Registered numeric match-state predicates (typed field/operator/value).
+        *MATCH_STATE_FIELDS,
     }
 )
 COMMON_GROUPINGS = frozenset(

@@ -9,6 +9,10 @@ from backend.app.cricket_analytics.cricket_definitions import (
     phase_case_expression,
     phase_filter_clause,
 )
+from backend.app.cricket_analytics.match_state_filters import (
+    MATCH_STATE_FIELDS,
+    match_state_filter_clauses,
+)
 from backend.app.cricket_analytics.metric_registry import metric_sql_expression
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, QueryBuildResult
@@ -275,6 +279,10 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
                 clauses.append((f"TRY_CAST(year AS INTEGER) IN ({placeholders})", list(value)))
         elif key == "competition":
             clauses.append(("competition = ?", [value]))
+        elif key in MATCH_STATE_FIELDS:
+            # Registered numeric match-state predicate: parameterized SQL over
+            # the registered column, excluding unavailable values.
+            clauses.extend(match_state_filter_clauses({key: value}))
     return clauses
 
 

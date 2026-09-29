@@ -55,6 +55,7 @@ COMMON_OPTIONAL_FILTERS = (
     "innings",
     "competition",
     "opposition",
+    "required_run_rate",
 )
 
 PLAYER_METRICS = (

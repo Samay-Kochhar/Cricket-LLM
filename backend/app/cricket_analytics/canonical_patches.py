@@ -17,6 +17,13 @@ from backend.app.cricket_analytics.dismissal_types import (
     unrecorded_reason,
     without_dismissal_categories,
 )
+from backend.app.cricket_analytics.match_state_filters import (
+    MATCH_STATE_FIELDS,
+    bare_predicate_match,
+    predicate_from_filter,
+    removed_fields,
+    unresolved_mention,
+)
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.plan_normalizer import requested_limit_from_wording
 from backend.app.cricket_analytics.schemas import MinimumSampleSpec
@@ -38,6 +45,7 @@ PatchTarget = Literal[
     "filter.comparison_view",
     "filter.over_range",
     "filter.dismissal_type",
+    "filter.required_run_rate",
     "metric",
     "limit",
     "minimum_sample",
@@ -55,6 +63,7 @@ PATCHABLE_FILTERS = {
     "comparison_view",
     "over_range",
     "dismissal_type",
+    *MATCH_STATE_FIELDS,
 }
 
 
@@ -125,6 +134,14 @@ def interpret_meaning_patch(
     named_players = _extract_players(question, resolver.available_players)
     if named_players:
         return MeaningPatchResolution(status="not_applicable")
+    match_state_problem = unresolved_mention(text)
+    if match_state_problem is not None:
+        if not _looks_contextual(text):
+            return MeaningPatchResolution(status="not_applicable")
+        return MeaningPatchResolution(
+            status="clarification",
+            clarification=match_state_problem.problem,
+        )
     dismissal_operations: list[MeaningPatchOperation] = []
     if "dismissal_type" in previous.group_by:
         # The previous answer fixed the dismissed batter and the registered
@@ -163,6 +180,18 @@ def interpret_meaning_patch(
         metric_text = without_dismissal_categories(metric_text)
 
     explicit_filters = resolver._explicit_filters(question, text)
+    # A bare threshold ("What about above 10?") restates the one numeric
+    # match-state field the previous answer was filtered by.
+    previous_state_fields = [key for key in previous.filters if key in MATCH_STATE_FIELDS]
+    sample_text = text
+    if len(previous_state_fields) == 1 and not (
+        set(explicit_filters) & set(MATCH_STATE_FIELDS)
+    ):
+        bare = bare_predicate_match(text)
+        field = MATCH_STATE_FIELDS[previous_state_fields[0]]
+        if bare is not None and predicate_from_filter(bare[0].as_filter(), field):
+            explicit_filters[field.field_id] = bare[0].as_filter()
+            sample_text = bare[1]
     if all(phase in text for phase in ("powerplay", "middle", "death")):
         explicit_filters.pop("phase", None)
         if previous.family == "comparison":
@@ -190,9 +219,10 @@ def interpret_meaning_patch(
         explicit_metric, metric_role = _metric_and_role(
             metric_text, None, previous.role
         )
-    sample = _explicit_sample(text, explicit_metric or previous.metric)
+    sample = _explicit_sample(sample_text, explicit_metric or previous.metric)
     limit = requested_limit_from_wording(text)
     removals = _requested_removals(text)
+    removals.extend(key for key in removed_fields(text) if key not in removals)
 
     if (
         "dismissal_type" in previous.group_by

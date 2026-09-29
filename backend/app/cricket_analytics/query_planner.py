@@ -663,7 +663,12 @@ class SemanticQueryPlanner:
         question: str,
         validation: ValidationResult,
     ) -> ValidationResult:
-        lowered = question.lower()
+        from backend.app.cricket_analytics.match_state_filters import (
+            strip_match_state_phrases,
+        )
+
+        # Predicate wording ("over 8") is not reread as an over/phase scope.
+        lowered = strip_match_state_phrases(question)
         inferred = self._infer_filters(question, lowered, plan.metric)
         expected_split, expected_values = self._infer_split(lowered, inferred)
         errors = list(validation.errors)
@@ -1042,7 +1047,12 @@ class SemanticQueryPlanner:
         )
 
     def _fallback_plan(self, question: str) -> CricketQueryPlan:
-        lowered = question.lower()
+        from backend.app.cricket_analytics.match_state_filters import (
+            strip_match_state_phrases,
+        )
+
+        # Predicate thresholds are compiled by _infer_filters, not reread here.
+        lowered = strip_match_state_phrases(question)
         operation = self._infer_operation(lowered)
         metric = self._infer_metric(lowered)
         entity = self._infer_entity(lowered, metric)
@@ -1612,6 +1622,11 @@ class SemanticQueryPlanner:
         }.items():
             if any(re.search(rf"\b{re.escape(alias)}\b", lowered) for alias in aliases):
                 filters["field_zone"] = key
+        from backend.app.cricket_analytics.match_state_filters import (
+            registered_predicates,
+        )
+
+        filters.update(registered_predicates(question))
         return filters
 
     def _extract_opposition(self, lowered: str) -> str | None:

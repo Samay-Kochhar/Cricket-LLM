@@ -21,6 +21,14 @@ from backend.app.cricket_analytics.match_facts import (
     is_polar_question,
     resolve_match_fact,
 )
+from backend.app.cricket_analytics.cricket_definitions import LEGAL_BALL_PREDICATE
+from backend.app.cricket_analytics.match_state_filters import (
+    MATCH_STATE_FIELDS,
+    availability_note,
+    match_state_filters_in,
+    match_state_mentions,
+    predicate_sql,
+)
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.query_builders.aggregate_builder import build_aggregate_query
@@ -88,10 +96,19 @@ class SemanticAnalyticsService:
         question: str,
         conversation_state: Any | None = None,
     ) -> QueryResponse:
-        profile_response = self._maybe_answer_batting_profile(question)
+        # Profile shortcuts have no filter support; a stated match-state
+        # condition must reach the planner, which compiles or rejects it.
+        states_match_condition = bool(match_state_mentions(question))
+        profile_response = (
+            None if states_match_condition else self._maybe_answer_batting_profile(question)
+        )
         if profile_response is not None:
             return profile_response
-        position_response = self._maybe_answer_batting_position_comparison(question)
+        position_response = (
+            None
+            if states_match_condition
+            else self._maybe_answer_batting_position_comparison(question)
+        )
         if position_response is not None:
             return position_response
         trace = QueryTrace(original_user_question=question)
@@ -1576,7 +1593,78 @@ class SemanticAnalyticsService:
             )
         if plan and plan.assumptions:
             notes.append(EvidenceNote(title="Semantic V2 assumptions", detail=" | ".join(plan.assumptions)))
+        if plan:
+            notes.extend(self._match_state_notes(plan))
         return notes
+
+    def _match_state_notes(self, plan: CricketQueryPlan) -> list[EvidenceNote]:
+        """Disclose each numeric match-state predicate and its unavailable rows."""
+        notes: list[EvidenceNote] = []
+        for state_field, predicate in match_state_filters_in(plan.filters):
+            detail = (
+                f"Applied {predicate.describe(state_field, symbols=True)}. "
+                + availability_note(state_field)
+            )
+            availability = self._match_state_availability(plan, state_field.field_id)
+            if availability:
+                detail += " " + availability
+            notes.append(
+                EvidenceNote(
+                    title=f"{state_field.label[0].upper()}{state_field.label[1:]} filter",
+                    detail=detail,
+                )
+            )
+        return notes
+
+    def _match_state_availability(self, plan: CricketQueryPlan, key: str) -> str | None:
+        """Count the named player's in-scope sample with and without a recorded value."""
+        if plan.operation not in {"aggregate", "matchup"} or "dismissal_type" in plan.group_by:
+            return None
+        person = next(
+            (
+                (role, plan.filters[role])
+                for role in ("batter", "bowler")
+                if role == plan.entity and isinstance(plan.filters.get(role), str)
+            ),
+            None,
+        )
+        if person is None:
+            return None
+        state_field = MATCH_STATE_FIELDS[key]
+        predicate = dict(match_state_filters_in({key: plan.filters[key]}))[state_field]
+        unit, unit_label = (
+            (LEGAL_BALL_PREDICATE, "legal balls")
+            if plan.entity == "bowler"
+            else ("TRY_CAST(ballfaced AS INTEGER) = 1", "balls faced")
+        )
+        from backend.app.cricket_analytics.query_builders.aggregate_builder import _filter_clauses
+
+        where: list[str] = ["1 = 1"]
+        params: list[object] = []
+        scope = {name: value for name, value in plan.filters.items() if name not in MATCH_STATE_FIELDS}
+        for clause, clause_params in _filter_clauses(scope, entity=plan.entity):
+            where.append(clause)
+            params.extend(clause_params)
+        matched_clause, matched_params = predicate_sql(state_field, predicate)
+        sql = (
+            "SELECT "
+            f"SUM(CASE WHEN {unit} THEN 1 ELSE 0 END), "
+            f"SUM(CASE WHEN {unit} AND NOT COALESCE(({state_field.availability_sql}), FALSE) THEN 1 ELSE 0 END), "
+            f"SUM(CASE WHEN {unit} AND COALESCE(({matched_clause}), FALSE) THEN 1 ELSE 0 END) "
+            f"FROM analytics.deliveries_v1 WHERE {' AND '.join(where)}"
+        )
+        try:
+            rows = self.repository._fetchall(sql, [*matched_params, *params])
+        except Exception:  # pragma: no cover - disclosure must not break an answer.
+            return None
+        if not rows or rows[0][0] is None:
+            return None
+        total, unavailable, matched = (int(value or 0) for value in rows[0])
+        return (
+            f"Of {total:,} {unit_label} by {person[1]} in the other requested filters, "
+            f"{unavailable:,} had no recorded {state_field.label} and were excluded; "
+            f"{matched:,} met the condition."
+        )
 
     @staticmethod
     def _table_for_rows(plan: CricketQueryPlan, rows: list[dict[str, object]]) -> TableBlock:
@@ -2079,6 +2167,9 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
         and all(isinstance(value, int) for value in over_range)
     ):
         contexts.append(f"in inclusive overs {over_range[0]}–{over_range[1]}")
+
+    for state_field, predicate in match_state_filters_in(plan.filters):
+        contexts.append(f"with {predicate.describe(state_field)}")
 
     style = plan.filters.get("bowling_style")
     if isinstance(style, str):

@@ -19,6 +19,22 @@ from backend.app.cricket_analytics.dismissal_types import (
     is_dismissal_share_concept,
     is_dismissal_type_concept,
 )
+from backend.app.cricket_analytics.match_state_filters import (
+    MATCH_STATE_FIELDS,
+    MATCH_STATE_SOURCE,
+    MatchStateField,
+    NumericPredicate,
+    field_for_concept,
+    is_numeric_condition,
+    match_state_mentions,
+    predicate_from_filter,
+    predicate_from_language_values,
+    registered_predicates,
+    strip_match_state_phrases,
+    unregistered_concept,
+    unregistered_reason,
+    unresolved_mention,
+)
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.plan_normalizer import (
     requests_boundary_percentage,
@@ -319,6 +335,10 @@ class CanonicalMeaningResolver:
             return False
         if _is_dismissal_type_resolution(resolution):
             return True
+        if MATCH_STATE_SOURCE in resolution.candidate_sources:
+            # A stated match-state condition must fail closed here rather
+            # than reach a planner that could drop it.
+            return True
         if resolution.status == MeaningStatus.unsupported:
             return bool(
                 resolution.reason
@@ -372,6 +392,10 @@ class CanonicalMeaningResolver:
 
         if not self.accepts(question, state):
             return deterministic
+        if MATCH_STATE_SOURCE in deterministic.candidate_sources:
+            # An unresolved or unregistered numeric match-state condition in the
+            # question itself is never replaced by a model reading.
+            return deterministic.model_copy(update={"candidate_sources": sources})
         # A model cannot make an explicitly ambiguous question unambiguous by guessing.
         if deterministic.status == MeaningStatus.clarification or (
             _is_dismissal_type_resolution(deterministic)
@@ -598,12 +622,44 @@ class CanonicalMeaningResolver:
                 if len(matches) == 1 and matches[0] in players:
                     continue
                 return unclear("Which player should this filter select?")
+            unregistered = unregistered_concept(fact.concept)
+            if unregistered is not None and is_numeric_condition(
+                fact.operator, list(fact.values), fact.evidence
+            ):
+                return MeaningResolution(
+                    status=MeaningStatus.unsupported,
+                    reason=unregistered_reason(unregistered),
+                    candidate_sources=sources,
+                )
             normalized = self._candidate_filter(fact)
             if not normalized:
+                field = field_for_concept(fact.concept)
+                if field is not None:
+                    return unclear(
+                        f"Which {field.label} threshold do you mean? "
+                        f"The requested {fact.concept} condition could not be read "
+                        "as one comparison such as above 8 or between 6 and 8."
+                    )
                 return unclear(
                     f"The requested {fact.concept} filter could not be resolved."
                 )
             for key, value in normalized.items():
+                if (
+                    key in MATCH_STATE_FIELDS
+                    and key in explicit_filters
+                    and explicit_filters[key] != value
+                ):
+                    # Two readings of one numeric condition must be reconciled
+                    # by the user; neither silently wins.
+                    field = MATCH_STATE_FIELDS[key]
+                    options = [
+                        _predicate_label(field, explicit_filters[key]),
+                        _predicate_label(field, value),
+                    ]
+                    return unclear(
+                        f"Which {field.label} condition do you mean?",
+                        [option for option in options if option],
+                    )
                 # Keep directly extracted constraints when the surface candidate disagrees.
                 if key in explicit_filters:
                     continue
@@ -934,6 +990,28 @@ class CanonicalMeaningResolver:
             )
 
         for fact in candidate.filters:
+            match_state = _match_state_fact(fact)
+            if match_state is not None:
+                # Typed numeric predicate: field, operator and every numeric
+                # value are accounted for separately (#37 invariant).
+                for fact_type, concept, requested, disposition, target in (
+                    _match_state_dispositions(fact, match_state, meaning)
+                ):
+                    add(
+                        fact_type,
+                        concept,
+                        requested,
+                        disposition=disposition,
+                        target=target,
+                        evidence=fact.evidence,
+                        reason=(
+                            None
+                            if disposition == "compiled"
+                            else "The compiled plan does not preserve this exact "
+                            "numeric match-state condition."
+                        ),
+                    )
+                continue
             normalized = self._candidate_filter(fact)
             compiled_items = [
                 (key, value)
@@ -1183,6 +1261,10 @@ class CanonicalMeaningResolver:
         return result
 
     def _candidate_filter(self, fact: ExpressedFilter) -> dict[str, object]:
+        match_state = _match_state_fact(fact)
+        if match_state is not None:
+            field, predicate = match_state
+            return {field.field_id: predicate.as_filter()} if predicate else {}
         concept = _normalized_text(fact.concept).replace("_", " ")
         values = fact.values
         categories = [canonical_dismissal_type(value) for value in values]
@@ -1264,6 +1346,26 @@ class CanonicalMeaningResolver:
             resolve_dismissal_types,
         )
 
+        # A numeric match-state condition that cannot compile exactly (missing
+        # threshold, unregistered field, several thresholds) fails closed with
+        # the concept retained, before any family can drop it.
+        match_state_problem = unresolved_mention(_normalized_text(question))
+        if match_state_problem is not None:
+            return MeaningResolution(
+                status=(
+                    MeaningStatus.unsupported
+                    if match_state_problem.kind == "unregistered"
+                    else MeaningStatus.clarification
+                ),
+                reason=match_state_problem.problem,
+                clarification=(
+                    None
+                    if match_state_problem.kind == "unregistered"
+                    else match_state_problem.problem
+                ),
+                candidate_sources=[MATCH_STATE_SOURCE],
+            )
+
         # A one-batter categorical breakdown ("caught versus bowled") is not a
         # two-player comparison or a matchup, so it is claimed first.
         dismissal_types = resolve_dismissal_types(self, question, state)
@@ -1282,7 +1384,9 @@ class CanonicalMeaningResolver:
         matchup = resolve_matchup(self, question, state)
         if matchup is not None:
             return matchup
-        lowered = _normalized_text(question)
+        # Threshold wording ("at least 8", "above 8") belongs to its typed
+        # predicate and is never reread as a sample, ranking or metric word.
+        lowered = strip_match_state_phrases(_normalized_text(question))
         dimensions = breakdown_dimensions(lowered)
         phases = {
             phase
@@ -1509,6 +1613,11 @@ class CanonicalMeaningResolver:
 
     def _explicit_filters(self, question: str, lowered: str) -> dict[str, object]:
         filters: dict[str, object] = {}
+        # Registered numeric match-state predicates are parsed from the full
+        # wording; their thresholds are then removed so other filters do not
+        # reread them.
+        match_state = registered_predicates(_normalized_text(question))
+        lowered = strip_match_state_phrases(lowered)
         if re.search(r"\b(?:chasing|second innings|innings 2)\b", lowered):
             filters["innings"] = 2
         elif re.search(r"\b(?:batting first|first innings|innings 1)\b", lowered):
@@ -1576,6 +1685,7 @@ class CanonicalMeaningResolver:
         opposition = _extract_team(question, self.available_teams)
         if opposition:
             filters["opposition"] = opposition
+        filters.update(match_state)
         return filters
 
 
@@ -1585,6 +1695,88 @@ def _is_dismissal_type_resolution(resolution: MeaningResolution) -> bool:
     )
 
     return DISMISSAL_TYPE_SOURCE in resolution.candidate_sources
+
+
+def _match_state_fact(
+    fact: ExpressedFilter,
+) -> tuple[MatchStateField, NumericPredicate | None] | None:
+    """A model-extracted filter over a registered numeric match-state field."""
+    field = field_for_concept(fact.concept)
+    if field is None and unregistered_concept(fact.concept) is None:
+        # A generic concept label whose evidence states exactly one
+        # registered predicate ("pressure": "when RRR was above 8").
+        evidence_fields = {
+            mention.field.field_id
+            for mention in match_state_mentions(fact.evidence or "")
+            if mention.field is not None and mention.kind == "predicate"
+        }
+        if len(evidence_fields) == 1:
+            field = MATCH_STATE_FIELDS[next(iter(evidence_fields))]
+    if field is None:
+        return None
+    predicate = predicate_from_language_values(
+        fact.operator, list(fact.values), fact.evidence or "", field
+    )
+    return field, predicate
+
+
+def _match_state_dispositions(
+    fact: ExpressedFilter,
+    match_state: tuple[MatchStateField, NumericPredicate | None],
+    meaning: CanonicalCricketMeaning,
+) -> list[tuple[str, str, object | None, str, str | None]]:
+    field, requested = match_state
+    compiled = predicate_from_filter(meaning.filters.get(field.field_id), field)
+    target = f"filter.{field.field_id}" if compiled is not None else None
+    same = requested is not None and compiled is not None and requested == compiled
+    rows: list[tuple[str, str, object | None, str, str | None]] = [
+        (
+            "filter",
+            fact.concept,
+            fact.values,
+            "compiled" if same else "unsupported",
+            target if same else None,
+        ),
+        (
+            "operator",
+            requested.operator if requested else (fact.operator or "unparsed"),
+            requested.operator if requested else fact.operator,
+            "compiled" if same else "unsupported",
+            f"{target}.operator" if same else None,
+        ),
+    ]
+    if requested is None:
+        rows.extend(
+            ("value", fact.concept, value, "unsupported", None) for value in fact.values
+        )
+        return rows
+    positions = (
+        (("lower", requested.lower), ("upper", requested.upper))
+        if requested.operator == "between"
+        else (("value", requested.value),)
+    )
+    for name, value in positions:
+        compiled_value = getattr(compiled, name, None) if compiled else None
+        value_compiled = (
+            compiled is not None
+            and compiled.operator == requested.operator
+            and compiled_value == value
+        )
+        rows.append(
+            (
+                "value",
+                fact.concept,
+                value,
+                "compiled" if value_compiled else "unsupported",
+                f"{target}.{name}" if value_compiled else None,
+            )
+        )
+    return rows
+
+
+def _predicate_label(field: MatchStateField, value: object) -> str | None:
+    predicate = predicate_from_filter(value, field)
+    return predicate.describe(field, symbols=True) if predicate else None
 
 
 def _candidate_fact_inventory(
@@ -1608,6 +1800,17 @@ def _candidate_fact_inventory(
         facts.append(("dimension", dimension, dimension, None))
     for fact in candidate.filters:
         facts.append(("filter", fact.concept, fact.values, fact.evidence))
+        match_state = _match_state_fact(fact)
+        if match_state is not None and match_state[1] is not None:
+            predicate = match_state[1]
+            facts.append(
+                ("operator", predicate.operator, predicate.operator, fact.evidence)
+            )
+            facts.extend(
+                ("value", fact.concept, value, fact.evidence)
+                for value in predicate.values()
+            )
+            continue
         if fact.operator:
             facts.append(("operator", fact.operator, fact.operator, fact.evidence))
         facts.extend(
@@ -1781,6 +1984,8 @@ def _compile_aggregate_meaning(meaning: CanonicalCricketMeaning) -> CricketQuery
 def _metric_and_role(
     lowered: str, player: str | None, role_hint: str | None = None
 ) -> tuple[str | None, str | None]:
+    # "required run rate above 8" is a filter, not a runs/run-rate metric.
+    lowered = strip_match_state_phrases(lowered)
     if requests_six_count(lowered):
         return "six_count", "batter"
     if requests_four_count(lowered):
@@ -1980,6 +2185,8 @@ def _ranking_limit(lowered: str) -> int:
 
 
 def _explicit_sample(lowered: str, metric: str) -> MinimumSampleSpec | None:
+    # "required rate at least 8" is a predicate threshold, not a ball sample.
+    lowered = strip_match_state_phrases(lowered)
     patterns = (
         r"\b(?:minimum|min\.?|at least)\s+(?:sample\s+)?(\d{1,7})\s*(legal\s+)?(?:balls?|deliver(?:y|ies)|innings?)?",
         r"\b(?:with\s+)?(?:a\s+)?(\d{1,7})[- ]ball\s+(?:cutoff|floor|minimum)\b",

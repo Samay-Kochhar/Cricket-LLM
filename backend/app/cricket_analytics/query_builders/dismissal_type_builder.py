@@ -34,6 +34,8 @@ DISMISSAL_TYPE_FILTERS = frozenset(
         "over_range",
         "competition",
         "bowling_style",
+        # Delivery state recorded for every row, so it applies to non-strikers.
+        "required_run_rate",
     }
 )
 OUTPUT_COLUMNS = [

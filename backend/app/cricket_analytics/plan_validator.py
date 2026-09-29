@@ -8,6 +8,14 @@ from backend.app.cricket_analytics.dismissal_types import (
     requested_dismissal_types,
 )
 from backend.app.cricket_analytics.match_facts import MATCH_FACT_REGISTRY
+from backend.app.cricket_analytics.match_state_filters import (
+    MATCH_STATE_FIELDS,
+    predicate_from_filter,
+    registered_predicates,
+    removed_fields,
+    strip_match_state_phrases,
+    unresolved_mention,
+)
 from backend.app.cricket_analytics.metric_registry import get_metric
 from backend.app.cricket_analytics.ontology import DIMENSIONS, ENTITIES, METRICS, OPERATION_TYPES
 from backend.app.cricket_analytics.plan_normalizer import (
@@ -56,13 +64,17 @@ FILTER_DIMENSIONS = {
     "over_range",
     "team",
     "dismissal_type",
+    *MATCH_STATE_FIELDS,
 }
 
 
 def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationResult:
     errors: list[str] = []
     warnings: list[str] = []
-    lowered = original_question.lower()
+    errors.extend(_match_state_errors(plan, original_question))
+    # Threshold wording such as "at least 8" belongs to its typed predicate and
+    # is never reread as a sample, ranking direction or metric request.
+    lowered = strip_match_state_phrases(original_question)
 
     if plan.operation not in OPERATION_TYPES:
         errors.append(f"Unsupported operation '{plan.operation}'.")
@@ -253,6 +265,33 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
     errors.extend(validate_capability(plan))
 
     return ValidationResult(valid=not errors, errors=errors, warnings=warnings)
+
+
+def _match_state_errors(plan: CricketQueryPlan, question: str) -> list[str]:
+    """Numeric match-state predicates compile only from registered, typed shapes."""
+    errors: list[str] = []
+    for key, value in plan.filters.items():
+        field = MATCH_STATE_FIELDS.get(key)
+        if field is not None and predicate_from_filter(value, field) is None:
+            errors.append(
+                f"Filter '{key}' must be one registered comparison "
+                "(gt, gte, lt, lte with a numeric value, or an inclusive between range)."
+            )
+    problem = unresolved_mention(question)
+    if problem is not None:
+        errors.append(problem.problem or f"Unresolved match-state concept: {problem.concept}.")
+    for key, requested in registered_predicates(question).items():
+        if plan.filters.get(key) != requested:
+            label = MATCH_STATE_FIELDS[key].label
+            errors.append(
+                f"Question requests {label} predicate {requested!r}, but the plan does not preserve it exactly."
+            )
+    for key in removed_fields(question):
+        if key in plan.filters:
+            errors.append(
+                f"Question removes the {MATCH_STATE_FIELDS[key].label} filter, but the plan still applies it."
+            )
+    return errors
 
 
 def _dismissal_type_errors(plan: CricketQueryPlan) -> list[str]:
