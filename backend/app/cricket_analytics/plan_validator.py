@@ -79,7 +79,7 @@ def validate_plan(plan: CricketQueryPlan, original_question: str) -> ValidationR
 
     internal_filters = {"compare_players", "comparison_metrics", "comparison_view"} if plan.operation == "player_compare" else set()
     if plan.operation == "match_fact":
-        internal_filters |= {"match_stage", "fact_type"}
+        internal_filters |= {"match_stage", "fact_type", "participants"}
         fact_type = plan.filters.get("fact_type")
         if fact_type not in MATCH_FACT_REGISTRY:
             errors.append("Match facts require a registered fact_type.")

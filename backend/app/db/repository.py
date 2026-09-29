@@ -78,6 +78,10 @@ class AnalyticsRepository:
                 grounds=values(row[4]),
                 winners=values(row[5]),
                 toss_winners=values(row[6]),
+                teams=tuple(sorted({*values(row[7]), *values(row[8])})),
+                missing_toss_rows=int(row[9] or 0),
+                missing_winner_rows=int(row[10] or 0),
+                delivery_rows=int(row[11] or 0),
             )
             for row in rows
         ]

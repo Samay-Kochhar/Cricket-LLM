@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from backend.app.cricket_analytics.canonical_meaning import (
     CanonicalMeaningResolver,
     MeaningStatus,
+    _extract_players,
     compile_canonical_meaning,
 )
 from backend.app.cricket_analytics.canonical_patches import (
@@ -21,7 +22,11 @@ from backend.app.cricket_analytics.language_meaning import (
     MeaningCallReason,
     extraction_prompt,
 )
-from backend.app.cricket_analytics.match_facts import extract_match_fact_meaning
+from backend.app.cricket_analytics.match_facts import (
+    TOSS_PATTERN,
+    WORLD_CUP_COMPETITIONS_BY_YEAR,
+    extract_match_fact_meaning,
+)
 from backend.app.cricket_analytics.ontology import METRICS, ontology_context
 from backend.app.cricket_analytics.plan_normalizer import (
     is_passive_dismissal_question,
@@ -34,7 +39,11 @@ from backend.app.cricket_analytics.plan_normalizer import (
 )
 from backend.app.cricket_analytics.plan_validator import validate_plan
 from backend.app.cricket_analytics.player_roles import PlayerParticipation, PlayerRoleResolver, Role
-from backend.app.cricket_analytics.response_policy import POLICY_SOURCE, apply_response_policy
+from backend.app.cricket_analytics.response_policy import (
+    POLICY_SOURCE,
+    apply_response_policy,
+    capability_outcome,
+)
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, MinimumSampleSpec, OperationType, SortSpec, ValidationResult
 from backend.app.cricket_analytics.venue_resolution import venue_alias_matches
 from backend.app.cricket_analytics.trace import QueryTrace
@@ -146,45 +155,45 @@ class SemanticQueryPlanner:
     def _plan_registered_match_fact(
         self, question: str, trace: QueryTrace
     ) -> PlannerResult | None:
-        meaning = extract_match_fact_meaning(question, tuple(self.available_teams))
+        # Capability policy (for example future prediction) keeps precedence.
+        if capability_outcome(question) is not None:
+            return None
+        meaning = extract_match_fact_meaning(
+            question,
+            tuple(self.available_teams),
+            tuple(_extract_players(question, self.available_players)),
+            tuple(self._extract_venues(question.lower())),
+        )
         if meaning is None:
             return None
         completeness = meaning.completeness(question)
         trace.language_meaning_candidate = {
             "version": 1,
-            "family": "match_fact",
-            "fact_type": meaning.fact_type,
-            "year": meaning.year,
-            "competition": meaning.competition,
-            "stage": meaning.stage,
+            **meaning.canonical(),
+            "issues": [
+                {"concept": issue.concept, "requested": issue.requested}
+                for issue in meaning.issues
+            ],
         }
-        trace.canonical_meaning = {
-            "family": "match_fact",
-            "fact_type": meaning.fact_type,
-            "year": meaning.year,
-            "competition": meaning.competition,
-            "stage": meaning.stage,
-            "team": meaning.team,
-        }
+        trace.canonical_meaning = meaning.canonical()
         trace.completeness_result = completeness
-        if not meaning.complete:
-            missing = [
-                label
-                for label, value in (
-                    ("year", meaning.year),
-                    ("competition", meaning.competition),
-                    ("match stage", meaning.stage),
-                )
-                if value is None
-            ]
-            clarification = "Which " + ", ".join(missing) + " identifies the match?"
-            trace.meaning_resolution = {
-                "status": "clarification",
-                "clarification": clarification,
-                "clarification_options": [],
-                "candidate_sources": ["registered_match_fact_language"],
-            }
-            validation = ValidationResult(valid=False, errors=[clarification])
+        outcome = meaning.outcome()
+        if outcome is not None:
+            status, message = outcome
+            if status == "clarification":
+                trace.meaning_resolution = {
+                    "status": "clarification",
+                    "clarification": message,
+                    "clarification_options": [],
+                    "candidate_sources": ["registered_match_fact_language"],
+                }
+            else:
+                trace.meaning_resolution = {
+                    "status": status,
+                    "reason": message,
+                    "candidate_sources": ["registered_match_fact_language"],
+                }
+            validation = ValidationResult(valid=False, errors=[message])
             trace.validation_result = validation.model_dump(mode="json")
             return PlannerResult(plan=None, validation=validation, used_gemini=False)
 
@@ -520,7 +529,6 @@ class SemanticQueryPlanner:
             r"wickets?|dismissals?|dismissed|dismisses|dot balls?|boundaries|boundary rate|"
             r"false shots?|yorkers?|control percentage|balls faced|legal balls|overs bowled|"
             r"fastest|slowest|destructive|dominates?|struggles?|weakness(?:es)?"
-            r"|toss"
             r")\b",
             lowered,
         )
@@ -1274,7 +1282,7 @@ class SemanticQueryPlanner:
 
     @staticmethod
     def _infer_operation(lowered: str) -> str:
-        if re.search(r"\btoss\b", lowered):
+        if TOSS_PATTERN.search(lowered):
             return "match_fact"
         if (
             ("world cup" in lowered or "final" in lowered or "match" in lowered)
@@ -1712,16 +1720,12 @@ class SemanticQueryPlanner:
         year_match = re.search(r"\b(20\d{2})\b", lowered)
         year = int(year_match.group(1)) if year_match else None
         if "world cup" in lowered and year is not None:
-            from backend.app.cricket_analytics.match_facts import (
-                WORLD_CUP_COMPETITIONS_BY_YEAR,
-            )
-
             competition = WORLD_CUP_COMPETITIONS_BY_YEAR.get(year)
             if competition:
                 filters["competition"] = competition
-        if "final" in lowered:
+        if re.search(r"(?<!semi-)(?<!semi )(?<!quarter-)(?<!quarter )\bfinal\b", lowered):
             filters["match_stage"] = "final"
-        if "toss" in lowered:
+        if TOSS_PATTERN.search(lowered):
             filters["fact_type"] = "toss"
         elif any(token in lowered for token in ("won", "winner", " win")):
             filters["fact_type"] = "winner"

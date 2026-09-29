@@ -18,6 +18,7 @@ from backend.app.cricket_analytics.executors import (
 from backend.app.cricket_analytics.cricket_definitions import public_label
 from backend.app.cricket_analytics.match_facts import (
     MATCH_METADATA_CANDIDATES_SQL,
+    is_polar_question,
     resolve_match_fact,
 )
 from backend.app.cricket_analytics.metric_registry import get_metric
@@ -706,18 +707,42 @@ class SemanticAnalyticsService:
 
         fact_type = str(plan.filters.get("fact_type") or "")
         stage = str(plan.filters.get("match_stage") or "")
+        participants = [
+            str(team)
+            for team in (plan.filters.get("participants") or [])
+            if isinstance(team, str)
+        ]
+        if isinstance(plan.filters.get("team"), str) and plan.filters["team"] not in participants:
+            participants.append(str(plan.filters["team"]))
         resolved = resolve_match_fact(
             self.repository,
             year=year,
             competition=competition,
             stage=stage,
             fact_type=fact_type,
+            participants=participants,
+            venue=(
+                str(plan.filters["venue"])
+                if isinstance(plan.filters.get("venue"), str)
+                else None
+            ),
         )
         if resolved.status != "resolved" or resolved.match_id is None:
             trace.final_answer_metadata = {
                 "status": f"match_fact_{resolved.status}",
                 "detail": resolved.detail,
             }
+            if resolved.match_id is not None:
+                trace.final_answer_metadata.update(
+                    {
+                        "match_id": resolved.match_id,
+                        "date": resolved.date,
+                        "ground": resolved.ground,
+                        "teams": list(resolved.teams),
+                        "toss": resolved.toss,
+                        "winner": resolved.winner,
+                    }
+                )
             return self._insufficient_response(
                 question=question,
                 plan=plan,
@@ -745,7 +770,11 @@ class SemanticAnalyticsService:
             "fact_value": resolved.fact_value,
             "toss": toss,
             "winner": winner,
+            "teams": list(resolved.teams),
         }
+        evidence_detail = resolved.detail + (
+            f" Match teams: {' v '.join(resolved.teams)}." if resolved.teams else ""
+        )
         if fact_type in {"toss", "winner"}:
             value_column = "Toss Winner" if fact_type == "toss" else "Match Winner"
             table = TableBlock(
@@ -770,14 +799,18 @@ class SemanticAnalyticsService:
                 ],
             )
             summary_body = (
-                f"Within the ODI database, {toss} won the toss in the {competition_label} final "
+                f"Within the ODI database, {toss} won the toss in the {competition_label} {stage} "
                 f"(match {match_id}), recorded on {matched_date} at {ground}."
                 if fact_type == "toss"
                 else (
-                    f"Within the ODI database, {winner} won the {competition_label} match "
-                    f"recorded on {matched_date} at {ground}."
+                    f"Within the ODI database, {winner} won the {competition_label} {stage} "
+                    f"(match {match_id}), recorded on {matched_date} at {ground}."
                 )
             )
+            if is_polar_question(question) and len(participants) == 1:
+                summary_body = (
+                    "Yes. " if participants[0] == resolved.fact_value else "No. "
+                ) + summary_body
             trace.final_sql_or_method = match_sql
             trace.result_columns = [
                 "match_id",
@@ -798,7 +831,7 @@ class SemanticAnalyticsService:
                 evidence_queries=[
                     EvidenceQueryBlock(
                         title="Match metadata lookup",
-                        description=resolved.detail,
+                        description=evidence_detail,
                         sql=match_sql,
                         parameters=_display_parameters(match_params),
                         table=table,
@@ -869,7 +902,7 @@ class SemanticAnalyticsService:
             evidence_queries=[
                 EvidenceQueryBlock(
                     title="Match metadata lookup",
-                    description=resolved.detail,
+                    description=evidence_detail,
                     sql=match_sql,
                     parameters=_display_parameters(match_params),
                     table=table,

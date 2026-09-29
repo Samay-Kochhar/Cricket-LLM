@@ -80,6 +80,11 @@ def apply_response_policy(
     return resolution
 
 
+def capability_outcome(question: str) -> tuple[MeaningStatus, str] | None:
+    """Return the policy outcome that takes precedence over any executable family."""
+    return _capability_outcome(_normalized(question))
+
+
 def _capability_outcome(
     text: str,
 ) -> tuple[MeaningStatus, str] | None:
