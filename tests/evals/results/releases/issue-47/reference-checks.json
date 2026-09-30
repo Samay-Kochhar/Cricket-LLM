@@ -1,0 +1,177 @@
+{
+  "checks": {
+    "bumrah_economy_by_lighting": {
+      "actual": [
+        [
+          "day match",
+          1055,
+          1487,
+          4.26
+        ],
+        [
+          "day/night match",
+          2454,
+          3093,
+          4.76
+        ]
+      ],
+      "expected": [
+        [
+          "day match",
+          1055,
+          1487,
+          4.26
+        ],
+        [
+          "day/night match",
+          2454,
+          3093,
+          4.76
+        ]
+      ],
+      "passed": true,
+      "sql": "SELECT daynight, SUM(CAST(bowlruns AS INTEGER)), SUM(CASE WHEN wide = '0' AND noball = '0' THEN 1 ELSE 0 END), ROUND(6.0 * SUM(CAST(bowlruns AS INTEGER)) / SUM(CASE WHEN wide = '0' AND noball = '0' THEN 1 ELSE 0 END), 2) FROM analytics.deliveries_v1 WHERE bowl = 'Jasprit Bumrah' GROUP BY daynight ORDER BY daynight"
+    },
+    "bumrah_overs_41_to_50_economy": {
+      "actual": [
+        [
+          1081,
+          1123,
+          5.78
+        ]
+      ],
+      "expected": [
+        [
+          1081,
+          1123,
+          5.78
+        ]
+      ],
+      "passed": true,
+      "sql": "SELECT SUM(CAST(bowlruns AS INTEGER)), SUM(CASE WHEN wide = '0' AND noball = '0' THEN 1 ELSE 0 END), ROUND(6.0 * SUM(CAST(bowlruns AS INTEGER)) / SUM(CASE WHEN wide = '0' AND noball = '0' THEN 1 ELSE 0 END), 2) FROM analytics.deliveries_v1 WHERE bowl = 'Jasprit Bumrah' AND CAST(over AS INTEGER) BETWEEN 41 AND 50"
+    },
+    "kohli_caught_bowled": {
+      "actual": [
+        [
+          "bowled",
+          34
+        ],
+        [
+          "caught",
+          170
+        ]
+      ],
+      "expected": [
+        [
+          "bowled",
+          34
+        ],
+        [
+          "caught",
+          170
+        ]
+      ],
+      "passed": true,
+      "sql": "SELECT dismissal, COUNT(*) FROM analytics.deliveries_v1 WHERE out = 'True' AND dismissal IN ('caught', 'bowled') AND p_out IN (SELECT DISTINCT p_bat FROM analytics.deliveries_v1 WHERE bat = 'Virat Kohli') GROUP BY dismissal ORDER BY dismissal"
+    },
+    "kohli_sixes": {
+      "actual": [
+        [
+          154
+        ]
+      ],
+      "expected": [
+        [
+          154
+        ]
+      ],
+      "passed": true,
+      "sql": "SELECT COUNT(*) FROM analytics.deliveries_v1 WHERE bat = 'Virat Kohli' AND batruns = '6'"
+    },
+    "lowest_team_economy_against_india": {
+      "actual": [
+        [
+          "Zimbabwe",
+          4099,
+          4743,
+          5.19
+        ]
+      ],
+      "expected": [
+        [
+          "Zimbabwe",
+          4099,
+          4743,
+          5.19
+        ]
+      ],
+      "passed": true,
+      "sql": "SELECT team_bowl, SUM(CAST(bowlruns AS INTEGER)) AS runs, SUM(CASE WHEN wide = '0' AND noball = '0' THEN 1 ELSE 0 END) AS legal, ROUND(6.0 * SUM(CAST(bowlruns AS INTEGER)) / SUM(CASE WHEN wide = '0' AND noball = '0' THEN 1 ELSE 0 END), 2) AS economy FROM analytics.deliveries_v1 WHERE team_bat = 'India' GROUP BY team_bowl HAVING legal >= 600 ORDER BY economy, team_bowl LIMIT 1"
+    },
+    "rohit_required_rate_above_8": {
+      "actual": [
+        [
+          354,
+          298,
+          118.79
+        ]
+      ],
+      "expected": [
+        [
+          354,
+          298,
+          118.79
+        ]
+      ],
+      "passed": true,
+      "sql": "SELECT SUM(CAST(batruns AS INTEGER)), SUM(CAST(ballfaced AS INTEGER)), ROUND(100.0 * SUM(CAST(batruns AS INTEGER)) / SUM(CAST(ballfaced AS INTEGER)), 2) FROM analytics.deliveries_v1 WHERE bat = 'Rohit Sharma' AND TRY_CAST(inns_rrr AS DOUBLE) > 8"
+    },
+    "stored_over_is_one_based": {
+      "actual": [
+        [
+          1329040,
+          1328979
+        ]
+      ],
+      "expected": null,
+      "passed": true,
+      "sql": "SELECT COUNT(*), SUM(CASE WHEN CAST(over AS INTEGER) = CAST(CEIL(CAST(inns_balls AS INTEGER) / 6.0) AS INTEGER) THEN 1 ELSE 0 END) FROM analytics.deliveries_v1 WHERE wide = '0' AND noball = '0' AND CAST(inns_balls AS INTEGER) > 0"
+    },
+    "successful_chase_top_run_scorer": {
+      "actual": [
+        [
+          "Virat Kohli",
+          5791
+        ]
+      ],
+      "expected": [
+        [
+          "Virat Kohli",
+          5791
+        ]
+      ],
+      "passed": true,
+      "sql": "SELECT bat, SUM(CAST(batruns AS INTEGER)) AS runs FROM analytics.deliveries_v1 WHERE inns = '2' AND winner = team_bat GROUP BY bat ORDER BY runs DESC LIMIT 1"
+    },
+    "world_cup_2019_final_toss": {
+      "actual": [
+        [
+          "New Zealand",
+          "-"
+        ]
+      ],
+      "expected": [
+        [
+          "New Zealand",
+          "-"
+        ]
+      ],
+      "passed": true,
+      "sql": "WITH wc AS (SELECT * FROM analytics.deliveries_v1 WHERE competition = 'ICC Cricket World Cup' AND year = '2019'), final AS (SELECT DISTINCT p_match FROM wc WHERE date = (SELECT MAX(date) FROM wc)) SELECT DISTINCT toss, winner FROM wc WHERE p_match IN (SELECT p_match FROM final)"
+    }
+  },
+  "database": "data/odi_analytics.duckdb",
+  "database_sha256": "80a3f500a7dfd1eedd7ca5fdca51febf190607217e3d8e2ff07ace2d026d2a08",
+  "passed": 9,
+  "total": 9
+}

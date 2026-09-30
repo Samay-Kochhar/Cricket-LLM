@@ -141,7 +141,8 @@ class AnalyticsRepository:
             return "", []
         start = max(0, int(over_range[0]))
         end = max(start, int(over_range[-1]))
-        return " AND TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) < ?", [float(start - 1), float(end)]
+        # Stored `over` is the 1-based over number, so human overs are inclusive.
+        return " AND TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ?", [float(start), float(end)]
 
     @staticmethod
     def _bowling_style_group_clause(style_group: str | None) -> tuple[str, list[Any]]:

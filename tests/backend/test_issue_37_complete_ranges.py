@@ -135,8 +135,8 @@ def test_two_explicit_over_ranges_compile_as_a_real_split() -> None:
     values = dict(
         zip(response.tables[0].columns, response.tables[0].rows[0], strict=True)
     )
-    assert values["Overs 1 To 10 Value"] == 3.94
-    assert values["Overs 41 To 50 Value"] == 5.63
+    assert values["Overs 1 To 10 Value"] == 3.96
+    assert values["Overs 41 To 50 Value"] == 5.78
 
 
 def test_context_can_replace_and_remove_a_bounded_range() -> None:
@@ -336,9 +336,9 @@ def test_priority_question_executes_through_live_chat_with_visible_evidence_scop
     assert response.interpretation.filters["over_range"] == [41, 50]
     row = response.tables[0].rows[0]
     values = dict(zip(response.tables[0].columns, row, strict=True))
-    assert values["Economy Rate"] == 5.63
-    assert values["Runs Conceded"] == 1035
-    assert values["Legal Balls"] == 1103
+    assert values["Economy Rate"] == 5.78
+    assert values["Runs Conceded"] == 1081
+    assert values["Legal Balls"] == 1123
     assert "inclusive overs 41–50" in response.summaries[0].body
     trace = json.loads(
         next(

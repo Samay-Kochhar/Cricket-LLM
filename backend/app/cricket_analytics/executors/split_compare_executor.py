@@ -242,24 +242,25 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
             assert first is not None and second is not None
             split_a, split_b = compare_values[0], compare_values[1]
             split_case = (
-                "CASE WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) < ? THEN "
-                f"'{split_a}' WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) < ? THEN "
+                "CASE WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ? THEN "
+                f"'{split_a}' WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ? THEN "
                 f"'{split_b}' ELSE NULL END"
             )
+            # Stored `over` is the 1-based over number, so human overs are inclusive.
             return split_case, split_a, split_b, split_a, split_b, [
-                float(first[0] - 1),
+                float(first[0]),
                 float(first[1]),
-                float(second[0] - 1),
+                float(second[0]),
                 float(second[1]),
             ]
         start, end = _over_range(plan)
         split_a = f"overs_{start}_to_{end}"
         split_b = f"before_over_{start}"
         split_case = (
-            "CASE WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) < ? THEN "
+            "CASE WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ? THEN "
             f"'{split_a}' WHEN TRY_CAST(over AS DOUBLE) < ? THEN '{split_b}' ELSE NULL END"
         )
-        return split_case, split_a, split_b, split_a, split_b, [float(start - 1), float(end), float(start - 1)]
+        return split_case, split_a, split_b, split_a, split_b, [float(start), float(end), float(start)]
     raise ValueError(unsupported_reason(plan))
 
 

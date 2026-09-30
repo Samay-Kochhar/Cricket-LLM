@@ -246,7 +246,8 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
         elif key == "over_range" and isinstance(value, list) and value:
             start = int(value[0])
             end = int(value[-1])
-            clauses.append(("TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) < ?", [float(start - 1), float(end)]))
+            # Stored `over` is the 1-based over number, so human overs are inclusive.
+            clauses.append(("TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ?", [float(start), float(end)]))
         elif key == "line":
             clauses.append(("line = ?", [value]))
         elif key == "length":
