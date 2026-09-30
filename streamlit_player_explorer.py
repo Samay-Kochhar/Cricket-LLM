@@ -41,6 +41,14 @@ LENGTH_HEIGHTS = {
     "YORKER": 0.82,
     "FULL_TOSS": 0.68,
 }
+PITCH_LENGTH_LABELS = {
+    "SHORT": "Short",
+    "SHORT_OF_A_GOOD_LENGTH": "Back of a length",
+    "GOOD_LENGTH": "Good length",
+    "FULL": "Full",
+    "YORKER": "Yorker",
+    "FULL_TOSS": "Full toss",
+}
 
 
 def _display_label(value: object) -> str:
@@ -280,11 +288,11 @@ def build_pitch_heatmap(
             )
 
     line_labels = {
-        "WIDE_OUTSIDE_OFFSTUMP": "Wide outside off",
-        "OUTSIDE_OFFSTUMP": "Outside off",
-        "ON_THE_STUMPS": "On stumps",
-        "DOWN_LEG": "Leg side",
-        "WIDE_DOWN_LEG": "Wide leg",
+        "WIDE_OUTSIDE_OFFSTUMP": "Wide<br>outside off",
+        "OUTSIDE_OFFSTUMP": "Outside<br>off",
+        "ON_THE_STUMPS": "On<br>stumps",
+        "DOWN_LEG": "Leg<br>side",
+        "WIDE_DOWN_LEG": "Wide<br>leg",
     }
     for column_index, line in enumerate(lines):
         left = _pitch_boundary_x(column_index, line_weights, 0.0, pitch_height)
@@ -293,11 +301,11 @@ def build_pitch_heatmap(
             dict(
                 name="pitch-line-label",
                 x=(left + right) / 2.0,
-                y=-0.34,
+                y=-0.4,
                 text=line_labels.get(line, _display_label(line)),
                 showarrow=False,
                 align="center",
-                font=dict(size=10, color="#E8E2D4"),
+                font=dict(size=9, color="#E8E2D4"),
             )
         )
     for row_index, length in enumerate(lengths):
@@ -307,7 +315,7 @@ def build_pitch_heatmap(
                 name="pitch-length-label",
                 x=_pitch_half_width(y, pitch_height) + 0.18,
                 y=y,
-                text=_display_label(length),
+                text=PITCH_LENGTH_LABELS.get(length, _display_label(length)),
                 showarrow=False,
                 xanchor="left",
                 font=dict(size=11, color="#F3EDE4"),
@@ -349,7 +357,7 @@ def build_pitch_heatmap(
         dragmode=False,
     )
     figure = _base_layout(figure, height=max(760, int(98 * pitch_height) + 170))
-    figure.update_layout(margin=dict(l=28, r=92, t=90, b=48), plot_bgcolor="#31452F")
+    figure.update_layout(margin=dict(l=28, r=92, t=90, b=64), plot_bgcolor="#31452F")
     figure.update_xaxes(visible=False, fixedrange=True, range=[-3.45, 4.15])
     figure.update_yaxes(visible=False, fixedrange=True, range=[-0.62, pitch_height + 0.72])
     return figure
