@@ -1029,15 +1029,25 @@ class CanonicalMeaningResolver:
                     target=f"role.{meaning.role}",
                 )
 
-        for dimension in [*candidate.breakdown_dimensions, *candidate.split_dimensions]:
-            normalized = breakdown_dimensions("by " + dimension.replace("_", " "))
-            target_dimension = normalized[0] if len(normalized) == 1 else dimension
-            if not normalized and is_dismissal_type_concept(dimension):
-                target_dimension = "dismissal_type"
-            if not normalized and is_lighting_concept(dimension):
-                target_dimension = MATCH_LIGHTING
-            if target_dimension in {"season", "annual"} and "year" in meaning.group_by:
-                target_dimension = "year"
+        extracted_dimensions = [*candidate.breakdown_dimensions, *candidate.split_dimensions]
+        registered_targets = {
+            dimension: _registered_dimension_target(dimension, meaning)
+            for dimension in extracted_dimensions
+        }
+        for dimension in extracted_dimensions:
+            target_dimension = registered_targets[dimension] or dimension
+            reason = None
+            if (
+                registered_targets[dimension] is None
+                and meaning.split_by is not None
+                and meaning.split_by not in registered_targets.values()
+                and _split_axis_stated_in_question(question, meaning.split_by)
+            ):
+                # An unregistered model label ("match_type") for the one split
+                # axis that the question's own registered wording states is the
+                # same request, not an extra dimension.
+                target_dimension = meaning.split_by
+                reason = "model label for the split axis stated in the question"
             compiled = (
                 target_dimension in meaning.group_by
                 or target_dimension == meaning.split_by
@@ -1048,6 +1058,7 @@ class CanonicalMeaningResolver:
                 dimension,
                 disposition="compiled" if compiled else "unsupported",
                 target=f"dimension.{target_dimension}" if compiled else None,
+                reason=reason if compiled else None,
             )
 
         for fact in candidate.filters:
@@ -2110,6 +2121,33 @@ def _relationship_filter_target(
     if isinstance(canonical, str) and _normalized_lookup_text(canonical) in values:
         return f"filter.{key}"
     return None
+
+
+def _registered_dimension_target(
+    dimension: str, meaning: CanonicalCricketMeaning
+) -> str | None:
+    """The registered dimension an extracted dimension label names, if any."""
+    normalized = breakdown_dimensions("by " + dimension.replace("_", " "))
+    target: str | None = None
+    if len(normalized) == 1:
+        target = normalized[0]
+    elif not normalized and is_dismissal_type_concept(dimension):
+        target = "dismissal_type"
+    elif not normalized and is_lighting_concept(dimension):
+        target = MATCH_LIGHTING
+    elif normalized:
+        # Several registered dimensions in one label stay a distinct request.
+        return dimension
+    if (target or dimension) in {"season", "annual"} and "year" in meaning.group_by:
+        return "year"
+    return target
+
+
+def _split_axis_stated_in_question(question: str, split_by: str) -> bool:
+    """Whether the question's registered wording itself names both sides of the split axis."""
+    if split_by == MATCH_LIGHTING:
+        return len(requested_lighting_values(question)) >= 2
+    return split_by in breakdown_dimensions(question)
 
 
 def _axis_filter_target(

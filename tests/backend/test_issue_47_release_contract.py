@@ -101,3 +101,89 @@ def test_matchup_page_structured_selections_never_call_gemini(
 
     assert result["matchup"].status.value == "supported"
     assert "Steven Smith scored 103 runs from 121 balls" in result["matchup"].summaries[0].body
+
+
+# The 2026-09-30 fresh production Flash extraction for the lighting tracer. The
+# model labelled the split axis "match_type" instead of a lighting concept.
+FRESH_LIGHTING_EXTRACTION = {
+    "version": 1,
+    "family": "comparison",
+    "entities": [{"kind": "player", "name": "Bumrah", "relationship": "subject", "role": None}],
+    "metric_concept": "economy",
+    "role": None,
+    "breakdown_dimensions": [],
+    "split_dimensions": ["match_type"],
+    "filters": [],
+    "intent": "comparison",
+    "ordering": None,
+    "limit": None,
+    "sample_threshold": None,
+    "ambiguity_candidates": [],
+}
+
+
+def _semantic_trace(response) -> dict:
+    import json
+
+    return json.loads(
+        next(note.detail for note in response.evidence_notes if note.title == "Semantic V2 trace")
+    )
+
+
+def test_unregistered_model_label_for_the_stated_lighting_axis_compiles(
+    repository: AnalyticsRepository,
+) -> None:
+    from tests.backend.test_issue_41_required_run_rate import _chat
+
+    chat, client = _chat(repository, FRESH_LIGHTING_EXTRACTION)
+    response = chat.reply("Compare Bumrah's economy in day versus night matches.", history=[]).query_response
+
+    assert client.calls == 1
+    assert response.status.value == "supported"
+    assert response.interpretation.filters["semantic_operation"] == "split_compare"
+    values = _values(response)
+    assert (values["Day Match Value"], values["Day Night Match Value"]) == (4.26, 4.76)
+    fact = next(
+        fact
+        for fact in _semantic_trace(response)["completeness_result"]["facts"]
+        if fact["concept"] == "match_type"
+    )
+    assert fact["disposition"] == "compiled"
+    assert fact["canonical_target"] == "dimension.match_lighting"
+    assert fact["reason"] == "model label for the split axis stated in the question"
+
+
+def test_unregistered_label_without_a_stated_axis_stays_unsupported(
+    repository: AnalyticsRepository,
+) -> None:
+    from tests.backend.test_issue_41_required_run_rate import _chat
+
+    chat, _ = _chat(repository, FRESH_LIGHTING_EXTRACTION)
+    response = chat.reply(
+        "Compare Bumrah's economy in World Cup versus bilateral matches.", history=[]
+    ).query_response
+
+    assert response.status.value != "supported"
+    facts = _semantic_trace(response)["completeness_result"]["facts"]
+    assert any(
+        fact["concept"] == "match_type" and fact["disposition"] != "compiled" for fact in facts
+    )
+
+
+def test_extra_unregistered_label_beside_the_lighting_axis_still_blocks(
+    repository: AnalyticsRepository,
+) -> None:
+    from tests.backend.test_issue_41_required_run_rate import _chat
+
+    extraction = {
+        **FRESH_LIGHTING_EXTRACTION,
+        "split_dimensions": ["day_night_condition", "match_type"],
+    }
+    chat, _ = _chat(repository, extraction)
+    response = chat.reply("Compare Bumrah's economy in day versus night matches.", history=[]).query_response
+
+    assert response.status.value != "supported"
+    facts = _semantic_trace(response)["completeness_result"]["facts"]
+    assert any(
+        fact["concept"] == "match_type" and fact["disposition"] == "unsupported" for fact in facts
+    )
