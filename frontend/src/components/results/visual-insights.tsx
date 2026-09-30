@@ -28,12 +28,12 @@ const PITCH_LINE_ORDER = [
 ] as const;
 
 const PITCH_LENGTH_ORDER = [
-  "FULL_TOSS",
-  "YORKER",
-  "FULL",
-  "GOOD_LENGTH",
-  "SHORT_OF_A_GOOD_LENGTH",
   "SHORT",
+  "SHORT_OF_A_GOOD_LENGTH",
+  "GOOD_LENGTH",
+  "FULL",
+  "YORKER",
+  "FULL_TOSS",
 ] as const;
 
 const LABEL_OVERRIDES: Record<string, string> = {
@@ -241,7 +241,7 @@ function PitchMap({
       <div className="pitch-board">
         <div className="pitch-grid">
           {PITCH_LENGTH_ORDER.map((length) => (
-            <div className="pitch-grid-row" key={length}>
+            <div className="pitch-grid-row" data-length={length} key={length}>
               <div className="pitch-length-label">{beautifyLabel(length)}</div>
               {pitchLines.map((line) => {
                 const cell = cellMap.get(`${length}:${line}`);
@@ -271,12 +271,15 @@ function PitchMap({
                   </div>
                 );
               })}
-              {length === "FULL_TOSS" ? (
-                <div className="pitch-stumps batting" aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
-                </div>
+              {length === "YORKER" ? (
+                <>
+                  <div className="pitch-crease" aria-hidden="true" />
+                  <div className="pitch-stumps batting" aria-hidden="true">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </>
               ) : null}
             </div>
           ))}
@@ -651,7 +654,7 @@ export function VisualInsights({ result }: VisualInsightsProps) {
                 "Wickets = deliveries in that tile where out = true.",
                 "The default view shows strike rate in every tile plus the event counts for 4s, 6s, and wickets.",
               ]}
-              note="The dataset contains Yorker, Full toss, Full, Good length, Short of a good length, and Short. We label 'Short of a good length' as 'Back of a length' in the UI."
+              note="The display runs from short at the far end to yorker at the batting crease, with full toss behind the wicket. The dataset label 'Short of a good length' is shown as 'Back of a length'."
             />
           }
         />

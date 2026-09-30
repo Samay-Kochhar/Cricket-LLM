@@ -18,12 +18,12 @@ MATCHUP_PITCH_LINES = (
     "DOWN_LEG",
 )
 MATCHUP_PITCH_LENGTHS = (
-    "FULL_TOSS",
-    "YORKER",
-    "FULL",
-    "GOOD_LENGTH",
-    "SHORT_OF_A_GOOD_LENGTH",
     "SHORT",
+    "SHORT_OF_A_GOOD_LENGTH",
+    "GOOD_LENGTH",
+    "FULL",
+    "YORKER",
+    "FULL_TOSS",
 )
 MATCHUP_PITCH_LABELS = {
     "WIDE_OUTSIDE_OFFSTUMP": "Wide outside off",
@@ -117,15 +117,16 @@ def build_matchup_pitch_html(
                 f'<span class="atlas-mini-chip wicket">W {wickets}</span>'
                 "</div></div>"
             )
-        stumps = (
+        crease_and_stumps = (
+            '<div class="atlas-pitch-crease" aria-hidden="true"></div>'
             '<div class="atlas-pitch-stumps" aria-hidden="true"><span></span><span></span><span></span></div>'
-            if length == "FULL_TOSS"
+            if length == "YORKER"
             else ""
         )
         rows.append(
-            '<div class="atlas-pitch-grid-row">'
+            f'<div class="atlas-pitch-grid-row" data-length="{length}">'
             f'<div class="atlas-pitch-length-label">{escape(MATCHUP_PITCH_LABELS[length])}</div>'
-            f"{''.join(rendered_cells)}{stumps}</div>"
+            f"{''.join(rendered_cells)}{crease_and_stumps}</div>"
         )
 
     return f"""
@@ -136,11 +137,15 @@ def build_matchup_pitch_html(
 .atlas-pitch-axis-label, .atlas-pitch-length-label {{ color:#9eabb5; font-size:.76rem; text-transform:uppercase; letter-spacing:.12em; }}
 .atlas-pitch-axis-label {{ padding-inline:4px; text-align:center; }}
 .atlas-pitch-board {{ position:relative; border-radius:28px; border:1px solid rgba(239,225,207,.16); background:radial-gradient(circle at top center,rgba(242,143,59,.08),transparent 24%),linear-gradient(180deg,rgba(239,225,207,.1),rgba(239,225,207,.04)),rgba(9,14,18,.76); padding:26px 18px 18px; overflow:hidden; }}
-.atlas-pitch-board::before {{ content:""; position:absolute; inset:16px 19px 16px 149px; border-radius:22px; background:linear-gradient(180deg,rgba(234,215,191,.88),rgba(217,192,161,.76)); box-shadow:inset 0 0 0 1px rgba(111,79,44,.22); pointer-events:none; }}
+.atlas-pitch-board::before {{ content:""; position:absolute; inset:16px 19px 16px 149px; border-radius:22px; background:linear-gradient(180deg,#c8a66f,#a77b4d); box-shadow:inset 0 0 0 1px rgba(111,79,44,.38),inset 0 0 44px rgba(82,50,24,.2); pointer-events:none; }}
 .atlas-pitch-grid {{ position:relative; display:grid; gap:10px; z-index:1; }}
 .atlas-pitch-grid-row {{ position:relative; }}
 .atlas-pitch-length-label {{ display:flex; align-items:center; }}
 .atlas-pitch-cell {{ min-height:98px; border-radius:10px; border:1px solid rgba(255,255,255,.08); padding:10px; display:flex; flex-direction:column; gap:8px; justify-content:space-between; color:#101418; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }}
+.atlas-pitch-grid-row[data-length="SHORT"] .atlas-pitch-cell {{ min-height:142px; }}
+.atlas-pitch-grid-row[data-length="SHORT_OF_A_GOOD_LENGTH"] .atlas-pitch-cell {{ min-height:112px; }}
+.atlas-pitch-grid-row[data-length="YORKER"] .atlas-pitch-cell {{ min-height:84px; }}
+.atlas-pitch-grid-row[data-length="FULL_TOSS"] .atlas-pitch-cell {{ min-height:74px; }}
 .atlas-pitch-cell.empty {{ justify-content:center; align-items:center; background:rgba(255,255,255,.05); color:rgba(11,16,20,.56); }}
 .atlas-pitch-cell.empty span {{ font-size:.68rem; letter-spacing:.08em; }}
 .atlas-pitch-cell strong {{ font-size:1.2rem; }}
@@ -150,10 +155,14 @@ def build_matchup_pitch_html(
 .atlas-mini-chip.four {{ background:rgba(242,143,59,.86); color:#101418; }}
 .atlas-mini-chip.six {{ background:rgba(255,209,102,.9); color:#101418; }}
 .atlas-mini-chip.wicket {{ background:rgba(239,83,80,.88); }}
-.atlas-pitch-stumps {{ position:absolute; left:calc(50% + 65px); bottom:-22px; transform:translateX(-50%); display:flex; gap:4px; z-index:2; }}
+.atlas-pitch-crease {{ position:absolute; left:130px; right:0; bottom:-4px; height:0; border-top:4px solid rgba(255,248,229,.96); z-index:3; pointer-events:none; }}
+.atlas-pitch-crease::before,.atlas-pitch-crease::after {{ content:""; position:absolute; bottom:-28px; width:3px; height:58px; background:rgba(255,248,229,.94); }}
+.atlas-pitch-crease::before {{ left:14%; }}
+.atlas-pitch-crease::after {{ right:14%; }}
+.atlas-pitch-stumps {{ position:absolute; left:calc(50% + 65px); bottom:-24px; transform:translateX(-50%); display:flex; gap:4px; z-index:4; }}
 .atlas-pitch-stumps span {{ width:6px; height:34px; border-radius:999px; background:rgba(11,16,20,.78); }}
 .atlas-pitch-legend {{ display:flex; gap:12px; flex-wrap:wrap; color:#9eabb5; font-size:.84rem; }}
-@media (max-width:700px) {{ .atlas-pitch-line-headers, .atlas-pitch-grid-row {{ grid-template-columns:78px var(--pitch-line-columns); }} .atlas-pitch-board::before {{ left:97px; }} .atlas-pitch-stumps {{ left:calc(50% + 39px); }} .atlas-pitch-cell {{ min-height:82px; padding:7px; }} .atlas-pitch-axis-label, .atlas-pitch-length-label {{ font-size:.62rem; }} }}
+@media (max-width:700px) {{ .atlas-pitch-line-headers, .atlas-pitch-grid-row {{ grid-template-columns:78px var(--pitch-line-columns); }} .atlas-pitch-board::before {{ left:97px; }} .atlas-pitch-crease {{ left:78px; }} .atlas-pitch-stumps {{ left:calc(50% + 39px); }} .atlas-pitch-cell {{ min-height:82px; padding:7px; }} .atlas-pitch-grid-row[data-length="SHORT"] .atlas-pitch-cell {{ min-height:118px; }} .atlas-pitch-axis-label, .atlas-pitch-length-label {{ font-size:.62rem; }} }}
 </style>
 <div class="atlas-approved-pitch" style="--pitch-line-columns:{column_weights}">
   <div class="atlas-pitch-line-headers"><span></span>{line_headers}</div>

@@ -26,13 +26,21 @@ LINE_WEIGHTS = {
     "DOWN_LEG": 1.0,
 }
 LENGTH_ORDER = [
-    "FULL_TOSS",
-    "YORKER",
-    "FULL",
-    "GOOD_LENGTH",
-    "SHORT_OF_A_GOOD_LENGTH",
     "SHORT",
+    "SHORT_OF_A_GOOD_LENGTH",
+    "GOOD_LENGTH",
+    "FULL",
+    "YORKER",
+    "FULL_TOSS",
 ]
+LENGTH_HEIGHTS = {
+    "SHORT": 1.55,
+    "SHORT_OF_A_GOOD_LENGTH": 1.15,
+    "GOOD_LENGTH": 1.0,
+    "FULL": 1.0,
+    "YORKER": 0.82,
+    "FULL_TOSS": 0.68,
+}
 
 
 def _display_label(value: object) -> str:
@@ -200,18 +208,28 @@ def build_pitch_heatmap(
 
     figure = go.Figure()
     annotations: list[dict[str, Any]] = []
-    row_count = len(lengths)
+    length_geometry: dict[str, dict[str, float]] = {}
+    pitch_height = sum(LENGTH_HEIGHTS.get(length, 1.0) for length in lengths)
+    y_cursor = pitch_height
+    for length in lengths:
+        height = LENGTH_HEIGHTS.get(length, 1.0)
+        length_geometry[length] = {
+            "top": y_cursor,
+            "bottom": y_cursor - height,
+            "height": height,
+        }
+        y_cursor -= height
     line_weights = [LINE_WEIGHTS.get(line, 1.0) for line in lines]
-    for row_index, record_row in enumerate(cell_records):
-        y_top = float(row_count - row_index)
-        y_bottom = y_top - 1.0
+    for row_index, (length, record_row) in enumerate(zip(lengths, cell_records, strict=True)):
+        y_top = length_geometry[length]["top"]
+        y_bottom = length_geometry[length]["bottom"]
         for column_index, record in enumerate(record_row):
             polygon_x, polygon_y = _pitch_cell_polygon(
                 column_index,
                 line_weights,
                 y_top,
                 y_bottom,
-                row_count,
+                pitch_height,
             )
             colour_value = record["colour_value"]
             if colour_value is None:
@@ -246,6 +264,7 @@ def build_pitch_heatmap(
                     hovertemplate="%{text}<extra></extra>",
                     showlegend=False,
                     name=f"{record['length']}:{record['line']}",
+                    opacity=0.78 if colour_value is not None else 0.68,
                 )
             )
             annotations.append(
@@ -268,8 +287,8 @@ def build_pitch_heatmap(
         "WIDE_DOWN_LEG": "Wide leg",
     }
     for column_index, line in enumerate(lines):
-        left = _pitch_boundary_x(column_index, line_weights, 0.0, row_count)
-        right = _pitch_boundary_x(column_index + 1, line_weights, 0.0, row_count)
+        left = _pitch_boundary_x(column_index, line_weights, 0.0, pitch_height)
+        right = _pitch_boundary_x(column_index + 1, line_weights, 0.0, pitch_height)
         annotations.append(
             dict(
                 name="pitch-line-label",
@@ -282,11 +301,11 @@ def build_pitch_heatmap(
             )
         )
     for row_index, length in enumerate(lengths):
-        y = row_count - row_index - 0.5
+        y = (length_geometry[length]["top"] + length_geometry[length]["bottom"]) / 2.0
         annotations.append(
             dict(
                 name="pitch-length-label",
-                x=_pitch_half_width(y, row_count) + 0.18,
+                x=_pitch_half_width(y, pitch_height) + 0.18,
                 y=y,
                 text=_display_label(length),
                 showarrow=False,
@@ -316,7 +335,7 @@ def build_pitch_heatmap(
     figure.update_layout(
         title=chart_title,
         annotations=annotations,
-        shapes=_pitch_shapes(row_count),
+        shapes=_pitch_shapes(pitch_height, length_geometry),
         meta={
             "lines": [_display_label(line) for line in lines],
             "lengths": [_display_label(length) for length in lengths],
@@ -324,13 +343,15 @@ def build_pitch_heatmap(
             "low_sample_fill": LOW_SAMPLE_FILL,
             "perspective": {"top_half_width": 1.65, "bottom_half_width": 3.0},
             "line_weights": line_weights,
+            "length_geometry": length_geometry,
+            "crease_y": length_geometry["YORKER"]["bottom"] + 0.18,
         },
         dragmode=False,
     )
-    figure = _base_layout(figure, height=max(730, 96 * len(lengths) + 170))
-    figure.update_layout(margin=dict(l=28, r=92, t=90, b=48), plot_bgcolor="#24452F")
+    figure = _base_layout(figure, height=max(760, int(98 * pitch_height) + 170))
+    figure.update_layout(margin=dict(l=28, r=92, t=90, b=48), plot_bgcolor="#31452F")
     figure.update_xaxes(visible=False, fixedrange=True, range=[-3.45, 4.15])
-    figure.update_yaxes(visible=False, fixedrange=True, range=[-0.62, row_count + 0.72])
+    figure.update_yaxes(visible=False, fixedrange=True, range=[-0.62, pitch_height + 0.72])
     return figure
 
 
@@ -363,38 +384,75 @@ def _pitch_cell_polygon(
     )
 
 
-def _pitch_shapes(row_count: int) -> list[dict[str, Any]]:
+def _pitch_shapes(
+    pitch_height: float,
+    length_geometry: dict[str, dict[str, float]],
+) -> list[dict[str, Any]]:
+    top_width = _pitch_half_width(pitch_height, pitch_height)
+    bottom_width = _pitch_half_width(0.0, pitch_height)
+    crease_y = length_geometry["YORKER"]["bottom"] + 0.18
+    crease_width = _pitch_half_width(crease_y, pitch_height)
+    wicket_y = length_geometry["FULL_TOSS"]["top"]
     shapes: list[dict[str, Any]] = [
         dict(
+            type="path",
+            name="pitch-surface",
+            path=(
+                f"M {-top_width},{pitch_height} L {top_width},{pitch_height} "
+                f"L {bottom_width},0 L {-bottom_width},0 Z"
+            ),
+            fillcolor="#B78B56",
+            line=dict(color="#D7B982", width=2),
+            layer="below",
+        ),
+        dict(
             type="line",
-            name="crease-bowler",
-            x0=-1.42,
-            x1=1.42,
-            y0=row_count + 0.03,
-            y1=row_count + 0.03,
-            line=dict(color="#F1E2B8", width=3),
-        )
+            name="crease-batting",
+            x0=-crease_width,
+            x1=crease_width,
+            y0=crease_y,
+            y1=crease_y,
+            line=dict(color="#FFF8E5", width=4),
+        ),
+        dict(
+            type="line",
+            name="return-crease-left",
+            x0=-crease_width * 0.72,
+            x1=-crease_width * 0.72,
+            y0=max(0.0, crease_y - 0.38),
+            y1=min(pitch_height, crease_y + 0.42),
+            line=dict(color="#FFF8E5", width=3),
+        ),
+        dict(
+            type="line",
+            name="return-crease-right",
+            x0=crease_width * 0.72,
+            x1=crease_width * 0.72,
+            y0=max(0.0, crease_y - 0.38),
+            y1=min(pitch_height, crease_y + 0.42),
+            line=dict(color="#FFF8E5", width=3),
+        ),
     ]
     for index, x in enumerate((-0.13, 0.0, 0.13), start=1):
         shapes.append(
             dict(
                 type="line",
-                name=f"stump-bowler-{index}",
+                name=f"stump-batting-{index}",
                 x0=x,
                 x1=x,
-                y0=row_count + 0.08,
-                y1=row_count + 0.5,
+                y0=wicket_y - 0.24,
+                y1=wicket_y + 0.08,
                 line=dict(color="#F1D68A", width=5),
             )
         )
     shapes.append(
         dict(
             type="line",
-            name="bails-bowler",
+            name="bails-batting",
             x0=-0.2,
             x1=0.2,
-            y0=row_count + 0.5,
-            y1=row_count + 0.5,
+            y0=wicket_y + 0.08,
+            y1=wicket_y + 0.08,
             line=dict(color="#F1D68A", width=3),
         )
     )

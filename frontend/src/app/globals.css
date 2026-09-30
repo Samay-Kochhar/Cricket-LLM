@@ -2075,8 +2075,10 @@ code {
   position: absolute;
   inset: 16px 19px 16px 149px;
   border-radius: 22px;
-  background: linear-gradient(180deg, rgba(234, 215, 191, 0.88), rgba(217, 192, 161, 0.76));
-  box-shadow: inset 0 0 0 1px rgba(111, 79, 44, 0.22);
+  background: linear-gradient(180deg, #c8a66f, #a77b4d);
+  box-shadow:
+    inset 0 0 0 1px rgba(111, 79, 44, 0.38),
+    inset 0 0 44px rgba(82, 50, 24, 0.2);
   pointer-events: none;
 }
 
@@ -2123,6 +2125,22 @@ code {
   gap: 8px;
   justify-content: space-between;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.pitch-grid-row[data-length="SHORT"] .pitch-grid-cell {
+  min-height: 142px;
+}
+
+.pitch-grid-row[data-length="SHORT_OF_A_GOOD_LENGTH"] .pitch-grid-cell {
+  min-height: 112px;
+}
+
+.pitch-grid-row[data-length="YORKER"] .pitch-grid-cell {
+  min-height: 84px;
+}
+
+.pitch-grid-row[data-length="FULL_TOSS"] .pitch-grid-cell {
+  min-height: 74px;
 }
 
 .pitch-grid-cell.empty {
@@ -2190,9 +2208,39 @@ code {
   z-index: 2;
 }
 
+.pitch-crease {
+  position: absolute;
+  left: 130px;
+  right: 0;
+  bottom: -4px;
+  height: 0;
+  border-top: 4px solid rgba(255, 248, 229, 0.96);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.pitch-crease::before,
+.pitch-crease::after {
+  content: "";
+  position: absolute;
+  bottom: -28px;
+  width: 3px;
+  height: 58px;
+  background: rgba(255, 248, 229, 0.94);
+}
+
+.pitch-crease::before {
+  left: 14%;
+}
+
+.pitch-crease::after {
+  right: 14%;
+}
+
 .pitch-stumps.batting {
   top: auto;
-  bottom: -22px;
+  bottom: -24px;
+  z-index: 4;
 }
 
 .pitch-stumps span {
@@ -2475,6 +2523,14 @@ code {
 
   .pitch-board::before {
     display: none;
+  }
+
+  .pitch-crease {
+    left: 0;
+  }
+
+  .pitch-grid-row[data-length="SHORT"] .pitch-grid-cell {
+    min-height: 118px;
   }
 
   .atlas-chat-main {

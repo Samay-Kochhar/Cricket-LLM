@@ -200,28 +200,38 @@ test("matchup pitch map mirrors for a left-handed batter and omits wide down leg
   expect(alignment.stumpHeight).toBeGreaterThanOrEqual(32);
 
   await expect(page.locator(".pitch-length-label")).toHaveText([
-    "Full toss",
-    "Yorker",
-    "Full",
-    "Good length",
-    "Back of a length",
     "Short",
+    "Back of a length",
+    "Good length",
+    "Full",
+    "Yorker",
+    "Full toss",
   ]);
   const lengthPlacement = await page.locator(".pitch-board").evaluate((board) => {
     const rows = board.querySelectorAll<HTMLElement>(".pitch-grid-row");
     const stumps = board.querySelector<HTMLElement>(".pitch-stumps.batting");
-    if (!stumps) throw new Error("Expected batting stumps");
-    const fullTossBox = rows[0].getBoundingClientRect();
-    const yorkerBox = rows[1].getBoundingClientRect();
+    const crease = board.querySelector<HTMLElement>(".pitch-crease");
+    if (!stumps || !crease) throw new Error("Expected batting stumps and complete crease");
+    const shortBox = rows[0].getBoundingClientRect();
+    const goodLengthBox = rows[2].getBoundingClientRect();
+    const yorkerBox = rows[4].getBoundingClientRect();
+    const fullTossBox = rows[5].getBoundingClientRect();
     const stumpsBox = stumps.getBoundingClientRect();
+    const creaseBox = crease.getBoundingClientRect();
     return {
+      shortHeight: shortBox.height,
+      goodLengthHeight: goodLengthBox.height,
       fullTossCenter: (fullTossBox.top + fullTossBox.bottom) / 2,
       stumpCenter: (stumpsBox.top + stumpsBox.bottom) / 2,
       yorkerCenter: (yorkerBox.top + yorkerBox.bottom) / 2,
+      creaseWidth: creaseBox.width,
+      pitchWidth: goodLengthBox.width - 130,
     };
   });
-  expect(lengthPlacement.fullTossCenter).toBeLessThan(lengthPlacement.stumpCenter);
-  expect(lengthPlacement.stumpCenter).toBeLessThan(lengthPlacement.yorkerCenter);
+  expect(lengthPlacement.shortHeight).toBeGreaterThan(lengthPlacement.goodLengthHeight);
+  expect(lengthPlacement.yorkerCenter).toBeLessThan(lengthPlacement.stumpCenter);
+  expect(lengthPlacement.stumpCenter).toBeLessThan(lengthPlacement.fullTossCenter);
+  expect(lengthPlacement.creaseWidth).toBeGreaterThan(lengthPlacement.pitchWidth * 0.9);
 });
 
 test("matchup explorer explains when an exact pair has zero ODI balls", async ({ page }) => {
