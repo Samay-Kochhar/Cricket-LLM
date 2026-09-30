@@ -1,7 +1,7 @@
 # Issue 47 release report: eight-question capability version
 
-Stable version: `odi-stable-2026-09-30` (git tag), code revision recorded in
-`tests/evals/regression/golden-answers.json`.
+Stable version: `odi-stable-2026-09-30`, a git tag on commit 7beede2 (application
+code last changed in f5703ad). Golden answers: `tests/evals/regression/golden-answers.json`.
 
 This report covers the release of the eight priority capabilities (#38–#44),
 the browser and Workbench routing slices (#45, #46), and the release-regression
