@@ -1037,7 +1037,10 @@ class CanonicalMeaningResolver:
         for dimension in extracted_dimensions:
             target_dimension = registered_targets[dimension] or dimension
             reason = None
-            if (
+            axis_target = _axis_phrase_target(dimension, meaning)
+            if axis_target is not None:
+                target_dimension = axis_target.removeprefix("dimension.")
+            elif (
                 registered_targets[dimension] is None
                 and meaning.split_by is not None
                 and meaning.split_by not in registered_targets.values()
@@ -1185,6 +1188,7 @@ class CanonicalMeaningResolver:
                 operator_compiled = compiled and (
                     fact.operator in {"eq", "in"}
                     or (fact.operator == "between" and "over_range" in normalized)
+                    or _operator_matches_compiled_scope(fact, meaning)
                 )
                 add(
                     "operator",
@@ -1457,13 +1461,20 @@ class CanonicalMeaningResolver:
             "venue",
             "opposition",
             "opponent",
+            "opponent team",
+            "opposition team",
+            "opposing team",
         }:
             normalized = self._explicit_filters(
                 fact.evidence, _normalized_text(fact.evidence)
             )
             if not normalized:
                 normalized = self._explicit_filters(text, _normalized_text(text))
-            key = "opposition" if concept == "opponent" else concept.replace(" ", "_")
+            key = (
+                "opposition"
+                if concept.startswith(("opponent", "opposition", "opposing"))
+                else concept.replace(" ", "_")
+            )
             if key == "bowling_style" and text.lower() in {"pace", "spin"}:
                 return {key: text.lower()}
             return {key: normalized[key]} if key in normalized else {}
@@ -2109,6 +2120,7 @@ def _relationship_filter_target(
     relationship_keys = {
         "batter dismissed": "batter",
         "dismissed batter": "batter",
+        "dismissed player": "batter",
         "batter": "batter",
         "bowler faced": "bowler",
         "opposing bowler": "bowler",
@@ -2153,22 +2165,87 @@ def _split_axis_stated_in_question(question: str, split_by: str) -> bool:
 def _axis_filter_target(
     fact: ExpressedFilter, meaning: CanonicalCricketMeaning
 ) -> str | None:
-    concept = _normalized_text(fact.concept).replace("_", " ")
-    axes = (
-        ("phase", "phase"),
-        ("bowling type", "bowling_style_group"),
-        ("bowling style", "bowling_style_group"),
-        ("batter hand", "batter_hand"),
-        ("handedness", "batter_hand"),
-        ("day night", MATCH_LIGHTING),
-        ("lighting", MATCH_LIGHTING),
-    )
-    for phrase, canonical in axes:
+    return _axis_phrase_target(fact.concept, meaning)
+
+
+# Registered wording for each split/breakdown axis a model may name.
+AXIS_PHRASES: tuple[tuple[str, str], ...] = (
+    ("phase", "phase"),
+    ("bowling type", "bowling_style_group"),
+    ("bowling style", "bowling_style_group"),
+    ("spin type", "bowling_style_group"),
+    ("batter hand", "batter_hand"),
+    ("handedness", "batter_hand"),
+    ("day night", MATCH_LIGHTING),
+    ("lighting", MATCH_LIGHTING),
+)
+
+
+def _axis_phrase_target(label: str, meaning: CanonicalCricketMeaning) -> str | None:
+    concept = _normalized_text(label).replace("_", " ")
+    for phrase, canonical in AXIS_PHRASES:
         if phrase not in concept:
             continue
         if canonical == meaning.split_by or canonical in meaning.group_by:
             return f"dimension.{canonical}"
     return None
+
+
+# Inclusive human over intervals of the registered phases (stored `over` is 1-based).
+PHASE_OVER_INTERVALS: dict[str, tuple[int, int]] = {
+    "first6": (1, 6),
+    "powerplay": (1, 10),
+    "middle": (11, 40),
+    "death": (41, 50),
+}
+
+
+def _operator_interval(operator: str, values: list[int], low: int, high: int) -> tuple[int, int] | None:
+    if operator == "between" and len(values) == 2 and values[0] <= values[1]:
+        return values[0], values[1]
+    if len(values) != 1:
+        return None
+    value = values[0]
+    return {
+        "gte": (value, high),
+        "gt": (value + 1, high),
+        "lte": (low, value),
+        "lt": (low, value - 1),
+    }.get(operator)
+
+
+def _operator_matches_compiled_scope(
+    fact: ExpressedFilter, meaning: CanonicalCricketMeaning
+) -> bool:
+    """A typed over/year bound compiles only when it equals the registered scope exactly."""
+    if not fact.operator:
+        return False
+    try:
+        values = [int(value) for value in fact.values]
+    except (TypeError, ValueError):
+        return False
+    concept = _normalized_text(fact.concept).replace("_", " ")
+    if "over" in concept:
+        requested = _operator_interval(fact.operator, values, 1, 50)
+        over_range = meaning.filters.get("over_range")
+        phase = meaning.filters.get("phase")
+        if isinstance(over_range, list) and len(over_range) == 2:
+            compiled_interval = (int(over_range[0]), int(over_range[1]))
+        elif isinstance(phase, str) and phase in PHASE_OVER_INTERVALS:
+            compiled_interval = PHASE_OVER_INTERVALS[phase]
+        else:
+            return False
+        return requested == compiled_interval
+    if "year" in concept or "season" in concept:
+        years = meaning.filters.get("years")
+        mode = meaning.filters.get("year_mode")
+        if not isinstance(years, list) or not years or len(values) != 1:
+            return False
+        if fact.operator == "gte":
+            return mode == "after" and min(years) == values[0]
+        if fact.operator == "lte":
+            return mode == "before" and max(years) == values[0]
+    return False
 
 
 def compile_canonical_meaning(meaning: CanonicalCricketMeaning) -> CricketQueryPlan:

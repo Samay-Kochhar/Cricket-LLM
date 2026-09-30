@@ -1,0 +1,298 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "unseen-direct-kohli-runs-aus-b",
+      "errors": [
+        "mode expected 'analysis', got 'clarification'",
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "direct",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-direct-rohit-pp-sr-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "direct",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-direct-bumrah-death-econ-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "direct",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-direct-starc-pp-wickets-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "direct",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-rank-pp-wickets-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "ranking",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-rank-middle-dots-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "ranking",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-rank-pp-runs-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "ranking",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-rank-death-sr-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "ranking",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-match-warner-dismissers-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "matchup",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-compare-rabada-shaheen-pp-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "comparison",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-split-klaasen-spin-type-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "split",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-trend-starc-death-a",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-trend-starc-death-b",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "trend",
+      "first_failing_stage": "canonicalization"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-b",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    }
+  ],
+  "families": {
+    "behavior": {
+      "passed": 18,
+      "rate": 0.9,
+      "total": 20
+    },
+    "breakdown": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "comparison": {
+      "passed": 15,
+      "rate": 0.9375,
+      "total": 16
+    },
+    "context": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "direct": {
+      "passed": 16,
+      "rate": 0.8,
+      "total": 20
+    },
+    "matchup": {
+      "passed": 15,
+      "rate": 0.9375,
+      "total": 16
+    },
+    "ranking": {
+      "passed": 20,
+      "rate": 0.8333333333333334,
+      "total": 24
+    },
+    "split": {
+      "passed": 12,
+      "rate": 0.8571428571428571,
+      "total": 14
+    },
+    "trend": {
+      "passed": 8,
+      "rate": 0.8,
+      "total": 10
+    }
+  },
+  "improvements": [],
+  "model_call_reasons": {
+    "ambiguous_meaning": 2,
+    "initial_meaning_extraction": 132
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 3,
+    "both_pass": 62,
+    "consistent_pairs": 65,
+    "one_pass": 10,
+    "total_pairs": 75
+  },
+  "planner_overlap": {
+    "both_fail": 11,
+    "both_pass": 59,
+    "deterministic_only": 3,
+    "production_only": 77,
+    "total": 150
+  },
+  "regressions": [
+    "unseen-compare-rabada-shaheen-pp-a",
+    "unseen-direct-bumrah-death-econ-a",
+    "unseen-direct-kohli-runs-aus-b",
+    "unseen-direct-rohit-pp-sr-a",
+    "unseen-direct-starc-pp-wickets-a",
+    "unseen-match-warner-dismissers-a",
+    "unseen-rank-death-sr-b",
+    "unseen-rank-middle-dots-b",
+    "unseen-rank-pp-runs-b",
+    "unseen-rank-pp-wickets-b",
+    "unseen-split-klaasen-spin-type-a",
+    "unseen-split-klaasen-spin-type-b",
+    "unseen-trend-starc-death-a",
+    "unseen-trend-starc-death-b",
+    "unseen-unsupported-team-econ-a",
+    "unseen-unsupported-team-econ-b"
+  ],
+  "safeguard_aware_accuracy": {
+    "passed": 134,
+    "rate": 0.8933333333333333,
+    "total": 150
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 134,
+    "rate": 0.8933333333333333,
+    "total": 150
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 104,
+      "rate": 0.8,
+      "total": 130
+    },
+    "compilation": {
+      "passed": 116,
+      "rate": 0.8923076923076924,
+      "total": 130
+    },
+    "database_evidence": {
+      "passed": 116,
+      "rate": 0.8923076923076924,
+      "total": 130
+    },
+    "extraction_contract": {
+      "passed": 117,
+      "rate": 0.975,
+      "total": 120
+    },
+    "response_contract": {
+      "passed": 116,
+      "rate": 0.8923076923076924,
+      "total": 130
+    },
+    "validation": {
+      "passed": 116,
+      "rate": 0.8923076923076924,
+      "total": 130
+    }
+  },
+  "strict_accuracy": {
+    "passed": 134,
+    "rate": 0.8933333333333333,
+    "total": 150
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI unseen production paraphrase benchmark",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "unseen-unsupported-team-econ-a",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    },
+    {
+      "case_id": "unseen-unsupported-team-econ-b",
+      "errors": [
+        "status expected 'unsupported', got 'supported'",
+        "failure_state expected 'unsupported_capability', got None"
+      ],
+      "family": "behavior",
+      "first_failing_stage": "response policy"
+    }
+  ],
+  "families": {
+    "behavior": {
+      "passed": 18,
+      "rate": 0.9,
+      "total": 20
+    },
+    "breakdown": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "comparison": {
+      "passed": 16,
+      "rate": 1.0,
+      "total": 16
+    },
+    "context": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    },
+    "direct": {
+      "passed": 20,
+      "rate": 1.0,
+      "total": 20
+    },
+    "matchup": {
+      "passed": 16,
+      "rate": 1.0,
+      "total": 16
+    },
+    "ranking": {
+      "passed": 24,
+      "rate": 1.0,
+      "total": 24
+    },
+    "split": {
+      "passed": 14,
+      "rate": 1.0,
+      "total": 14
+    },
+    "trend": {
+      "passed": 10,
+      "rate": 1.0,
+      "total": 10
+    }
+  },
+  "improvements": [],
+  "model_call_reasons": {
+    "ambiguous_meaning": 2,
+    "initial_meaning_extraction": 132
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 1,
+    "both_pass": 74,
+    "consistent_pairs": 75,
+    "one_pass": 0,
+    "total_pairs": 75
+  },
+  "planner_overlap": {
+    "both_fail": 0,
+    "both_pass": 62,
+    "deterministic_only": 0,
+    "production_only": 88,
+    "total": 150
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 148,
+    "rate": 0.9866666666666667,
+    "total": 150
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 148,
+    "rate": 0.9866666666666667,
+    "total": 150
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 116,
+      "rate": 0.8923076923076924,
+      "total": 130
+    },
+    "compilation": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    },
+    "database_evidence": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    },
+    "extraction_contract": {
+      "passed": 117,
+      "rate": 0.975,
+      "total": 120
+    },
+    "response_contract": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    },
+    "validation": {
+      "passed": 130,
+      "rate": 1.0,
+      "total": 130
+    }
+  },
+  "strict_accuracy": {
+    "passed": 148,
+    "rate": 0.9866666666666667,
+    "total": 150
+  }
+}

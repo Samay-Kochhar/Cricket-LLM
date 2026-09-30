@@ -187,3 +187,164 @@ def test_extra_unregistered_label_beside_the_lighting_axis_still_blocks(
     assert any(
         fact["concept"] == "match_type" and fact["disposition"] == "unsupported" for fact in facts
     )
+
+
+# Recorded 2026-09-30 fresh-150 extractions (d11f438). The extraction contract
+# asks the model to preserve each filter's operator, so ordinary registered
+# bounds now arrive with typed operators and must be accounted exactly.
+def _candidate(filters: list[dict], **updates: object) -> dict:
+    return {
+        "version": 1,
+        "family": "direct",
+        "entities": [],
+        "metric_concept": None,
+        "role": None,
+        "breakdown_dimensions": [],
+        "split_dimensions": [],
+        "filters": filters,
+        "intent": "value",
+        "ordering": None,
+        "limit": None,
+        "sample_threshold": None,
+        "ambiguity_candidates": [],
+        **updates,
+    }
+
+
+STARC_POWERPLAY = _candidate(
+    [{"concept": "overs", "evidence": "inside the opening ten overs", "operator": "between", "values": [1, 10]}],
+    entities=[{"kind": "player", "name": "Starc", "relationship": "subject", "role": "bowler"}],
+    metric_concept="wickets",
+    role="bowler",
+)
+BUMRAH_FROM_41 = _candidate(
+    [{"concept": "over number", "evidence": "from over 41 onwards", "operator": "gte", "values": [41]}],
+    entities=[{"kind": "player", "name": "Bumrah", "relationship": "subject", "role": "bowler"}],
+    metric_concept="economy rate",
+    role="bowler",
+)
+STARC_SINCE_2018 = _candidate(
+    [
+        {"concept": "overs_phase", "evidence": "death-over", "operator": "eq", "values": ["death"]},
+        {"concept": "year", "evidence": "since 2018", "operator": "gte", "values": [2018]},
+    ],
+    family="trend",
+    entities=[{"kind": "player", "name": "Starc", "relationship": "subject", "role": None}],
+    metric_concept="economy",
+    role="bowler",
+    breakdown_dimensions=["year"],
+)
+KOHLI_AGAINST_AUSTRALIA = _candidate(
+    [{"concept": "opponent_team", "evidence": "Against Australia", "operator": "eq", "values": ["Australia"]}],
+    entities=[
+        {"kind": "player", "name": "Virat Kohli", "relationship": "subject", "role": None},
+        {"kind": "team", "name": "Australia", "relationship": "opponent", "role": None},
+    ],
+    metric_concept="runs",
+    role="batter",
+)
+WARNER_DISMISSERS = _candidate(
+    [{"concept": "dismissed_player", "evidence": "gets David Warner out", "operator": "eq", "values": ["David Warner"]}],
+    family="ranking",
+    entities=[{"kind": "player", "name": "David Warner", "relationship": "participant", "role": None}],
+    metric_concept="dismissals",
+    role="bowler",
+    intent="ranking",
+    ordering="highest",
+)
+KLAASEN_SPIN_TYPE = _candidate(
+    [{"concept": "spin type", "evidence": "across wrist and finger spin", "operator": "in", "values": ["wrist spin", "finger spin"]}],
+    family="split",
+    entities=[{"kind": "player", "name": "Heinrich Klaasen", "relationship": "subject", "role": None}],
+    metric_concept="strike rate",
+    role="batter",
+    intent="comparison",
+    split_dimensions=["spin type"],
+)
+
+
+def _reply(repository: AnalyticsRepository, extraction: dict, question: str):
+    from tests.backend.test_issue_41_required_run_rate import _chat
+
+    chat, client = _chat(repository, extraction)
+    response = chat.reply(question, history=[]).query_response
+    assert client.calls == 1
+    return response
+
+
+@pytest.mark.parametrize(
+    ("extraction", "question", "expected_filters"),
+    [
+        (STARC_POWERPLAY, "Starc wickets inside the opening ten overs?", {"phase": "powerplay"}),
+        (BUMRAH_FROM_41, "How expensive is Bumrah from over 41 onwards?", {"phase": "death"}),
+        (
+            STARC_SINCE_2018,
+            "Starc death-over economy year by year since 2018.",
+            {"phase": "death", "years": [2018], "year_mode": "after"},
+        ),
+        (KOHLI_AGAINST_AUSTRALIA, "Against Australia, how many runs has Virat Kohli made?", {"opposition": "Australia"}),
+        (WARNER_DISMISSERS, "Which bowler gets David Warner out most?", {"batter": "David Warner"}),
+    ],
+)
+def test_recorded_typed_operators_compile_to_the_equal_registered_scope(
+    repository: AnalyticsRepository,
+    extraction: dict,
+    question: str,
+    expected_filters: dict,
+) -> None:
+    response = _reply(repository, extraction, question)
+
+    assert response.status.value == "supported"
+    filters = response.interpretation.filters
+    assert {key: filters.get(key) for key in expected_filters} == expected_filters
+    facts = _semantic_trace(response)["completeness_result"]["facts"]
+    assert all(fact["disposition"] != "unsupported" for fact in facts)
+
+
+def test_recorded_operator_answers_match_independent_queries(repository: AnalyticsRepository) -> None:
+    bumrah = _values(_reply(repository, BUMRAH_FROM_41, "How expensive is Bumrah from over 41 onwards?"))
+    kohli = _values(
+        _reply(repository, KOHLI_AGAINST_AUSTRALIA, "Against Australia, how many runs has Virat Kohli made?")
+    )
+
+    assert (bumrah["Economy Rate"], bumrah["Legal Balls"]) == (5.78, 1123)
+    assert kohli["Runs Scored"] == 2367
+
+
+def test_recorded_spin_type_label_names_the_bowling_style_group_split(repository: AnalyticsRepository) -> None:
+    response = _reply(
+        repository, KLAASEN_SPIN_TYPE, "Compare Heinrich Klaasen's strike rate across wrist and finger spin."
+    )
+
+    assert response.status.value == "supported"
+    assert response.interpretation.filters["semantic_operation"] == "split_compare"
+    facts = _semantic_trace(response)["completeness_result"]["facts"]
+    assert all(fact["disposition"] != "unsupported" for fact in facts)
+
+
+@pytest.mark.parametrize(
+    ("extraction", "question", "changed_filter"),
+    [
+        # Overs 1-12 is not the powerplay; a strict bound after over 41 is not overs 41-50.
+        (STARC_POWERPLAY, "Starc wickets inside the opening ten overs?",
+         {"concept": "overs", "evidence": "inside the opening ten overs", "operator": "between", "values": [1, 12]}),
+        (BUMRAH_FROM_41, "How expensive is Bumrah from over 41 onwards?",
+         {"concept": "over number", "evidence": "from over 41 onwards", "operator": "gt", "values": [41]}),
+        # "After 2018" as a strict bound is not the inclusive registered "since 2018" scope.
+        (STARC_SINCE_2018, "Starc death-over economy year by year since 2018.",
+         {"concept": "year", "evidence": "since 2018", "operator": "gt", "values": [2018]}),
+    ],
+)
+def test_operators_that_differ_from_the_compiled_scope_still_block(
+    repository: AnalyticsRepository,
+    extraction: dict,
+    question: str,
+    changed_filter: dict,
+) -> None:
+    filters = [
+        changed_filter if item["concept"] == changed_filter["concept"] else item
+        for item in extraction["filters"]
+    ]
+    response = _reply(repository, {**extraction, "filters": filters}, question)
+
+    assert response.status.value != "supported"
