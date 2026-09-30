@@ -1,0 +1,119 @@
+{
+  "artifact_schema_version": 1,
+  "benchmark": "ODI next database-backed capabilities",
+  "benchmark_version": 1,
+  "failures": [
+    {
+      "case_id": "next-kohli-dismissal-types",
+      "errors": [
+        "status expected 'supported', got 'unsupported'",
+        "Semantic V2 trace does not contain a normalized plan",
+        "supported answer has no database evidence query"
+      ],
+      "family": "breakdown",
+      "first_failing_stage": "canonicalization"
+    }
+  ],
+  "families": {
+    "breakdown": {
+      "passed": 0,
+      "rate": 0.0,
+      "total": 1
+    },
+    "direct": {
+      "passed": 3,
+      "rate": 1.0,
+      "total": 3
+    },
+    "match_fact": {
+      "passed": 1,
+      "rate": 1.0,
+      "total": 1
+    },
+    "ranking": {
+      "passed": 2,
+      "rate": 1.0,
+      "total": 2
+    },
+    "split": {
+      "passed": 1,
+      "rate": 1.0,
+      "total": 1
+    }
+  },
+  "improvements": [
+    "next-2019-final-toss",
+    "next-bumrah-day-night",
+    "next-bumrah-overs-41-50",
+    "next-kohli-sixes",
+    "next-rohit-required-rate",
+    "next-successful-chases",
+    "next-team-economy-india"
+  ],
+  "model_call_reasons": {
+    "initial_meaning_extraction": 6
+  },
+  "paraphrase_pair_consistency": {
+    "both_fail": 0,
+    "both_pass": 0,
+    "consistent_pairs": 0,
+    "one_pass": 0,
+    "total_pairs": 0
+  },
+  "planner_overlap": {
+    "both_fail": 1,
+    "both_pass": 4,
+    "deterministic_only": 0,
+    "production_only": 3,
+    "total": 8
+  },
+  "regressions": [],
+  "safeguard_aware_accuracy": {
+    "passed": 7,
+    "rate": 0.875,
+    "total": 8
+  },
+  "scoring_version": 1,
+  "semantic_capability": {
+    "passed": 7,
+    "rate": 0.875,
+    "total": 8
+  },
+  "stage_accuracy": {
+    "canonical_meaning": {
+      "passed": 4,
+      "rate": 0.5,
+      "total": 8
+    },
+    "compilation": {
+      "passed": 7,
+      "rate": 0.875,
+      "total": 8
+    },
+    "database_evidence": {
+      "passed": 7,
+      "rate": 0.875,
+      "total": 8
+    },
+    "extraction_contract": {
+      "passed": 6,
+      "rate": 1.0,
+      "total": 6
+    },
+    "response_contract": {
+      "passed": 7,
+      "rate": 0.875,
+      "total": 8
+    },
+    "validation": {
+      "passed": 7,
+      "rate": 0.875,
+      "total": 8
+    }
+  },
+  "strict_accuracy": {
+    "passed": 7,
+    "rate": 0.875,
+    "total": 8
+  }
+}

@@ -1064,7 +1064,26 @@ class CanonicalMeaningResolver:
                 reason=reason if compiled else None,
             )
 
+        compiled_entities = {
+            _normalized_lookup_text(fact.concept): fact.canonical_target
+            for fact in facts
+            if fact.fact_type == "entity" and fact.disposition == "compiled"
+        }
         for fact in candidate.filters:
+            restated_target = _restated_entity_target(fact, compiled_entities)
+            if restated_target is not None:
+                # A generic "player" filter that only repeats an extracted,
+                # already-compiled entity mention adds no new condition.
+                add("filter", fact.concept, fact.values, disposition="compiled",
+                    target=restated_target, evidence=fact.evidence)
+                if fact.operator:
+                    add("operator", fact.operator, fact.operator,
+                        disposition="compiled" if fact.operator in {"eq", "in"} else "unsupported",
+                        target=restated_target, evidence=fact.evidence)
+                for value in fact.values:
+                    add("value", fact.concept, value, disposition="compiled",
+                        target=restated_target, evidence=fact.evidence)
+                continue
             match_state = _match_state_fact(fact)
             if match_state is not None:
                 # Typed numeric predicate: field, operator and every numeric
@@ -2110,6 +2129,22 @@ def _dismissal_type_filter_target(
         if set(requested) <= set(DISMISSAL_TYPE_REGISTRY)
         else None
     )
+
+
+GENERIC_PLAYER_CONCEPTS = frozenset({"player", "players", "player name", "subject", "subject player"})
+
+
+def _restated_entity_target(
+    fact: ExpressedFilter, compiled_entities: Mapping[str, str | None]
+) -> str | None:
+    """The target of the extracted entity a generic player filter merely repeats."""
+    concept = _normalized_text(fact.concept).replace("_", " ")
+    if concept not in GENERIC_PLAYER_CONCEPTS or not fact.values:
+        return None
+    targets = {compiled_entities.get(_normalized_lookup_text(str(value))) for value in fact.values}
+    if None in targets or len(targets) != 1:
+        return None
+    return targets.pop()
 
 
 def _relationship_filter_target(

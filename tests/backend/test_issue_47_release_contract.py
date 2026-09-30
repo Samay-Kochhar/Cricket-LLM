@@ -348,3 +348,43 @@ def test_operators_that_differ_from_the_compiled_scope_still_block(
     response = _reply(repository, {**extraction, "filters": filters}, question)
 
     assert response.status.value != "supported"
+
+
+# Recorded fresh priority-8 extraction at d6b5f08: the model restated the
+# subject as a generic "player" filter.
+KOHLI_CAUGHT_BOWLED = _candidate(
+    [
+        {"concept": "player", "evidence": "Kohli", "operator": "eq", "values": ["Kohli"]},
+        {"concept": "dismissal type", "evidence": "caught versus bowled", "operator": "in", "values": ["caught", "bowled"]},
+    ],
+    family="comparison",
+    entities=[{"kind": "player", "name": "Kohli", "relationship": "subject", "role": None}],
+    metric_concept="dismissals",
+    role="batter",
+    intent="comparison",
+    split_dimensions=["dismissal type"],
+)
+DISMISSAL_QUESTION = "How often was Kohli dismissed caught versus bowled?"
+
+
+def test_generic_player_filter_restating_the_subject_compiles(repository: AnalyticsRepository) -> None:
+    response = _reply(repository, KOHLI_CAUGHT_BOWLED, DISMISSAL_QUESTION)
+
+    assert response.status.value == "supported"
+    assert "caught 170 times and bowled 34 times" in response.summaries[0].body
+    player_facts = [
+        fact
+        for fact in _semantic_trace(response)["completeness_result"]["facts"]
+        if fact["concept"] in {"player", "eq"}
+    ]
+    assert player_facts and all(fact["disposition"] == "compiled" for fact in player_facts)
+
+
+def test_generic_player_filter_naming_another_player_still_blocks(repository: AnalyticsRepository) -> None:
+    filters = [
+        {"concept": "player", "evidence": "Kohli", "operator": "eq", "values": ["Rohit Sharma"]},
+        KOHLI_CAUGHT_BOWLED["filters"][1],
+    ]
+    response = _reply(repository, {**KOHLI_CAUGHT_BOWLED, "filters": filters}, DISMISSAL_QUESTION)
+
+    assert response.status.value != "supported"
