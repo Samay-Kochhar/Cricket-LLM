@@ -50,6 +50,6 @@ be reduced. Use a dedicated Gemini project with the intended spending cap.
 
 ## Product boundary
 
-The Docker/Next.js application remains the full CricAtlas experience. The
-Streamlit app includes chat, Player Explorer and direct batter-versus-bowler
-Matchups with filters, summary metrics and a pitch map for invited testing.
+The Streamlit app includes the shared database-backed chat plus Player,
+Compare, Matchup, and Venue explorers for invited testing. The explorers use
+the same repository and analytics services as the Docker/Next.js application.

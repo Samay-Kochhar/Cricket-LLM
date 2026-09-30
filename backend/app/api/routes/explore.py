@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from backend.app.bootstrap import get_services
 from backend.app.domain.evidence_models import VisualPayload
+from backend.app.services.explorer_service import build_player_comparison, build_venue_profile
 from backend.app.services.player_resolution import resolve_player_name
 
 
@@ -43,22 +44,12 @@ def player_profile(player_name: str, services=Depends(get_services)):
 
 @router.get("/venues/{venue_name}")
 def venue_profile(venue_name: str, services=Depends(get_services)):
-    return {
-        "venue_name": venue_name,
-        "bowling_leaderboard": services["repository"].get_venue_bowling_leaderboard(venue_name),
-    }
+    return build_venue_profile(services["repository"], venue_name)
 
 
 @router.get("/compare")
 def compare_players(player: list[str] = Query(default=[]), services=Depends(get_services)):
-    repo = services["repository"]
-    summaries = []
-    for name in player[:2]:
-        resolved = resolve_player_name(name, repo.list_player_names())
-        summary = repo.get_player_batting_summary(resolved.canonical_name or name)
-        if summary:
-            summaries.append(summary)
-    return {"players": summaries}
+    return build_player_comparison(services["repository"], player)
 
 
 @router.post("/workbench/search")

@@ -215,7 +215,7 @@ def render_page() -> None:
         st.markdown("Database statistics remain the source of truth. Gemini assists with interpretation and explanation.")
         view = st.radio(
             "Navigate",
-            ["Ask Atlas", "Player Explorer", "Matchups"],
+            ["Ask Atlas", "Player Explorer", "Compare", "Matchups", "Venue Explorer"],
             label_visibility="collapsed",
         )
         if view == "Ask Atlas":
@@ -226,24 +226,32 @@ def render_page() -> None:
                 st.rerun()
         st.divider()
         st.caption("Private testing deployment")
-        st.caption("Chat, Player Explorer and Matchups are hosted here. Compare and venue explorers remain in the Docker edition.")
+        st.caption("Chat and all four ODI explorers are hosted here using the shared CricAtlas analytics engine.")
 
-    if view in {"Player Explorer", "Matchups"}:
+    if view in {"Player Explorer", "Compare", "Matchups", "Venue Explorer"}:
         try:
             with st.spinner("Preparing the ODI player database…"):
                 services = (
                     initialize_player_explorer_services(PLAYER_EXPLORER_BUNDLE_VERSION)
-                    if view == "Player Explorer"
+                    if view in {"Player Explorer", "Compare", "Venue Explorer"}
                     else initialize_services(SERVICE_BUNDLE_VERSION)
                 )
             if view == "Player Explorer":
                 from streamlit_player_explorer import render_player_explorer
 
                 render_player_explorer(services)
-            else:
+            elif view == "Compare":
+                from streamlit_compare_explorer import render_compare_explorer
+
+                render_compare_explorer(services)
+            elif view == "Matchups":
                 from streamlit_matchup_explorer import render_matchup_explorer
 
                 render_matchup_explorer(services)
+            else:
+                from streamlit_venue_explorer import render_venue_explorer
+
+                render_venue_explorer(services)
         except Exception:
             LOGGER.exception("CricAtlas Streamlit %s failed to initialize", view)
             st.error(f"CricAtlas could not prepare {view}. Check the private app logs for details.")
