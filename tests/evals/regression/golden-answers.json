@@ -1,0 +1,10269 @@
+{
+ "cases": {
+  "next-2019-final-toss": [
+   {
+    "answer_numbers": [
+     "07",
+     "1144530",
+     "14",
+     "2019"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Match ID",
+       "Competition",
+       "Stage",
+       "Date",
+       "Ground",
+       "Toss Winner"
+      ],
+      "rows": [
+       [
+        "1144530",
+        "ICC Cricket World Cup",
+        "Final",
+        "2019-07-14",
+        "Lord's, London",
+        "New Zealand"
+       ]
+      ],
+      "title": "Database match fact"
+     }
+    ]
+   }
+  ],
+  "next-bumrah-day-night": [
+   {
+    "answer_numbers": [
+     "1487",
+     "3093",
+     "4.26",
+     "4.76"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Day Match Value",
+       "Day Night Match Value",
+       "Difference",
+       "Day Match Sample",
+       "Day Night Match Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        4.26,
+        4.76,
+        -0.5,
+        1487,
+        3093,
+        -0.5
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     },
+     {
+      "columns": [
+       "Match Lighting",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "day match",
+        4.26,
+        1055,
+        1487,
+        28
+       ],
+       [
+        "day/night match",
+        4.76,
+        2454,
+        3093,
+        60
+       ]
+      ],
+      "title": "Recorded match-lighting evidence"
+     }
+    ]
+   }
+  ],
+  "next-bumrah-overs-41-50": [
+   {
+    "answer_numbers": [
+     "1123",
+     "41",
+     "5.78",
+     "50"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        5.78,
+        1081,
+        1123,
+        66
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "next-kohli-dismissal-types": [
+   {
+    "answer_numbers": [
+     "170",
+     "241",
+     "34"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Dismissal Type",
+       "Dismissals",
+       "All Recorded Dismissals"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Caught",
+        170,
+        241
+       ],
+       [
+        "Virat Kohli",
+        "Bowled",
+        34,
+        241
+       ]
+      ],
+      "title": "Batter dismissals by recorded dismissal type"
+     }
+    ]
+   }
+  ],
+  "next-kohli-sixes": [
+   {
+    "answer_numbers": [
+     "14918",
+     "154"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Six Count",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        154,
+        14918,
+        284
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "next-rohit-required-rate": [
+   {
+    "answer_numbers": [
+     "118.79",
+     "298",
+     "8"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rohit Sharma",
+        118.79,
+        354,
+        298,
+        13
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "next-successful-chases": [
+   {
+    "answer_numbers": [
+     "5791",
+     "5963"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        5791,
+        5963,
+        97
+       ],
+       [
+        "Rohit Sharma",
+        4415,
+        4805,
+        95
+       ],
+       [
+        "MS Dhoni",
+        2877,
+        3270,
+        75
+       ],
+       [
+        "Martin Guptill",
+        2676,
+        2742,
+        56
+       ],
+       [
+        "Shikhar Dhawan",
+        2629,
+        2785,
+        61
+       ],
+       [
+        "AB de Villiers",
+        2566,
+        2648,
+        59
+       ],
+       [
+        "Tamim Iqbal",
+        2453,
+        2775,
+        56
+       ],
+       [
+        "Tillakaratne Dilshan",
+        2422,
+        2614,
+        51
+       ],
+       [
+        "Gautam Gambhir",
+        2413,
+        2763,
+        55
+       ],
+       [
+        "Eoin Morgan",
+        2352,
+        2511,
+        65
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "next-team-economy-india": [
+   {
+    "answer_numbers": [
+     "4743",
+     "5.19",
+     "60"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowling Team",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Zimbabwe",
+        5.19,
+        4099,
+        4743,
+        19
+       ],
+       [
+        "Scotland",
+        5.27,
+        210,
+        239,
+        1
+       ],
+       [
+        "South Africa",
+        5.3,
+        10752,
+        12175,
+        47
+       ],
+       [
+        "Ireland",
+        5.3,
+        624,
+        706,
+        3
+       ],
+       [
+        "Afghanistan",
+        5.37,
+        898,
+        1003,
+        4
+       ],
+       [
+        "Australia",
+        5.46,
+        17261,
+        18961,
+        70
+       ],
+       [
+        "West Indies",
+        5.49,
+        15684,
+        17151,
+        64
+       ],
+       [
+        "United Arab Emirates",
+        5.52,
+        104,
+        113,
+        1
+       ],
+       [
+        "Sri Lanka",
+        5.54,
+        21595,
+        23379,
+        90
+       ],
+       [
+        "Bangladesh",
+        5.55,
+        6538,
+        7068,
+        27
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-ambiguous-best-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Runs scored",
+      "message": "Who has the most runs?"
+     },
+     {
+      "label": "Batting strike rate",
+      "message": "Who has the highest batting strike rate?"
+     },
+     {
+      "label": "Wickets taken",
+      "message": "Who has the most wickets?"
+     },
+     {
+      "label": "Economy rate",
+      "message": "Who has the best economy rate?"
+     }
+    ],
+    "failure_state": null,
+    "mode": "clarification",
+    "status": null,
+    "tables": []
+   }
+  ],
+  "unseen-ambiguous-best-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Runs scored",
+      "message": "Which player has the strongest statistics? Use Runs scored."
+     },
+     {
+      "label": "Batting strike rate",
+      "message": "Which player has the strongest statistics? Use Batting strike rate."
+     },
+     {
+      "label": "Wickets taken",
+      "message": "Which player has the strongest statistics? Use Wickets taken."
+     },
+     {
+      "label": "Economy rate",
+      "message": "Which player has the strongest statistics? Use Economy rate."
+     }
+    ],
+    "failure_state": "planner_uncertainty",
+    "mode": "clarification",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-ambiguous-bumrah-sr-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Batting strike rate",
+      "message": "What's Bumrah's batting strike rate?"
+     },
+     {
+      "label": "Bowling strike rate",
+      "message": "What's Bumrah's bowling strike rate?"
+     }
+    ],
+    "failure_state": null,
+    "mode": "clarification",
+    "status": null,
+    "tables": []
+   }
+  ],
+  "unseen-ambiguous-bumrah-sr-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Batting strike rate",
+      "message": "Give me Jasprit Bumrah's SR. Use Batting strike rate."
+     },
+     {
+      "label": "Bowling strike rate",
+      "message": "Give me Jasprit Bumrah's SR. Use Bowling strike rate."
+     }
+    ],
+    "failure_state": "planner_uncertainty",
+    "mode": "clarification",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-ambiguous-comparison-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Compare their batting",
+      "message": "Compare Kohli and Bumrah. Use Compare their batting."
+     },
+     {
+      "label": "Compare their bowling",
+      "message": "Compare Kohli and Bumrah. Use Compare their bowling."
+     },
+     {
+      "label": "Treat it as a batter-bowler matchup",
+      "message": "Compare Kohli and Bumrah. Use Treat it as a batter-bowler matchup."
+     }
+    ],
+    "failure_state": "planner_uncertainty",
+    "mode": "clarification",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-ambiguous-comparison-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Compare their batting",
+      "message": "Who is better, Rohit or Starc? Use Compare their batting."
+     },
+     {
+      "label": "Compare their bowling",
+      "message": "Who is better, Rohit or Starc? Use Compare their bowling."
+     },
+     {
+      "label": "Treat it as a batter-bowler matchup",
+      "message": "Who is better, Rohit or Starc? Use Treat it as a batter-bowler matchup."
+     }
+    ],
+    "failure_state": "planner_uncertainty",
+    "mode": "clarification",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-ambiguous-player-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Aryansh Sharma",
+      "message": "How good is Sharma? Use Aryansh Sharma."
+     },
+     {
+      "label": "Ishant Sharma",
+      "message": "How good is Sharma? Use Ishant Sharma."
+     },
+     {
+      "label": "Joginder Sharma",
+      "message": "How good is Sharma? Use Joginder Sharma."
+     },
+     {
+      "label": "Karn Sharma",
+      "message": "How good is Sharma? Use Karn Sharma."
+     },
+     {
+      "label": "Mohit Sharma",
+      "message": "How good is Sharma? Use Mohit Sharma."
+     },
+     {
+      "label": "Rahul Sharma",
+      "message": "How good is Sharma? Use Rahul Sharma."
+     },
+     {
+      "label": "Rohit Sharma",
+      "message": "How good is Sharma? Use Rohit Sharma."
+     },
+     {
+      "label": "Sanchit Sharma",
+      "message": "How good is Sharma? Use Sanchit Sharma."
+     }
+    ],
+    "failure_state": "planner_uncertainty",
+    "mode": "clarification",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-ambiguous-player-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [
+     {
+      "label": "Aayan Afzal Khan",
+      "message": "Show me Khan's record. Use Aayan Afzal Khan."
+     },
+     {
+      "label": "Aizaz Khan",
+      "message": "Show me Khan's record. Use Aizaz Khan."
+     },
+     {
+      "label": "Ali Khan",
+      "message": "Show me Khan's record. Use Ali Khan."
+     },
+     {
+      "label": "Arshad Khan",
+      "message": "Show me Khan's record. Use Arshad Khan."
+     },
+     {
+      "label": "Asif Khan",
+      "message": "Show me Khan's record. Use Asif Khan."
+     },
+     {
+      "label": "Avesh Khan",
+      "message": "Show me Khan's record. Use Avesh Khan."
+     },
+     {
+      "label": "Ayaan Khan",
+      "message": "Show me Khan's record. Use Ayaan Khan."
+     },
+     {
+      "label": "Bazid Khan",
+      "message": "Show me Khan's record. Use Bazid Khan."
+     },
+     {
+      "label": "Bilal Khan",
+      "message": "Show me Khan's record. Use Bilal Khan."
+     },
+     {
+      "label": "Ehsan Khan",
+      "message": "Show me Khan's record. Use Ehsan Khan."
+     },
+     {
+      "label": "Haseebullah Khan",
+      "message": "Show me Khan's record. Use Haseebullah Khan."
+     },
+     {
+      "label": "Irfan Khan",
+      "message": "Show me Khan's record. Use Irfan Khan."
+     },
+     {
+      "label": "Junaid Khan",
+      "message": "Show me Khan's record. Use Junaid Khan."
+     },
+     {
+      "label": "Khurram Khan",
+      "message": "Show me Khan's record. Use Khurram Khan."
+     },
+     {
+      "label": "Matiullah Khan",
+      "message": "Show me Khan's record. Use Matiullah Khan."
+     },
+     {
+      "label": "Mehran Khan",
+      "message": "Show me Khan's record. Use Mehran Khan."
+     },
+     {
+      "label": "Nizakat Khan",
+      "message": "Show me Khan's record. Use Nizakat Khan."
+     },
+     {
+      "label": "Rashid Khan",
+      "message": "Show me Khan's record. Use Rashid Khan."
+     },
+     {
+      "label": "Samiullah Khan",
+      "message": "Show me Khan's record. Use Samiullah Khan."
+     },
+     {
+      "label": "Shadab Khan",
+      "message": "Show me Khan's record. Use Shadab Khan."
+     },
+     {
+      "label": "Shahzad Khan",
+      "message": "Show me Khan's record. Use Shahzad Khan."
+     },
+     {
+      "label": "Sharjeel Khan",
+      "message": "Show me Khan's record. Use Sharjeel Khan."
+     },
+     {
+      "label": "Shoaib Khan",
+      "message": "Show me Khan's record. Use Shoaib Khan."
+     },
+     {
+      "label": "Sohail Khan",
+      "message": "Show me Khan's record. Use Sohail Khan."
+     },
+     {
+      "label": "Waqas Khan",
+      "message": "Show me Khan's record. Use Waqas Khan."
+     },
+     {
+      "label": "Younis Khan",
+      "message": "Show me Khan's record. Use Younis Khan."
+     },
+     {
+      "label": "Zaheer Khan",
+      "message": "Show me Khan's record. Use Zaheer Khan."
+     },
+     {
+      "label": "Zahir Khan",
+      "message": "Show me Khan's record. Use Zahir Khan."
+     },
+     {
+      "label": "Zahoor Khan",
+      "message": "Show me Khan's record. Use Zahoor Khan."
+     },
+     {
+      "label": "Zaman Khan",
+      "message": "Show me Khan's record. Use Zaman Khan."
+     }
+    ],
+    "failure_state": "planner_uncertainty",
+    "mode": "clarification",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-break-babar-style-sr-a": [
+   {
+    "answer_numbers": [
+     "557",
+     "99.28"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowling Style",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "lb",
+        99.28,
+        553,
+        557,
+        31
+       ],
+       [
+        "rm",
+        98.07,
+        203,
+        207,
+        24
+       ],
+       [
+        "lbg",
+        91.44,
+        374,
+        409,
+        28
+       ],
+       [
+        "rfm",
+        91.14,
+        1101,
+        1208,
+        80
+       ],
+       [
+        "lfm",
+        90.21,
+        396,
+        439,
+        38
+       ],
+       [
+        "rmf",
+        87.86,
+        753,
+        857,
+        61
+       ],
+       [
+        "rf",
+        86.92,
+        837,
+        963,
+        69
+       ],
+       [
+        "lf",
+        84.43,
+        103,
+        122,
+        10
+       ],
+       [
+        "sla",
+        83.76,
+        583,
+        696,
+        38
+       ],
+       [
+        "ob/lb",
+        80.13,
+        121,
+        151,
+        9
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-babar-style-sr-b": [
+   {
+    "answer_numbers": [
+     "557",
+     "99.28"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowling Style",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "lb",
+        99.28,
+        553,
+        557,
+        31
+       ],
+       [
+        "rm",
+        98.07,
+        203,
+        207,
+        24
+       ],
+       [
+        "lbg",
+        91.44,
+        374,
+        409,
+        28
+       ],
+       [
+        "rfm",
+        91.14,
+        1101,
+        1208,
+        80
+       ],
+       [
+        "lfm",
+        90.21,
+        396,
+        439,
+        38
+       ],
+       [
+        "rmf",
+        87.86,
+        753,
+        857,
+        61
+       ],
+       [
+        "rf",
+        86.92,
+        837,
+        963,
+        69
+       ],
+       [
+        "lf",
+        84.43,
+        103,
+        122,
+        10
+       ],
+       [
+        "sla",
+        83.76,
+        583,
+        696,
+        38
+       ],
+       [
+        "ob/lb",
+        80.13,
+        121,
+        151,
+        9
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-boult-hand-wickets-a": [
+   {
+    "answer_numbers": [
+     "145",
+     "3981"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter Hand",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "right-hand batter",
+        145,
+        145,
+        3981,
+        113
+       ],
+       [
+        "left-hand batter",
+        66,
+        66,
+        2200,
+        104
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-boult-hand-wickets-b": [
+   {
+    "answer_numbers": [
+     "145",
+     "3981"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter Hand",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "right-hand batter",
+        145,
+        145,
+        3981,
+        113
+       ],
+       [
+        "left-hand batter",
+        66,
+        66,
+        2200,
+        104
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-bumrah-length-wickets-a": [
+   {
+    "answer_numbers": [
+     "1867",
+     "50"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Length",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "good length",
+        50,
+        50,
+        1867,
+        88
+       ],
+       [
+        "short of a good length",
+        34,
+        34,
+        1315,
+        88
+       ],
+       [
+        "full",
+        21,
+        21,
+        653,
+        86
+       ],
+       [
+        "short",
+        18,
+        18,
+        337,
+        77
+       ],
+       [
+        "yorker",
+        18,
+        18,
+        233,
+        72
+       ],
+       [
+        "full toss",
+        8,
+        8,
+        163,
+        65
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-bumrah-length-wickets-b": [
+   {
+    "answer_numbers": [
+     "1867",
+     "50"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Length",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "good length",
+        50,
+        50,
+        1867,
+        88
+       ],
+       [
+        "short of a good length",
+        34,
+        34,
+        1315,
+        88
+       ],
+       [
+        "full",
+        21,
+        21,
+        653,
+        86
+       ],
+       [
+        "short",
+        18,
+        18,
+        337,
+        77
+       ],
+       [
+        "yorker",
+        18,
+        18,
+        233,
+        72
+       ],
+       [
+        "full toss",
+        8,
+        8,
+        163,
+        65
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-buttler-shot-runs-a": [
+   {
+    "answer_numbers": [
+     "1039",
+     "702"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Shot Type",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "on drive",
+        1039,
+        702,
+        115
+       ],
+       [
+        "cover drive",
+        733,
+        561,
+        108
+       ],
+       [
+        "pull",
+        639,
+        320,
+        82
+       ],
+       [
+        "flick",
+        609,
+        611,
+        116
+       ],
+       [
+        "leg glance",
+        289,
+        223,
+        62
+       ],
+       [
+        "cut shot",
+        287,
+        252,
+        84
+       ],
+       [
+        "slog shot",
+        233,
+        80,
+        42
+       ],
+       [
+        "square drive",
+        174,
+        144,
+        66
+       ],
+       [
+        "reverse sweep",
+        142,
+        78,
+        40
+       ],
+       [
+        "steered",
+        121,
+        134,
+        61
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-buttler-shot-runs-b": [
+   {
+    "answer_numbers": [
+     "1039",
+     "702"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Shot Type",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "on drive",
+        1039,
+        702,
+        115
+       ],
+       [
+        "cover drive",
+        733,
+        561,
+        108
+       ],
+       [
+        "pull",
+        639,
+        320,
+        82
+       ],
+       [
+        "flick",
+        609,
+        611,
+        116
+       ],
+       [
+        "leg glance",
+        289,
+        223,
+        62
+       ],
+       [
+        "cut shot",
+        287,
+        252,
+        84
+       ],
+       [
+        "slog shot",
+        233,
+        80,
+        42
+       ],
+       [
+        "square drive",
+        174,
+        144,
+        66
+       ],
+       [
+        "reverse sweep",
+        142,
+        78,
+        40
+       ],
+       [
+        "steered",
+        121,
+        134,
+        61
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-klaasen-zone-boundary-a": [
+   {
+    "answer_numbers": [
+     "21.84",
+     "316"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Field Zone",
+       "Boundary Percentage",
+       "Boundary Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "long off",
+        21.84,
+        69,
+        316,
+        46
+       ],
+       [
+        "long on",
+        18.56,
+        18,
+        97,
+        31
+       ],
+       [
+        "fine leg",
+        15.49,
+        22,
+        142,
+        43
+       ],
+       [
+        "cover",
+        14.75,
+        36,
+        244,
+        44
+       ],
+       [
+        "point",
+        11.76,
+        30,
+        255,
+        44
+       ],
+       [
+        "third man",
+        9.66,
+        34,
+        352,
+        48
+       ],
+       [
+        null,
+        0.0,
+        0,
+        145,
+        44
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-klaasen-zone-boundary-b": [
+   {
+    "answer_numbers": [
+     "21.84",
+     "316"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Field Zone",
+       "Boundary Percentage",
+       "Boundary Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "long off",
+        21.84,
+        69,
+        316,
+        46
+       ],
+       [
+        "long on",
+        18.56,
+        18,
+        97,
+        31
+       ],
+       [
+        "fine leg",
+        15.49,
+        22,
+        142,
+        43
+       ],
+       [
+        "cover",
+        14.75,
+        36,
+        244,
+        44
+       ],
+       [
+        "point",
+        11.76,
+        30,
+        255,
+        44
+       ],
+       [
+        "third man",
+        9.66,
+        34,
+        352,
+        48
+       ],
+       [
+        null,
+        0.0,
+        0,
+        145,
+        44
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-kohli-line-runs-a": [
+   {
+    "answer_numbers": [
+     "4179",
+     "4704"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Line",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "outside offstump",
+        4179,
+        4704,
+        156
+       ],
+       [
+        "on the stumps",
+        2667,
+        2709,
+        148
+       ],
+       [
+        "wide outside offstump",
+        1053,
+        890,
+        104
+       ],
+       [
+        "down leg",
+        366,
+        298,
+        94
+       ],
+       [
+        "wide down leg",
+        24,
+        20,
+        23
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-kohli-line-runs-b": [
+   {
+    "answer_numbers": [
+     "4179",
+     "4704"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Line",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "outside offstump",
+        4179,
+        4704,
+        156
+       ],
+       [
+        "on the stumps",
+        2667,
+        2709,
+        148
+       ],
+       [
+        "wide outside offstump",
+        1053,
+        890,
+        104
+       ],
+       [
+        "down leg",
+        366,
+        298,
+        94
+       ],
+       [
+        "wide down leg",
+        24,
+        20,
+        23
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-rashid-phase-econ-a": [
+   {
+    "answer_numbers": [
+     "3.94",
+     "4489"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Phase",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "middle",
+        3.94,
+        2947,
+        4489,
+        104
+       ],
+       [
+        "death",
+        5.29,
+        949,
+        1077,
+        74
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-rashid-phase-econ-b": [
+   {
+    "answer_numbers": [
+     "3.94",
+     "4489"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Phase",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "middle",
+        3.94,
+        2947,
+        4489,
+        104
+       ],
+       [
+        "death",
+        5.29,
+        949,
+        1077,
+        74
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-rohit-length-dots-a": [
+   {
+    "answer_numbers": [
+     "17.28",
+     "486"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Length",
+       "Batter Dot Ball Percentage",
+       "Dot Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "short",
+        17.28,
+        84,
+        486,
+        92
+       ],
+       [
+        "full toss",
+        18.6,
+        24,
+        129,
+        54
+       ],
+       [
+        "full",
+        47.04,
+        667,
+        1418,
+        124
+       ],
+       [
+        "short of a good length",
+        49.86,
+        886,
+        1777,
+        136
+       ],
+       [
+        "good length",
+        60.71,
+        2202,
+        3627,
+        143
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-rohit-length-dots-b": [
+   {
+    "answer_numbers": [
+     "17.28",
+     "486"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Length",
+       "Batter Dot Ball Percentage",
+       "Dot Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "short",
+        17.28,
+        84,
+        486,
+        92
+       ],
+       [
+        "full toss",
+        18.6,
+        24,
+        129,
+        54
+       ],
+       [
+        "full",
+        47.04,
+        667,
+        1418,
+        124
+       ],
+       [
+        "short of a good length",
+        49.86,
+        886,
+        1777,
+        136
+       ],
+       [
+        "good length",
+        60.71,
+        2202,
+        3627,
+        143
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-starc-line-dots-a": [
+   {
+    "answer_numbers": [
+     "2647",
+     "62.56"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Line",
+       "Bowler Dot Ball Percentage",
+       "Bowler Dot Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "outside offstump",
+        62.56,
+        1656,
+        2647,
+        107
+       ],
+       [
+        "on the stumps",
+        60.1,
+        1285,
+        2138,
+        107
+       ],
+       [
+        "wide outside offstump",
+        48.72,
+        190,
+        390,
+        76
+       ],
+       [
+        "down leg",
+        47.84,
+        199,
+        416,
+        100
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-starc-line-dots-b": [
+   {
+    "answer_numbers": [
+     "2647",
+     "62.56"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Line",
+       "Bowler Dot Ball Percentage",
+       "Bowler Dot Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "outside offstump",
+        62.56,
+        1656,
+        2647,
+        107
+       ],
+       [
+        "on the stumps",
+        60.1,
+        1285,
+        2138,
+        107
+       ],
+       [
+        "wide outside offstump",
+        48.72,
+        190,
+        390,
+        76
+       ],
+       [
+        "down leg",
+        47.84,
+        199,
+        416,
+        100
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-warner-year-sr-a": [
+   {
+    "answer_numbers": [
+     "102.83",
+     "105.31",
+     "110.51",
+     "112.67",
+     "2009",
+     "2011",
+     "2012",
+     "2013",
+     "2014",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "67.48",
+     "77.37",
+     "78.79",
+     "82.84",
+     "89.36",
+     "92.62",
+     "92.91",
+     "94.81",
+     "95.29"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2009,
+        77.37,
+        106,
+        137,
+        7
+       ],
+       [
+        2011,
+        78.79,
+        104,
+        132,
+        3
+       ],
+       [
+        2012,
+        82.84,
+        840,
+        1014,
+        24
+       ],
+       [
+        2013,
+        67.48,
+        83,
+        123,
+        4
+       ],
+       [
+        2014,
+        92.91,
+        406,
+        437,
+        11
+       ],
+       [
+        2015,
+        110.51,
+        652,
+        590,
+        14
+       ],
+       [
+        2016,
+        105.31,
+        1388,
+        1318,
+        23
+       ],
+       [
+        2017,
+        102.83,
+        691,
+        672,
+        13
+       ],
+       [
+        2018,
+        94.81,
+        73,
+        77,
+        5
+       ],
+       [
+        2019,
+        89.36,
+        647,
+        724,
+        10
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-break-warner-year-sr-b": [
+   {
+    "answer_numbers": [
+     "102.83",
+     "105.31",
+     "110.51",
+     "112.67",
+     "2009",
+     "2011",
+     "2012",
+     "2013",
+     "2014",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "67.48",
+     "77.37",
+     "78.79",
+     "82.84",
+     "89.36",
+     "92.62",
+     "92.91",
+     "94.81",
+     "95.29"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2009,
+        77.37,
+        106,
+        137,
+        7
+       ],
+       [
+        2011,
+        78.79,
+        104,
+        132,
+        3
+       ],
+       [
+        2012,
+        82.84,
+        840,
+        1014,
+        24
+       ],
+       [
+        2013,
+        67.48,
+        83,
+        123,
+        4
+       ],
+       [
+        2014,
+        92.91,
+        406,
+        437,
+        11
+       ],
+       [
+        2015,
+        110.51,
+        652,
+        590,
+        14
+       ],
+       [
+        2016,
+        105.31,
+        1388,
+        1318,
+        23
+       ],
+       [
+        2017,
+        102.83,
+        691,
+        672,
+        13
+       ],
+       [
+        2018,
+        94.81,
+        73,
+        77,
+        5
+       ],
+       [
+        2019,
+        89.36,
+        647,
+        724,
+        10
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-babar-smith-a": [
+   {
+    "answer_numbers": [
+     "5674",
+     "5990",
+     "88.15"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Babar Azam",
+        5990,
+        88.15,
+        54.95,
+        48.11,
+        8.99,
+        6795,
+        109,
+        122
+       ],
+       [
+        "Steven Smith",
+        5674,
+        87.14,
+        42.03,
+        48.09,
+        8.72,
+        6511,
+        135,
+        150
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-babar-smith-b": [
+   {
+    "answer_numbers": [
+     "5674",
+     "5990",
+     "88.15"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Babar Azam",
+        5990,
+        88.15,
+        54.95,
+        48.11,
+        8.99,
+        6795,
+        109,
+        122
+       ],
+       [
+        "Steven Smith",
+        5674,
+        87.14,
+        42.03,
+        48.09,
+        8.72,
+        6511,
+        135,
+        150
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-bumrah-starc-a": [
+   {
+    "answer_numbers": [
+     "149",
+     "244",
+     "4.6"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Wickets Taken",
+       "Economy Rate",
+       "Bowling Strike Rate",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        149,
+        4.6,
+        30.74,
+        60.83,
+        4580,
+        3509,
+        88
+       ],
+       [
+        "Mitchell Starc",
+        244,
+        5.26,
+        26.69,
+        59.36,
+        6513,
+        5711,
+        127
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-bumrah-starc-b": [
+   {
+    "answer_numbers": [
+     "149",
+     "244",
+     "4.6"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Wickets Taken",
+       "Economy Rate",
+       "Bowling Strike Rate",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        149,
+        4.6,
+        30.74,
+        60.83,
+        4580,
+        3509,
+        88
+       ],
+       [
+        "Mitchell Starc",
+        244,
+        5.26,
+        26.69,
+        59.36,
+        6513,
+        5711,
+        127
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-bumrah-starc-death-a": [
+   {
+    "answer_numbers": [
+     "5.78",
+     "67",
+     "70"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Economy Rate",
+       "Wickets Taken",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        5.78,
+        70,
+        45.59,
+        1123,
+        1081,
+        66
+       ],
+       [
+        "Mitchell Starc",
+        6.55,
+        67,
+        46.87,
+        1037,
+        1132,
+        75
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-bumrah-starc-death-b": [
+   {
+    "answer_numbers": [
+     "5.78",
+     "67",
+     "70"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Economy Rate",
+       "Wickets Taken",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        5.78,
+        70,
+        45.59,
+        1123,
+        1081,
+        66
+       ],
+       [
+        "Mitchell Starc",
+        6.55,
+        67,
+        46.87,
+        1037,
+        1132,
+        75
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-buttler-klaasen-spin-a": [
+   {
+    "answer_numbers": [
+     "122.32",
+     "1823",
+     "948"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        122.32,
+        948,
+        14.84,
+        775,
+        20,
+        45
+       ],
+       [
+        "Jos Buttler",
+        110.42,
+        1823,
+        10.66,
+        1651,
+        36,
+        116
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-buttler-klaasen-spin-b": [
+   {
+    "answer_numbers": [
+     "122.32",
+     "1823",
+     "948"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        122.32,
+        948,
+        14.84,
+        775,
+        20,
+        45
+       ],
+       [
+        "Jos Buttler",
+        110.42,
+        1823,
+        10.66,
+        1651,
+        36,
+        116
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-kohli-rohit-a": [
+   {
+    "answer_numbers": [
+     "10970",
+     "13950",
+     "93.51"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rohit Sharma",
+        10970,
+        92.64,
+        49.64,
+        52.49,
+        11.5,
+        11841,
+        221,
+        260
+       ],
+       [
+        "Virat Kohli",
+        13950,
+        93.51,
+        56.25,
+        45.05,
+        9.81,
+        14918,
+        248,
+        284
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-kohli-rohit-b": [
+   {
+    "answer_numbers": [
+     "10970",
+     "13950",
+     "93.51"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rohit Sharma",
+        10970,
+        92.64,
+        49.64,
+        52.49,
+        11.5,
+        11841,
+        221,
+        260
+       ],
+       [
+        "Virat Kohli",
+        13950,
+        93.51,
+        56.25,
+        45.05,
+        9.81,
+        14918,
+        248,
+        284
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-rabada-shaheen-pp-a": [
+   {
+    "answer_numbers": [
+     "4.72",
+     "44",
+     "57"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Wickets Taken",
+       "Economy Rate",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Kagiso Rabada",
+        57,
+        4.72,
+        68.48,
+        2370,
+        1863,
+        100
+       ],
+       [
+        "Shaheen Shah Afridi",
+        44,
+        5.06,
+        67.49,
+        1452,
+        1224,
+        60
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-rabada-shaheen-pp-b": [
+   {
+    "answer_numbers": [
+     "4.72",
+     "44",
+     "57"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Wickets Taken",
+       "Economy Rate",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Kagiso Rabada",
+        57,
+        4.72,
+        68.48,
+        2370,
+        1863,
+        100
+       ],
+       [
+        "Shaheen Shah Afridi",
+        44,
+        5.06,
+        67.49,
+        1452,
+        1224,
+        60
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-rashid-ashwin-a": [
+   {
+    "answer_numbers": [
+     "156",
+     "198",
+     "4.2"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Wickets Taken",
+       "Economy Rate",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rashid Khan",
+        198,
+        4.2,
+        56.81,
+        5620,
+        3935,
+        104
+       ],
+       [
+        "Ravichandran Ashwin",
+        156,
+        4.93,
+        50.02,
+        6304,
+        5180,
+        114
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-rashid-ashwin-b": [
+   {
+    "answer_numbers": [
+     "156",
+     "198",
+     "4.2"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Wickets Taken",
+       "Economy Rate",
+       "Bowler Dot Ball Percentage",
+       "Legal Balls",
+       "Runs Conceded",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rashid Khan",
+        198,
+        4.2,
+        56.81,
+        5620,
+        3935,
+        104
+       ],
+       [
+        "Ravichandran Ashwin",
+        156,
+        4.93,
+        50.02,
+        6304,
+        5180,
+        114
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-rohit-warner-pp-a": [
+   {
+    "answer_numbers": [
+     "3198",
+     "3651",
+     "92.83"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        3198,
+        92.83,
+        13.73,
+        3445,
+        84,
+        157
+       ],
+       [
+        "Rohit Sharma",
+        3651,
+        80.44,
+        12.4,
+        4539,
+        86,
+        203
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-compare-rohit-warner-pp-b": [
+   {
+    "answer_numbers": [
+     "3198",
+     "3651",
+     "92.83"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        3198,
+        92.83,
+        13.73,
+        3445,
+        84,
+        157
+       ],
+       [
+        "Rohit Sharma",
+        3651,
+        80.44,
+        12.4,
+        4539,
+        86,
+        203
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-context-bumrah-phase-a": [
+   {
+    "answer_numbers": [
+     "4.6",
+     "4580"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        4.6,
+        3509,
+        4580,
+        88
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "1944",
+     "3.96"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        3.96,
+        1282,
+        1944,
+        83
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-context-bumrah-phase-b": [
+   {
+    "answer_numbers": [
+     "4.6",
+     "4580"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        4.6,
+        3509,
+        4580,
+        88
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "1123",
+     "5.78"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        5.78,
+        1081,
+        1123,
+        66
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-context-comparison-a": [
+   {
+    "answer_numbers": [
+     "10970",
+     "6932",
+     "97.24"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        6932,
+        97.24,
+        44.44,
+        51.51,
+        12.13,
+        7129,
+        156,
+        159
+       ],
+       [
+        "Rohit Sharma",
+        10970,
+        92.64,
+        49.64,
+        52.49,
+        11.5,
+        11841,
+        221,
+        260
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "3198",
+     "3651",
+     "92.83"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        3198,
+        92.83,
+        38.07,
+        60.87,
+        13.73,
+        3445,
+        84,
+        157
+       ],
+       [
+        "Rohit Sharma",
+        3651,
+        80.44,
+        42.45,
+        66.38,
+        12.4,
+        4539,
+        86,
+        203
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-context-comparison-b": [
+   {
+    "answer_numbers": [
+     "10970",
+     "6932",
+     "97.24"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        6932,
+        97.24,
+        44.44,
+        51.51,
+        12.13,
+        7129,
+        156,
+        159
+       ],
+       [
+        "Rohit Sharma",
+        10970,
+        92.64,
+        49.64,
+        52.49,
+        11.5,
+        11841,
+        221,
+        260
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "1107",
+     "158.65",
+     "211"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Player",
+       "Runs Scored",
+       "Batting Strike Rate",
+       "Batting Average",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "Balls Faced",
+       "Dismissals",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        211,
+        158.65,
+        26.38,
+        22.56,
+        18.05,
+        133,
+        8,
+        8
+       ],
+       [
+        "Rohit Sharma",
+        1107,
+        152.69,
+        39.54,
+        30.34,
+        20.14,
+        725,
+        28,
+        47
+       ]
+      ],
+      "title": "Semantic player comparison"
+     }
+    ]
+   }
+  ],
+  "unseen-context-kohli-phase-a": [
+   {
+    "answer_numbers": [
+     "14918",
+     "93.51"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        93.51,
+        13950,
+        14918,
+        284
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "1016",
+     "149.9"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        149.9,
+        1523,
+        1016,
+        63
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-context-kohli-phase-b": [
+   {
+    "answer_numbers": [
+     "14918",
+     "93.51"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        93.51,
+        13950,
+        14918,
+        284
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "2848",
+     "73.1"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        73.1,
+        2082,
+        2848,
+        189
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-context-kohli-starc-a": [
+   {
+    "answer_numbers": [
+     "1",
+     "155",
+     "156"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Mitchell Starc",
+        155,
+        156,
+        1,
+        1,
+        100.65,
+        43.23,
+        9.68,
+        18.71,
+        0.65
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "0",
+     "80",
+     "89"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Mitchell Starc",
+        80,
+        89,
+        0,
+        0,
+        111.25,
+        28.75,
+        8.75,
+        8.75,
+        0.0
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-context-kohli-starc-b": [
+   {
+    "answer_numbers": [
+     "1",
+     "155",
+     "156"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Mitchell Starc",
+        155,
+        156,
+        1,
+        1,
+        100.65,
+        43.23,
+        9.68,
+        18.71,
+        0.65
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "0",
+     "14",
+     "22"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Mitchell Starc",
+        14,
+        22,
+        0,
+        0,
+        157.14,
+        28.57,
+        14.29,
+        21.43,
+        0.0
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-context-trend-a": [
+   {
+    "answer_numbers": [
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "3.63",
+     "3.64",
+     "4.33",
+     "4.41",
+     "4.63",
+     "5.14",
+     "5.63"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2016,
+        3.64,
+        249,
+        411,
+        8
+       ],
+       [
+        2017,
+        5.14,
+        1024,
+        1196,
+        23
+       ],
+       [
+        2018,
+        3.63,
+        366,
+        605,
+        13
+       ],
+       [
+        2019,
+        4.63,
+        615,
+        797,
+        14
+       ],
+       [
+        2020,
+        5.63,
+        482,
+        514,
+        9
+       ],
+       [
+        2022,
+        4.33,
+        205,
+        284,
+        5
+       ],
+       [
+        2023,
+        4.41,
+        568,
+        773,
+        16
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "3.98",
+     "4.08",
+     "5.19",
+     "5.3",
+     "5.78",
+     "6.64",
+     "7.01"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2016,
+        4.08,
+        51,
+        75,
+        6
+       ],
+       [
+        2017,
+        6.64,
+        361,
+        326,
+        20
+       ],
+       [
+        2018,
+        3.98,
+        75,
+        113,
+        7
+       ],
+       [
+        2019,
+        5.78,
+        242,
+        251,
+        12
+       ],
+       [
+        2020,
+        7.01,
+        159,
+        136,
+        8
+       ],
+       [
+        2022,
+        5.3,
+        53,
+        60,
+        4
+       ],
+       [
+        2023,
+        5.19,
+        140,
+        162,
+        9
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-context-trend-b": [
+   {
+    "answer_numbers": [
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "3.63",
+     "3.64",
+     "4.33",
+     "4.41",
+     "4.63",
+     "5.14",
+     "5.63"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2016,
+        3.64,
+        249,
+        411,
+        8
+       ],
+       [
+        2017,
+        5.14,
+        1024,
+        1196,
+        23
+       ],
+       [
+        2018,
+        3.63,
+        366,
+        605,
+        13
+       ],
+       [
+        2019,
+        4.63,
+        615,
+        797,
+        14
+       ],
+       [
+        2020,
+        5.63,
+        482,
+        514,
+        9
+       ],
+       [
+        2022,
+        4.33,
+        205,
+        284,
+        5
+       ],
+       [
+        2023,
+        4.41,
+        568,
+        773,
+        16
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   },
+   {
+    "answer_numbers": [
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "3.45",
+     "3.58",
+     "3.64",
+     "3.86",
+     "4.5",
+     "4.64"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2016,
+        3.64,
+        40,
+        66,
+        5
+       ],
+       [
+        2017,
+        4.64,
+        376,
+        486,
+        21
+       ],
+       [
+        2018,
+        3.45,
+        183,
+        318,
+        13
+       ],
+       [
+        2019,
+        3.58,
+        190,
+        318,
+        14
+       ],
+       [
+        2020,
+        4.5,
+        153,
+        204,
+        9
+       ],
+       [
+        2022,
+        3.86,
+        85,
+        132,
+        5
+       ],
+       [
+        2023,
+        3.64,
+        255,
+        420,
+        16
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-ashwin-right-econ-a": [
+   {
+    "answer_numbers": [
+     "4083",
+     "5.08"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Ravichandran Ashwin",
+        5.08,
+        3459,
+        4083,
+        114
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-ashwin-right-econ-b": [
+   {
+    "answer_numbers": [
+     "4083",
+     "5.08"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Ravichandran Ashwin",
+        5.08,
+        3459,
+        4083,
+        114
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-babar-spin-dot-a": [
+   {
+    "answer_numbers": [
+     "2869",
+     "43.36"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batter Dot Ball Percentage",
+       "Dot Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Babar Azam",
+        43.36,
+        1244,
+        2869,
+        94
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-babar-spin-dot-b": [
+   {
+    "answer_numbers": [
+     "2869",
+     "43.36"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batter Dot Ball Percentage",
+       "Dot Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Babar Azam",
+        43.36,
+        1244,
+        2869,
+        94
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-bumrah-death-econ-a": [
+   {
+    "answer_numbers": [
+     "1123",
+     "5.78"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        5.78,
+        1081,
+        1123,
+        66
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-bumrah-death-econ-b": [
+   {
+    "answer_numbers": [
+     "1123",
+     "5.78"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        5.78,
+        1081,
+        1123,
+        66
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-buttler-middle-false-a": [
+   {
+    "answer_numbers": [
+     "16.12",
+     "3189"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "False Shot Percentage",
+       "False Shots",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jos Buttler",
+        16.12,
+        514,
+        3189,
+        136
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-buttler-middle-false-b": [
+   {
+    "answer_numbers": [
+     "16.12",
+     "3189"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "False Shot Percentage",
+       "False Shots",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Jos Buttler",
+        16.12,
+        514,
+        3189,
+        136
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-klaasen-death-boundary-a": [
+   {
+    "answer_numbers": [
+     "24.65",
+     "288"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Boundary Percentage",
+       "Boundary Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        24.65,
+        71,
+        288,
+        19
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-klaasen-death-boundary-b": [
+   {
+    "answer_numbers": [
+     "24.65",
+     "288"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Boundary Percentage",
+       "Boundary Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        24.65,
+        71,
+        288,
+        19
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-kohli-runs-aus-a": [
+   {
+    "answer_numbers": [
+     "2367",
+     "2518"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        2367,
+        2518,
+        47
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-kohli-runs-aus-b": [
+   {
+    "answer_numbers": [
+     "2367",
+     "2518"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        2367,
+        2518,
+        47
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-malinga-yorker-share-a": [
+   {
+    "answer_numbers": [
+     "1.66",
+     "10687"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Yorker Percentage",
+       "Yorker Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Lasith Malinga",
+        1.66,
+        177,
+        10687,
+        215
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-malinga-yorker-share-b": [
+   {
+    "answer_numbers": [
+     "1.66",
+     "10687"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Yorker Percentage",
+       "Yorker Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Lasith Malinga",
+        1.66,
+        177,
+        10687,
+        215
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-rashid-left-dot-a": [
+   {
+    "answer_numbers": [
+     "1575",
+     "56.89"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Bowler Dot Ball Percentage",
+       "Bowler Dot Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rashid Khan",
+        56.89,
+        896,
+        1575,
+        88
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-rashid-left-dot-b": [
+   {
+    "answer_numbers": [
+     "1575",
+     "56.89"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Bowler Dot Ball Percentage",
+       "Bowler Dot Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rashid Khan",
+        56.89,
+        896,
+        1575,
+        88
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-rohit-pp-sr-a": [
+   {
+    "answer_numbers": [
+     "4539",
+     "80.44"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rohit Sharma",
+        80.44,
+        3651,
+        4539,
+        203
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-rohit-pp-sr-b": [
+   {
+    "answer_numbers": [
+     "4539",
+     "80.44"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rohit Sharma",
+        80.44,
+        3651,
+        4539,
+        203
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-starc-pp-wickets-a": [
+   {
+    "answer_numbers": [
+     "2565",
+     "86"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Mitchell Starc",
+        86,
+        86,
+        2565,
+        125
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-direct-starc-pp-wickets-b": [
+   {
+    "answer_numbers": [
+     "2565",
+     "86"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Mitchell Starc",
+        86,
+        86,
+        2565,
+        125
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-klaasen-dots-a": [
+   {
+    "answer_numbers": [
+     "66"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        "Josh Hazlewood",
+        66,
+        65,
+        80,
+        1,
+        1,
+        121.21,
+        51.52,
+        50.77,
+        19.7,
+        18.18,
+        1.52
+       ],
+       [
+        "Heinrich Klaasen",
+        "Kuldeep Yadav",
+        62,
+        62,
+        77,
+        2,
+        2,
+        124.19,
+        43.55,
+        43.55,
+        14.52,
+        22.58,
+        3.23
+       ],
+       [
+        "Heinrich Klaasen",
+        "Adam Zampa",
+        89,
+        89,
+        121,
+        3,
+        3,
+        135.96,
+        35.96,
+        35.96,
+        16.85,
+        17.98,
+        3.37
+       ],
+       [
+        "Heinrich Klaasen",
+        "Adil Rashid",
+        62,
+        62,
+        76,
+        1,
+        1,
+        122.58,
+        27.42,
+        27.42,
+        9.68,
+        12.9,
+        1.61
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-klaasen-dots-b": [
+   {
+    "answer_numbers": [
+     "66"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        "Josh Hazlewood",
+        66,
+        65,
+        80,
+        1,
+        1,
+        121.21,
+        51.52,
+        50.77,
+        19.7,
+        18.18,
+        1.52
+       ],
+       [
+        "Heinrich Klaasen",
+        "Kuldeep Yadav",
+        62,
+        62,
+        77,
+        2,
+        2,
+        124.19,
+        43.55,
+        43.55,
+        14.52,
+        22.58,
+        3.23
+       ],
+       [
+        "Heinrich Klaasen",
+        "Adam Zampa",
+        89,
+        89,
+        121,
+        3,
+        3,
+        135.96,
+        35.96,
+        35.96,
+        16.85,
+        17.98,
+        3.37
+       ],
+       [
+        "Heinrich Klaasen",
+        "Adil Rashid",
+        62,
+        62,
+        76,
+        1,
+        1,
+        122.58,
+        27.42,
+        27.42,
+        9.68,
+        12.9,
+        1.61
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-kohli-pace-a": [
+   {
+    "answer_numbers": [
+     "63"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Bowling Style",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Vishwa Fernando",
+        "left arm pace",
+        63,
+        62,
+        88,
+        1,
+        1,
+        139.68,
+        42.86,
+        41.94,
+        22.22,
+        12.7,
+        1.59
+       ],
+       [
+        "Virat Kohli",
+        "Lockie Ferguson",
+        "pace",
+        75,
+        75,
+        91,
+        1,
+        1,
+        121.33,
+        42.67,
+        42.67,
+        18.67,
+        13.33,
+        1.33
+       ],
+       [
+        "Virat Kohli",
+        "Jade Dernbach",
+        "pace",
+        98,
+        98,
+        121,
+        0,
+        0,
+        123.47,
+        35.71,
+        35.71,
+        17.35,
+        8.16,
+        0.0
+       ],
+       [
+        "Virat Kohli",
+        "James Neesham",
+        "finger spin",
+        84,
+        83,
+        98,
+        0,
+        0,
+        116.67,
+        40.48,
+        39.76,
+        16.67,
+        15.48,
+        0.0
+       ],
+       [
+        "Virat Kohli",
+        "Dwayne Bravo",
+        "pace",
+        80,
+        80,
+        101,
+        2,
+        1,
+        126.25,
+        28.75,
+        28.75,
+        16.25,
+        2.5,
+        2.5
+       ],
+       [
+        "Virat Kohli",
+        "Mitchell Johnson",
+        "left arm pace",
+        83,
+        83,
+        83,
+        1,
+        1,
+        100.0,
+        48.19,
+        48.19,
+        15.66,
+        12.05,
+        1.2
+       ],
+       [
+        "Virat Kohli",
+        "Wahab Riaz",
+        "left arm pace",
+        90,
+        88,
+        104,
+        1,
+        1,
+        115.56,
+        40.0,
+        39.77,
+        15.56,
+        16.67,
+        1.11
+       ],
+       [
+        "Virat Kohli",
+        "Suranga Lakmal",
+        "pace",
+        86,
+        85,
+        87,
+        0,
+        0,
+        101.16,
+        51.16,
+        51.76,
+        15.12,
+        18.6,
+        0.0
+       ],
+       [
+        "Virat Kohli",
+        "Alzarri Joseph",
+        "pace",
+        68,
+        68,
+        78,
+        3,
+        3,
+        114.71,
+        42.65,
+        42.65,
+        14.71,
+        11.76,
+        4.41
+       ],
+       [
+        "Virat Kohli",
+        "James Faulkner",
+        "left arm pace",
+        117,
+        117,
+        137,
+        2,
+        2,
+        117.09,
+        37.61,
+        37.61,
+        14.53,
+        5.98,
+        1.71
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-kohli-pace-b": [
+   {
+    "answer_numbers": [
+     "63"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Bowling Style",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Vishwa Fernando",
+        "left arm pace",
+        63,
+        62,
+        88,
+        1,
+        1,
+        139.68,
+        42.86,
+        41.94,
+        22.22,
+        12.7,
+        1.59
+       ],
+       [
+        "Virat Kohli",
+        "Lockie Ferguson",
+        "pace",
+        75,
+        75,
+        91,
+        1,
+        1,
+        121.33,
+        42.67,
+        42.67,
+        18.67,
+        13.33,
+        1.33
+       ],
+       [
+        "Virat Kohli",
+        "Jade Dernbach",
+        "pace",
+        98,
+        98,
+        121,
+        0,
+        0,
+        123.47,
+        35.71,
+        35.71,
+        17.35,
+        8.16,
+        0.0
+       ],
+       [
+        "Virat Kohli",
+        "James Neesham",
+        "finger spin",
+        84,
+        83,
+        98,
+        0,
+        0,
+        116.67,
+        40.48,
+        39.76,
+        16.67,
+        15.48,
+        0.0
+       ],
+       [
+        "Virat Kohli",
+        "Dwayne Bravo",
+        "pace",
+        80,
+        80,
+        101,
+        2,
+        1,
+        126.25,
+        28.75,
+        28.75,
+        16.25,
+        2.5,
+        2.5
+       ],
+       [
+        "Virat Kohli",
+        "Mitchell Johnson",
+        "left arm pace",
+        83,
+        83,
+        83,
+        1,
+        1,
+        100.0,
+        48.19,
+        48.19,
+        15.66,
+        12.05,
+        1.2
+       ],
+       [
+        "Virat Kohli",
+        "Wahab Riaz",
+        "left arm pace",
+        90,
+        88,
+        104,
+        1,
+        1,
+        115.56,
+        40.0,
+        39.77,
+        15.56,
+        16.67,
+        1.11
+       ],
+       [
+        "Virat Kohli",
+        "Suranga Lakmal",
+        "pace",
+        86,
+        85,
+        87,
+        0,
+        0,
+        101.16,
+        51.16,
+        51.76,
+        15.12,
+        18.6,
+        0.0
+       ],
+       [
+        "Virat Kohli",
+        "Alzarri Joseph",
+        "pace",
+        68,
+        68,
+        78,
+        3,
+        3,
+        114.71,
+        42.65,
+        42.65,
+        14.71,
+        11.76,
+        4.41
+       ],
+       [
+        "Virat Kohli",
+        "James Faulkner",
+        "left arm pace",
+        117,
+        117,
+        137,
+        2,
+        2,
+        117.09,
+        37.61,
+        37.61,
+        14.53,
+        5.98,
+        1.71
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-kohli-starc-a": [
+   {
+    "answer_numbers": [
+     "1",
+     "155",
+     "156"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Mitchell Starc",
+        155,
+        156,
+        1,
+        1,
+        100.65,
+        43.23,
+        9.68,
+        18.71,
+        0.65
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-kohli-starc-b": [
+   {
+    "answer_numbers": [
+     "1",
+     "155",
+     "156"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        "Mitchell Starc",
+        155,
+        156,
+        1,
+        1,
+        100.65,
+        43.23,
+        9.68,
+        18.71,
+        0.65
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-maxwell-ashwin-a": [
+   {
+    "answer_numbers": [
+     "3",
+     "61",
+     "83"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Glenn Maxwell",
+        "Ravichandran Ashwin",
+        61,
+        83,
+        3,
+        3,
+        136.07,
+        47.54,
+        19.67,
+        13.11,
+        4.92
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-maxwell-ashwin-b": [
+   {
+    "answer_numbers": [
+     "3",
+     "61",
+     "83"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Glenn Maxwell",
+        "Ravichandran Ashwin",
+        61,
+        83,
+        3,
+        3,
+        136.07,
+        47.54,
+        19.67,
+        13.11,
+        4.92
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-miller-false-a": [
+   {
+    "answer_numbers": [
+     "71"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "David Miller",
+        "Wahab Riaz",
+        71,
+        71,
+        49,
+        2,
+        2,
+        69.01,
+        61.97,
+        61.97,
+        7.04,
+        35.21,
+        2.82
+       ],
+       [
+        "David Miller",
+        "Mitchell Starc",
+        65,
+        65,
+        62,
+        2,
+        2,
+        95.38,
+        44.62,
+        44.62,
+        9.23,
+        30.77,
+        3.08
+       ],
+       [
+        "David Miller",
+        "Josh Hazlewood",
+        90,
+        90,
+        74,
+        2,
+        2,
+        82.22,
+        48.89,
+        48.89,
+        8.89,
+        23.33,
+        2.22
+       ],
+       [
+        "David Miller",
+        "Kuldeep Yadav",
+        65,
+        65,
+        51,
+        2,
+        2,
+        78.46,
+        49.23,
+        49.23,
+        7.69,
+        20.0,
+        3.08
+       ],
+       [
+        "David Miller",
+        "Mohammad Hafeez",
+        135,
+        135,
+        114,
+        3,
+        3,
+        84.44,
+        51.85,
+        51.85,
+        6.67,
+        17.78,
+        2.22
+       ],
+       [
+        "David Miller",
+        "Pat Cummins",
+        118,
+        118,
+        131,
+        3,
+        3,
+        111.02,
+        45.76,
+        45.76,
+        14.41,
+        16.95,
+        2.54
+       ],
+       [
+        "David Miller",
+        "Yuzvendra Chahal",
+        71,
+        70,
+        55,
+        4,
+        3,
+        77.46,
+        50.7,
+        50.0,
+        4.23,
+        15.49,
+        5.63
+       ],
+       [
+        "David Miller",
+        "Adam Zampa",
+        138,
+        138,
+        174,
+        0,
+        0,
+        126.09,
+        42.03,
+        42.03,
+        15.22,
+        13.04,
+        0.0
+       ],
+       [
+        "David Miller",
+        "Mitchell Marsh",
+        64,
+        64,
+        71,
+        0,
+        0,
+        110.94,
+        32.81,
+        32.81,
+        9.38,
+        10.94,
+        0.0
+       ],
+       [
+        "David Miller",
+        "Glenn Maxwell",
+        80,
+        80,
+        63,
+        0,
+        0,
+        78.75,
+        47.5,
+        47.5,
+        6.25,
+        10.0,
+        0.0
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-miller-false-b": [
+   {
+    "answer_numbers": [
+     "71"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "David Miller",
+        "Wahab Riaz",
+        71,
+        71,
+        49,
+        2,
+        2,
+        69.01,
+        61.97,
+        61.97,
+        7.04,
+        35.21,
+        2.82
+       ],
+       [
+        "David Miller",
+        "Mitchell Starc",
+        65,
+        65,
+        62,
+        2,
+        2,
+        95.38,
+        44.62,
+        44.62,
+        9.23,
+        30.77,
+        3.08
+       ],
+       [
+        "David Miller",
+        "Josh Hazlewood",
+        90,
+        90,
+        74,
+        2,
+        2,
+        82.22,
+        48.89,
+        48.89,
+        8.89,
+        23.33,
+        2.22
+       ],
+       [
+        "David Miller",
+        "Kuldeep Yadav",
+        65,
+        65,
+        51,
+        2,
+        2,
+        78.46,
+        49.23,
+        49.23,
+        7.69,
+        20.0,
+        3.08
+       ],
+       [
+        "David Miller",
+        "Mohammad Hafeez",
+        135,
+        135,
+        114,
+        3,
+        3,
+        84.44,
+        51.85,
+        51.85,
+        6.67,
+        17.78,
+        2.22
+       ],
+       [
+        "David Miller",
+        "Pat Cummins",
+        118,
+        118,
+        131,
+        3,
+        3,
+        111.02,
+        45.76,
+        45.76,
+        14.41,
+        16.95,
+        2.54
+       ],
+       [
+        "David Miller",
+        "Yuzvendra Chahal",
+        71,
+        70,
+        55,
+        4,
+        3,
+        77.46,
+        50.7,
+        50.0,
+        4.23,
+        15.49,
+        5.63
+       ],
+       [
+        "David Miller",
+        "Adam Zampa",
+        138,
+        138,
+        174,
+        0,
+        0,
+        126.09,
+        42.03,
+        42.03,
+        15.22,
+        13.04,
+        0.0
+       ],
+       [
+        "David Miller",
+        "Mitchell Marsh",
+        64,
+        64,
+        71,
+        0,
+        0,
+        110.94,
+        32.81,
+        32.81,
+        9.38,
+        10.94,
+        0.0
+       ],
+       [
+        "David Miller",
+        "Glenn Maxwell",
+        80,
+        80,
+        63,
+        0,
+        0,
+        78.75,
+        47.5,
+        47.5,
+        6.25,
+        10.0,
+        0.0
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-rashid-boundary-a": [
+   {
+    "answer_numbers": [
+     "80"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Batter",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Rashid Khan",
+        "Hamilton Masakadza",
+        80,
+        68,
+        2,
+        2,
+        85.0,
+        57.5,
+        11.25,
+        26.25,
+        2.5
+       ],
+       [
+        "Rashid Khan",
+        "Litton Das",
+        64,
+        55,
+        1,
+        1,
+        85.94,
+        50.0,
+        10.94,
+        12.5,
+        1.56
+       ],
+       [
+        "Rashid Khan",
+        "Kevin O'Brien",
+        130,
+        121,
+        4,
+        4,
+        93.08,
+        46.92,
+        10.0,
+        4.62,
+        3.08
+       ],
+       [
+        "Rashid Khan",
+        "George Dockrell",
+        71,
+        64,
+        3,
+        3,
+        90.14,
+        39.44,
+        9.86,
+        11.27,
+        4.23
+       ],
+       [
+        "Rashid Khan",
+        "Sean Williams",
+        72,
+        62,
+        2,
+        2,
+        86.11,
+        55.56,
+        8.33,
+        8.33,
+        2.78
+       ],
+       [
+        "Rashid Khan",
+        "William Porterfield",
+        89,
+        61,
+        2,
+        2,
+        68.54,
+        55.06,
+        7.87,
+        0.0,
+        2.25
+       ],
+       [
+        "Rashid Khan",
+        "Ed Joyce",
+        92,
+        75,
+        1,
+        1,
+        81.52,
+        47.83,
+        7.61,
+        0.0,
+        1.09
+       ],
+       [
+        "Rashid Khan",
+        "Andy Balbirnie",
+        154,
+        111,
+        3,
+        3,
+        72.08,
+        55.84,
+        7.14,
+        9.09,
+        1.95
+       ],
+       [
+        "Rashid Khan",
+        "Mushfiqur Rahim",
+        126,
+        115,
+        4,
+        4,
+        91.27,
+        41.27,
+        7.14,
+        11.11,
+        3.17
+       ],
+       [
+        "Rashid Khan",
+        "Sikandar Raza",
+        148,
+        106,
+        6,
+        6,
+        71.62,
+        56.08,
+        6.76,
+        8.78,
+        4.05
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-rashid-boundary-b": [
+   {
+    "answer_numbers": [
+     "80"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Batter",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Rashid Khan",
+        "Hamilton Masakadza",
+        80,
+        68,
+        2,
+        2,
+        85.0,
+        57.5,
+        11.25,
+        26.25,
+        2.5
+       ],
+       [
+        "Rashid Khan",
+        "Litton Das",
+        64,
+        55,
+        1,
+        1,
+        85.94,
+        50.0,
+        10.94,
+        12.5,
+        1.56
+       ],
+       [
+        "Rashid Khan",
+        "Kevin O'Brien",
+        130,
+        121,
+        4,
+        4,
+        93.08,
+        46.92,
+        10.0,
+        4.62,
+        3.08
+       ],
+       [
+        "Rashid Khan",
+        "George Dockrell",
+        71,
+        64,
+        3,
+        3,
+        90.14,
+        39.44,
+        9.86,
+        11.27,
+        4.23
+       ],
+       [
+        "Rashid Khan",
+        "Sean Williams",
+        72,
+        62,
+        2,
+        2,
+        86.11,
+        55.56,
+        8.33,
+        8.33,
+        2.78
+       ],
+       [
+        "Rashid Khan",
+        "William Porterfield",
+        89,
+        61,
+        2,
+        2,
+        68.54,
+        55.06,
+        7.87,
+        0.0,
+        2.25
+       ],
+       [
+        "Rashid Khan",
+        "Ed Joyce",
+        92,
+        75,
+        1,
+        1,
+        81.52,
+        47.83,
+        7.61,
+        0.0,
+        1.09
+       ],
+       [
+        "Rashid Khan",
+        "Andy Balbirnie",
+        154,
+        111,
+        3,
+        3,
+        72.08,
+        55.84,
+        7.14,
+        9.09,
+        1.95
+       ],
+       [
+        "Rashid Khan",
+        "Mushfiqur Rahim",
+        126,
+        115,
+        4,
+        4,
+        91.27,
+        41.27,
+        7.14,
+        11.11,
+        3.17
+       ],
+       [
+        "Rashid Khan",
+        "Sikandar Raza",
+        148,
+        106,
+        6,
+        6,
+        71.62,
+        56.08,
+        6.76,
+        8.78,
+        4.05
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-smith-bumrah-a": [
+   {
+    "answer_numbers": [
+     "103",
+     "121",
+     "2"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Steven Smith",
+        "Jasprit Bumrah",
+        121,
+        103,
+        2,
+        2,
+        85.12,
+        57.85,
+        13.22,
+        19.83,
+        1.65
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-smith-bumrah-b": [
+   {
+    "answer_numbers": [
+     "103",
+     "121",
+     "2"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "Steven Smith",
+        "Jasprit Bumrah",
+        121,
+        103,
+        2,
+        2,
+        85.12,
+        57.85,
+        13.22,
+        19.83,
+        1.65
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-warner-dismissers-a": [
+   {
+    "answer_numbers": [
+     "169"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        "Chris Woakes",
+        169,
+        169,
+        126,
+        5,
+        5,
+        74.56,
+        66.86,
+        66.86,
+        11.24,
+        28.99,
+        2.96
+       ],
+       [
+        "David Warner",
+        "Lasith Malinga",
+        119,
+        119,
+        102,
+        4,
+        4,
+        85.71,
+        62.18,
+        62.18,
+        10.92,
+        28.57,
+        3.36
+       ],
+       [
+        "David Warner",
+        "Mohammed Shami",
+        118,
+        118,
+        103,
+        4,
+        4,
+        87.29,
+        61.86,
+        61.86,
+        12.71,
+        24.58,
+        3.39
+       ],
+       [
+        "David Warner",
+        "Matt Henry",
+        95,
+        94,
+        105,
+        4,
+        4,
+        110.53,
+        54.74,
+        55.32,
+        16.84,
+        15.79,
+        4.21
+       ],
+       [
+        "David Warner",
+        "Dhananjaya de Silva",
+        60,
+        60,
+        37,
+        4,
+        4,
+        61.67,
+        53.33,
+        53.33,
+        3.33,
+        13.33,
+        6.67
+       ],
+       [
+        "David Warner",
+        "Lungi Ngidi",
+        41,
+        41,
+        23,
+        4,
+        4,
+        56.1,
+        75.61,
+        75.61,
+        7.32,
+        43.9,
+        9.76
+       ],
+       [
+        "David Warner",
+        "Wayne Parnell",
+        36,
+        36,
+        23,
+        4,
+        4,
+        63.89,
+        58.33,
+        58.33,
+        5.56,
+        25.0,
+        11.11
+       ],
+       [
+        "David Warner",
+        "Dale Steyn",
+        170,
+        169,
+        183,
+        3,
+        3,
+        107.65,
+        55.29,
+        55.62,
+        15.88,
+        17.06,
+        1.76
+       ],
+       [
+        "David Warner",
+        "Junaid Khan",
+        103,
+        102,
+        110,
+        3,
+        3,
+        106.8,
+        51.46,
+        50.98,
+        16.5,
+        32.04,
+        2.91
+       ],
+       [
+        "David Warner",
+        "Kuldeep Yadav",
+        83,
+        83,
+        66,
+        3,
+        3,
+        79.52,
+        49.4,
+        49.4,
+        7.23,
+        16.87,
+        3.61
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-match-warner-dismissers-b": [
+   {
+    "answer_numbers": [
+     "169"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Bowler",
+       "Balls",
+       "Legal Balls",
+       "Runs",
+       "Dismissals",
+       "Wickets Taken",
+       "Batting Strike Rate",
+       "Batter Dot Ball Percentage",
+       "Bowler Dot Ball Percentage",
+       "Boundary Percentage",
+       "False Shot Percentage",
+       "Dismissal Rate"
+      ],
+      "rows": [
+       [
+        "David Warner",
+        "Chris Woakes",
+        169,
+        169,
+        126,
+        5,
+        5,
+        74.56,
+        66.86,
+        66.86,
+        11.24,
+        28.99,
+        2.96
+       ],
+       [
+        "David Warner",
+        "Lasith Malinga",
+        119,
+        119,
+        102,
+        4,
+        4,
+        85.71,
+        62.18,
+        62.18,
+        10.92,
+        28.57,
+        3.36
+       ],
+       [
+        "David Warner",
+        "Mohammed Shami",
+        118,
+        118,
+        103,
+        4,
+        4,
+        87.29,
+        61.86,
+        61.86,
+        12.71,
+        24.58,
+        3.39
+       ],
+       [
+        "David Warner",
+        "Matt Henry",
+        95,
+        94,
+        105,
+        4,
+        4,
+        110.53,
+        54.74,
+        55.32,
+        16.84,
+        15.79,
+        4.21
+       ],
+       [
+        "David Warner",
+        "Dhananjaya de Silva",
+        60,
+        60,
+        37,
+        4,
+        4,
+        61.67,
+        53.33,
+        53.33,
+        3.33,
+        13.33,
+        6.67
+       ],
+       [
+        "David Warner",
+        "Lungi Ngidi",
+        41,
+        41,
+        23,
+        4,
+        4,
+        56.1,
+        75.61,
+        75.61,
+        7.32,
+        43.9,
+        9.76
+       ],
+       [
+        "David Warner",
+        "Wayne Parnell",
+        36,
+        36,
+        23,
+        4,
+        4,
+        63.89,
+        58.33,
+        58.33,
+        5.56,
+        25.0,
+        11.11
+       ],
+       [
+        "David Warner",
+        "Dale Steyn",
+        170,
+        169,
+        183,
+        3,
+        3,
+        107.65,
+        55.29,
+        55.62,
+        15.88,
+        17.06,
+        1.76
+       ],
+       [
+        "David Warner",
+        "Junaid Khan",
+        103,
+        102,
+        110,
+        3,
+        3,
+        106.8,
+        51.46,
+        50.98,
+        16.5,
+        32.04,
+        2.91
+       ],
+       [
+        "David Warner",
+        "Kuldeep Yadav",
+        83,
+        83,
+        66,
+        3,
+        3,
+        79.52,
+        49.4,
+        49.4,
+        7.23,
+        16.87,
+        3.61
+       ]
+      ],
+      "title": "Semantic matchup result"
+     }
+    ]
+   }
+  ],
+  "unseen-missing-captain-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "data_limitation",
+    "mode": "analysis",
+    "status": "insufficient_evidence",
+    "tables": []
+   }
+  ],
+  "unseen-missing-captain-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "data_limitation",
+    "mode": "analysis",
+    "status": "insufficient_evidence",
+    "tables": []
+   }
+  ],
+  "unseen-missing-catches-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "data_limitation",
+    "mode": "analysis",
+    "status": "insufficient_evidence",
+    "tables": []
+   }
+  ],
+  "unseen-missing-catches-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "data_limitation",
+    "mode": "analysis",
+    "status": "insufficient_evidence",
+    "tables": []
+   }
+  ],
+  "unseen-rank-2019-runs-a": [
+   {
+    "answer_numbers": [
+     "1490",
+     "1657"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rohit Sharma",
+        1490,
+        1657,
+        27
+       ],
+       [
+        "Virat Kohli",
+        1377,
+        1429,
+        25
+       ],
+       [
+        "Shai Hope",
+        1345,
+        1726,
+        26
+       ],
+       [
+        "Aaron Finch",
+        1141,
+        1276,
+        23
+       ],
+       [
+        "Babar Azam",
+        1092,
+        1183,
+        20
+       ],
+       [
+        "Usman Khawaja",
+        1085,
+        1278,
+        22
+       ],
+       [
+        "Kane Williamson",
+        948,
+        1258,
+        19
+       ],
+       [
+        "Ross Taylor",
+        943,
+        1090,
+        20
+       ],
+       [
+        "Joe Root",
+        910,
+        980,
+        20
+       ],
+       [
+        "Imam-ul-Haq",
+        902,
+        1138,
+        21
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-2019-runs-b": [
+   {
+    "answer_numbers": [
+     "1490",
+     "1657"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Rohit Sharma",
+        1490,
+        1657,
+        27
+       ],
+       [
+        "Virat Kohli",
+        1377,
+        1429,
+        25
+       ],
+       [
+        "Shai Hope",
+        1345,
+        1726,
+        26
+       ],
+       [
+        "Aaron Finch",
+        1141,
+        1276,
+        23
+       ],
+       [
+        "Babar Azam",
+        1092,
+        1183,
+        20
+       ],
+       [
+        "Usman Khawaja",
+        1085,
+        1278,
+        22
+       ],
+       [
+        "Kane Williamson",
+        948,
+        1258,
+        19
+       ],
+       [
+        "Ross Taylor",
+        943,
+        1090,
+        20
+       ],
+       [
+        "Joe Root",
+        910,
+        980,
+        20
+       ],
+       [
+        "Imam-ul-Haq",
+        902,
+        1138,
+        21
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-death-econ-a": [
+   {
+    "answer_numbers": [
+     "120",
+     "240",
+     "4.0"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Bernard Scholtz",
+        4.0,
+        160,
+        240,
+        24
+       ],
+       [
+        "Andrew White",
+        4.32,
+        95,
+        132,
+        12
+       ],
+       [
+        "Basil Hameed",
+        4.41,
+        108,
+        147,
+        13
+       ],
+       [
+        "Amir Hamza",
+        4.49,
+        116,
+        155,
+        16
+       ],
+       [
+        "Brad Hogg",
+        4.65,
+        244,
+        315,
+        33
+       ],
+       [
+        "Majid Haq",
+        4.69,
+        197,
+        252,
+        19
+       ],
+       [
+        "Robin Peterson",
+        4.8,
+        228,
+        285,
+        26
+       ],
+       [
+        "Arafat Sunny",
+        4.89,
+        110,
+        135,
+        13
+       ],
+       [
+        "Sunil Narine",
+        4.98,
+        437,
+        526,
+        38
+       ],
+       [
+        "Lalit Rajbanshi",
+        5.09,
+        112,
+        132,
+        12
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-death-econ-b": [
+   {
+    "answer_numbers": [
+     "120",
+     "240",
+     "4.0"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Bernard Scholtz",
+        4.0,
+        160,
+        240,
+        24
+       ],
+       [
+        "Andrew White",
+        4.32,
+        95,
+        132,
+        12
+       ],
+       [
+        "Basil Hameed",
+        4.41,
+        108,
+        147,
+        13
+       ],
+       [
+        "Amir Hamza",
+        4.49,
+        116,
+        155,
+        16
+       ],
+       [
+        "Brad Hogg",
+        4.65,
+        244,
+        315,
+        33
+       ],
+       [
+        "Majid Haq",
+        4.69,
+        197,
+        252,
+        19
+       ],
+       [
+        "Robin Peterson",
+        4.8,
+        228,
+        285,
+        26
+       ],
+       [
+        "Arafat Sunny",
+        4.89,
+        110,
+        135,
+        13
+       ],
+       [
+        "Sunil Narine",
+        4.98,
+        437,
+        526,
+        38
+       ],
+       [
+        "Lalit Rajbanshi",
+        5.09,
+        112,
+        132,
+        12
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-death-sr-a": [
+   {
+    "answer_numbers": [
+     "166",
+     "190.96",
+     "90"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Asif Khan",
+        190.96,
+        317,
+        166,
+        8
+       ],
+       [
+        "Rishabh Pant",
+        181.82,
+        200,
+        110,
+        8
+       ],
+       [
+        "Chris Gayle",
+        181.1,
+        230,
+        127,
+        10
+       ],
+       [
+        "Heinrich Klaasen",
+        178.47,
+        514,
+        288,
+        19
+       ],
+       [
+        "AB de Villiers",
+        172.76,
+        1541,
+        892,
+        66
+       ],
+       [
+        "Shimron Hetmyer",
+        172.64,
+        183,
+        106,
+        5
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-death-sr-b": [
+   {
+    "answer_numbers": [
+     "166",
+     "190.96",
+     "90"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Asif Khan",
+        190.96,
+        317,
+        166,
+        8
+       ],
+       [
+        "Rishabh Pant",
+        181.82,
+        200,
+        110,
+        8
+       ],
+       [
+        "Chris Gayle",
+        181.1,
+        230,
+        127,
+        10
+       ],
+       [
+        "Heinrich Klaasen",
+        178.47,
+        514,
+        288,
+        19
+       ],
+       [
+        "AB de Villiers",
+        172.76,
+        1541,
+        892,
+        66
+       ],
+       [
+        "Shimron Hetmyer",
+        172.64,
+        183,
+        106,
+        5
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-lords-wickets-a": [
+   {
+    "answer_numbers": [
+     "16",
+     "601"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Stuart Broad",
+        16,
+        16,
+        601,
+        11
+       ],
+       [
+        "Graeme Swann",
+        16,
+        16,
+        450,
+        8
+       ],
+       [
+        "Liam Plunkett",
+        15,
+        15,
+        378,
+        7
+       ],
+       [
+        "Brett Lee",
+        15,
+        15,
+        283,
+        5
+       ],
+       [
+        "James Anderson",
+        13,
+        13,
+        680,
+        13
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-lords-wickets-b": [
+   {
+    "answer_numbers": [
+     "16",
+     "601"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Stuart Broad",
+        16,
+        16,
+        601,
+        11
+       ],
+       [
+        "Graeme Swann",
+        16,
+        16,
+        450,
+        8
+       ],
+       [
+        "Liam Plunkett",
+        15,
+        15,
+        378,
+        7
+       ],
+       [
+        "Brett Lee",
+        15,
+        15,
+        283,
+        5
+       ],
+       [
+        "James Anderson",
+        13,
+        13,
+        680,
+        13
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-middle-dots-a": [
+   {
+    "answer_numbers": [
+     "180",
+     "216",
+     "71.76"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Bowler Dot Ball Percentage",
+       "Bowler Dot Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Shakeel Ahmed",
+        71.76,
+        155,
+        216,
+        9
+       ],
+       [
+        "Anshy Rath",
+        68.83,
+        223,
+        324,
+        7
+       ],
+       [
+        "Jon Lewis",
+        68.46,
+        191,
+        279,
+        12
+       ],
+       [
+        "Aamir Kaleem",
+        67.91,
+        218,
+        321,
+        9
+       ],
+       [
+        "Glenn McGrath",
+        67.41,
+        726,
+        1077,
+        54
+       ],
+       [
+        "Craig Wright",
+        67.32,
+        206,
+        306,
+        8
+       ],
+       [
+        "Mohammad Aadil Alam",
+        67.11,
+        153,
+        228,
+        6
+       ],
+       [
+        "Andre Nel",
+        66.83,
+        1257,
+        1881,
+        53
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-middle-dots-b": [
+   {
+    "answer_numbers": [
+     "180",
+     "216",
+     "71.76"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Bowler Dot Ball Percentage",
+       "Bowler Dot Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Shakeel Ahmed",
+        71.76,
+        155,
+        216,
+        9
+       ],
+       [
+        "Anshy Rath",
+        68.83,
+        223,
+        324,
+        7
+       ],
+       [
+        "Jon Lewis",
+        68.46,
+        191,
+        279,
+        12
+       ],
+       [
+        "Aamir Kaleem",
+        67.91,
+        218,
+        321,
+        9
+       ],
+       [
+        "Glenn McGrath",
+        67.41,
+        726,
+        1077,
+        54
+       ],
+       [
+        "Craig Wright",
+        67.32,
+        206,
+        306,
+        8
+       ],
+       [
+        "Mohammad Aadil Alam",
+        67.11,
+        153,
+        228,
+        6
+       ],
+       [
+        "Andre Nel",
+        66.83,
+        1257,
+        1881,
+        53
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-pace-boundary-a": [
+   {
+    "answer_numbers": [
+     "120",
+     "141",
+     "21.99"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Boundary Percentage",
+       "Boundary Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Prithvi Shaw",
+        21.99,
+        31,
+        141,
+        6
+       ],
+       [
+        "Andre Russell",
+        21.71,
+        99,
+        456,
+        38
+       ],
+       [
+        "Mohammad Naveed",
+        21.15,
+        44,
+        208,
+        28
+       ],
+       [
+        "Rizwan Cheema",
+        20.5,
+        82,
+        400,
+        27
+       ],
+       [
+        "Phil Salt",
+        20.0,
+        128,
+        640,
+        28
+       ],
+       [
+        "Sharjeel Khan",
+        19.48,
+        104,
+        534,
+        25
+       ],
+       [
+        "Andries Gous",
+        19.23,
+        25,
+        130,
+        6
+       ],
+       [
+        "Michael Bracewell",
+        19.0,
+        53,
+        279,
+        18
+       ],
+       [
+        "Iftikhar Ahmed",
+        18.99,
+        49,
+        258,
+        19
+       ],
+       [
+        "Tanzid Hasan",
+        18.73,
+        56,
+        299,
+        19
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-pace-boundary-b": [
+   {
+    "answer_numbers": [
+     "120",
+     "141",
+     "21.99"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Boundary Percentage",
+       "Boundary Balls",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Prithvi Shaw",
+        21.99,
+        31,
+        141,
+        6
+       ],
+       [
+        "Andre Russell",
+        21.71,
+        99,
+        456,
+        38
+       ],
+       [
+        "Mohammad Naveed",
+        21.15,
+        44,
+        208,
+        28
+       ],
+       [
+        "Rizwan Cheema",
+        20.5,
+        82,
+        400,
+        27
+       ],
+       [
+        "Phil Salt",
+        20.0,
+        128,
+        640,
+        28
+       ],
+       [
+        "Sharjeel Khan",
+        19.48,
+        104,
+        534,
+        25
+       ],
+       [
+        "Andries Gous",
+        19.23,
+        25,
+        130,
+        6
+       ],
+       [
+        "Michael Bracewell",
+        19.0,
+        53,
+        279,
+        18
+       ],
+       [
+        "Iftikhar Ahmed",
+        18.99,
+        49,
+        258,
+        19
+       ],
+       [
+        "Tanzid Hasan",
+        18.73,
+        56,
+        299,
+        19
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-pp-runs-a": [
+   {
+    "answer_numbers": [
+     "4017",
+     "5485"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Tamim Iqbal",
+        4017,
+        5485,
+        236
+       ],
+       [
+        "Rohit Sharma",
+        3651,
+        4539,
+        203
+       ],
+       [
+        "Tillakaratne Dilshan",
+        3560,
+        3892,
+        180
+       ],
+       [
+        "Chris Gayle",
+        3523,
+        3890,
+        186
+       ],
+       [
+        "Hashim Amla",
+        3431,
+        4028,
+        176
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-pp-runs-b": [
+   {
+    "answer_numbers": [
+     "4017",
+     "5485"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Tamim Iqbal",
+        4017,
+        5485,
+        236
+       ],
+       [
+        "Rohit Sharma",
+        3651,
+        4539,
+        203
+       ],
+       [
+        "Tillakaratne Dilshan",
+        3560,
+        3892,
+        180
+       ],
+       [
+        "Chris Gayle",
+        3523,
+        3890,
+        186
+       ],
+       [
+        "Hashim Amla",
+        3431,
+        4028,
+        176
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-pp-wickets-a": [
+   {
+    "answer_numbers": [
+     "102",
+     "4158"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Lasith Malinga",
+        102,
+        102,
+        4158,
+        203
+       ],
+       [
+        "Brett Lee",
+        100,
+        100,
+        3242,
+        129
+       ],
+       [
+        "Nuwan Kulasekara",
+        93,
+        93,
+        4282,
+        172
+       ],
+       [
+        "Trent Boult",
+        93,
+        93,
+        3037,
+        113
+       ],
+       [
+        "James Anderson",
+        86,
+        86,
+        4044,
+        153
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-pp-wickets-b": [
+   {
+    "answer_numbers": [
+     "102",
+     "4158"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Lasith Malinga",
+        102,
+        102,
+        4158,
+        203
+       ],
+       [
+        "Brett Lee",
+        100,
+        100,
+        3242,
+        129
+       ],
+       [
+        "Nuwan Kulasekara",
+        93,
+        93,
+        4282,
+        172
+       ],
+       [
+        "Trent Boult",
+        93,
+        93,
+        3037,
+        113
+       ],
+       [
+        "James Anderson",
+        86,
+        86,
+        4044,
+        153
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-spin-sr-a": [
+   {
+    "answer_numbers": [
+     "100",
+     "139.95",
+     "881"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Shahid Afridi",
+        139.95,
+        1233,
+        881,
+        107
+       ],
+       [
+        "Marcus Trescothick",
+        130.95,
+        165,
+        126,
+        8
+       ],
+       [
+        "Glenn Maxwell",
+        128.9,
+        1775,
+        1377,
+        98
+       ],
+       [
+        "Virender Sehwag",
+        126.36,
+        978,
+        774,
+        43
+       ],
+       [
+        "Saim Ayub",
+        122.83,
+        156,
+        127,
+        7
+       ],
+       [
+        "Heinrich Klaasen",
+        122.32,
+        948,
+        775,
+        45
+       ],
+       [
+        "Wanindu Hasaranga",
+        120.67,
+        397,
+        329,
+        40
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-spin-sr-b": [
+   {
+    "answer_numbers": [
+     "100",
+     "139.95",
+     "881"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Shahid Afridi",
+        139.95,
+        1233,
+        881,
+        107
+       ],
+       [
+        "Marcus Trescothick",
+        130.95,
+        165,
+        126,
+        8
+       ],
+       [
+        "Glenn Maxwell",
+        128.9,
+        1775,
+        1377,
+        98
+       ],
+       [
+        "Virender Sehwag",
+        126.36,
+        978,
+        774,
+        43
+       ],
+       [
+        "Saim Ayub",
+        122.83,
+        156,
+        127,
+        7
+       ],
+       [
+        "Heinrich Klaasen",
+        122.32,
+        948,
+        775,
+        45
+       ],
+       [
+        "Wanindu Hasaranga",
+        120.67,
+        397,
+        329,
+        40
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-worst-econ-a": [
+   {
+    "answer_numbers": [
+     "200",
+     "222",
+     "7.57"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Mahbubul Alam",
+        7.57,
+        280,
+        222,
+        5
+       ],
+       [
+        "Dolar Mahmud",
+        7.37,
+        258,
+        210,
+        7
+       ],
+       [
+        "Matheesha Pathirana",
+        7.28,
+        616,
+        508,
+        12
+       ],
+       [
+        "Carl Mumba",
+        7.19,
+        326,
+        272,
+        7
+       ],
+       [
+        "Pramod Madushan",
+        7.06,
+        426,
+        362,
+        9
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-worst-econ-b": [
+   {
+    "answer_numbers": [
+     "200",
+     "222",
+     "7.57"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Mahbubul Alam",
+        7.57,
+        280,
+        222,
+        5
+       ],
+       [
+        "Dolar Mahmud",
+        7.37,
+        258,
+        210,
+        7
+       ],
+       [
+        "Matheesha Pathirana",
+        7.28,
+        616,
+        508,
+        12
+       ],
+       [
+        "Carl Mumba",
+        7.19,
+        326,
+        272,
+        7
+       ],
+       [
+        "Pramod Madushan",
+        7.06,
+        426,
+        362,
+        9
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-yorker-count-a": [
+   {
+    "answer_numbers": [
+     "276",
+     "6513"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Yorker Count",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Mitchell Starc",
+        276,
+        6513,
+        127
+       ],
+       [
+        "Jasprit Bumrah",
+        233,
+        4580,
+        88
+       ],
+       [
+        "Lasith Malinga",
+        177,
+        10687,
+        215
+       ],
+       [
+        "Trent Boult",
+        165,
+        6181,
+        113
+       ],
+       [
+        "Shaheen Shah Afridi",
+        117,
+        3114,
+        60
+       ],
+       [
+        "Kagiso Rabada",
+        111,
+        5291,
+        101
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-yorker-count-b": [
+   {
+    "answer_numbers": [
+     "276",
+     "6513"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Yorker Count",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Mitchell Starc",
+        276,
+        6513,
+        127
+       ],
+       [
+        "Jasprit Bumrah",
+        233,
+        4580,
+        88
+       ],
+       [
+        "Lasith Malinga",
+        177,
+        10687,
+        215
+       ],
+       [
+        "Trent Boult",
+        165,
+        6181,
+        113
+       ],
+       [
+        "Shaheen Shah Afridi",
+        117,
+        3114,
+        60
+       ],
+       [
+        "Kagiso Rabada",
+        111,
+        5291,
+        101
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-yorker-rate-a": [
+   {
+    "answer_numbers": [
+     "150",
+     "508",
+     "6.5"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Yorker Percentage",
+       "Yorker Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Matheesha Pathirana",
+        6.5,
+        33,
+        508,
+        12
+       ],
+       [
+        "Siddarth Kaul",
+        5.56,
+        9,
+        162,
+        3
+       ],
+       [
+        "Navdeep Saini",
+        5.48,
+        23,
+        420,
+        8
+       ],
+       [
+        "Jasprit Bumrah",
+        5.09,
+        233,
+        4580,
+        88
+       ],
+       [
+        "Mitchell Starc",
+        4.24,
+        276,
+        6513,
+        127
+       ],
+       [
+        "Ben Lister",
+        3.85,
+        6,
+        156,
+        3
+       ],
+       [
+        "Shaheen Shah Afridi",
+        3.76,
+        117,
+        3114,
+        60
+       ],
+       [
+        "Pramod Madushan",
+        3.59,
+        13,
+        362,
+        9
+       ],
+       [
+        "Arshdeep Singh",
+        3.49,
+        13,
+        373,
+        8
+       ],
+       [
+        "Anrich Nortje",
+        3.48,
+        35,
+        1006,
+        21
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-rank-yorker-rate-b": [
+   {
+    "answer_numbers": [
+     "150",
+     "508",
+     "6.5"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Yorker Percentage",
+       "Yorker Balls",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Matheesha Pathirana",
+        6.5,
+        33,
+        508,
+        12
+       ],
+       [
+        "Siddarth Kaul",
+        5.56,
+        9,
+        162,
+        3
+       ],
+       [
+        "Navdeep Saini",
+        5.48,
+        23,
+        420,
+        8
+       ],
+       [
+        "Jasprit Bumrah",
+        5.09,
+        233,
+        4580,
+        88
+       ],
+       [
+        "Mitchell Starc",
+        4.24,
+        276,
+        6513,
+        127
+       ],
+       [
+        "Ben Lister",
+        3.85,
+        6,
+        156,
+        3
+       ],
+       [
+        "Shaheen Shah Afridi",
+        3.76,
+        117,
+        3114,
+        60
+       ],
+       [
+        "Pramod Madushan",
+        3.59,
+        13,
+        362,
+        9
+       ],
+       [
+        "Arshdeep Singh",
+        3.49,
+        13,
+        373,
+        8
+       ],
+       [
+        "Anrich Nortje",
+        3.48,
+        35,
+        1006,
+        21
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-boult-hand-dots-a": [
+   {
+    "answer_numbers": [
+     "0.0",
+     "2200",
+     "3981",
+     "60.14"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Left Handers Value",
+       "Right Handers Value",
+       "Difference",
+       "Left Handers Sample",
+       "Right Handers Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Trent Boult",
+        60.14,
+        60.14,
+        0.0,
+        2200,
+        3981,
+        0.0
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-boult-hand-dots-b": [
+   {
+    "answer_numbers": [
+     "0.0",
+     "2200",
+     "3981",
+     "60.14"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Left Handers Value",
+       "Right Handers Value",
+       "Difference",
+       "Left Handers Sample",
+       "Right Handers Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Trent Boult",
+        60.14,
+        60.14,
+        0.0,
+        2200,
+        3981,
+        0.0
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-bumrah-phase-econ-a": [
+   {
+    "answer_numbers": [
+     "1123",
+     "1944",
+     "3.96",
+     "5.78"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        3.96,
+        5.78,
+        -1.82,
+        1944,
+        1123,
+        1.82
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-bumrah-phase-econ-b": [
+   {
+    "answer_numbers": [
+     "1123",
+     "1944",
+     "3.96",
+     "5.78"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Jasprit Bumrah",
+        3.96,
+        5.78,
+        -1.82,
+        1944,
+        1123,
+        1.82
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-klaasen-spin-type-a": [
+   {
+    "answer_numbers": [
+     "116.57",
+     "124.64",
+     "332",
+     "418"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Wrist Spin Value",
+       "Finger Spin Value",
+       "Difference",
+       "Wrist Spin Sample",
+       "Finger Spin Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        124.64,
+        116.57,
+        8.07,
+        418,
+        332,
+        8.07
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-klaasen-spin-type-b": [
+   {
+    "answer_numbers": [
+     "116.57",
+     "124.64",
+     "332",
+     "418"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Wrist Spin Value",
+       "Finger Spin Value",
+       "Difference",
+       "Wrist Spin Sample",
+       "Finger Spin Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Heinrich Klaasen",
+        124.64,
+        116.57,
+        8.07,
+        418,
+        332,
+        8.07
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-kohli-phase-sr-a": [
+   {
+    "answer_numbers": [
+     "1016",
+     "149.9",
+     "2848",
+     "73.1"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        73.1,
+        149.9,
+        -76.8,
+        2848,
+        1016,
+        76.8
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-kohli-phase-sr-b": [
+   {
+    "answer_numbers": [
+     "1016",
+     "149.9",
+     "2848",
+     "73.1"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Virat Kohli",
+        73.1,
+        149.9,
+        -76.8,
+        2848,
+        1016,
+        76.8
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-miller-phase-boundary-a": [
+   {
+    "answer_numbers": [
+     "-5.72",
+     "11.43",
+     "1207",
+     "17.15",
+     "70"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "David Miller",
+        11.43,
+        17.15,
+        -5.72,
+        70,
+        1207,
+        5.72
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-miller-phase-boundary-b": [
+   {
+    "answer_numbers": [
+     "-5.72",
+     "11.43",
+     "1207",
+     "17.15",
+     "70"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Batter",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "David Miller",
+        11.43,
+        17.15,
+        -5.72,
+        70,
+        1207,
+        5.72
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-starc-hand-econ-a": [
+   {
+    "answer_numbers": [
+     "2066",
+     "4447",
+     "5.24",
+     "5.3"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Left Handers Value",
+       "Right Handers Value",
+       "Difference",
+       "Left Handers Sample",
+       "Right Handers Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Mitchell Starc",
+        5.3,
+        5.24,
+        0.05,
+        2066,
+        4447,
+        0.05
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-starc-hand-econ-b": [
+   {
+    "answer_numbers": [
+     "2066",
+     "4447",
+     "5.24",
+     "5.3"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowler",
+       "Left Handers Value",
+       "Right Handers Value",
+       "Difference",
+       "Left Handers Sample",
+       "Right Handers Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Mitchell Starc",
+        5.3,
+        5.24,
+        0.05,
+        2066,
+        4447,
+        0.05
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-team-phase-runrate-a": [
+   {
+    "answer_numbers": [
+     "2099",
+     "3.82",
+     "3304",
+     "6.9"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Team",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Namibia",
+        3.82,
+        6.9,
+        -3.07,
+        3304,
+        2099,
+        3.07
+       ],
+       [
+        "Africa XI",
+        4.06,
+        6.99,
+        -2.93,
+        361,
+        249,
+        2.93
+       ],
+       [
+        "South Africa",
+        4.66,
+        7.51,
+        -2.85,
+        21563,
+        13464,
+        2.85
+       ],
+       [
+        "New Zealand",
+        4.6,
+        7.37,
+        -2.76,
+        20976,
+        12874,
+        2.76
+       ],
+       [
+        "Pakistan",
+        4.18,
+        6.91,
+        -2.73,
+        22536,
+        14994,
+        2.73
+       ],
+       [
+        "West Indies",
+        4.19,
+        6.84,
+        -2.65,
+        22143,
+        12539,
+        2.65
+       ],
+       [
+        "Scotland",
+        4.1,
+        6.75,
+        -2.64,
+        8569,
+        5268,
+        2.64
+       ],
+       [
+        "Ireland",
+        3.98,
+        6.5,
+        -2.52,
+        11144,
+        6460,
+        2.52
+       ],
+       [
+        "Afghanistan",
+        4.08,
+        6.58,
+        -2.5,
+        10379,
+        6338,
+        2.5
+       ],
+       [
+        "Australia",
+        4.83,
+        7.32,
+        -2.5,
+        25495,
+        17870,
+        2.5
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-split-team-phase-runrate-b": [
+   {
+    "answer_numbers": [
+     "2099",
+     "3.82",
+     "3304",
+     "6.9"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Team",
+       "Powerplay Value",
+       "Death Value",
+       "Difference",
+       "Powerplay Sample",
+       "Death Sample",
+       "Rank Value"
+      ],
+      "rows": [
+       [
+        "Namibia",
+        3.82,
+        6.9,
+        -3.07,
+        3304,
+        2099,
+        3.07
+       ],
+       [
+        "Africa XI",
+        4.06,
+        6.99,
+        -2.93,
+        361,
+        249,
+        2.93
+       ],
+       [
+        "South Africa",
+        4.66,
+        7.51,
+        -2.85,
+        21563,
+        13464,
+        2.85
+       ],
+       [
+        "New Zealand",
+        4.6,
+        7.37,
+        -2.76,
+        20976,
+        12874,
+        2.76
+       ],
+       [
+        "Pakistan",
+        4.18,
+        6.91,
+        -2.73,
+        22536,
+        14994,
+        2.73
+       ],
+       [
+        "West Indies",
+        4.19,
+        6.84,
+        -2.65,
+        22143,
+        12539,
+        2.65
+       ],
+       [
+        "Scotland",
+        4.1,
+        6.75,
+        -2.64,
+        8569,
+        5268,
+        2.64
+       ],
+       [
+        "Ireland",
+        3.98,
+        6.5,
+        -2.52,
+        11144,
+        6460,
+        2.52
+       ],
+       [
+        "Afghanistan",
+        4.08,
+        6.58,
+        -2.5,
+        10379,
+        6338,
+        2.5
+       ],
+       [
+        "Australia",
+        4.83,
+        7.32,
+        -2.5,
+        25495,
+        17870,
+        2.5
+       ]
+      ],
+      "title": "Semantic split comparison result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-bumrah-econ-a": [
+   {
+    "answer_numbers": [
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "3.63",
+     "3.64",
+     "4.33",
+     "4.41",
+     "4.63",
+     "5.14",
+     "5.63"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2016,
+        3.64,
+        249,
+        411,
+        8
+       ],
+       [
+        2017,
+        5.14,
+        1024,
+        1196,
+        23
+       ],
+       [
+        2018,
+        3.63,
+        366,
+        605,
+        13
+       ],
+       [
+        2019,
+        4.63,
+        615,
+        797,
+        14
+       ],
+       [
+        2020,
+        5.63,
+        482,
+        514,
+        9
+       ],
+       [
+        2022,
+        4.33,
+        205,
+        284,
+        5
+       ],
+       [
+        2023,
+        4.41,
+        568,
+        773,
+        16
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-bumrah-econ-b": [
+   {
+    "answer_numbers": [
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2022",
+     "2023",
+     "3.63",
+     "3.64",
+     "4.33",
+     "4.41",
+     "4.63",
+     "5.14",
+     "5.63"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2016,
+        3.64,
+        249,
+        411,
+        8
+       ],
+       [
+        2017,
+        5.14,
+        1024,
+        1196,
+        23
+       ],
+       [
+        2018,
+        3.63,
+        366,
+        605,
+        13
+       ],
+       [
+        2019,
+        4.63,
+        615,
+        797,
+        14
+       ],
+       [
+        2020,
+        5.63,
+        482,
+        514,
+        9
+       ],
+       [
+        2022,
+        4.33,
+        205,
+        284,
+        5
+       ],
+       [
+        2023,
+        4.41,
+        568,
+        773,
+        16
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-kohli-sr-a": [
+   {
+    "answer_numbers": [
+     "100.0",
+     "102.56",
+     "2008",
+     "2009",
+     "2010",
+     "2011",
+     "2012",
+     "2013",
+     "2014",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2021",
+     "2022",
+     "2023",
+     "2025",
+     "66.53",
+     "80.6",
+     "84.42",
+     "85.12",
+     "85.57",
+     "86.58",
+     "87.03",
+     "90.48",
+     "92.29",
+     "93.78",
+     "96.36",
+     "97.54",
+     "99.12",
+     "99.14",
+     "99.62"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2008,
+        66.53,
+        159,
+        239,
+        5
+       ],
+       [
+        2009,
+        84.42,
+        325,
+        385,
+        8
+       ],
+       [
+        2010,
+        85.12,
+        995,
+        1169,
+        23
+       ],
+       [
+        2011,
+        85.57,
+        1382,
+        1615,
+        34
+       ],
+       [
+        2012,
+        93.78,
+        1026,
+        1094,
+        17
+       ],
+       [
+        2013,
+        97.54,
+        1268,
+        1300,
+        30
+       ],
+       [
+        2014,
+        99.62,
+        1054,
+        1058,
+        20
+       ],
+       [
+        2015,
+        80.6,
+        623,
+        773,
+        20
+       ],
+       [
+        2016,
+        100.0,
+        739,
+        739,
+        10
+       ],
+       [
+        2017,
+        99.12,
+        1460,
+        1473,
+        26
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-kohli-sr-b": [
+   {
+    "answer_numbers": [
+     "100.0",
+     "102.56",
+     "2008",
+     "2009",
+     "2010",
+     "2011",
+     "2012",
+     "2013",
+     "2014",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2021",
+     "2022",
+     "2023",
+     "2025",
+     "66.53",
+     "80.6",
+     "84.42",
+     "85.12",
+     "85.57",
+     "86.58",
+     "87.03",
+     "90.48",
+     "92.29",
+     "93.78",
+     "96.36",
+     "97.54",
+     "99.12",
+     "99.14",
+     "99.62"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Batting Strike Rate",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2008,
+        66.53,
+        159,
+        239,
+        5
+       ],
+       [
+        2009,
+        84.42,
+        325,
+        385,
+        8
+       ],
+       [
+        2010,
+        85.12,
+        995,
+        1169,
+        23
+       ],
+       [
+        2011,
+        85.57,
+        1382,
+        1615,
+        34
+       ],
+       [
+        2012,
+        93.78,
+        1026,
+        1094,
+        17
+       ],
+       [
+        2013,
+        97.54,
+        1268,
+        1300,
+        30
+       ],
+       [
+        2014,
+        99.62,
+        1054,
+        1058,
+        20
+       ],
+       [
+        2015,
+        80.6,
+        623,
+        773,
+        20
+       ],
+       [
+        2016,
+        100.0,
+        739,
+        739,
+        10
+       ],
+       [
+        2017,
+        99.12,
+        1460,
+        1473,
+        26
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-rashid-wickets-a": [
+   {
+    "answer_numbers": [
+     "15",
+     "20",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2021",
+     "2022",
+     "2023",
+     "2024",
+     "22",
+     "23",
+     "43",
+     "48",
+     "5",
+     "7"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2015,
+        5,
+        5,
+        223,
+        4
+       ],
+       [
+        2016,
+        22,
+        22,
+        624,
+        11
+       ],
+       [
+        2017,
+        43,
+        43,
+        708,
+        15
+       ],
+       [
+        2018,
+        48,
+        48,
+        1067,
+        20
+       ],
+       [
+        2019,
+        15,
+        15,
+        935,
+        17
+       ],
+       [
+        2021,
+        7,
+        7,
+        174,
+        3
+       ],
+       [
+        2022,
+        23,
+        23,
+        617,
+        11
+       ],
+       [
+        2023,
+        20,
+        20,
+        951,
+        17
+       ],
+       [
+        2024,
+        15,
+        15,
+        321,
+        6
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-rashid-wickets-b": [
+   {
+    "answer_numbers": [
+     "15",
+     "20",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2021",
+     "2022",
+     "2023",
+     "2024",
+     "22",
+     "23",
+     "43",
+     "48",
+     "5",
+     "7"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Wickets Taken",
+       "Wickets Taken",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2015,
+        5,
+        5,
+        223,
+        4
+       ],
+       [
+        2016,
+        22,
+        22,
+        624,
+        11
+       ],
+       [
+        2017,
+        43,
+        43,
+        708,
+        15
+       ],
+       [
+        2018,
+        48,
+        48,
+        1067,
+        20
+       ],
+       [
+        2019,
+        15,
+        15,
+        935,
+        17
+       ],
+       [
+        2021,
+        7,
+        7,
+        174,
+        3
+       ],
+       [
+        2022,
+        23,
+        23,
+        617,
+        11
+       ],
+       [
+        2023,
+        20,
+        20,
+        951,
+        17
+       ],
+       [
+        2024,
+        15,
+        15,
+        321,
+        6
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-rohit-runs-a": [
+   {
+    "answer_numbers": [
+     "102",
+     "1030",
+     "1196",
+     "122",
+     "1255",
+     "1293",
+     "149",
+     "1490",
+     "168",
+     "171",
+     "2007",
+     "2008",
+     "2009",
+     "2010",
+     "2011",
+     "2012",
+     "2013",
+     "2014",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2021",
+     "2022",
+     "2023",
+     "2024",
+     "2025",
+     "249",
+     "504",
+     "522",
+     "564",
+     "578",
+     "61",
+     "611",
+     "815",
+     "90"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2007,
+        61,
+        74,
+        3
+       ],
+       [
+        2008,
+        522,
+        724,
+        28
+       ],
+       [
+        2009,
+        102,
+        155,
+        7
+       ],
+       [
+        2010,
+        504,
+        586,
+        14
+       ],
+       [
+        2011,
+        611,
+        739,
+        16
+       ],
+       [
+        2012,
+        168,
+        251,
+        13
+       ],
+       [
+        2013,
+        1196,
+        1480,
+        27
+       ],
+       [
+        2014,
+        578,
+        613,
+        12
+       ],
+       [
+        2015,
+        815,
+        854,
+        17
+       ],
+       [
+        2016,
+        564,
+        593,
+        10
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-rohit-runs-b": [
+   {
+    "answer_numbers": [
+     "102",
+     "1030",
+     "1196",
+     "122",
+     "1255",
+     "1293",
+     "149",
+     "1490",
+     "168",
+     "171",
+     "2007",
+     "2008",
+     "2009",
+     "2010",
+     "2011",
+     "2012",
+     "2013",
+     "2014",
+     "2015",
+     "2016",
+     "2017",
+     "2018",
+     "2019",
+     "2020",
+     "2021",
+     "2022",
+     "2023",
+     "2024",
+     "2025",
+     "249",
+     "504",
+     "522",
+     "564",
+     "578",
+     "61",
+     "611",
+     "815",
+     "90"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Runs Scored",
+       "Balls Faced",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2007,
+        61,
+        74,
+        3
+       ],
+       [
+        2008,
+        522,
+        724,
+        28
+       ],
+       [
+        2009,
+        102,
+        155,
+        7
+       ],
+       [
+        2010,
+        504,
+        586,
+        14
+       ],
+       [
+        2011,
+        611,
+        739,
+        16
+       ],
+       [
+        2012,
+        168,
+        251,
+        13
+       ],
+       [
+        2013,
+        1196,
+        1480,
+        27
+       ],
+       [
+        2014,
+        578,
+        613,
+        12
+       ],
+       [
+        2015,
+        815,
+        854,
+        17
+       ],
+       [
+        2016,
+        564,
+        593,
+        10
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-starc-death-a": [
+   {
+    "answer_numbers": [
+     "2018",
+     "2019",
+     "2020",
+     "2023",
+     "4.96",
+     "7.35",
+     "7.83",
+     "8.43"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2018,
+        7.83,
+        94,
+        72,
+        5
+       ],
+       [
+        2019,
+        4.96,
+        86,
+        104,
+        8
+       ],
+       [
+        2020,
+        8.43,
+        215,
+        153,
+        10
+       ],
+       [
+        2023,
+        7.35,
+        147,
+        120,
+        9
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-trend-starc-death-b": [
+   {
+    "answer_numbers": [
+     "2018",
+     "2019",
+     "2020",
+     "2023",
+     "4.96",
+     "7.35",
+     "7.83",
+     "8.43"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Year",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        2018,
+        7.83,
+        94,
+        72,
+        5
+       ],
+       [
+        2019,
+        4.96,
+        86,
+        104,
+        8
+       ],
+       [
+        2020,
+        8.43,
+        215,
+        153,
+        10
+       ],
+       [
+        2023,
+        7.35,
+        147,
+        120,
+        9
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-unsupported-prediction-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "unsupported_capability",
+    "mode": "analysis",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-unsupported-prediction-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "unsupported_capability",
+    "mode": "analysis",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-unsupported-salary-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "unsupported_capability",
+    "mode": "analysis",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-unsupported-salary-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "unsupported_capability",
+    "mode": "analysis",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-unsupported-team-econ-a": [
+   {
+    "answer_numbers": [
+     "14793",
+     "4.55",
+     "60"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowling Team",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Namibia",
+        4.55,
+        11219,
+        14793,
+        56
+       ],
+       [
+        "Nepal",
+        4.64,
+        14031,
+        18144,
+        72
+       ],
+       [
+        "Oman",
+        4.68,
+        12262,
+        15716,
+        59
+       ],
+       [
+        "United States of America",
+        4.68,
+        13041,
+        16705,
+        63
+       ],
+       [
+        "Afghanistan",
+        4.74,
+        35277,
+        44660,
+        172
+       ],
+       [
+        "Papua New Guinea",
+        4.76,
+        13998,
+        17655,
+        66
+       ],
+       [
+        "Hong Kong",
+        4.79,
+        4871,
+        6100,
+        24
+       ],
+       [
+        "Scotland",
+        4.82,
+        29143,
+        36297,
+        144
+       ],
+       [
+        "Kenya",
+        4.9,
+        12739,
+        15586,
+        66
+       ],
+       [
+        "Canada",
+        4.93,
+        15487,
+        18831,
+        71
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-unsupported-team-econ-b": [
+   {
+    "answer_numbers": [
+     "4743",
+     "5.19",
+     "60"
+    ],
+    "clarification_options": [],
+    "failure_state": null,
+    "mode": "analysis",
+    "status": "supported",
+    "tables": [
+     {
+      "columns": [
+       "Bowling Team",
+       "Economy Rate",
+       "Runs Conceded",
+       "Legal Balls",
+       "Matches"
+      ],
+      "rows": [
+       [
+        "Zimbabwe",
+        5.19,
+        4099,
+        4743,
+        19
+       ],
+       [
+        "Scotland",
+        5.27,
+        210,
+        239,
+        1
+       ],
+       [
+        "South Africa",
+        5.3,
+        10752,
+        12175,
+        47
+       ],
+       [
+        "Ireland",
+        5.3,
+        624,
+        706,
+        3
+       ],
+       [
+        "Afghanistan",
+        5.37,
+        898,
+        1003,
+        4
+       ],
+       [
+        "Australia",
+        5.46,
+        17261,
+        18961,
+        70
+       ],
+       [
+        "West Indies",
+        5.49,
+        15684,
+        17151,
+        64
+       ],
+       [
+        "United Arab Emirates",
+        5.52,
+        104,
+        113,
+        1
+       ],
+       [
+        "Sri Lanka",
+        5.54,
+        21595,
+        23379,
+        90
+       ],
+       [
+        "Bangladesh",
+        5.55,
+        6538,
+        7068,
+        27
+       ]
+      ],
+      "title": "Semantic aggregate result"
+     }
+    ]
+   }
+  ],
+  "unseen-unsupported-weather-a": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "unsupported_capability",
+    "mode": "analysis",
+    "status": "unsupported",
+    "tables": []
+   }
+  ],
+  "unseen-unsupported-weather-b": [
+   {
+    "answer_numbers": [],
+    "clarification_options": [],
+    "failure_state": "unsupported_capability",
+    "mode": "analysis",
+    "status": "unsupported",
+    "tables": []
+   }
+  ]
+ },
+ "contract_sha256": "cfc73aed3bbd4e62577f4b426f6c2747557bb12ac0acc56aa31b7dec972f2e38",
+ "stable_version": "odi-stable-2026-09-30"
+}

@@ -1,0 +1,121 @@
+{
+  "backlog": [
+    "variant typed_operators saved-priority-8-2026-09-27/next-rohit-required-rate: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-babar-style-sr-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-babar-style-sr-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-boult-hand-wickets-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-boult-hand-wickets-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-bumrah-length-wickets-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-bumrah-length-wickets-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-buttler-shot-runs-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-buttler-shot-runs-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-klaasen-zone-boundary-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-klaasen-zone-boundary-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-kohli-line-runs-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-kohli-line-runs-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-rashid-phase-econ-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-rashid-phase-econ-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-rohit-length-dots-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-rohit-length-dots-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-starc-line-dots-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-starc-line-dots-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-warner-year-sr-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-break-warner-year-sr-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-context-trend-a: needs_model_call",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-context-trend-b: needs_model_call",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-split-bumrah-phase-econ-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-split-bumrah-phase-econ-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-split-kohli-phase-sr-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-split-miller-phase-boundary-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-bumrah-econ-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-kohli-sr-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-kohli-sr-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-rashid-wickets-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-rashid-wickets-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-rohit-runs-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-rohit-runs-b: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-starc-death-a: safe_refusal",
+    "variant generic_dimension_label saved-150-2026-09-27/unseen-trend-starc-death-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-babar-style-sr-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-babar-style-sr-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-boult-hand-wickets-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-boult-hand-wickets-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-bumrah-length-wickets-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-bumrah-length-wickets-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-buttler-shot-runs-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-buttler-shot-runs-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-klaasen-zone-boundary-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-klaasen-zone-boundary-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-kohli-line-runs-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-kohli-line-runs-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-rashid-phase-econ-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-rashid-phase-econ-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-rohit-length-dots-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-rohit-length-dots-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-starc-line-dots-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-starc-line-dots-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-warner-year-sr-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-break-warner-year-sr-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-context-trend-a: needs_model_call",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-context-trend-b: needs_model_call",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-bumrah-phase-econ-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-bumrah-phase-econ-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-klaasen-spin-type-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-klaasen-spin-type-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-kohli-phase-sr-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-kohli-phase-sr-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-miller-phase-boundary-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-split-team-phase-runrate-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-bumrah-econ-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-bumrah-econ-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-kohli-sr-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-rashid-wickets-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-rashid-wickets-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-rohit-runs-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-rohit-runs-b: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-starc-death-a: safe_refusal",
+    "variant generic_dimension_label fresh-150-d11f438/unseen-trend-starc-death-b: safe_refusal",
+    "variant generic_dimension_label fresh-priority-8-d6b5f08/next-kohli-dismissal-types: safe_refusal"
+  ],
+  "contract_drift": [],
+  "corpora": {
+    "fresh-150-d11f438": {
+      "match": 150
+    },
+    "fresh-priority-8-68e591f": {
+      "match": 8
+    },
+    "fresh-priority-8-d11f438": {
+      "match": 8
+    },
+    "fresh-priority-8-d6b5f08": {
+      "match": 8
+    },
+    "saved-150-2026-09-27": {
+      "match": 150
+    },
+    "saved-priority-8-2026-09-27": {
+      "match": 8
+    }
+  },
+  "failures": [],
+  "revision": "f5703adbf26e2f4ed87796330f02ad1cfa4d7d01",
+  "stable_version": "odi-stable-2026-09-30",
+  "variants": {
+    "generic_dimension_label": {
+      "match": 10,
+      "needs_model_call": 4,
+      "safe_refusal": 71
+    },
+    "restated_subject": {
+      "match": 190
+    },
+    "role_moved": {
+      "match": 96
+    },
+    "typed_operators": {
+      "match": 67,
+      "safe_refusal": 1
+    }
+  }
+}

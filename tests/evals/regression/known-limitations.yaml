@@ -1,0 +1,6 @@
+# Question families that CricAtlas cannot answer yet. Listed cases are
+# reported by scripts/release_regression.py but do not block a release.
+# Wrong answers are never excused here.
+#
+# Each entry: case_id, scope ("*", a corpus name, or "variant:<name>"), note.
+limitations: []

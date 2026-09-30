@@ -1,0 +1,106 @@
+{
+  "artifacts": {
+    "tests/evals/regression/golden-answers.json": "952ca0ed25dffaa72c3d6f6b6d94187a2eafc5c46ca977b04fb933737d070680",
+    "tests/evals/regression/known-limitations.yaml": "4abe9732a5fc4e24d32fc0073ea0b0237402e0ed33fa6492ae616fb3ac313379",
+    "tests/evals/regression/manifest.yaml": "0c5cacd2aa652e95cc09669e726cf6a00c0d7397a9dc2abdae64559bad0e454a",
+    "tests/evals/regression/stable-baseline.json": "72c10762d7171dc5b57e97730968855a533ef658093a40611fab2661f1d405fd",
+    "tests/evals/results/releases/issue-47/fresh-150-d11f438.jsonl": "0d85be055b799d1b81814b9baee69e6eb9f2cba527a539195bf1c0b96f711724",
+    "tests/evals/results/releases/issue-47/fresh-150-d11f438.summary.json": "8b648dc55c97cc01029c49baf9440f6292bd75b4cc335d776287465c81874855",
+    "tests/evals/results/releases/issue-47/fresh-priority-8-d11f438.jsonl": "1c1609d02b75adce0ccd268d5d9940e49720a24df62ed76b4517a7e1fc10e376",
+    "tests/evals/results/releases/issue-47/fresh-priority-8-d11f438.summary.json": "eb5c948b8728223c33b18f7fd98f306328a4f46526542af8a6acd650817653fa",
+    "tests/evals/results/releases/issue-47/fresh-priority-8-d6b5f08.jsonl": "a032ac0abd0f1e9e79579aa1390179a5e589ea6c1d6030054801a98886451d73",
+    "tests/evals/results/releases/issue-47/fresh-priority-8-d6b5f08.summary.json": "66393302bcd24f1e5979ad69a90e9bb3d3ea3046394717dada8643a997b96a70",
+    "tests/evals/results/releases/issue-47/fresh-priority-8.jsonl": "eebddb394f18f2b0bf68790c42890403329a733e101b257842a5de7fd379bf64",
+    "tests/evals/results/releases/issue-47/fresh-priority-8.summary.json": "ec4283793ea3ed15ec6ea255e68de5641510996b34ac353b7c531f5c4498b145",
+    "tests/evals/results/releases/issue-47/offline-replay-150.jsonl": "02312ebd408199b1952d06b28fd57a6780d78c5673d03ff5c74016fb97da5905",
+    "tests/evals/results/releases/issue-47/offline-replay-150.summary.json": "845a53f9c15acc3fe365e6ca4e895a97ce198d468aff2e4d8575f46136c90787",
+    "tests/evals/results/releases/issue-47/offline-replay-fresh-150-d11f438.jsonl": "5d06967a45fc535bc64c56316c5bf267f31f0083b4327319f93c3ab12611acf8",
+    "tests/evals/results/releases/issue-47/offline-replay-fresh-150-d11f438.summary.json": "5626cb0e5eca6d7fc4dc9f0098ef4d57988315f09ec894f969285491c496af3e",
+    "tests/evals/results/releases/issue-47/offline-replay-priority-8.jsonl": "e522bbde0a68cb0aa819bdcd4c451c0c4f1836b151550007821a1688bb957f54",
+    "tests/evals/results/releases/issue-47/offline-replay-priority-8.summary.json": "43728edb61ef5258c2000c25da1b2eb8fb19df20fec6344e8cfb7cf61f380e54",
+    "tests/evals/results/releases/issue-47/reference-checks.json": "4e27a7c72e7c77aa7096942f66063f3bae7e2848357c725555ccd0d824411954"
+  },
+  "benchmarks": {
+    "tests/benchmarks/odi_next_capabilities_v1.yaml": "252cdb106e1034ef3346d6709dd349ddd335a1b5e34fa74fcdfc6a87db5be451",
+    "tests/benchmarks/odi_unseen_paraphrases_v1.yaml": "c9c1d3b8cf7f3d5199dce5a67e3fdfac9681a055e0c15044e777ef1c909569f0"
+  },
+  "code_revision": "f5703adbf26e2f4ed87796330f02ad1cfa4d7d01",
+  "database": {
+    "path": "data/odi_analytics.duckdb",
+    "sha256": "80a3f500a7dfd1eedd7ca5fdca51febf190607217e3d8e2ff07ace2d026d2a08"
+  },
+  "extraction_prompt_sha256": "7ff61add9c1d793e04ea6e01d7d921a06131a674df3caff4f3d46f6c15a3b204",
+  "extraction_schema": {
+    "sha256": "15abb5a3c2cc3dd4bfa5e13e427d40e59d438d7cf50895325b9617e2406b48ef",
+    "version": 1
+  },
+  "frontend": {
+    "@playwright/test": "^1.54.2",
+    "next": "16.2.3",
+    "react": "19.0.0",
+    "react-dom": "19.0.0"
+  },
+  "gemini_transport": "REST via httpx (no Gemini SDK)",
+  "model_calls": {
+    "fresh-150-d11f438.jsonl": {
+      "model_attempts": 134,
+      "models": {
+        "gemini-2.5-flash": 132,
+        "gemini-2.5-pro": 2
+      },
+      "output_tokens": 12816,
+      "prompt_tokens": 20261,
+      "reasons": {
+        "ambiguous_meaning": 2,
+        "initial_meaning_extraction": 132
+      }
+    },
+    "fresh-priority-8-d11f438.jsonl": {
+      "model_attempts": 6,
+      "models": {
+        "gemini-2.5-flash": 6
+      },
+      "output_tokens": 531,
+      "prompt_tokens": 891,
+      "reasons": {
+        "initial_meaning_extraction": 6
+      }
+    },
+    "fresh-priority-8-d6b5f08.jsonl": {
+      "model_attempts": 6,
+      "models": {
+        "gemini-2.5-flash": 6
+      },
+      "output_tokens": 719,
+      "prompt_tokens": 891,
+      "reasons": {
+        "initial_meaning_extraction": 6
+      }
+    },
+    "fresh-priority-8.jsonl": {
+      "model_attempts": 6,
+      "models": {
+        "gemini-2.5-flash": 6
+      },
+      "output_tokens": 534,
+      "prompt_tokens": 891,
+      "reasons": {
+        "initial_meaning_extraction": 6
+      }
+    }
+  },
+  "previous_artifacts": {
+    "tests/evals/results/releases/current-2026-09-27/fresh-150.jsonl": "e88a93b76972e8c789361db38113cbd7b4e83cca25c4208cdbf0db1df8724163",
+    "tests/evals/results/releases/current-2026-09-27/priority-8.jsonl": "da154d9c759141fd432647d1aebc0be0e4a758a8e48d16819302a9eaf3174515"
+  },
+  "runtime": {
+    "PyYAML": "6.0.3",
+    "duckdb": "1.5.3",
+    "fastapi": "0.136.3",
+    "httpx": "0.28.1",
+    "pydantic": "2.13.4",
+    "pytest": "9.0.3",
+    "python": "3.12.13"
+  }
+}
+

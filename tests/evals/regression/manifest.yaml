@@ -1,0 +1,54 @@
+# Release-regression test list (scripts/release_regression.py).
+#
+# Corpora are saved production Gemini extractions, listed oldest first. Each
+# is replayed offline through the real chat/database path on every check.
+#   golden_source:  its verified answers define the golden answers when a new
+#                   stable version is recorded (only cases that pass their
+#                   benchmark, or are listed under intended_changes).
+#   variant_source: its extractions are also rewritten into meaning-preserving
+#                   variants.
+#   optional:       skipped when the capture file is not present.
+#   recorded_at_revision: commit whose extraction contract produced the corpus;
+#                   the newest one is compared with the current contract.
+corpora:
+  - name: saved-150-2026-09-27
+    benchmark: tests/benchmarks/odi_unseen_paraphrases_v1.yaml
+    capture: tests/evals/results/releases/current-2026-09-27/fresh-150.jsonl
+    optional: true
+    variant_source: true
+  - name: saved-priority-8-2026-09-27
+    benchmark: tests/benchmarks/odi_next_capabilities_v1.yaml
+    capture: tests/evals/results/releases/current-2026-09-27/priority-8.jsonl
+    optional: true
+    variant_source: true
+  - name: fresh-priority-8-68e591f
+    benchmark: tests/benchmarks/odi_next_capabilities_v1.yaml
+    capture: tests/evals/results/releases/issue-47/fresh-priority-8.jsonl
+    recorded_at_revision: 68e591f
+  - name: fresh-150-d11f438
+    benchmark: tests/benchmarks/odi_unseen_paraphrases_v1.yaml
+    capture: tests/evals/results/releases/issue-47/fresh-150-d11f438.jsonl
+    recorded_at_revision: d11f438
+    golden_source: true
+    variant_source: true
+  - name: fresh-priority-8-d11f438
+    benchmark: tests/benchmarks/odi_next_capabilities_v1.yaml
+    capture: tests/evals/results/releases/issue-47/fresh-priority-8-d11f438.jsonl
+    recorded_at_revision: d11f438
+  - name: fresh-priority-8-d6b5f08
+    benchmark: tests/benchmarks/odi_next_capabilities_v1.yaml
+    capture: tests/evals/results/releases/issue-47/fresh-priority-8-d6b5f08.jsonl
+    recorded_at_revision: d6b5f08
+    golden_source: true
+    variant_source: true
+
+# Frozen-benchmark expectations that the product intentionally no longer
+# meets, with independent database evidence. The frozen files stay unchanged.
+intended_changes:
+  - case_id: unseen-unsupported-team-econ-a
+    reason: >-
+      Issue 44 answers bowling-team economy (Zimbabwe 5.19 from 4,099 runs /
+      4,743 legal balls against India; scripts/verify_release_references.py)
+      instead of the old safe refusal.
+  - case_id: unseen-unsupported-team-econ-b
+    reason: Same as unseen-unsupported-team-econ-a.
