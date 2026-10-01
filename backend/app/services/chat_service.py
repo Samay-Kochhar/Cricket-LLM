@@ -116,6 +116,26 @@ class ChatService:
         conversation_state: ConversationState | None = None,
     ) -> ChatReply:
         normalized_message = message.strip()
+        venue_lookup_message = normalized_message
+        if conversation_state is not None and conversation_state.pending_clarification is not None:
+            pending = conversation_state.pending_clarification
+            if pending.kind in {"metric", "semantic"}:
+                resolved_message = self._resolve_pending_choice(normalized_message, pending)
+                if resolved_message is not None:
+                    normalized_message = self._contextualize_from_state(
+                        resolved_message,
+                        conversation_state.model_copy(update={"canonical_meaning": None}),
+                    )
+                elif not self._looks_like_new_question(normalized_message):
+                    return ChatReply(
+                        mode="clarification",
+                        message="Please choose one of the options for your previous question.",
+                        conversation_state=conversation_state,
+                        clarification_options=self._pending_options(pending),
+                    )
+                conversation_state = conversation_state.model_copy(
+                    update={"pending_clarification": None}
+                )
         resolved_pending_venues: list[str] | None = None
         if (
             conversation_state is not None
@@ -144,15 +164,24 @@ class ChatService:
         metric_clarification = standalone_metric_clarification(normalized_message)
         if metric_clarification is not None:
             clarification_message, clarification_options = metric_clarification
+            pending_state = (conversation_state or ConversationState()).model_copy(
+                update={
+                    "pending_clarification": PendingClarification(
+                        kind="metric",
+                        original_message=normalized_message,
+                        options=[option.label for option in clarification_options],
+                    )
+                }
+            )
             return ChatReply(
                 mode="clarification",
                 message=clarification_message,
-                conversation_state=conversation_state,
+                conversation_state=pending_state,
                 clarification_options=clarification_options,
             )
         venue_matches = (
             resolved_pending_venues
-            or self._venue_follow_up_matches(normalized_message)
+            or self._venue_follow_up_matches(venue_lookup_message)
             if conversation_state is not None
             else []
         )
@@ -227,6 +256,17 @@ class ChatService:
             )
         query_response = self._query(contextual_message, conversation_state)
         if query_response.clarification_question:
+            pending_state = conversation_state
+            if query_response.clarification_options:
+                pending_state = (conversation_state or ConversationState()).model_copy(
+                    update={
+                        "pending_clarification": PendingClarification(
+                            kind="semantic",
+                            original_message=contextual_message,
+                            options=list(query_response.clarification_options),
+                        )
+                    }
+                )
             return ChatReply(
                 mode="clarification",
                 message=query_response.clarification_question,
@@ -235,7 +275,7 @@ class ChatService:
                     ClarificationOption(label=option, message=f"{contextual_message} Use {option}.")
                     for option in query_response.clarification_options
                 ],
-                conversation_state=conversation_state,
+                conversation_state=pending_state,
             )
         entities = query_response.interpretation.entities
         query_class = QueryClass(query_response.interpretation.query_class)
@@ -330,6 +370,46 @@ class ChatService:
             and batting_context is None
             and bowling_context is None
         )
+
+    @staticmethod
+    def _looks_like_new_question(message: str) -> bool:
+        return bool(
+            re.match(
+                r"\s*(?:who|which|what|how|where|when|compare|show|list|rank|give|tell|find)\b",
+                message,
+                re.IGNORECASE,
+            )
+        )
+
+    @staticmethod
+    def _pending_options(pending: PendingClarification) -> list[ClarificationOption]:
+        if pending.kind == "metric":
+            clarification = standalone_metric_clarification(pending.original_message)
+            return clarification[1] if clarification is not None else []
+        return [
+            ClarificationOption(
+                label=option,
+                message=f"{pending.original_message} Use {option}.",
+            )
+            for option in pending.options
+        ]
+
+    @classmethod
+    def _resolve_pending_choice(
+        cls, message: str, pending: PendingClarification
+    ) -> str | None:
+        options = cls._pending_options(pending)
+        normalized = re.sub(r"[^a-z0-9]+", " ", message.lower()).strip()
+        for index, option in enumerate(options):
+            label = re.sub(r"[^a-z0-9]+", " ", option.label.lower()).strip()
+            answers = {label, option.message.lower().strip()}
+            if pending.kind == "metric" and len(options) == 2:
+                answers.add(label.split()[0])
+            if index < 3:
+                answers.update(({"first", "1"}, {"second", "2"}, {"third", "3"})[index])
+            if normalized in answers or message.lower().strip() == option.message.lower().strip():
+                return option.message
+        return None
 
     def _query(
         self,

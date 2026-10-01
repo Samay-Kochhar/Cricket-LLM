@@ -82,6 +82,26 @@ def test_candidate_explicit_filter_is_preserved_when_deterministic_candidate_omi
     assert resolution.meaning.filters == {"batter": "Virat Kohli", "innings": 2}
 
 
+@pytest.mark.parametrize("style", ["left-arm fast", "left arm fast bowling", "left-arm fast-medium"])
+def test_model_bowler_type_alias_resolves_to_left_arm_pace(style: str):
+    resolver = CanonicalMeaningResolver(available_players=[])
+    candidate = LanguageMeaningCandidate.model_validate(
+        {
+            "version": 1,
+            "family": "ranking",
+            "metric_concept": "batting strike rate",
+            "filters": [
+                {"concept": "bowler_type", "values": [style], "evidence": style},
+            ],
+        }
+    )
+    question = f"Who has the highest batting strike rate in the powerplay against {style}?"
+    resolution = resolver.resolve_candidate(question, None, candidate)
+    assert resolution.status == MeaningStatus.resolved
+    assert resolution.meaning.filters["phase"] == "powerplay"
+    assert resolution.meaning.filters["bowling_style"] == "left_arm_pace"
+
+
 # Independently specified meanings: these are not generated from planner output or
 # from the frozen unseen benchmark. Each pack varies both wording and model surface.
 MEANING_PACKS = [

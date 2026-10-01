@@ -154,6 +154,73 @@ def test_chat_specific_spin_subtype_is_not_broadened_by_generic_style_wording(
     assert result["interpretation"]["filters"]["bowling_style"] == "off_spin"
 
 
+@pytest.mark.parametrize(
+    ("choice", "metric", "leader"),
+    [
+        ("batting strike rate", "batting_strike_rate", "Matthew Hayden"),
+        ("bowling", "bowling_strike_rate", None),
+    ],
+)
+def test_short_metric_clarification_preserves_death_over_ranking(
+    client: TestClient, choice: str, metric: str, leader: str | None
+) -> None:
+    question = "Who has the highest strike rate in death overs?"
+    first = client.post("/api/chat", json={"message": question, "history": []})
+    first_payload = first.json()
+
+    assert first_payload["mode"] == "clarification"
+    assert first_payload["conversation_state"]["pending_clarification"] == {
+        "kind": "metric",
+        "original_message": question,
+        "options": ["Batting strike rate", "Bowling strike rate"],
+    }
+
+    second = client.post(
+        "/api/chat",
+        json={
+            "message": choice,
+            "history": [
+                {"role": "user", "content": question},
+                {"role": "assistant", "content": first_payload["message"]},
+            ],
+            "conversation_state": first_payload["conversation_state"],
+        },
+    )
+    payload = second.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] == "supported"
+    filters = payload["query_response"]["interpretation"]["filters"]
+    assert filters["phase"] == "death"
+    assert filters["semantic_metric"] == metric
+    assert payload["conversation_state"]["pending_clarification"] is None
+    if leader:
+        assert payload["query_response"]["tables"][0]["rows"][0][0] == leader
+
+
+@pytest.mark.parametrize(
+    "style",
+    ["left-arm pace", "left-arm fast", "left arm fast bowling", "left-arm fast-medium"],
+)
+def test_powerplay_batting_ranking_keeps_left_arm_fast_style(
+    client: TestClient, style: str
+) -> None:
+    response = client.post(
+        "/api/chat",
+        json={
+            "message": f"Who has the highest batting strike rate in the powerplay against {style}?",
+            "history": [],
+        },
+    )
+    payload = response.json()
+    assert payload["mode"] == "analysis"
+    assert payload["query_response"]["status"] == "supported"
+    filters = payload["query_response"]["interpretation"]["filters"]
+    assert filters["phase"] == "powerplay"
+    assert filters["bowling_style"] == "left_arm_pace"
+    assert filters["semantic_metric"] == "batting_strike_rate"
+    assert payload["query_response"]["tables"][0]["rows"][0][0] == "Shahid Afridi"
+
+
 def test_chat_false_shot_leaderboard_states_scope_and_uses_reliable_default_sample(
     client: TestClient,
 ) -> None:
@@ -836,11 +903,28 @@ def test_ambiguous_follow_up_clarifies_without_mutating_structured_state(
     assert second.status_code == 200
     payload = second.json()
     assert payload["mode"] == "clarification"
-    assert payload["conversation_state"] == original_state
+    assert payload["conversation_state"]["pending_clarification"] == {
+        "kind": "metric",
+        "original_message": "What about strike rate?",
+        "options": ["Batting strike rate", "Bowling strike rate"],
+    }
     assert [option["label"] for option in payload["clarification_options"]] == [
         "Batting strike rate",
         "Bowling strike rate",
     ]
+
+    resolved = client.post(
+        "/api/chat",
+        json={
+            "message": "batting",
+            "history": [],
+            "conversation_state": payload["conversation_state"],
+        },
+    ).json()
+    assert resolved["mode"] == "analysis"
+    assert resolved["query_response"]["status"] == "supported"
+    assert resolved["query_response"]["interpretation"]["filters"]["phase"] == "death"
+    assert resolved["query_response"]["interpretation"]["filters"]["batter"] == "Virat Kohli"
 
 
 def test_non_analytical_turn_does_not_break_the_next_structured_follow_up(

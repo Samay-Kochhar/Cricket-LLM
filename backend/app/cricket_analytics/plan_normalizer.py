@@ -87,6 +87,12 @@ VALUE_SYNONYMS = {
         "left-arm spin": "left_arm_spin",
         "left arm pace": "left_arm_pace",
         "left-arm pace": "left_arm_pace",
+        "left arm fast": "left_arm_pace",
+        "left-arm fast": "left_arm_pace",
+        "left arm fast bowling": "left_arm_pace",
+        "left-arm fast bowling": "left_arm_pace",
+        "left arm fast-medium": "left_arm_pace",
+        "left-arm fast-medium": "left_arm_pace",
         "leg spin": "leg_spin",
         "leg-spin": "leg_spin",
         "legbreak": "leg_spin",
@@ -154,7 +160,12 @@ WORD_NUMBERS = {
 def requested_bowling_style(lowered_question: str) -> str | None:
     matches: list[str] = []
     for style, aliases in (
-        ("left_arm_pace", ("left-arm pace", "left arm pace")),
+        (
+            "left_arm_pace",
+            (
+                "left-arm pace", "left arm pace", "left-arm fast", "left arm fast",
+            ),
+        ),
         ("left_arm_spin", ("left-arm spin", "left arm spin")),
         ("off_spin", ("off spin", "off-spin", "off spinner", "off-break", "off break")),
         ("leg_spin", ("leg spin", "leg-spin", "leg spinner", "leg-break", "leg break")),
