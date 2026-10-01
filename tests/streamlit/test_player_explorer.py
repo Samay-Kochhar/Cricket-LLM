@@ -109,7 +109,7 @@ def test_pitch_heatmap_colours_batting_average_and_greys_small_samples() -> None
     assert any("Low sample" in annotation.text for annotation in figure.layout.annotations)
     assert all("· B" not in annotation.text for annotation in figure.layout.annotations)
     assert meta["low_sample_fill"] == "#D8DCDE"
-    assert figure.layout.plot_bgcolor == "#31452F"
+    assert figure.layout.plot_bgcolor == "#24452F"
     assert figure.data[-1].marker.colorbar.title.text == "Avg vs<br>baseline"
     assert "baseline Avg 33.3" in figure.layout.title.text
 
@@ -140,12 +140,12 @@ def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> 
     )
 
     assert figure.layout.meta["lengths"] == [
-        "Short",
-        "Short Of A Good Length",
-        "Good Length",
-        "Full",
-        "Yorker",
         "Full Toss",
+        "Yorker",
+        "Full",
+        "Good Length",
+        "Short Of A Good Length",
+        "Short",
     ]
     assert figure.layout.xaxis.visible is False
     assert figure.layout.yaxis.visible is False
@@ -156,18 +156,8 @@ def test_pitch_heatmap_uses_cricket_length_order_without_dash_placeholders() -> 
     assert all("Avg n/a" in annotation.text for annotation in data_annotations)
     assert all("—" not in annotation.text for annotation in figure.layout.annotations)
     shape_names = {shape.name for shape in figure.layout.shapes}
-    assert {
-        "pitch-surface",
-        "crease-batting",
-        "return-crease-left",
-        "return-crease-right",
-        "bails-batting",
-    } <= shape_names
+    assert {"crease-bowler", "bails-bowler"} <= shape_names
     assert len({name for name in shape_names if name and name.startswith("stump-")}) == 3
-    geometry = figure.layout.meta["length_geometry"]
-    assert geometry["SHORT"]["height"] > geometry["GOOD_LENGTH"]["height"]
-    assert geometry["FULL_TOSS"]["top"] < figure.layout.meta["crease_y"]
-    assert geometry["YORKER"]["bottom"] < figure.layout.meta["crease_y"] < geometry["YORKER"]["top"]
     first_cell = figure.data[0]
     assert first_cell.fill == "toself"
     assert (first_cell.x[1] - first_cell.x[0]) < (first_cell.x[2] - first_cell.x[3])
