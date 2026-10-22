@@ -1,0 +1,1882 @@
+{
+  "observed_raw_names": 194,
+  "physical_ground_ids": 166,
+  "total_deliveries": 1364851,
+  "mapped_deliveries": 1364851,
+  "verified_identities": 166,
+  "verified_current_listings": 162,
+  "verified_archive_names": 0,
+  "corroborated_current_names": 3,
+  "verified_historical_names": 1,
+  "retained_separate_identities": 0,
+  "csv_inventory_matches_database": true,
+  "csv_delivery_and_match_counts_match_database": true,
+  "groups": [
+    {
+      "venue_id": "ae-abu-dhabi-zayed",
+      "display_name": "Zayed Cricket Stadium, Abu Dhabi",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sheikh Zayed Stadium, Abu Dhabi",
+        "Zayed Cricket Stadium, Abu Dhabi"
+      ],
+      "deliveries": 30433,
+      "distinct_matches": 53,
+      "sum_raw_distinct_matches": 53
+    },
+    {
+      "venue_id": "ae-sharjah-stadium",
+      "display_name": "Sharjah Cricket Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sharjah Cricket Association Stadium",
+        "Sharjah Cricket Stadium"
+      ],
+      "deliveries": 30109,
+      "distinct_matches": 57,
+      "sum_raw_distinct_matches": 57
+    },
+    {
+      "venue_id": "au-townsville-riverway",
+      "display_name": "Riverway Stadium, Townsville",
+      "legacy_ids": [],
+      "raw_names": [
+        "Riverway Stadium, Townsville",
+        "Tony Ireland Stadium, Townsville"
+      ],
+      "deliveries": 2360,
+      "distinct_matches": 5,
+      "sum_raw_distinct_matches": 5
+    },
+    {
+      "venue_id": "bd-chattogram-divisional",
+      "display_name": "Bir Shrestho Flight Lieutenant Matiur Rahman Cricket Stadium, Chattogram",
+      "legacy_ids": [],
+      "raw_names": [
+        "Chittagong Divisional Stadium",
+        "Zahur Ahmed Chowdhury Stadium, Chattogram",
+        "Zahur Ahmed Chowdhury Stadium, Chittagong"
+      ],
+      "deliveries": 16098,
+      "distinct_matches": 30,
+      "sum_raw_distinct_matches": 30
+    },
+    {
+      "venue_id": "gb-southampton-bowl",
+      "display_name": "Utilita Bowl, Southampton",
+      "legacy_ids": [],
+      "raw_names": [
+        "The Rose Bowl, Southampton"
+      ],
+      "deliveries": 13197,
+      "distinct_matches": 25,
+      "sum_raw_distinct_matches": 25
+    },
+    {
+      "venue_id": "ie-malahide-village",
+      "display_name": "The Village, Malahide, Dublin",
+      "legacy_ids": [],
+      "raw_names": [
+        "Malahide, Dublin",
+        "The Village, Malahide, Dublin"
+      ],
+      "deliveries": 10922,
+      "distinct_matches": 22,
+      "sum_raw_distinct_matches": 22
+    },
+    {
+      "venue_id": "in-ahmedabad-motera",
+      "display_name": "Narendra Modi Stadium, Ahmedabad",
+      "legacy_ids": [],
+      "raw_names": [
+        "Narendra Modi Stadium, Ahmedabad",
+        "Sardar Patel Stadium, Motera, Ahmedabad"
+      ],
+      "deliveries": 12153,
+      "distinct_matches": 22,
+      "sum_raw_distinct_matches": 22
+    },
+    {
+      "venue_id": "in-bengaluru-chinnaswamy",
+      "display_name": "M Chinnaswamy Stadium, Bengaluru",
+      "legacy_ids": [],
+      "raw_names": [
+        "M Chinnaswamy Stadium, Bangalore",
+        "M Chinnaswamy Stadium, Bengaluru"
+      ],
+      "deliveries": 9503,
+      "distinct_matches": 18,
+      "sum_raw_distinct_matches": 18
+    },
+    {
+      "venue_id": "in-delhi-kotla",
+      "display_name": "Arun Jaitley Stadium, Delhi",
+      "legacy_ids": [],
+      "raw_names": [
+        "Arun Jaitley Stadium, Delhi",
+        "Feroz Shah Kotla, Delhi"
+      ],
+      "deliveries": 9824,
+      "distinct_matches": 19,
+      "sum_raw_distinct_matches": 19
+    },
+    {
+      "venue_id": "in-indore-holkar",
+      "display_name": "Holkar Cricket Stadium, Indore",
+      "legacy_ids": [],
+      "raw_names": [
+        "Holkar Cricket Stadium, Indore",
+        "Maharani Usharaje Trust Cricket Ground, Indore"
+      ],
+      "deliveries": 4049,
+      "distinct_matches": 7,
+      "sum_raw_distinct_matches": 7
+    },
+    {
+      "venue_id": "in-mohali-pca",
+      "display_name": "Punjab Cricket Association IS Bindra Stadium, Mohali, Chandigarh",
+      "legacy_ids": [],
+      "raw_names": [
+        "Punjab Cricket Association IS Bindra Stadium, Mohali, Chandigarh",
+        "Punjab Cricket Association Stadium, Mohali, Chandigarh"
+      ],
+      "deliveries": 10462,
+      "distinct_matches": 18,
+      "sum_raw_distinct_matches": 18
+    },
+    {
+      "venue_id": "in-vadodara-ipcl",
+      "display_name": "Reliance Stadium, Vadodara",
+      "legacy_ids": [],
+      "raw_names": [
+        "Indian Petrochemicals Corporation Limited Sports Complex Ground, Vadodara",
+        "Reliance Stadium, Vadodara"
+      ],
+      "deliveries": 2701,
+      "distinct_matches": 5,
+      "sum_raw_distinct_matches": 5
+    },
+    {
+      "venue_id": "in-visakhapatnam-aca-vdca",
+      "display_name": "ACA-VDCA Cricket Stadium, Visakhapatnam",
+      "legacy_ids": [],
+      "raw_names": [
+        "Andhra Cricket Association-Visakhapatnam District Cricket Association Stadium, Visakhapatnam",
+        "Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium, Visakhapatnam"
+      ],
+      "deliveries": 5300,
+      "distinct_matches": 10,
+      "sum_raw_distinct_matches": 10
+    },
+    {
+      "venue_id": "lc-gros-islet-beausejour",
+      "display_name": "Daren Sammy National Cricket Stadium, Gros Islet, St Lucia",
+      "legacy_ids": [],
+      "raw_names": [
+        "Beausejour Stadium, Gros Islet, St Lucia",
+        "Darren Sammy National Cricket Stadium, Gros Islet, St Lucia"
+      ],
+      "deliveries": 12210,
+      "distinct_matches": 24,
+      "sum_raw_distinct_matches": 24
+    },
+    {
+      "venue_id": "nz-christchurch-lancaster",
+      "display_name": "Lancaster Park, Christchurch",
+      "legacy_ids": [],
+      "raw_names": [
+        "AMI Stadium, Christchurch",
+        "Jade Stadium, Christchurch"
+      ],
+      "deliveries": 5424,
+      "distinct_matches": 10,
+      "sum_raw_distinct_matches": 10
+    },
+    {
+      "venue_id": "nz-wellington-regional",
+      "display_name": "Hnry Stadium, Wellington",
+      "legacy_ids": [],
+      "raw_names": [
+        "Westpac Stadium, Wellington"
+      ],
+      "deliveries": 11422,
+      "distinct_matches": 22,
+      "sum_raw_distinct_matches": 22
+    },
+    {
+      "venue_id": "odi-ground-002",
+      "display_name": "Adelaide Oval",
+      "legacy_ids": [],
+      "raw_names": [
+        "Adelaide Oval"
+      ],
+      "deliveries": 17591,
+      "distinct_matches": 31,
+      "sum_raw_distinct_matches": 31
+    },
+    {
+      "venue_id": "odi-ground-003",
+      "display_name": "Affies Park, Windhoek",
+      "legacy_ids": [],
+      "raw_names": [
+        "Affies Park, Windhoek"
+      ],
+      "deliveries": 472,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-004",
+      "display_name": "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)",
+      "legacy_ids": [],
+      "raw_names": [
+        "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)"
+      ],
+      "deliveries": 13599,
+      "distinct_matches": 27,
+      "sum_raw_distinct_matches": 27
+    },
+    {
+      "venue_id": "odi-ground-005",
+      "display_name": "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)",
+      "legacy_ids": [],
+      "raw_names": [
+        "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)"
+      ],
+      "deliveries": 2633,
+      "distinct_matches": 5,
+      "sum_raw_distinct_matches": 5
+    },
+    {
+      "venue_id": "odi-ground-006",
+      "display_name": "Amini Park, Port Moresby",
+      "legacy_ids": [],
+      "raw_names": [
+        "Amini Park, Port Moresby"
+      ],
+      "deliveries": 4599,
+      "distinct_matches": 8,
+      "sum_raw_distinct_matches": 8
+    },
+    {
+      "venue_id": "odi-ground-008",
+      "display_name": "Antigua Recreation Ground, St John's, Antigua",
+      "legacy_ids": [],
+      "raw_names": [
+        "Antigua Recreation Ground, St John's, Antigua"
+      ],
+      "deliveries": 1156,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-009",
+      "display_name": "Imran Khan Stadium, Peshawar",
+      "legacy_ids": [],
+      "raw_names": [
+        "Arbab Niaz Stadium, Peshawar"
+      ],
+      "deliveries": 600,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-010",
+      "display_name": "Arnos Vale Playing Field, Kingstown, St Vincent",
+      "legacy_ids": [],
+      "raw_names": [
+        "Arnos Vale Ground, Kingstown, St Vincent"
+      ],
+      "deliveries": 4196,
+      "distinct_matches": 8,
+      "sum_raw_distinct_matches": 8
+    },
+    {
+      "venue_id": "odi-ground-012",
+      "display_name": "National Stadium, Dhaka",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bangabandhu National Stadium, Dhaka"
+      ],
+      "deliveries": 1715,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-013",
+      "display_name": "Barabati Stadium, Cuttack",
+      "legacy_ids": [],
+      "raw_names": [
+        "Barabati Stadium, Cuttack"
+      ],
+      "deliveries": 4672,
+      "distinct_matches": 8,
+      "sum_raw_distinct_matches": 8
+    },
+    {
+      "venue_id": "odi-ground-014",
+      "display_name": "Barsapara Cricket Stadium, Guwahati",
+      "legacy_ids": [],
+      "raw_names": [
+        "Barsapara Cricket Stadium, Guwahati"
+      ],
+      "deliveries": 1179,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-015",
+      "display_name": "Cello Basin Reserve, Wellington",
+      "legacy_ids": [],
+      "raw_names": [
+        "Basin Reserve, Wellington"
+      ],
+      "deliveries": 3206,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-016",
+      "display_name": "Bay Oval, Mount Maunganui",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bay Oval, Mount Maunganui"
+      ],
+      "deliveries": 6308,
+      "distinct_matches": 11,
+      "sum_raw_distinct_matches": 11
+    },
+    {
+      "venue_id": "odi-ground-017",
+      "display_name": "Bayuemas Cricket Oval, Kuala Lumpur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bayuemas Oval, Kuala Lumpur"
+      ],
+      "deliveries": 569,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-019",
+      "display_name": "Ninja Stadium, Hobart",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bellerive Oval, Hobart"
+      ],
+      "deliveries": 8913,
+      "distinct_matches": 16,
+      "sum_raw_distinct_matches": 16
+    },
+    {
+      "venue_id": "odi-ground-020",
+      "display_name": "Bert Sutcliffe Oval, Lincoln",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bert Sutcliffe Oval, Lincoln"
+      ],
+      "deliveries": 1142,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-021",
+      "display_name": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow"
+      ],
+      "deliveries": 4923,
+      "distinct_matches": 9,
+      "sum_raw_distinct_matches": 9
+    },
+    {
+      "venue_id": "odi-ground-022",
+      "display_name": "Boland Park, Paarl",
+      "legacy_ids": [],
+      "raw_names": [
+        "Boland Park, Paarl"
+      ],
+      "deliveries": 5216,
+      "distinct_matches": 9,
+      "sum_raw_distinct_matches": 9
+    },
+    {
+      "venue_id": "odi-ground-023",
+      "display_name": "Bourda, Georgetown, Guyana",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bourda, Georgetown, Guyana"
+      ],
+      "deliveries": 632,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-024",
+      "display_name": "Brabourne Stadium, Mumbai",
+      "legacy_ids": [],
+      "raw_names": [
+        "Brabourne Stadium, Mumbai"
+      ],
+      "deliveries": 2761,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-025",
+      "display_name": "Bready Cricket Club, Magheramason, Bready",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bready Cricket Club, Magheramason, Bready"
+      ],
+      "deliveries": 604,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-026",
+      "display_name": "Brian Lara Stadium, Tarouba, Trinidad",
+      "legacy_ids": [],
+      "raw_names": [
+        "Brian Lara Stadium, Tarouba, Trinidad"
+      ],
+      "deliveries": 527,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-027",
+      "display_name": "The Gabba, Brisbane",
+      "legacy_ids": [],
+      "raw_names": [
+        "Brisbane Cricket Ground, Woolloongabba, Brisbane"
+      ],
+      "deliveries": 13593,
+      "distinct_matches": 26,
+      "sum_raw_distinct_matches": 26
+    },
+    {
+      "venue_id": "odi-ground-028",
+      "display_name": "Buffalo Park, East London",
+      "legacy_ids": [],
+      "raw_names": [
+        "Buffalo Park, East London"
+      ],
+      "deliveries": 3164,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-029",
+      "display_name": "Bulawayo Athletic Club",
+      "legacy_ids": [],
+      "raw_names": [
+        "Bulawayo Athletic Club"
+      ],
+      "deliveries": 4405,
+      "distinct_matches": 8,
+      "sum_raw_distinct_matches": 8
+    },
+    {
+      "venue_id": "odi-ground-030",
+      "display_name": "Cambusdoon New Ground, Ayr",
+      "legacy_ids": [],
+      "raw_names": [
+        "Cambusdoon New Ground, Ayr"
+      ],
+      "deliveries": 2900,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-031",
+      "display_name": "Captain Roop Singh Stadium, Gwalior",
+      "legacy_ids": [],
+      "raw_names": [
+        "Captain Roop Singh Stadium, Gwalior"
+      ],
+      "deliveries": 1163,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-032",
+      "display_name": "Clontarf Cricket Ground, Dublin",
+      "legacy_ids": [
+        "odi-ground-038"
+      ],
+      "raw_names": [
+        "Castle Avenue, Dublin",
+        "Clontarf Cricket Club Ground, Dublin"
+      ],
+      "deliveries": 11453,
+      "distinct_matches": 23,
+      "sum_raw_distinct_matches": 23
+    },
+    {
+      "venue_id": "odi-ground-033",
+      "display_name": "Cazalys Stadium, Cairns",
+      "legacy_ids": [],
+      "raw_names": [
+        "Cazaly's Stadium, Cairns"
+      ],
+      "deliveries": 1694,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-034",
+      "display_name": "Central Broward Park & Broward County Stadium, Lauderhill",
+      "legacy_ids": [],
+      "raw_names": [
+        "Central Broward Regional Park Stadium Turf Ground, Lauderhill"
+      ],
+      "deliveries": 3193,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-037",
+      "display_name": "Civil Service Cricket Club, Stormont, Belfast",
+      "legacy_ids": [],
+      "raw_names": [
+        "Civil Service Cricket Club, Stormont, Belfast"
+      ],
+      "deliveries": 15338,
+      "distinct_matches": 32,
+      "sum_raw_distinct_matches": 32
+    },
+    {
+      "venue_id": "odi-ground-039",
+      "display_name": "Cobham Oval (New), Whangarei",
+      "legacy_ids": [],
+      "raw_names": [
+        "Cobham Oval (New), Whangarei"
+      ],
+      "deliveries": 1235,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-040",
+      "display_name": "Seat Unique Stadium, Bristol",
+      "legacy_ids": [],
+      "raw_names": [
+        "County Ground, Bristol"
+      ],
+      "deliveries": 6028,
+      "distinct_matches": 13,
+      "sum_raw_distinct_matches": 13
+    },
+    {
+      "venue_id": "odi-ground-041",
+      "display_name": "Ambassador Cruise Line Ground, Chelmsford",
+      "legacy_ids": [],
+      "raw_names": [
+        "County Ground, Chelmsford"
+      ],
+      "deliveries": 1575,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-045",
+      "display_name": "Marvel Stadium, Melbourne",
+      "legacy_ids": [],
+      "raw_names": [
+        "Docklands Stadium, Melbourne"
+      ],
+      "deliveries": 3465,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-047",
+      "display_name": "Dubai International Cricket Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Dubai International Cricket Stadium"
+      ],
+      "deliveries": 31659,
+      "distinct_matches": 58,
+      "sum_raw_distinct_matches": 58
+    },
+    {
+      "venue_id": "odi-ground-048",
+      "display_name": "Eden Gardens, Kolkata",
+      "legacy_ids": [],
+      "raw_names": [
+        "Eden Gardens, Kolkata"
+      ],
+      "deliveries": 8971,
+      "distinct_matches": 17,
+      "sum_raw_distinct_matches": 17
+    },
+    {
+      "venue_id": "odi-ground-049",
+      "display_name": "Eden Park, Auckland",
+      "legacy_ids": [],
+      "raw_names": [
+        "Eden Park, Auckland"
+      ],
+      "deliveries": 14686,
+      "distinct_matches": 29,
+      "sum_raw_distinct_matches": 29
+    },
+    {
+      "venue_id": "odi-ground-050",
+      "display_name": "Edgbaston, Birmingham",
+      "legacy_ids": [],
+      "raw_names": [
+        "Edgbaston, Birmingham"
+      ],
+      "deliveries": 13837,
+      "distinct_matches": 28,
+      "sum_raw_distinct_matches": 28
+    },
+    {
+      "venue_id": "odi-ground-052",
+      "display_name": "Forthill, Dundee",
+      "legacy_ids": [],
+      "raw_names": [
+        "Forthill, Dundee"
+      ],
+      "deliveries": 2855,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-053",
+      "display_name": "Gaddafi Stadium, Lahore",
+      "legacy_ids": [],
+      "raw_names": [
+        "Gaddafi Stadium, Lahore"
+      ],
+      "deliveries": 13477,
+      "distinct_matches": 24,
+      "sum_raw_distinct_matches": 24
+    },
+    {
+      "venue_id": "odi-ground-054",
+      "display_name": "Galle International Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Galle International Stadium"
+      ],
+      "deliveries": 997,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-056",
+      "display_name": "Grand Prairie Stadium, Dallas",
+      "legacy_ids": [],
+      "raw_names": [
+        "Grand Prairie Stadium, Dallas"
+      ],
+      "deliveries": 2668,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-057",
+      "display_name": "Grange Cricket Club Ground, Raeburn Place, Edinburgh",
+      "legacy_ids": [],
+      "raw_names": [
+        "Grange Cricket Club Ground, Raeburn Place, Edinburgh"
+      ],
+      "deliveries": 10093,
+      "distinct_matches": 20,
+      "sum_raw_distinct_matches": 20
+    },
+    {
+      "venue_id": "odi-ground-058",
+      "display_name": "Shaheed Vijay Singh Pathik Sports Complex Ground, Greater Noida",
+      "legacy_ids": [],
+      "raw_names": [
+        "Greater Noida Sports Complex Ground, Greater Noida"
+      ],
+      "deliveries": 2992,
+      "distinct_matches": 5,
+      "sum_raw_distinct_matches": 5
+    },
+    {
+      "venue_id": "odi-ground-059",
+      "display_name": "Green Park Stadium, Kanpur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Green Park, Kanpur"
+      ],
+      "deliveries": 3548,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-060",
+      "display_name": "Greenfield International Stadium, Thiruvananthapuram",
+      "legacy_ids": [],
+      "raw_names": [
+        "Greenfield International Stadium, Thiruvananthapuram"
+      ],
+      "deliveries": 729,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-061",
+      "display_name": "Gymkhana Club Ground, Nairobi",
+      "legacy_ids": [],
+      "raw_names": [
+        "Gymkhana Club Ground, Nairobi"
+      ],
+      "deliveries": 11159,
+      "distinct_matches": 22,
+      "sum_raw_distinct_matches": 22
+    },
+    {
+      "venue_id": "odi-ground-062",
+      "display_name": "Hagley Oval, Christchurch",
+      "legacy_ids": [],
+      "raw_names": [
+        "Hagley Oval, Christchurch"
+      ],
+      "deliveries": 8135,
+      "distinct_matches": 16,
+      "sum_raw_distinct_matches": 16
+    },
+    {
+      "venue_id": "odi-ground-063",
+      "display_name": "Harare Sports Club",
+      "legacy_ids": [],
+      "raw_names": [
+        "Harare Sports Club"
+      ],
+      "deliveries": 64676,
+      "distinct_matches": 121,
+      "sum_raw_distinct_matches": 121
+    },
+    {
+      "venue_id": "odi-ground-064",
+      "display_name": "Schiebroekse Park, Rotterdam",
+      "legacy_ids": [],
+      "raw_names": [
+        "Hazelaarweg, Rotterdam"
+      ],
+      "deliveries": 8199,
+      "distinct_matches": 15,
+      "sum_raw_distinct_matches": 15
+    },
+    {
+      "venue_id": "odi-ground-065",
+      "display_name": "Headingley, Leeds",
+      "legacy_ids": [],
+      "raw_names": [
+        "Headingley, Leeds"
+      ],
+      "deliveries": 10732,
+      "distinct_matches": 19,
+      "sum_raw_distinct_matches": 19
+    },
+    {
+      "venue_id": "odi-ground-066",
+      "display_name": "Himachal Pradesh Cricket Association Stadium, Dharamsala",
+      "legacy_ids": [],
+      "raw_names": [
+        "Himachal Pradesh Cricket Association Stadium, Dharamsala"
+      ],
+      "deliveries": 4833,
+      "distinct_matches": 9,
+      "sum_raw_distinct_matches": 9
+    },
+    {
+      "venue_id": "odi-ground-068",
+      "display_name": "ICC Academy Oval 1, Dubai",
+      "legacy_ids": [
+        "odi-ground-069"
+      ],
+      "raw_names": [
+        "ICC Academy, Dubai",
+        "ICC Global Cricket Academy, Dubai"
+      ],
+      "deliveries": 16107,
+      "distinct_matches": 29,
+      "sum_raw_distinct_matches": 29
+    },
+    {
+      "venue_id": "odi-ground-071",
+      "display_name": "Iqbal Stadium, Faisalabad",
+      "legacy_ids": [],
+      "raw_names": [
+        "Iqbal Stadium, Faisalabad"
+      ],
+      "deliveries": 2252,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "odi-ground-072",
+      "display_name": "JSCA International Stadium Complex, Ranchi",
+      "legacy_ids": [],
+      "raw_names": [
+        "JSCA International Stadium Complex, Ranchi"
+      ],
+      "deliveries": 3159,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-074",
+      "display_name": "Jaffery Sports Club Ground, Nairobi",
+      "legacy_ids": [],
+      "raw_names": [
+        "Jaffery Sports Club Ground, Nairobi"
+      ],
+      "deliveries": 1040,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-075",
+      "display_name": "Keenan Stadium, Jamshedpur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Keenan Stadium, Jamshedpur"
+      ],
+      "deliveries": 1139,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-076",
+      "display_name": "The Kia Oval, London",
+      "legacy_ids": [],
+      "raw_names": [
+        "Kennington Oval, London"
+      ],
+      "deliveries": 20742,
+      "distinct_matches": 39,
+      "sum_raw_distinct_matches": 39
+    },
+    {
+      "venue_id": "odi-ground-077",
+      "display_name": "Kensington Oval, Bridgetown, Barbados",
+      "legacy_ids": [],
+      "raw_names": [
+        "Kensington Oval, Bridgetown, Barbados"
+      ],
+      "deliveries": 15398,
+      "distinct_matches": 31,
+      "sum_raw_distinct_matches": 31
+    },
+    {
+      "venue_id": "odi-ground-078",
+      "display_name": "Shaheed Ria Gope Stadium, Fatullah",
+      "legacy_ids": [
+        "odi-ground-106"
+      ],
+      "raw_names": [
+        "Khan Shaheb Osman Ali Stadium, Fatullah",
+        "Narayanganj Osmani Stadium, Fatullah"
+      ],
+      "deliveries": 4640,
+      "distinct_matches": 8,
+      "sum_raw_distinct_matches": 8
+    },
+    {
+      "venue_id": "odi-ground-079",
+      "display_name": "Khulna Divisional Stadium",
+      "legacy_ids": [
+        "odi-ground-151"
+      ],
+      "raw_names": [
+        "Khulna Divisional Stadium",
+        "Sheikh Abu Naser Stadium, Khulna"
+      ],
+      "deliveries": 1622,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-080",
+      "display_name": "Hollywoodbets Kingsmead Stadium, Durban",
+      "legacy_ids": [],
+      "raw_names": [
+        "Kingsmead, Durban"
+      ],
+      "deliveries": 11387,
+      "distinct_matches": 23,
+      "sum_raw_distinct_matches": 23
+    },
+    {
+      "venue_id": "odi-ground-081",
+      "display_name": "Kinrara Academy Oval, Puchong",
+      "legacy_ids": [],
+      "raw_names": [
+        "Kinrara Academy Oval, Kuala Lumpur"
+      ],
+      "deliveries": 5246,
+      "distinct_matches": 10,
+      "sum_raw_distinct_matches": 10
+    },
+    {
+      "venue_id": "odi-ground-082",
+      "display_name": "Lord's, London",
+      "legacy_ids": [],
+      "raw_names": [
+        "Lord's, London"
+      ],
+      "deliveries": 17942,
+      "distinct_matches": 32,
+      "sum_raw_distinct_matches": 32
+    },
+    {
+      "venue_id": "odi-ground-085",
+      "display_name": "MA Aziz Stadium, Chattogram",
+      "legacy_ids": [],
+      "raw_names": [
+        "MA Aziz Stadium, Chittagong"
+      ],
+      "deliveries": 1201,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-086",
+      "display_name": "MA Chidambaram Stadium, Chepauk, Chennai",
+      "legacy_ids": [],
+      "raw_names": [
+        "MA Chidambaram Stadium, Chepauk, Chennai"
+      ],
+      "deliveries": 10312,
+      "distinct_matches": 19,
+      "sum_raw_distinct_matches": 19
+    },
+    {
+      "venue_id": "odi-ground-087",
+      "display_name": "Madhavrao Scindia Cricket Ground, Rajkot",
+      "legacy_ids": [],
+      "raw_names": [
+        "Madhavrao Scindia Cricket Ground, Rajkot"
+      ],
+      "deliveries": 2273,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "odi-ground-089",
+      "display_name": "Maharashtra Cricket Association Stadium, Pune",
+      "legacy_ids": [],
+      "raw_names": [
+        "Maharashtra Cricket Association Stadium, Pune"
+      ],
+      "deliveries": 6939,
+      "distinct_matches": 12,
+      "sum_raw_distinct_matches": 12
+    },
+    {
+      "venue_id": "odi-ground-090",
+      "display_name": "Mahinda Rajapaksa International Cricket Stadium, Sooriyawewa, Hambantota",
+      "legacy_ids": [],
+      "raw_names": [
+        "Mahinda Rajapaksa International Cricket Stadium, Sooriyawewa, Hambantota"
+      ],
+      "deliveries": 12160,
+      "distinct_matches": 26,
+      "sum_raw_distinct_matches": 26
+    },
+    {
+      "venue_id": "odi-ground-093",
+      "display_name": "Mannofield Park, Aberdeen",
+      "legacy_ids": [],
+      "raw_names": [
+        "Mannofield Park, Aberdeen"
+      ],
+      "deliveries": 11569,
+      "distinct_matches": 21,
+      "sum_raw_distinct_matches": 21
+    },
+    {
+      "venue_id": "odi-ground-094",
+      "display_name": "Manuka Oval, Canberra",
+      "legacy_ids": [],
+      "raw_names": [
+        "Manuka Oval, Canberra"
+      ],
+      "deliveries": 5247,
+      "distinct_matches": 10,
+      "sum_raw_distinct_matches": 10
+    },
+    {
+      "venue_id": "odi-ground-095",
+      "display_name": "Maple Leaf North-West Ground, King City",
+      "legacy_ids": [
+        "odi-ground-096"
+      ],
+      "raw_names": [
+        "Maple Leaf North-West Ground, King City",
+        "Maple Leaf North-West Ground, Toronto"
+      ],
+      "deliveries": 7020,
+      "distinct_matches": 15,
+      "sum_raw_distinct_matches": 15
+    },
+    {
+      "venue_id": "odi-ground-097",
+      "display_name": "Marrara Stadium, Darwin",
+      "legacy_ids": [],
+      "raw_names": [
+        "Marrara Cricket Ground, Darwin"
+      ],
+      "deliveries": 1334,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-098",
+      "display_name": "McLean Park, Napier",
+      "legacy_ids": [],
+      "raw_names": [
+        "McLean Park, Napier"
+      ],
+      "deliveries": 12128,
+      "distinct_matches": 22,
+      "sum_raw_distinct_matches": 22
+    },
+    {
+      "venue_id": "odi-ground-099",
+      "display_name": "Melbourne Cricket Ground",
+      "legacy_ids": [],
+      "raw_names": [
+        "Melbourne Cricket Ground"
+      ],
+      "deliveries": 19873,
+      "distinct_matches": 35,
+      "sum_raw_distinct_matches": 35
+    },
+    {
+      "venue_id": "odi-ground-100",
+      "display_name": "Tin Kwong Road Recreation Ground, Hong Kong",
+      "legacy_ids": [],
+      "raw_names": [
+        "Mission Road Ground, Mong Kok, Hong Kong"
+      ],
+      "deliveries": 2183,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "odi-ground-101",
+      "display_name": "Mombasa Sports Club Ground",
+      "legacy_ids": [],
+      "raw_names": [
+        "Mombasa Sports Club Ground"
+      ],
+      "deliveries": 2268,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "odi-ground-102",
+      "display_name": "Moosa Cricket Stadium, Pearland",
+      "legacy_ids": [],
+      "raw_names": [
+        "Moosa Cricket Stadium, Pearland"
+      ],
+      "deliveries": 6920,
+      "distinct_matches": 12,
+      "sum_raw_distinct_matches": 12
+    },
+    {
+      "venue_id": "odi-ground-103",
+      "display_name": "Mulpani International Cricket Ground, Kathmandu",
+      "legacy_ids": [],
+      "raw_names": [
+        "Mulpani Cricket Ground"
+      ],
+      "deliveries": 564,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-104",
+      "display_name": "Multan Cricket Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Multan Cricket Stadium"
+      ],
+      "deliveries": 4854,
+      "distinct_matches": 9,
+      "sum_raw_distinct_matches": 9
+    },
+    {
+      "venue_id": "odi-ground-105",
+      "display_name": "Nahar Singh Cricket Stadium, Faridabad",
+      "legacy_ids": [],
+      "raw_names": [
+        "Nahar Singh Stadium, Faridabad"
+      ],
+      "deliveries": 611,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-108",
+      "display_name": "National Cricket Stadium, St George's, Grenada",
+      "legacy_ids": [],
+      "raw_names": [
+        "National Cricket Stadium, St George's, Grenada"
+      ],
+      "deliveries": 8162,
+      "distinct_matches": 15,
+      "sum_raw_distinct_matches": 15
+    },
+    {
+      "venue_id": "odi-ground-109",
+      "display_name": "National Bank Stadium, Karachi",
+      "legacy_ids": [],
+      "raw_names": [
+        "National Stadium, Karachi"
+      ],
+      "deliveries": 14525,
+      "distinct_matches": 26,
+      "sum_raw_distinct_matches": 26
+    },
+    {
+      "venue_id": "odi-ground-110",
+      "display_name": "Pandit Jawaharlal Nehru Stadium, Fatorda, Margao",
+      "legacy_ids": [],
+      "raw_names": [
+        "Nehru Stadium, Fatorda, Margao"
+      ],
+      "deliveries": 1213,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-111",
+      "display_name": "Nehru Stadium, Guwahati",
+      "legacy_ids": [],
+      "raw_names": [
+        "Nehru Stadium, Guwahati"
+      ],
+      "deliveries": 1719,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-112",
+      "display_name": "Jawaharlal Nehru Stadium, Kochi",
+      "legacy_ids": [],
+      "raw_names": [
+        "Nehru Stadium, Kochi"
+      ],
+      "deliveries": 3401,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-113",
+      "display_name": "Nehru Stadium, Pune",
+      "legacy_ids": [],
+      "raw_names": [
+        "Nehru Stadium, Pune"
+      ],
+      "deliveries": 585,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-115",
+      "display_name": "World Sports Betting Newlands Cricket Ground, Cape Town",
+      "legacy_ids": [],
+      "raw_names": [
+        "Newlands, Cape Town"
+      ],
+      "deliveries": 11291,
+      "distinct_matches": 20,
+      "sum_raw_distinct_matches": 20
+    },
+    {
+      "venue_id": "odi-ground-116",
+      "display_name": "Niaz Stadium, Hyderabad, Sind",
+      "legacy_ids": [],
+      "raw_names": [
+        "Niaz Stadium, Hyderabad, Sind"
+      ],
+      "deliveries": 590,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-118",
+      "display_name": "Old Hararians, Harare",
+      "legacy_ids": [],
+      "raw_names": [
+        "Old Hararians, Harare"
+      ],
+      "deliveries": 2518,
+      "distinct_matches": 5,
+      "sum_raw_distinct_matches": 5
+    },
+    {
+      "venue_id": "odi-ground-119",
+      "display_name": "Emirates Old Trafford, Manchester",
+      "legacy_ids": [],
+      "raw_names": [
+        "Old Trafford, Manchester"
+      ],
+      "deliveries": 11988,
+      "distinct_matches": 23,
+      "sum_raw_distinct_matches": 23
+    },
+    {
+      "venue_id": "odi-ground-120",
+      "display_name": "P Sara Oval, Colombo",
+      "legacy_ids": [],
+      "raw_names": [
+        "P Saravanamuttu Stadium, Colombo"
+      ],
+      "deliveries": 555,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-121",
+      "display_name": "Pallekele International Cricket Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Pallekele International Cricket Stadium"
+      ],
+      "deliveries": 21741,
+      "distinct_matches": 44,
+      "sum_raw_distinct_matches": 44
+    },
+    {
+      "venue_id": "odi-ground-122",
+      "display_name": "Optus Stadium, Perth",
+      "legacy_ids": [],
+      "raw_names": [
+        "Perth Stadium"
+      ],
+      "deliveries": 1342,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-123",
+      "display_name": "Guyana National Stadium, Providence, Guyana",
+      "legacy_ids": [],
+      "raw_names": [
+        "Providence Stadium, Guyana"
+      ],
+      "deliveries": 13288,
+      "distinct_matches": 25,
+      "sum_raw_distinct_matches": 25
+    },
+    {
+      "venue_id": "odi-ground-126",
+      "display_name": "Queen's Park Oval, Port of Spain, Trinidad",
+      "legacy_ids": [],
+      "raw_names": [
+        "Queen's Park Oval, Port of Spain, Trinidad"
+      ],
+      "deliveries": 14103,
+      "distinct_matches": 28,
+      "sum_raw_distinct_matches": 28
+    },
+    {
+      "venue_id": "odi-ground-127",
+      "display_name": "Queens Sports Club, Bulawayo",
+      "legacy_ids": [],
+      "raw_names": [
+        "Queens Sports Club, Bulawayo"
+      ],
+      "deliveries": 31362,
+      "distinct_matches": 60,
+      "sum_raw_distinct_matches": 60
+    },
+    {
+      "venue_id": "odi-ground-128",
+      "display_name": "Sir John Davies Oval, Queenstown",
+      "legacy_ids": [],
+      "raw_names": [
+        "Queenstown Events Centre"
+      ],
+      "deliveries": 2473,
+      "distinct_matches": 7,
+      "sum_raw_distinct_matches": 7
+    },
+    {
+      "venue_id": "odi-ground-129",
+      "display_name": "R Premadasa Stadium, Colombo",
+      "legacy_ids": [],
+      "raw_names": [
+        "R Premadasa Stadium, Colombo"
+      ],
+      "deliveries": 42892,
+      "distinct_matches": 82,
+      "sum_raw_distinct_matches": 82
+    },
+    {
+      "venue_id": "odi-ground-130",
+      "display_name": "Rajiv Gandhi International Cricket Stadium, Dehradun",
+      "legacy_ids": [],
+      "raw_names": [
+        "Rajiv Gandhi International Cricket Stadium, Dehradun"
+      ],
+      "deliveries": 2563,
+      "distinct_matches": 5,
+      "sum_raw_distinct_matches": 5
+    },
+    {
+      "venue_id": "odi-ground-131",
+      "display_name": "Rajiv Gandhi International Stadium, Uppal, Hyderabad",
+      "legacy_ids": [],
+      "raw_names": [
+        "Rajiv Gandhi International Stadium, Uppal, Hyderabad"
+      ],
+      "deliveries": 5918,
+      "distinct_matches": 10,
+      "sum_raw_distinct_matches": 10
+    },
+    {
+      "venue_id": "odi-ground-132",
+      "display_name": "Rangiri Dambulla International Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Rangiri Dambulla International Stadium"
+      ],
+      "deliveries": 20035,
+      "distinct_matches": 40,
+      "sum_raw_distinct_matches": 40
+    },
+    {
+      "venue_id": "odi-ground-133",
+      "display_name": "Rawalpindi Cricket Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Rawalpindi Cricket Stadium"
+      ],
+      "deliveries": 4706,
+      "distinct_matches": 8,
+      "sum_raw_distinct_matches": 8
+    },
+    {
+      "venue_id": "odi-ground-135",
+      "display_name": "Banks Homes Riverside, Chester-le-Street",
+      "legacy_ids": [],
+      "raw_names": [
+        "Riverside Ground, Chester-le-Street"
+      ],
+      "deliveries": 8633,
+      "distinct_matches": 16,
+      "sum_raw_distinct_matches": 16
+    },
+    {
+      "venue_id": "odi-ground-137",
+      "display_name": "Ruaraka Sports Club Ground, Nairobi",
+      "legacy_ids": [],
+      "raw_names": [
+        "Ruaraka Sports Club Ground, Nairobi"
+      ],
+      "deliveries": 554,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-138",
+      "display_name": "Sabina Park, Kingston, Jamaica",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sabina Park, Kingston, Jamaica"
+      ],
+      "deliveries": 14567,
+      "distinct_matches": 26,
+      "sum_raw_distinct_matches": 26
+    },
+    {
+      "venue_id": "odi-ground-140",
+      "display_name": "Niranjan Shah Stadium, Rajkot",
+      "legacy_ids": [],
+      "raw_names": [
+        "Saurashtra Cricket Association Stadium, Rajkot"
+      ],
+      "deliveries": 2451,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "odi-ground-141",
+      "display_name": "Sawai Mansingh Stadium, Jaipur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sawai Mansingh Stadium, Jaipur"
+      ],
+      "deliveries": 6199,
+      "distinct_matches": 11,
+      "sum_raw_distinct_matches": 11
+    },
+    {
+      "venue_id": "odi-ground-142",
+      "display_name": "Saxton Oval, Nelson",
+      "legacy_ids": [],
+      "raw_names": [
+        "Saxton Oval, Nelson"
+      ],
+      "deliveries": 6309,
+      "distinct_matches": 12,
+      "sum_raw_distinct_matches": 12
+    },
+    {
+      "venue_id": "odi-ground-143",
+      "display_name": "Sector 16 Stadium, Chandigarh",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sector 16 Stadium, Chandigarh"
+      ],
+      "deliveries": 629,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-144",
+      "display_name": "Seddon Park, Hamilton",
+      "legacy_ids": [],
+      "raw_names": [
+        "Seddon Park, Hamilton"
+      ],
+      "deliveries": 13510,
+      "distinct_matches": 27,
+      "sum_raw_distinct_matches": 27
+    },
+    {
+      "venue_id": "odi-ground-147",
+      "display_name": "Shaheed Chandu Stadium, Bogra",
+      "legacy_ids": [],
+      "raw_names": [
+        "Shaheed Chandu Stadium, Bogra"
+      ],
+      "deliveries": 2175,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "odi-ground-148",
+      "display_name": "Shaheed Veer Narayan Singh International Stadium, Raipur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Shaheed Veer Narayan Singh International Stadium, Raipur"
+      ],
+      "deliveries": 333,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-153",
+      "display_name": "Sheikhupura Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sheikhupura Stadium"
+      ],
+      "deliveries": 484,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-154",
+      "display_name": "Sher-e-Bangla National Cricket Stadium, Mirpur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Shere Bangla National Stadium, Mirpur"
+      ],
+      "deliveries": 63849,
+      "distinct_matches": 119,
+      "sum_raw_distinct_matches": 119
+    },
+    {
+      "venue_id": "odi-ground-155",
+      "display_name": "Sinhalese Sports Club Ground, Colombo",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sinhalese Sports Club Ground, Colombo"
+      ],
+      "deliveries": 3919,
+      "distinct_matches": 8,
+      "sum_raw_distinct_matches": 8
+    },
+    {
+      "venue_id": "odi-ground-156",
+      "display_name": "Sir Vivian Richards Stadium, North Sound, Antigua",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sir Vivian Richards Stadium, North Sound, Antigua"
+      ],
+      "deliveries": 13328,
+      "distinct_matches": 24,
+      "sum_raw_distinct_matches": 24
+    },
+    {
+      "venue_id": "odi-ground-157",
+      "display_name": "Sophia Gardens, Cardiff",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sophia Gardens, Cardiff"
+      ],
+      "deliveries": 12230,
+      "distinct_matches": 26,
+      "sum_raw_distinct_matches": 26
+    },
+    {
+      "venue_id": "odi-ground-158",
+      "display_name": "Sportpark Het Schootsveld, Deventer",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sportpark Het Schootsveld, Deventer"
+      ],
+      "deliveries": 1172,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-159",
+      "display_name": "Sportpark Maarschalkerweerd, Utrecht",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sportpark Maarschalkerweerd, Utrecht"
+      ],
+      "deliveries": 1787,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-160",
+      "display_name": "Sportpark Thurlede, Schiedam",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sportpark Thurlede, Schiedam"
+      ],
+      "deliveries": 955,
+      "distinct_matches": 2,
+      "sum_raw_distinct_matches": 2
+    },
+    {
+      "venue_id": "odi-ground-161",
+      "display_name": "Sportpark Westvliet, The Hague",
+      "legacy_ids": [
+        "odi-ground-162"
+      ],
+      "raw_names": [
+        "Sportpark Westvliet, The Hague",
+        "Sportpark Westvliet, Voorburg"
+      ],
+      "deliveries": 4984,
+      "distinct_matches": 9,
+      "sum_raw_distinct_matches": 9
+    },
+    {
+      "venue_id": "odi-ground-165",
+      "display_name": "The Spitfire Ground, Canterbury",
+      "legacy_ids": [],
+      "raw_names": [
+        "St Lawrence Ground, Canterbury"
+      ],
+      "deliveries": 611,
+      "distinct_matches": 1,
+      "sum_raw_distinct_matches": 1
+    },
+    {
+      "venue_id": "odi-ground-166",
+      "display_name": "SuperSport Park, Centurion",
+      "legacy_ids": [],
+      "raw_names": [
+        "SuperSport Park, Centurion"
+      ],
+      "deliveries": 20039,
+      "distinct_matches": 39,
+      "sum_raw_distinct_matches": 39
+    },
+    {
+      "venue_id": "odi-ground-167",
+      "display_name": "Sydney Cricket Ground",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sydney Cricket Ground"
+      ],
+      "deliveries": 21849,
+      "distinct_matches": 42,
+      "sum_raw_distinct_matches": 42
+    },
+    {
+      "venue_id": "odi-ground-168",
+      "display_name": "Sylhet International Cricket Stadium",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sylhet International Cricket Stadium"
+      ],
+      "deliveries": 3254,
+      "distinct_matches": 7,
+      "sum_raw_distinct_matches": 7
+    },
+    {
+      "venue_id": "odi-ground-169",
+      "display_name": "Takashinga Sports Club, Highfield, Harare",
+      "legacy_ids": [],
+      "raw_names": [
+        "Takashinga Sports Club, Highfield, Harare"
+      ],
+      "deliveries": 5068,
+      "distinct_matches": 9,
+      "sum_raw_distinct_matches": 9
+    },
+    {
+      "venue_id": "odi-ground-170",
+      "display_name": "The Cooper Associates County Ground, Taunton",
+      "legacy_ids": [],
+      "raw_names": [
+        "The Cooper Associates County Ground, Taunton"
+      ],
+      "deliveries": 1609,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-174",
+      "display_name": "Titwood, Glasgow",
+      "legacy_ids": [],
+      "raw_names": [
+        "Titwood, Glasgow"
+      ],
+      "deliveries": 2857,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "odi-ground-176",
+      "display_name": "Toronto Cricket, Skating and Curling Club",
+      "legacy_ids": [],
+      "raw_names": [
+        "Toronto Cricket, Skating and Curling Club"
+      ],
+      "deliveries": 1820,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "odi-ground-177",
+      "display_name": "Trent Bridge, Nottingham",
+      "legacy_ids": [],
+      "raw_names": [
+        "Trent Bridge, Nottingham"
+      ],
+      "deliveries": 12536,
+      "distinct_matches": 24,
+      "sum_raw_distinct_matches": 24
+    },
+    {
+      "venue_id": "odi-ground-178",
+      "display_name": "Tribhuvan University International Cricket Ground, Kirtipur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Tribhuvan University International Cricket Ground, Kirtipur"
+      ],
+      "deliveries": 17675,
+      "distinct_matches": 34,
+      "sum_raw_distinct_matches": 34
+    },
+    {
+      "venue_id": "odi-ground-179",
+      "display_name": "United Cricket Club Ground, Windhoek",
+      "legacy_ids": [],
+      "raw_names": [
+        "United Cricket Club Ground, Windhoek"
+      ],
+      "deliveries": 10005,
+      "distinct_matches": 19,
+      "sum_raw_distinct_matches": 19
+    },
+    {
+      "venue_id": "odi-ground-180",
+      "display_name": "University of Otago Oval, Dunedin",
+      "legacy_ids": [],
+      "raw_names": [
+        "University Oval, Dunedin"
+      ],
+      "deliveries": 6214,
+      "distinct_matches": 12,
+      "sum_raw_distinct_matches": 12
+    },
+    {
+      "venue_id": "odi-ground-181",
+      "display_name": "VRA Ground, Amstelveen",
+      "legacy_ids": [],
+      "raw_names": [
+        "VRA Ground, Amstelveen"
+      ],
+      "deliveries": 10933,
+      "distinct_matches": 19,
+      "sum_raw_distinct_matches": 19
+    },
+    {
+      "venue_id": "odi-ground-182",
+      "display_name": "VCA Civil Lines Stadium, Nagpur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Vidarbha Cricket Association Ground, Nagpur"
+      ],
+      "deliveries": 1767,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-183",
+      "display_name": "Vidarbha Cricket Association Stadium, Jamtha, Nagpur",
+      "legacy_ids": [],
+      "raw_names": [
+        "Vidarbha Cricket Association Stadium, Jamtha, Nagpur"
+      ],
+      "deliveries": 5786,
+      "distinct_matches": 10,
+      "sum_raw_distinct_matches": 10
+    },
+    {
+      "venue_id": "odi-ground-184",
+      "display_name": "Wanderers Cricket Ground, Windhoek",
+      "legacy_ids": [],
+      "raw_names": [
+        "Wanderers Cricket Ground, Windhoek"
+      ],
+      "deliveries": 9462,
+      "distinct_matches": 17,
+      "sum_raw_distinct_matches": 17
+    },
+    {
+      "venue_id": "odi-ground-185",
+      "display_name": "Wankhede Stadium, Mumbai",
+      "legacy_ids": [],
+      "raw_names": [
+        "Wankhede Stadium, Mumbai"
+      ],
+      "deliveries": 8270,
+      "distinct_matches": 15,
+      "sum_raw_distinct_matches": 15
+    },
+    {
+      "venue_id": "odi-ground-186",
+      "display_name": "Warner Park, Basseterre, St Kitts",
+      "legacy_ids": [],
+      "raw_names": [
+        "Warner Park, Basseterre, St Kitts"
+      ],
+      "deliveries": 11658,
+      "distinct_matches": 21,
+      "sum_raw_distinct_matches": 21
+    },
+    {
+      "venue_id": "odi-ground-187",
+      "display_name": "West End Park International Cricket Stadium, Doha",
+      "legacy_ids": [],
+      "raw_names": [
+        "West End Park International Cricket Stadium, Doha"
+      ],
+      "deliveries": 1781,
+      "distinct_matches": 3,
+      "sum_raw_distinct_matches": 3
+    },
+    {
+      "venue_id": "odi-ground-188",
+      "display_name": "WACA Ground, Perth",
+      "legacy_ids": [],
+      "raw_names": [
+        "Western Australia Cricket Association Ground, Perth"
+      ],
+      "deliveries": 14465,
+      "distinct_matches": 26,
+      "sum_raw_distinct_matches": 26
+    },
+    {
+      "venue_id": "odi-ground-190",
+      "display_name": "Willowmoore Park, Benoni",
+      "legacy_ids": [],
+      "raw_names": [
+        "Willowmoore Park, Benoni"
+      ],
+      "deliveries": 7306,
+      "distinct_matches": 14,
+      "sum_raw_distinct_matches": 14
+    },
+    {
+      "venue_id": "odi-ground-191",
+      "display_name": "Windsor Park, Roseau, Dominica",
+      "legacy_ids": [],
+      "raw_names": [
+        "Windsor Park, Roseau, Dominica"
+      ],
+      "deliveries": 2316,
+      "distinct_matches": 4,
+      "sum_raw_distinct_matches": 4
+    },
+    {
+      "venue_id": "za-bloemfontein-oval",
+      "display_name": "Mangaung Oval, Bloemfontein",
+      "legacy_ids": [],
+      "raw_names": [
+        "Chevrolet Park, Bloemfontein",
+        "Goodyear Park, Bloemfontein",
+        "Mangaung Oval, Bloemfontein",
+        "OUTsurance Oval, Bloemfontein"
+      ],
+      "deliveries": 7967,
+      "distinct_matches": 14,
+      "sum_raw_distinct_matches": 14
+    },
+    {
+      "venue_id": "za-gqeberha-st-georges",
+      "display_name": "St George's Park, Gqeberha",
+      "legacy_ids": [],
+      "raw_names": [
+        "St George's Park, Gqeberha",
+        "St George's Park, Port Elizabeth"
+      ],
+      "deliveries": 11396,
+      "distinct_matches": 21,
+      "sum_raw_distinct_matches": 21
+    },
+    {
+      "venue_id": "za-johannesburg-wanderers",
+      "display_name": "DP World Wanderers Stadium, Johannesburg",
+      "legacy_ids": [],
+      "raw_names": [
+        "New Wanderers Stadium, Johannesburg",
+        "The Wanderers Stadium, Johannesburg"
+      ],
+      "deliveries": 16404,
+      "distinct_matches": 31,
+      "sum_raw_distinct_matches": 31
+    },
+    {
+      "venue_id": "za-kimberley-oval",
+      "display_name": "Kimberley Oval, Kimberley",
+      "legacy_ids": [],
+      "raw_names": [
+        "De Beers Diamond Oval, Kimberley",
+        "Diamond Oval, Kimberley"
+      ],
+      "deliveries": 3263,
+      "distinct_matches": 6,
+      "sum_raw_distinct_matches": 6
+    },
+    {
+      "venue_id": "za-potchefstroom-oval",
+      "display_name": "JB Marks Cricket Oval, Potchefstroom",
+      "legacy_ids": [],
+      "raw_names": [
+        "Sedgars Park, Potchefstroom",
+        "Senwes Park, Potchefstroom"
+      ],
+      "deliveries": 8540,
+      "distinct_matches": 15,
+      "sum_raw_distinct_matches": 15
+    }
+  ]
+}

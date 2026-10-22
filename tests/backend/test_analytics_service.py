@@ -1419,7 +1419,7 @@ def test_venue_wise_player_performance_infers_batting_role() -> None:
     assert response.tables[0].rows[0][1] == "Seddon Park, Hamilton"
     assert response.tables[0].rows[0][4] == 640
     assert "Seddon Park, Hamilton" in response.summaries[0].body
-    assert "GROUP BY ground" in response.evidence_queries[0].sql
+    assert "GROUP BY CASE ground" in response.evidence_queries[0].sql
     assert "ORDER BY runs DESC" in response.evidence_queries[0].sql
 
 
@@ -1563,7 +1563,7 @@ def test_venue_wickets_question_uses_ground_filter_before_global_leaderboard() -
     assert response.tables[0].rows[0][3] == 15
     assert "Lord's, London" in response.summaries[0].body
     assert response.evidence_queries[0].title == "Venue bowling leaderboard source"
-    assert "WHERE ground = :venue_name" in response.evidence_queries[0].sql
+    assert "WHERE ground IN (:venue_aliases)" in response.evidence_queries[0].sql
     assert "dismissal is credited to bowler" in response.evidence_queries[0].sql
 
 

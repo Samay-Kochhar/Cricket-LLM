@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import re
+from backend.app.domain.venues import matching_venues, resolve_venue
 
 
 VENUE_ALIASES = {
@@ -16,21 +16,16 @@ VENUE_ALIASES = {
 
 
 def venue_alias_matches(message: str, available_venues: list[str] | tuple[str, ...]) -> list[str]:
+    matches = matching_venues(message, available_venues)
+    if matches:
+        return matches
     lowered = message.lower()
-    available = set(available_venues)
-    if "chinnaswamy" in lowered:
-        matches = [venue for venue in available_venues if "chinnaswamy" in venue.lower()]
-        if matches:
-            return matches
+    available_ids = {resolve_venue(name).id for name in available_venues}
     for alias, canonical in VENUE_ALIASES.items():
-        if alias in lowered and (not available or canonical in available):
+        if alias in lowered and (not available_ids or resolve_venue(canonical).id in available_ids):
             return [canonical]
     return []
 
 
 def same_venue_family(venues: list[str]) -> bool:
-    family_names = {
-        re.sub(r"[^a-z0-9]+", " ", venue.split(",", 1)[0].lower()).strip()
-        for venue in venues
-    }
-    return len(family_names) == 1
+    return len({resolve_venue(venue).id for venue in venues}) == 1

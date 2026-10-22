@@ -233,7 +233,11 @@ render_matchup_explorer({"repository": Repository(), "matchup_handler": matchup_
     ]
     rendered_pitch = app.get("html")
     assert len(rendered_pitch) == 1
-    assert app.segmented_control[0].options == ["All", "SR", "Avg", "W", "4s", "6s"]
+    # AppTest exposes segmented controls through button_group on Streamlit 1.55;
+    # use the shared representation also supported by newer releases.
+    assert [option.content for option in app.button_group[0].proto.options] == [
+        "All", "SR", "Avg", "W", "4s", "6s"
+    ]
     assert any(
         "Compared with the batter's normal ODI rate" in markdown.value
         and "85.12 vs 93.51" in markdown.value

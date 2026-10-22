@@ -502,10 +502,9 @@ def test_same_stadium_venue_aliases_are_combined_without_clarification(
     payload = response.json()
     assert payload["mode"] == "analysis"
     assert payload["query_response"]["status"] == "supported"
-    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
-        "M Chinnaswamy Stadium, Bangalore",
-        "M Chinnaswamy Stadium, Bengaluru",
-    ]
+    assert payload["query_response"]["interpretation"]["filters"]["venue"] == (
+        "M Chinnaswamy Stadium, Bengaluru"
+    )
 
 
 @pytest.mark.parametrize(
@@ -555,10 +554,9 @@ def test_same_stadium_aliases_work_for_aggregate_matchup_and_trend_follow_ups(
     payload = response.json()
     assert payload["mode"] == "analysis"
     assert payload["query_response"]["status"] != "unsupported"
-    assert payload["query_response"]["interpretation"]["filters"]["venues"] == [
-        "M Chinnaswamy Stadium, Bangalore",
-        "M Chinnaswamy Stadium, Bengaluru",
-    ]
+    assert payload["query_response"]["interpretation"]["filters"]["venue"] == (
+        "M Chinnaswamy Stadium, Bengaluru"
+    )
 
 
 def test_both_resolves_every_pending_venue_choice_without_losing_context(
@@ -1000,7 +998,7 @@ def test_ambiguous_venue_follow_up_offers_choices_without_mutating_state(
         "kind": "venue",
         "original_message": "What about in Melbourne?",
         "options": [
-            "Docklands Stadium, Melbourne",
+            "Marvel Stadium, Melbourne",
             "Melbourne Cricket Ground",
         ],
     }
@@ -1009,7 +1007,7 @@ def test_ambiguous_venue_follow_up_offers_choices_without_mutating_state(
         "pending_clarification": None,
     } == original_state
     assert [option["label"] for option in payload["clarification_options"]] == [
-        "Docklands Stadium, Melbourne",
+        "Marvel Stadium, Melbourne",
         "Melbourne Cricket Ground",
     ]
 
@@ -1024,3 +1022,41 @@ def test_ambiguous_venue_follow_up_offers_choices_without_mutating_state(
     clarified_filters = clarified.json()["query_response"]["interpretation"]["filters"]
     assert clarified_filters["compare_players"] == ["Rohit Sharma", "Virat Kohli"]
     assert clarified_filters["venue"] == "Melbourne Cricket Ground"
+
+
+@pytest.mark.parametrize('historical,current', [
+    ('Feroz Shah Kotla, Delhi', 'Arun Jaitley Stadium, Delhi'),
+    ('The Rose Bowl, Southampton', 'Utilita Bowl, Southampton'),
+    ('Sardar Patel Stadium, Motera, Ahmedabad', 'Narendra Modi Stadium, Ahmedabad'),
+])
+def test_current_and_historical_chat_filters_return_identical_evidence(client, historical, current):
+    results = []
+    for name in (historical, current):
+        payload = client.post('/api/chat', json={
+            'message': f'How many runs did Virat Kohli score at {name}?', 'history': [],
+        }).json()
+        result = payload['query_response']
+        assert result['status'] == 'supported'
+        assert result['interpretation']['filters']['venue'] == current
+        results.append(result['tables'][0]['rows'])
+    assert results[0] == results[1]
+
+
+def test_old_conversation_state_with_overlapping_historical_venue_filters_is_accepted(client):
+    base = {
+        'players': ['Virat Kohli'], 'operation': 'aggregate', 'metric': 'runs_scored',
+        'group_by': ['batter'], 'filters': {'batter': 'Virat Kohli'},
+    }
+    results = []
+    for filters in (
+        {'venue': 'M Chinnaswamy Stadium, Bangalore'},
+        {'venue': 'M Chinnaswamy Stadium, Bengaluru'},
+        {'venues': ['M Chinnaswamy Stadium, Bangalore', 'M Chinnaswamy Stadium, Bengaluru']},
+    ):
+        state = {**base, 'filters': {**base['filters'], **filters}}
+        payload = client.post('/api/chat', json={
+            'message': 'What about in 2020?', 'history': [], 'conversation_state': state,
+        }).json()
+        assert payload['query_response']['status'] == 'supported'
+        results.append(payload['query_response']['tables'][0]['rows'])
+    assert results[0] == results[1] == results[2]

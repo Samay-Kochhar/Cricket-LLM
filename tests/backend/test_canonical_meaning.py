@@ -231,10 +231,7 @@ def test_direct_meaning_has_no_ranking_threshold_but_ranking_gets_the_default() 
             "boundary_percentage",
             "batter",
             {
-                "venues": [
-                    "M Chinnaswamy Stadium, Bangalore",
-                    "M Chinnaswamy Stadium, Bengaluru",
-                ]
+                "venue": "M Chinnaswamy Stadium, Bengaluru"
             },
         ),
         (

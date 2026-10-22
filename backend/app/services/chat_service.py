@@ -782,7 +782,7 @@ class ChatService:
                 return aliases
             stopwords = {
                 "about", "and", "at", "club", "compare", "cricket", "death",
-                "ground", "in", "international", "middle", "now", "overs",
+                "ground", "in", "international", "middle", "now", "of", "overs",
                 "players", "powerplay", "same", "sports", "stadium", "the", "what",
             }
             query_tokens = set(re.findall(r"[a-z0-9]+", lowered)) - stopwords

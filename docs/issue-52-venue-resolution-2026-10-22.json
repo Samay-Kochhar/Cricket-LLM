@@ -1,0 +1,194 @@
+{
+  "method": "Separate physical identity, naming evidence and venue lifecycle. Retain source scope honestly: official, corroborated reporting, or verified historical name. Do not require an invented modern sponsor for closed grounds. Trace proposed renames forward: Mulpani proposal was suspended, so the current CAN directory controls.",
+  "decisions": [
+    {
+      "venue_id": "odi-ground-031",
+      "display_name": "Captain Roop Singh Stadium, Gwalior",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://hycricket.org/data-2025-26/BCCI-matches/womens-T20/v-tripura.pdf"
+      ],
+      "finding": "HCA-hosted BCCI Senior Womens T20 Trophy scorecard dated 9 October 2025 identifies Captain Roop Singh Stadium, Gwalior. The old ground remains separately named; the newer Scindia stadium is not a rename."
+    },
+    {
+      "venue_id": "odi-ground-058",
+      "display_name": "Shaheed Vijay Singh Pathik Sports Complex Ground, Greater Noida",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://etender.up.nic.in/nicgep/app?component=%24DirectLink&page=FrontEndLatestActiveTenders&service=direct&sp=S2sDR5vwULKBbjGBMb2jVeQ%3D%3D",
+        "https://www.icc-cricket.com/news/shenwari-dreams-of-bigger-and-better",
+        "https://timesofindia.indiatimes.com/city/noida/gr-noida-stadium-gets-icc-accreditation/articleshow/56129469.cms",
+        "https://timesofindia.indiatimes.com/city/noida/pathik-sports-complex-set-to-reopen-after-9-years/amp_articleshow/133041773.cms"
+      ],
+      "finding": "GNIDA government eProcurement tender 2025_GNIDA_1066243_27 explicitly names cricket floodlights at Shaheed Vijay Singh Pathik Sports Complex, Greater Noida. ICC identifies the same named complex as the Afghanistan home ground; 2016 accreditation and subsequent match reports connect the dataset cricket venue. Canonical label identifies the cricket ground within this complex; football and other sports pitches are not included. Tender was cancelled, so no completed-maintenance claim is inferred."
+    },
+    {
+      "venue_id": "odi-ground-068",
+      "display_name": "ICC Academy Oval 1, Dubai",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://emiratescricket.com/news-detail/3KWYxk8mep2rbMyJNjQ9"
+      ],
+      "finding": "Emirates Cricket Board 18 June 2026 tournament announcement explicitly names ICC Academy Oval 1, Dubai. Existing date/team matching of all 29 dataset ODIs to NZC physical-ground record 7457 plus Cricket Ireland Academy 1 fixtures establishes same-site identity. Ground 2 remains separate; retired ID 069 redirects here."
+    },
+    {
+      "venue_id": "odi-ground-081",
+      "display_name": "Kinrara Academy Oval, Puchong",
+      "verification_scope": "verified_historical_name",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://english.stadiumastro.com/news-sports/malaysian-cricket-association-ordered-vacate-kinrara-oval-after-19-years-212059",
+        "https://www.malaysiakini.com/news/623133",
+        "https://www.scoop.my/sports/245576/three-years-on-kinrara-oval-now-a-sad-state-of-bustling-former-self/"
+      ],
+      "finding": "MCA president statement reproduced in March 2022 and Bernama June 2022 departure report establish the known Kinrara venue in Puchong. January 2025 reporting confirms disuse following the loss of the ground. Keep the established historical cricket name and old Kuala Lumpur alias; no invented current sponsor or merger with Bayuemas/UKM. Closure is a lifecycle state, not unresolved physical identity."
+    },
+    {
+      "venue_id": "odi-ground-087",
+      "display_name": "Madhavrao Scindia Cricket Ground, Rajkot",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://www.rmc.gov.in/rmcwebsite/docs/budget/Budget_2025-26.pdf",
+        "https://www.rmc.gov.in/rmcwebsite/docs/budget/Budget_2024-25.pdf",
+        "https://deshgujarat.com/2025/06/20/madhavrao-scindia-cricket-ground-in-rajkot-set-for-%E2%82%B95-71-crore-revamp/",
+        "https://www.gujaratstatetenders.com/tender-notice/tender-for-renting-out-the-shri-madhavrao-scindia-cricket-rajkot-gujarat-india-gt104425435?tesd=30-09-2026"
+      ],
+      "finding": "Rajkot Municipal Corporation 2025-26 budget names Madhavrao Scindia cricket stadium renovation in Gujarati; its 2024-25 budget locates the Shri Madhavrao Scindia cricket ground in the Race Course sports complex and specifies floodlighting work. This is current municipal name/site evidence beyond the NZC historical ground record. Retain established English Madhavrao Scindia Cricket Ground, Rajkot; do not merge Niranjan Shah/Khandheri or the Gwalior Scindia venue. Municipal budget naming does not assert renovation completion."
+    },
+    {
+      "venue_id": "odi-ground-103",
+      "display_name": "Mulpani International Cricket Ground, Kathmandu",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://cricketnepal.org.np/ground-detail/",
+        "https://www.onlinekhabar.com/2023/07/1330821/%E0%A4%AA%E0%A4%9B%E0%A4%BF-%E0%A4%B9%E0%A4%9F%E0%A5%8D%E0%A4%AF%E0%A5%8B-%E0%A4%95%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%A8-%E0%A4%AE%E0%A5%82%E0%A4%B2%E0%A4%AA%E0%A4%BE%E0%A4%A8%E0%A5%80-%E0%A4%AE",
+        "https://english.khabarhub.com/2023/28/302090/",
+        "https://www.cricnepal.com/can-rename-mulpani-cricket-ground-in-honour-of-the-late-former-president",
+        "https://kathmandupost.com/cricket/2023/07/02/can-general-manager-resigns-blames-harassment-by-president",
+        "https://radionepalonline.com/en/2026/05/09/429613.html"
+      ],
+      "finding": "CAN official current ground directory names Mulpani International Cricket Ground with ODI status from 2023. The 28 April 2023 preview explicitly places the next-day Oman-UAE semifinal at Upper Mulpani, quoting CAN acting secretary; local match 1368000 has the exact date and teams. July 2023 reporting states the proposed Jayakumar Nath Shah rename was suspended after objections. Use CAN current Mulpani name, not the suspended proposal. Upper Mulpani and historical raw name remain aliases; Lower Mulpani is separate. Official directory text was available through search index; direct fetch returned 403. Current official label and proposal-suspension evidence supersede earlier rename-only reports."
+    },
+    {
+      "venue_id": "odi-ground-105",
+      "display_name": "Nahar Singh Cricket Stadium, Faridabad",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://haryanatourism.gov.in/places_of_interest/nahar-singh-cricket-stadium/",
+        "https://haryanatourism.gov.in/destinations/faridabad/"
+      ],
+      "finding": "Haryana Tourism currently lists Nahar Singh Cricket Stadium in Faridabad with its New Industrial Town location. Indexed official text verifies the name; direct-page fetch timed out in this session. Existing statistical ground record supplies same-site historical identity. Current naming does not assert renovation completion or active ODIs."
+    },
+    {
+      "venue_id": "odi-ground-113",
+      "display_name": "Nehru Stadium, Pune",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2311424&lang=1&reg=3",
+        "https://www.icc-cricket.com/news/maharashtra-cricket-association-stadium"
+      ],
+      "finding": "Government PIB announcement dated 17 September 2026 names Nehru Stadium, Pune as the venue campus for a Vice-President visit. ICC 2023 venue history explicitly distinguishes downtown Nehru Stadium from the newer MCA ground at Gahunje. No current sponsor change is asserted."
+    },
+    {
+      "venue_id": "odi-ground-130",
+      "display_name": "Rajiv Gandhi International Cricket Stadium, Dehradun",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://www.uttarakhandgoldcup.com/tournament",
+        "https://www.iip.res.in/wp-content/uploads/2024/03/Souvenir_51st-SSBMT_CSIR-IIP_compressed.pdf"
+      ],
+      "finding": "Tournament organizer 2026 Gold Cup fixtures repeatedly identify Rajiv Gandhi International Stadium, Dehradun separately from Maharana Pratap Sports College and Abhimanyu academy; CSIR-IIP 2024 venue description locates the international cricket stadium in Raipur, Dehradun. Keep full established cricket name; distinct from Uppal/Hyderabad."
+    },
+    {
+      "venue_id": "in-vadodara-ipcl",
+      "display_name": "Reliance Stadium, Vadodara",
+      "verification_scope": "corroborated_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://www.cricbuzz.com/cricket-series/12398/ranji-trophy-elite-2026-27/venues/79/reliance-stadium",
+        "https://documents.bcci.tv/documents/bcci/document/2022/08/Payments_above_25_Lacs_List-June_2021.pdf"
+      ],
+      "finding": "Current 2026-27 Ranji venue record names Reliance Stadium, Vadodara and explicitly gives the IPCL Sports Complex alias. BCCI payment record independently names the Reliance venue; NZC ground history links the historical aliases. No evidence that a 2016 proposed Dhirubhai Ambani rename was implemented; keep the attested Reliance name, separate from Kotambi."
+    },
+    {
+      "venue_id": "odi-ground-003",
+      "display_name": "Affies Park, Windhoek",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://wap.edu.na/fasiliteite/",
+        "https://wap.edu.na/ons-skool/",
+        "https://wap.edu.na/wp-content/uploads/2026/01/Busbrief2026-1.pdf"
+      ],
+      "finding": "WAP operator facilities page explicitly identifies Affiespark and its cricket field; 2026 bus memo still names AffiesPark. Board 2019 fixture/result pairing connects the PNG-USA ODI at WAP to Affies Park. Historical ground label retained; school Eros campus is not the sports-ground location. Affies and Wanderers have distinct match assignments despite Wanderers locality reference in the bus memo."
+    },
+    {
+      "venue_id": "odi-ground-074",
+      "display_name": "Jaffery Sports Club Ground, Nairobi",
+      "verification_scope": "corroborated_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://urbanswaras.co.ke/wp-content/uploads/2018/12/Thursday-Track-Sessions-info-sheet-JSC.pdf",
+        "https://www.the-star.co.ke/news/2019-12-13-new-astro-turf-football-pitch-opened-at-jafferys-sports-club",
+        "https://ea.thedawoodibohras.com/2025/08/15/cricket-fever-grips-nairobi-the-communitys-marquee-cricket-tournament-comes-to-africa/"
+      ],
+      "finding": "ICC historical ODI report identifies Jaffery Sports Club. Original participant instructions locate its grass cricket pitch within the track in Lavington; club secretary explains 2019 football arena was additional to the cricket pitch. First-hand 2025 community tournament report names cricket at Jaffery. Same-site continuity is corroborated, not a 2026 official oval survey. Do not rename to Jaffery Arena or conflate Nairobi and Mombasa clubs."
+    },
+    {
+      "venue_id": "odi-ground-101",
+      "display_name": "Mombasa Sports Club Ground",
+      "verification_scope": "corroborated_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://www.icc-cricket.com/news/dates-announced-for-third-round-of-icc-intercontinental-cup",
+        "https://www.icc-cricket.com/news/mooney-stars-in-ireland-win",
+        "https://www.linkedin.com/company/mombasa-sports-club"
+      ],
+      "finding": "ICC exact 2012 ODI fixtures and ground report establish the international Mombasa Sports Club venue. Operator self-description identifies continuing cricket at the same club/address; WPBSA corroborates operator website. Retain historical ground name with corroborated operator continuity; homepage returned an empty body, so no successful current oval-specific certificate is claimed. No Coast Gymkhana or other Mombasa-site merge."
+    },
+    {
+      "venue_id": "odi-ground-179",
+      "display_name": "United Cricket Club Ground, Windhoek",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://cricketnamibia.com/schedule-released-for-icc-mens-cricket-world-cup-qualifier-playoff-in-namibia/",
+        "https://cricketnamibia.com/u14-nashua-junior-franchise-competition-opens-with-outstanding-cricket-talent/",
+        "https://cricketnamibia.com/veterans-cricket-association-of-namibia-to-host-the-over-50s-africa-cup/"
+      ],
+      "finding": "Board 2023 exact ground/fixture naming and 2024 events establish United Cricket Club Ground. Board explicitly distinguishes United from HP Oval and separately schedules FNB, United and Wanderers. Retain established United name, without asserting a current Trustco sponsorship; new national stadium is not a rename."
+    },
+    {
+      "venue_id": "odi-ground-184",
+      "display_name": "Wanderers Cricket Ground, Windhoek",
+      "verification_scope": "official_current_listing",
+      "verified_on": "2026-10-22",
+      "sources": [
+        "https://cricketnamibia.com/wanderers-cricket-ground/",
+        "https://cricketnamibia.com/schedule-released-for-icc-mens-cricket-world-cup-qualifier-playoff-in-namibia/",
+        "https://cricketnamibia.com/veterans-cricket-association-of-namibia-to-host-the-over-50s-africa-cup/",
+        "https://www.icc-cricket.com/news/new-cricket-world-cup-2027-venue-hosts-thrilling-first-international-fixture"
+      ],
+      "finding": "Live board stadium directory names Wanderers Cricket Ground; 2023-24 board fixture assignments and ICC 2025 description distinguish old Wanderers from new FNB venue. Retain exact historical ground name. Live directory retrieval date is not its 2016 publication date; no new sponsorship assertion."
+    }
+  ],
+  "mulpani_match_receipt": {
+    "p_match": "1368000",
+    "date": "2023-04-29",
+    "raw_ground": "Mulpani Cricket Ground",
+    "teams": [
+      "United Arab Emirates",
+      "Oman"
+    ],
+    "physical_site": "Upper Mulpani",
+    "evidence": "28 April 2023 preview explicitly identifies Upper Mulpani for the next-day Oman-UAE semifinal and quotes CAN acting secretary; exact match/date/teams agree with local delivery data."
+  }
+}
