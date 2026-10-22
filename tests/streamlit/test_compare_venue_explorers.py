@@ -34,7 +34,7 @@ class Repository:
         }
         return rows.get(player_name)
 
-    def get_venue_bowling_leaderboard(self, venue_name: str) -> list[dict[str, object]]:
+    def get_venue_bowling_leaderboard(self, venue_name: str, **filters) -> list[dict[str, object]]:
         assert venue_name == "Melbourne Cricket Ground"
         return [
             {

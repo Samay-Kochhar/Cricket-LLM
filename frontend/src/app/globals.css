@@ -2505,3 +2505,8 @@ code {
     white-space: nowrap;
   }
 }
+
+/* Venue controls reuse the explorer fields; the metric chart precedes the table. */
+.venue-leaderboard-grid { grid-template-columns: minmax(0, 1fr); }
+.explorer-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 16px; }
+.explorer-filters input[type="checkbox"] { width: auto; min-height: auto; justify-self: start; }

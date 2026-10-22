@@ -1186,52 +1186,63 @@ class AnalyticsRepository:
         venue_name: str,
         limit: int = 10,
         excluded_teams: list[str] | None = None,
+        *,
+        sample_unit: str = "legal_balls",
+        minimum_sample: int = 24,
+        metric: str = "wickets_taken",
+        phase: str | None = None,
+        year_start: int | None = None,
+        year_end: int | None = None,
     ) -> list[dict[str, Any]]:
-        legal_ball_predicate = (
-            "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
-            "AND COALESCE(TRY_CAST(noball AS INTEGER), 0) = 0"
-        )
-        bowler_wicket_predicate = (
-            "LOWER(CAST(dismissal AS VARCHAR)) IN "
-            "('caught', 'bowled', 'leg before wicket', 'stumped', 'hit wicket', 'caught and bowled')"
-        )
-        venue_clause, venue_params = venue_filter([venue_name])
-        params: list[Any] = list(venue_params)
-        team_exclusion_clause = ""
+        from backend.app.domain.venue_leaderboard import VenueBowlingOptions
+
+        options = VenueBowlingOptions(metric, phase, year_start, year_end, sample_unit, minimum_sample, limit)
+        venue_clause, params = venue_filter([venue_name])
+        phase_clause, phase_params = self._phase_clause(phase)
+        clauses = venue_clause + phase_clause
+        params = [*params, *phase_params]
+        if year_start is not None:
+            clauses += " AND TRY_CAST(year AS INTEGER) BETWEEN ? AND ?"
+            params.extend([year_start, year_end])
         if excluded_teams:
-            placeholders = ", ".join("?" for _ in excluded_teams)
-            team_exclusion_clause = f" AND team_bowl NOT IN ({placeholders})"
+            clauses += " AND team_bowl NOT IN (" + ", ".join("?" for _ in excluded_teams) + ")"
             params.extend(excluded_teams)
-        params.append(limit)
+        field = options.ranking["field"]
+        direction = options.ranking["direction"].upper()
         rows = self._fetchall(
             f"""
-            SELECT
-              bowl,
-              SUM(CASE WHEN {legal_ball_predicate} THEN 1 ELSE 0 END) AS legal_balls,
-              COUNT(*) AS delivery_rows,
-              SUM(TRY_CAST(bowlruns AS INTEGER)) AS runs_conceded,
-              SUM(CASE WHEN {bowler_wicket_predicate} THEN 1 ELSE 0 END) AS wickets
-            FROM analytics.deliveries_v1
-            WHERE {venue_clause}
-              {team_exclusion_clause}
-            GROUP BY bowl
-            HAVING SUM(CASE WHEN {legal_ball_predicate} THEN 1 ELSE 0 END) >= 24
-            ORDER BY wickets DESC, runs_conceded / NULLIF(wickets, 0) ASC, legal_balls ASC
+            WITH counts AS (
+              SELECT bowl AS player_name,
+                SUM(CASE WHEN {LEGAL_BALL_PREDICATE} THEN 1 ELSE 0 END) AS deliveries,
+                COUNT(DISTINCT p_match) AS matches, COUNT(*) AS delivery_rows,
+                COALESCE(SUM(TRY_CAST(bowlruns AS INTEGER)), 0) AS runs_conceded,
+                SUM(CASE WHEN {BOWLER_WICKET_PREDICATE} THEN 1 ELSE 0 END) AS wickets,
+                SUM(CASE WHEN {LEGAL_BALL_PREDICATE} AND TRY_CAST(bowlruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
+                SUM(CASE WHEN {LEGAL_BALL_PREDICATE} AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls
+              FROM analytics.deliveries_v1 WHERE {clauses}
+              GROUP BY bowl
+            ), rates AS (
+              SELECT *, runs_conceded / NULLIF(wickets, 0) AS bowling_average,
+                runs_conceded / NULLIF(deliveries / 6.0, 0) AS economy_rate,
+                deliveries / NULLIF(wickets, 0) AS bowling_strike_rate,
+                dot_balls * 100.0 / NULLIF(deliveries, 0) AS dot_percentage,
+                boundary_balls * 100.0 / NULLIF(deliveries, 0) AS boundary_percentage
+              FROM counts
+            )
+            SELECT player_name, deliveries, matches, delivery_rows, runs_conceded, wickets,
+              bowling_average, economy_rate, bowling_strike_rate, dot_percentage, boundary_percentage
+            FROM rates
+            WHERE {"deliveries" if sample_unit == "legal_balls" else "matches"} >= ?
+              AND {field} IS NOT NULL
+            ORDER BY {field} {direction} NULLS LAST,
+              bowling_average ASC NULLS LAST, deliveries DESC, player_name ASC
             LIMIT ?
             """,
-            params,
+            [*params, minimum_sample, limit],
         )
-        return [
-            {
-                "player_name": row[0],
-                "deliveries": int(row[1] or 0),
-                "delivery_rows": int(row[2] or 0),
-                "runs_conceded": int(row[3] or 0),
-                "wickets": int(row[4] or 0),
-                "economy_rate": (float(row[3] or 0) / (float(row[1]) / 6.0)) if row[1] else None,
-            }
-            for row in rows
-        ]
+        fields = ("player_name", "deliveries", "matches", "delivery_rows", "runs_conceded", "wickets",
+                  "bowling_average", "economy_rate", "bowling_strike_rate", "dot_percentage", "boundary_percentage")
+        return [dict(zip(fields, row)) for row in rows]
 
     @staticmethod
     def _bowling_leaderboard_order(metric: str, rank_intent: str) -> tuple[str, str]:

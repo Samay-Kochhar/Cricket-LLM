@@ -289,6 +289,20 @@ CATALOG: dict[str, MetricDefinition] = {
         ],
         required_fields=["batruns", "wide", "noball"],
     ),
+    "bowling_average": MetricDefinition(
+        metric_id="bowling_average", label="Bowling Average",
+        formula="SUM(bowlruns) / NULLIF(bowler-credit wickets, 0)",
+        description="Runs charged to the bowler per bowler-credit wicket; unavailable without wickets.",
+        unit="runs_per_wicket", supported_query_classes=[QueryClass.venue_context_leaderboard],
+        required_fields=["bowlruns", "dismissal"],
+    ),
+    "boundary_percentage_conceded": MetricDefinition(
+        metric_id="boundary_percentage_conceded", label="Boundary Percentage Conceded",
+        formula="legal balls with batruns IN (4, 6) / NULLIF(legal balls, 0) * 100",
+        description="Percentage of legal balls hit for four or six; lower means fewer boundaries conceded.",
+        unit="percent", supported_query_classes=[QueryClass.venue_context_leaderboard],
+        required_fields=["batruns", "wide", "noball"],
+    ),
     "balls_per_wicket": MetricDefinition(
         metric_id="balls_per_wicket",
         label="Balls Per Wicket",
