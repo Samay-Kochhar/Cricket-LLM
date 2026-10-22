@@ -1,0 +1,2930 @@
+[
+  {
+    "id": "in-ahmedabad-motera",
+    "display_name": "Narendra Modi Stadium, Ahmedabad",
+    "aliases": [
+      "Narendra Modi Stadium, Ahmedabad",
+      "Sardar Patel Stadium, Motera, Ahmedabad"
+    ],
+    "search_aliases": [
+      "narendra modi",
+      "sardar patel stadium",
+      "motera"
+    ],
+    "sources": [
+      "https://www.icc-cricket.com/tournaments/cricketworldcup/venues/narendra-modi-stadium"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "in-delhi-kotla",
+    "display_name": "Arun Jaitley Stadium, Delhi",
+    "aliases": [
+      "Arun Jaitley Stadium, Delhi",
+      "Feroz Shah Kotla, Delhi"
+    ],
+    "search_aliases": [
+      "arun jaitley",
+      "feroz shah kotla"
+    ],
+    "sources": [
+      "https://www.icc-cricket.com/news/kohli-honoured-with-a-stand-in-his-name-at-delhi-stadium"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "lc-gros-islet-beausejour",
+    "display_name": "Daren Sammy National Cricket Stadium, Gros Islet, St Lucia",
+    "aliases": [
+      "Daren Sammy National Cricket Stadium, Gros Islet, St Lucia",
+      "Darren Sammy National Cricket Stadium, Gros Islet, St Lucia",
+      "Beausejour Stadium, Gros Islet, St Lucia"
+    ],
+    "search_aliases": [
+      "darren sammy",
+      "beausejour",
+      "daren sammy"
+    ],
+    "sources": [
+      "https://www.icc-cricket.com/news/st-lucia-ground-to-be-renamed-after-sammy",
+      "https://www.windiescricket.com/grounds/beausejour-stadium-gros-islet/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "CWI uses Daren (one r) in the current display name. Dataset Darren spelling and Beausejour retained as historical aliases.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "za-bloemfontein-oval",
+    "display_name": "Mangaung Oval, Bloemfontein",
+    "aliases": [
+      "Mangaung Oval, Bloemfontein",
+      "Chevrolet Park, Bloemfontein",
+      "Goodyear Park, Bloemfontein",
+      "OUTsurance Oval, Bloemfontein",
+      "Springbok Park, Bloemfontein"
+    ],
+    "search_aliases": [
+      "mangaung oval",
+      "chevrolet park",
+      "goodyear park",
+      "outsurance oval"
+    ],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1561.html",
+      "https://cricket.co.za/fixtures-schedules/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "in-bengaluru-chinnaswamy",
+    "display_name": "M Chinnaswamy Stadium, Bengaluru",
+    "aliases": [
+      "M Chinnaswamy Stadium, Bengaluru",
+      "M Chinnaswamy Stadium, Bangalore"
+    ],
+    "search_aliases": [
+      "chinnaswamy"
+    ],
+    "sources": [
+      "https://www.icc-cricket.com/news/m-chinnaswamy-stadium",
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "za-gqeberha-st-georges",
+    "display_name": "St George's Park, Gqeberha",
+    "aliases": [
+      "St George's Park, Gqeberha",
+      "St George's Park, Port Elizabeth"
+    ],
+    "search_aliases": [
+      "st george's park",
+      "st georges park"
+    ],
+    "sources": [
+      "https://www.cricket.co.za/stadium/st-georges-park/",
+      "https://www.icc-cricket.com/media-releases/icc-womens-t20-world-cup-2023-the-venues"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "bd-chattogram-divisional",
+    "display_name": "Bir Shrestho Flight Lieutenant Matiur Rahman Cricket Stadium, Chattogram",
+    "aliases": [
+      "Bir Shrestho Flight Lieutenant Matiur Rahman Cricket Stadium, Chattogram",
+      "Zahur Ahmed Chowdhury Stadium, Chattogram",
+      "Zahur Ahmed Chowdhury Stadium, Chittagong",
+      "Chittagong Divisional Stadium"
+    ],
+    "search_aliases": [
+      "zahur ahmed chowdhury",
+      "chittagong divisional",
+      "matiur rahman cricket stadium"
+    ],
+    "sources": [
+      "https://www.tigercricket.com.bd/public/images/opportunity_file/1857902870164028.pdf",
+      "https://www.thedailystar.net/news-detail-95057"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "ae-sharjah-stadium",
+    "display_name": "Sharjah Cricket Stadium",
+    "aliases": [
+      "Sharjah Cricket Stadium",
+      "Sharjah Cricket Association Stadium"
+    ],
+    "search_aliases": [
+      "sharjah cricket stadium",
+      "sharjah cricket association stadium"
+    ],
+    "sources": [
+      "https://sharjahcricket.ae/history-of-sharjah-cricket-stadium",
+      "https://images.icc-cricket.com/image/upload/prd/n9kn12nxndfpywpt1ayv.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "ae-abu-dhabi-zayed",
+    "display_name": "Zayed Cricket Stadium, Abu Dhabi",
+    "aliases": [
+      "Zayed Cricket Stadium, Abu Dhabi",
+      "Sheikh Zayed Stadium, Abu Dhabi",
+      "Sheikh Zayed Cricket Stadium, Abu Dhabi"
+    ],
+    "search_aliases": [
+      "sheikh zayed",
+      "zayed cricket stadium"
+    ],
+    "sources": [
+      "https://www.abudhabit10.com/",
+      "https://images.icc-cricket.com/image/upload/prd/muhftkbnhgzaqtkj64ol.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "gb-southampton-bowl",
+    "display_name": "Utilita Bowl, Southampton",
+    "aliases": [
+      "Utilita Bowl, Southampton",
+      "The Rose Bowl, Southampton",
+      "The Ageas Bowl, Southampton",
+      "Ageas Bowl, Southampton"
+    ],
+    "search_aliases": [
+      "rose bowl",
+      "ageas bowl",
+      "utilita bowl"
+    ],
+    "sources": [
+      "https://www.utilitabowl.com/venue/25-years-of-the-bowl/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "nz-wellington-regional",
+    "display_name": "Hnry Stadium, Wellington",
+    "aliases": [
+      "Hnry Stadium, Wellington",
+      "Westpac Stadium, Wellington",
+      "WestpacTrust Stadium, Wellington",
+      "Sky Stadium, Wellington",
+      "Wellington Regional Stadium"
+    ],
+    "search_aliases": [
+      "westpac stadium",
+      "westpactrust stadium",
+      "sky stadium",
+      "hnry stadium",
+      "wellington regional stadium"
+    ],
+    "sources": [
+      "https://register.charities.govt.nz/Charity/CC10754",
+      "https://www.hnrystadium.co.nz/",
+      "https://www.westpac.co.nz/about-us/media/westpac-and-wellington-regional-stadium-trust-to-conclude-stadium-naming-rights-sponsorship/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit historical identity; never inferred from city.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-002",
+    "display_name": "Adelaide Oval",
+    "aliases": [
+      "Adelaide Oval"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-003",
+    "display_name": "Affies Park, Windhoek",
+    "aliases": [
+      "Affies Park, Windhoek"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketnamibia.com/namibia-crowned-icc-world-cricket-league-division-2-champions-with-victory-over-oman/",
+      "https://cricketnamibia.com/papua-new-guinea-secure-top-four-finish-on-dramatic-day-at-world-cricket-league-division-2/",
+      "https://wap.edu.na/fasiliteite/",
+      "https://wap.edu.na/ons-skool/",
+      "https://wap.edu.na/wp-content/uploads/2026/01/Busbrief2026-1.pdf"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "WAP operator facilities page explicitly identifies Affiespark and its cricket field; 2026 bus memo still names AffiesPark. Board 2019 fixture/result pairing connects the PNG-USA ODI at WAP to Affies Park. Historical ground label retained; school Eros campus is not the sports-ground location. Affies and Wanderers have distinct match assignments despite Wanderers locality reference in the bus memo.",
+    "researched_on": "2026-10-22",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Affies Park\" site:cricketnamibia.com"
+    ],
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-004",
+    "display_name": "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)",
+    "aliases": [
+      "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1)"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.omancricket.org/oman-cricket-announces-start-omani-t20-tournament/",
+      "https://www.omancricket.org/development/grounds-facilities/",
+      "https://www.icc-cricket.com/matches/275409/afghanistan-under-19-vs-bangladesh-under-19"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "ICC October 2026 Youth ODI fixture explicitly lists Al Amerat Cricket Ground Oman Cricket (Ministry Turf 1), Oman. Board separate-turf history retained; no merge with Turf 2.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Al Amerat\" \"Turf 1\" site:omancricket.org"
+    ],
+    "researched_on": "2026-10-22"
+  },
+  {
+    "id": "odi-ground-005",
+    "display_name": "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)",
+    "aliases": [
+      "Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2)"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.omancricket.org/oman-eyes-acc-western-region-triumph-road-asia-cup-2020/",
+      "https://www.omancricket.org/development/grounds-facilities/",
+      "https://www.icc-cricket.com/matches/275416/afghanistan-under-19-vs-bangladesh-under-19"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "ICC October 2026 Youth ODI fixture explicitly lists Al Amerat Cricket Ground Oman Cricket (Ministry Turf 2), Oman. Board separate-turf history retained; no merge with Turf 1.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Al Amerat\" \"Turf 2\" site:omancricket.org"
+    ],
+    "researched_on": "2026-10-22"
+  },
+  {
+    "id": "odi-ground-006",
+    "display_name": "Amini Park, Port Moresby",
+    "aliases": [
+      "Amini Park, Port Moresby"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/media-releases/icc-announces-schedule-for-upcoming-east-asia-pacific-qualifiers"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-008",
+    "display_name": "Antigua Recreation Ground, St John's, Antigua",
+    "aliases": [
+      "Antigua Recreation Ground, St John's, Antigua"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/antigua-recreation-ground-st-johns/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-009",
+    "display_name": "Imran Khan Stadium, Peshawar",
+    "aliases": [
+      "Imran Khan Stadium, Peshawar",
+      "Arbab Niaz Stadium, Peshawar"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.pcb.com.pk/press-release-detail/hbl-psl-11-tickets-to-go-on-sale-online-from-tuesday.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "PCB 16 March 2026 ticket announcement names Peshawar Imran Khan Stadium. Historical Arbab Niaz identity is retained; no merge with any other Peshawar ground.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-010",
+    "display_name": "Arnos Vale Playing Field, Kingstown, St Vincent",
+    "aliases": [
+      "Arnos Vale Playing Field, Kingstown, St Vincent",
+      "Arnos Vale Ground, Kingstown, St Vincent"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/arnos-vale-playing-field-kingstown/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-012",
+    "display_name": "National Stadium, Dhaka",
+    "aliases": [
+      "National Stadium, Dhaka",
+      "Bangabandhu National Stadium, Dhaka"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://nsc.gov.bd/pages/static-pages/6922e119933eb65569e2a33c"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "National Sports Council directory currently uses National Stadium, Dhaka. Historical Bangabandhu dataset label retained; no claim of active cricket use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-013",
+    "display_name": "Barabati Stadium, Cuttack",
+    "aliases": [
+      "Barabati Stadium, Cuttack"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-014",
+    "display_name": "Barsapara Cricket Stadium, Guwahati",
+    "aliases": [
+      "Barsapara Cricket Stadium, Guwahati"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-015",
+    "display_name": "Cello Basin Reserve, Wellington",
+    "aliases": [
+      "Cello Basin Reserve, Wellington",
+      "Basin Reserve, Wellington"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1474.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 domestic schedule confirms current name and location; ground history preserves the exact site distinction.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-016",
+    "display_name": "Bay Oval, Mount Maunganui",
+    "aliases": [
+      "Bay Oval, Mount Maunganui"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/7624.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 domestic schedule confirms current name and location; ground history preserves the exact site distinction.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-017",
+    "display_name": "Bayuemas Cricket Oval, Kuala Lumpur",
+    "aliases": [
+      "Bayuemas Cricket Oval, Kuala Lumpur",
+      "Bayuemas Oval, Kuala Lumpur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.asiancricket.org/results"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-019",
+    "display_name": "Ninja Stadium, Hobart",
+    "aliases": [
+      "Ninja Stadium, Hobart",
+      "Bellerive Oval, Hobart",
+      "Blundstone Arena, Hobart"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues",
+      "https://www.crickettas.com.au/news/4154192/cricket-tasmania-announces-ninja-as-the-new-naming-rights-partner-of-bellerive-oval",
+      "https://www.ninjastadium.com.au/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Cricket Tasmania explicitly names Ninja Stadium as the naming-rights name of Bellerive Oval; current stadium operator confirms it. Bellerive and Blundstone remain hidden aliases.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-020",
+    "display_name": "Bert Sutcliffe Oval, Lincoln",
+    "aliases": [
+      "Bert Sutcliffe Oval, Lincoln"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1437.html",
+      "https://archive.nzc.nz/Scorecards/1461/1461215.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC dated official warm-up scorecard uses Bert Sutcliffe Oval, Lincoln, on 1 October 2026, independently of the ODI dataset. Ground history establishes exact site and BIL Oval predecessor.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-021",
+    "display_name": "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow",
+    "aliases": [
+      "Bharat Ratna Shri Atal Bihari Vajpayee Ekana Cricket Stadium, Lucknow"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-022",
+    "display_name": "Boland Park, Paarl",
+    "aliases": [
+      "Boland Park, Paarl"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/south-africa-unveil-schedule-for-key-wtc-series"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-023",
+    "display_name": "Bourda, Georgetown, Guyana",
+    "aliases": [
+      "Bourda, Georgetown, Guyana"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/bourda-georgetown/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-024",
+    "display_name": "Brabourne Stadium, Mumbai",
+    "aliases": [
+      "Brabourne Stadium, Mumbai"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://thecricketclubofindia.com/about_us.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-025",
+    "display_name": "Bready Cricket Club, Magheramason, Bready",
+    "aliases": [
+      "Bready Cricket Club, Magheramason, Bready"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketireland.ie/international/venues-facilities/international-grounds/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-026",
+    "display_name": "Brian Lara Stadium, Tarouba, Trinidad",
+    "aliases": [
+      "Brian Lara Stadium, Tarouba, Trinidad"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/brian-lara-stadium-tarouba/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-027",
+    "display_name": "The Gabba, Brisbane",
+    "aliases": [
+      "The Gabba, Brisbane",
+      "Brisbane Cricket Ground, Woolloongabba, Brisbane"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues/gabba"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "CA explicitly identifies The Gabba as Brisbane Cricket Ground in Woolloongabba.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-028",
+    "display_name": "Buffalo Park, East London",
+    "aliases": [
+      "Buffalo Park, East London"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricket.co.za/upcoming-match/border-women-vs-kei-women-2/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-029",
+    "display_name": "Bulawayo Athletic Club",
+    "aliases": [
+      "Bulawayo Athletic Club"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://npl.co.zw/leagues/npl-super-40/seasons/mens-super-40-2026/matches/164/amakhosi-2-cricket-club-vs-mbizo-cricket-club"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-030",
+    "display_name": "Cambusdoon New Ground, Ayr",
+    "aliases": [
+      "Cambusdoon New Ground, Ayr"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cambusdoonsportsclub.com/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Current operator identifies the new site as Robertsons Field, built in 1997 for Ayr Cricket Club. Retain New Ground distinction; do not merge old Cambusdoon.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-031",
+    "display_name": "Captain Roop Singh Stadium, Gwalior",
+    "aliases": [
+      "Captain Roop Singh Stadium, Gwalior"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1025.html",
+      "https://hycricket.org/data-2025-26/BCCI-matches/womens-T20/v-tripura.pdf"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "HCA-hosted BCCI Senior Womens T20 Trophy scorecard dated 9 October 2025 identifies Captain Roop Singh Stadium, Gwalior. The old ground remains separately named; the newer Scindia stadium is not a rename.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Captain Roop Singh\" site:mpcaonline.com \"2026\"",
+      "\"Captain Roop Singh\" site:bcci.tv \"2026\""
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-032",
+    "display_name": "Clontarf Cricket Ground, Dublin",
+    "aliases": [
+      "Clontarf Cricket Ground, Dublin",
+      "Castle Avenue, Dublin",
+      "Clontarf Cricket Club Ground, Dublin"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketireland.ie/international/venues-and-facilities/international-grounds/clontarf/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Cricket Ireland explicitly says Clontarf Cricket Ground is known locally as Castle Avenue and supplies the Castle Avenue address. Both dataset labels refer to this ground; retired ID remains resolvable.",
+    "legacy_ids": [
+      "odi-ground-038"
+    ],
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-033",
+    "display_name": "Cazalys Stadium, Cairns",
+    "aliases": [
+      "Cazalys Stadium, Cairns",
+      "Cazaly's Stadium, Cairns"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/56.html",
+      "https://aflcairns.com.au/cazalysstadium/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Owner AFL Cairns current stadium page confirms Cazalys Stadium at 344 Mulgrave Road and lists former Bundaberg Rum / Australian Football Park names. Dataset Cazalys apostrophe spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-034",
+    "display_name": "Central Broward Park & Broward County Stadium, Lauderhill",
+    "aliases": [
+      "Central Broward Park & Broward County Stadium, Lauderhill",
+      "Central Broward Regional Park Stadium Turf Ground, Lauderhill"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.broward.org/Parks/Support/Documents/2026.05.01CBPOveriewPAB.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Broward County Parks May 2026 official overview identifies the cricket stadium at Central Broward Park. Turf-ground dataset label remains an alias; no adjacent sports field is merged.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-037",
+    "display_name": "Civil Service Cricket Club, Stormont, Belfast",
+    "aliases": [
+      "Civil Service Cricket Club, Stormont, Belfast"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketireland.ie/international/venues-facilities/international-grounds/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-039",
+    "display_name": "Cobham Oval (New), Whangarei",
+    "aliases": [
+      "Cobham Oval (New), Whangarei"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/3869.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 domestic schedule confirms current name and location; ground history preserves the exact site distinction.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-040",
+    "display_name": "Seat Unique Stadium, Bristol",
+    "aliases": [
+      "Seat Unique Stadium, Bristol",
+      "County Ground, Bristol"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-041",
+    "display_name": "Ambassador Cruise Line Ground, Chelmsford",
+    "aliases": [
+      "Ambassador Cruise Line Ground, Chelmsford",
+      "County Ground, Chelmsford"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-045",
+    "display_name": "Marvel Stadium, Melbourne",
+    "aliases": [
+      "Marvel Stadium, Melbourne",
+      "Docklands Stadium, Melbourne"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues/marvel-stadium"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "CA identifies Marvel Stadium at 740 Bourke Street in Docklands, opened in 2000; retain Docklands dataset label.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-047",
+    "display_name": "Dubai International Cricket Stadium",
+    "aliases": [
+      "Dubai International Cricket Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/bangladesh-set-up-semi-final-against-india-at-asia-cup"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-048",
+    "display_name": "Eden Gardens, Kolkata",
+    "aliases": [
+      "Eden Gardens, Kolkata"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-049",
+    "display_name": "Eden Park, Auckland",
+    "aliases": [
+      "Eden Park, Auckland"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1405.html",
+      "https://edenpark.co.nz/about/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-050",
+    "display_name": "Edgbaston, Birmingham",
+    "aliases": [
+      "Edgbaston, Birmingham"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-052",
+    "display_name": "Forthill, Dundee",
+    "aliases": [
+      "Forthill, Dundee"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.forfarshire.co.uk/gallery/default.aspx"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-053",
+    "display_name": "Gaddafi Stadium, Lahore",
+    "aliases": [
+      "Gaddafi Stadium, Lahore"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.pcb.com.pk/press-release-detail/hbl-psl-11-tickets-to-go-on-sale-online-from-tuesday.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-054",
+    "display_name": "Galle International Stadium",
+    "aliases": [
+      "Galle International Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://srilankacricket.lk/2026/08/india-tour-of-sri-lanka-2026-sri-lanka-test-squad/",
+      "https://www.gallecricketclub.lk/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "SLC 12 August 2026 Test squad announcement identifies Galle International Cricket Stadium, Galle, for 15-19 August. This supplies current governing-board naming evidence independently of the club website.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-056",
+    "display_name": "Grand Prairie Stadium, Dallas",
+    "aliases": [
+      "Grand Prairie Stadium, Dallas"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/media-releases/usa-clinch-league-2-title-after-win-over-namibia"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-057",
+    "display_name": "Grange Cricket Club Ground, Raeburn Place, Edinburgh",
+    "aliases": [
+      "Grange Cricket Club Ground, Raeburn Place, Edinburgh"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://grangecricket.org/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-058",
+    "display_name": "Shaheed Vijay Singh Pathik Sports Complex Ground, Greater Noida",
+    "aliases": [
+      "Greater Noida Sports Complex Ground, Greater Noida",
+      "Shaheed Vijay Singh Pathik Sports Complex Ground, Greater Noida"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cdn.cricket.af/solicitations/files/1722779046.pdf",
+      "https://www.icc-cricket.com/news/icc-announces-fixtures-of-icc-intercontinental-cup-and-world-cricket-league-championship",
+      "https://www.icc-cricket.com/news/shenwari-dreams-of-bigger-and-better",
+      "https://timesofindia.indiatimes.com/city/noida/gr-noida-stadium-gets-icc-accreditation/articleshow/56129469.cms",
+      "https://timesofindia.indiatimes.com/city/noida/pathik-sports-complex-set-to-reopen-after-9-years/amp_articleshow/133041773.cms",
+      "https://etender.up.nic.in/nicgep/app?component=%24DirectLink&page=FrontEndLatestActiveTenders&service=direct&sp=S2sDR5vwULKBbjGBMb2jVeQ%3D%3D"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "GNIDA government eProcurement tender 2025_GNIDA_1066243_27 explicitly names cricket floodlights at Shaheed Vijay Singh Pathik Sports Complex, Greater Noida. ICC identifies the same named complex as the Afghanistan home ground; 2016 accreditation and subsequent match reports connect the dataset cricket venue. Canonical label identifies the cricket ground within this complex; football and other sports pitches are not included. Tender was cancelled, so no completed-maintenance claim is inferred.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Greater Noida Sports Complex\" official cricket",
+      "\"Shaheed Vijay Singh Pathik\" site:greaternoidaauthority.in",
+      "\"Greater Noida\" stadium site:icc-cricket.com"
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-059",
+    "display_name": "Green Park Stadium, Kanpur",
+    "aliases": [
+      "Green Park Stadium, Kanpur",
+      "Green Park, Kanpur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.upca.tv/wp-content/uploads/2025/01/NITUPCAGreen-Park-Stadium-23.01.2025.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-060",
+    "display_name": "Greenfield International Stadium, Thiruvananthapuram",
+    "aliases": [
+      "Greenfield International Stadium, Thiruvananthapuram"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-061",
+    "display_name": "Gymkhana Club Ground, Nairobi",
+    "aliases": [
+      "Gymkhana Club Ground, Nairobi"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketkenya.org/match-centre/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-062",
+    "display_name": "Hagley Oval, Christchurch",
+    "aliases": [
+      "Hagley Oval, Christchurch"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1415.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 domestic schedule confirms current name and location; ground history preserves the exact site distinction.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-063",
+    "display_name": "Harare Sports Club",
+    "aliases": [
+      "Harare Sports Club"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/victoria-falls-stadium-in-zimbabwe-nears-completion-for-cwc27"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-064",
+    "display_name": "Schiebroekse Park, Rotterdam",
+    "aliases": [
+      "Schiebroekse Park, Rotterdam",
+      "Hazelaarweg, Rotterdam"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://matchcentre.kncb.nl/match/134453-6341660/scorecard/?period=1680649",
+      "https://kncb.nl/clubs.php"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "KNCB Netherlands-Pakistan ODI scorecard identifies Schiebroekse Park at Hazelaarweg 7. Current KNCB club directory confirms the VOC address. This is the cricket ground, not the adjacent hockey complex at Hazelaarweg 2.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-065",
+    "display_name": "Headingley, Leeds",
+    "aliases": [
+      "Headingley, Leeds"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-066",
+    "display_name": "Himachal Pradesh Cricket Association Stadium, Dharamsala",
+    "aliases": [
+      "Himachal Pradesh Cricket Association Stadium, Dharamsala"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-068",
+    "display_name": "ICC Academy Oval 1, Dubai",
+    "aliases": [
+      "ICC Academy, Dubai",
+      "ICC Global Cricket Academy, Dubai",
+      "ICC Academy Ground 1, Dubai",
+      "ICC Academy Oval 1, Dubai"
+    ],
+    "search_aliases": [
+      "icc academy ground 1",
+      "icc academy oval 1"
+    ],
+    "sources": [
+      "https://www.iccacademy.com/about",
+      "https://www.dsc.ae/sports/icc-academy/",
+      "https://archive.nzc.nz/Grounds/7457.html",
+      "https://archive.nzc.nz/Grounds/7457_o.html",
+      "https://archive.nzc.nz/Grounds/7813.html",
+      "https://cricketireland.ie/news/chase-replaces-little-in-ireland-squad-for-t20-series/",
+      "https://www.icc-cricket.com/news/uae-to-make-history-by-hosting-icc-u19-cwc-2014",
+      "https://emiratescricket.com/news-detail/3KWYxk8mep2rbMyJNjQ9"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Emirates Cricket Board 18 June 2026 tournament announcement explicitly names ICC Academy Oval 1, Dubai. Existing date/team matching of all 29 dataset ODIs to NZC physical-ground record 7457 plus Cricket Ireland Academy 1 fixtures establishes same-site identity. Ground 2 remains separate; retired ID 069 redirects here.",
+    "researched_on": "2026-10-22",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "site.iccacademy.com \"two\" \"grounds\"",
+      "ICC Academy Dubai ground one renamed global cricket academy official ODI",
+      "\"ICC Academy\" site:archive.nzc.nz/Grounds",
+      "\"ICC Academy\" site:cricketireland.ie \"2017\" \"March\"",
+      "\"ICC Academy\" \"Ground 1\" \"2026\" site:icc-cricket.com"
+    ],
+    "legacy_ids": [
+      "odi-ground-069"
+    ],
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-071",
+    "display_name": "Iqbal Stadium, Faisalabad",
+    "aliases": [
+      "Iqbal Stadium, Faisalabad"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.pcb.com.pk/press-release-detail/hbl-psl-11-tickets-to-go-on-sale-online-from-tuesday.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-072",
+    "display_name": "JSCA International Stadium Complex, Ranchi",
+    "aliases": [
+      "JSCA International Stadium Complex, Ranchi"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricjharkhand.org/tenders/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-074",
+    "display_name": "Jaffery Sports Club Ground, Nairobi",
+    "aliases": [
+      "Jaffery Sports Club Ground, Nairobi"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/scots-aim-for-final-victory",
+      "https://urbanswaras.co.ke/wp-content/uploads/2018/12/Thursday-Track-Sessions-info-sheet-JSC.pdf",
+      "https://www.the-star.co.ke/news/2019-12-13-new-astro-turf-football-pitch-opened-at-jafferys-sports-club",
+      "https://ea.thedawoodibohras.com/2025/08/15/cricket-fever-grips-nairobi-the-communitys-marquee-cricket-tournament-comes-to-africa/"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "ICC historical ODI report identifies Jaffery Sports Club. Original participant instructions locate its grass cricket pitch within the track in Lavington; club secretary explains 2019 football arena was additional to the cricket pitch. First-hand 2025 community tournament report names cricket at Jaffery. Same-site continuity is corroborated, not a 2026 official oval survey. Do not rename to Jaffery Arena or conflate Nairobi and Mombasa clubs.",
+    "verification_scope": "corroborated_current_listing",
+    "research_queries": [
+      "\"Jaffery Sports Club\" cricket official Nairobi",
+      "\"Nairobi Jaffery\" sports club official"
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-075",
+    "display_name": "Keenan Stadium, Jamshedpur",
+    "aliases": [
+      "Keenan Stadium, Jamshedpur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricjharkhand.org/about-the-stadium/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-076",
+    "display_name": "The Kia Oval, London",
+    "aliases": [
+      "The Kia Oval, London",
+      "Kennington Oval, London"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-077",
+    "display_name": "Kensington Oval, Bridgetown, Barbados",
+    "aliases": [
+      "Kensington Oval, Bridgetown, Barbados"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/kensington-oval-bridgetown/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-078",
+    "display_name": "Shaheed Ria Gope Stadium, Fatullah",
+    "aliases": [
+      "Shaheed Ria Gope Stadium, Fatullah",
+      "Khan Shaheb Osman Ali Stadium, Fatullah",
+      "Narayanganj Osmani Stadium, Fatullah"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricketarchive.com/CricketIreland/Grounds/237.html",
+      "https://nsc.gov.bd/pages/static-pages/6922e119933eb65569e2a33c"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Cricket Ireland archive explicitly maps Narayanganj Osmani (2005/06-2008/09) to Khan Shaheb Osman Ali (2009/10 onward). National Sports Council current international-stadium directory names Shaheed Ria Gope Stadium at Fatullah, Narayanganj. This is the main cricket stadium; do not merge the outer ground or the separate Osmani football stadium.",
+    "legacy_ids": [
+      "odi-ground-106"
+    ],
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-079",
+    "display_name": "Khulna Divisional Stadium",
+    "aliases": [
+      "Khulna Divisional Stadium",
+      "Sheikh Abu Naser Stadium, Khulna",
+      "Khulna Divisional Stadium, Khulna",
+      "Bir Shrestha Shahid Flight Lieutenant Motiur Rahman Stadium, Khulna"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketarchive.com/Archive/Grounds/4/1996.html",
+      "https://adp.plancomm.gov.bd/pub/rec",
+      "https://www.tigercricket.com.bd/images/2021/08/BCB-Activities-Report-2017-2020-2-page-view.pdf",
+      "https://www.bssnews.net/others/414627"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Statistical ground history explicitly links Khulna Divisional, Bir Shrestha Shahid Flight Lieutenant Motiur Rahman, and Sheikh Abu Naser. Government Planning Commission 2026-27 project list uses Khulna Divisional Cricket Stadium; BCB activities report also uses KDVS. Do not confuse with Khulna District Stadium. Retired ID remains resolvable.",
+    "legacy_ids": [
+      "odi-ground-151"
+    ],
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-080",
+    "display_name": "Hollywoodbets Kingsmead Stadium, Durban",
+    "aliases": [
+      "Hollywoodbets Kingsmead Stadium, Durban",
+      "Kingsmead, Durban"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/south-africa-unveil-schedule-for-key-wtc-series"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-081",
+    "display_name": "Kinrara Academy Oval, Puchong",
+    "aliases": [
+      "Kinrara Academy Oval, Kuala Lumpur",
+      "Kinrara Academy Oval, Puchong"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricketmalaysia.com/MalaysianCricketAssociation/viewArticle.do?articleId=166&clubId=10933",
+      "https://english.stadiumastro.com/news-sports/malaysian-cricket-association-ordered-vacate-kinrara-oval-after-19-years-212059",
+      "https://www.malaysiakini.com/news/623133",
+      "https://www.scoop.my/sports/245576/three-years-on-kinrara-oval-now-a-sad-state-of-bustling-former-self/"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "MCA president statement reproduced in March 2022 and Bernama June 2022 departure report establish the known Kinrara venue in Puchong. January 2025 reporting confirms disuse following the loss of the ground. Keep the established historical cricket name and old Kuala Lumpur alias; no invented current sponsor or merger with Bayuemas/UKM. Closure is a lifecycle state, not unresolved physical identity.",
+    "researched_on": "2026-10-22",
+    "verification_scope": "verified_historical_name",
+    "research_queries": [
+      "site.icc-cricket.com \"Kinrara\" \"closed\"",
+      "\"Kinrara\" \"closed\" site:cricketmalaysia.com",
+      "\"Kinrara\" \"vacate\" site:cricketmalaysia.com"
+    ],
+    "identity_status": "resolved",
+    "lifecycle": "former_cricket_venue"
+  },
+  {
+    "id": "odi-ground-082",
+    "display_name": "Lord's, London",
+    "aliases": [
+      "Lord's, London"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-085",
+    "display_name": "MA Aziz Stadium, Chattogram",
+    "aliases": [
+      "MA Aziz Stadium, Chattogram",
+      "MA Aziz Stadium, Chittagong"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bssnews.net/others/383618"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Bangladesh government news agency May 2026 report identifies MA Aziz Stadium at Chattogram. This remains separate from Chattogram Divisional / Matiur Rahman stadium; old city spelling retained.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-086",
+    "display_name": "MA Chidambaram Stadium, Chepauk, Chennai",
+    "aliases": [
+      "MA Chidambaram Stadium, Chepauk, Chennai"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-087",
+    "display_name": "Madhavrao Scindia Cricket Ground, Rajkot",
+    "aliases": [
+      "Madhavrao Scindia Cricket Ground, Rajkot"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1189.html",
+      "https://deshgujarat.com/2025/06/20/madhavrao-scindia-cricket-ground-in-rajkot-set-for-%E2%82%B95-71-crore-revamp/",
+      "https://www.gujaratstatetenders.com/tender-notice/tender-for-renting-out-the-shri-madhavrao-scindia-cricket-rajkot-gujarat-india-gt104425435?tesd=30-09-2026",
+      "https://www.rmc.gov.in/rmcwebsite/docs/budget/Budget_2025-26.pdf",
+      "https://www.rmc.gov.in/rmcwebsite/docs/budget/Budget_2024-25.pdf"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Rajkot Municipal Corporation 2025-26 budget names Madhavrao Scindia cricket stadium renovation in Gujarati; its 2024-25 budget locates the Shri Madhavrao Scindia cricket ground in the Race Course sports complex and specifies floodlighting work. This is current municipal name/site evidence beyond the NZC historical ground record. Retain established English Madhavrao Scindia Cricket Ground, Rajkot; do not merge Niranjan Shah/Khandheri or the Gwalior Scindia venue. Municipal budget naming does not assert renovation completion.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Madhavrao Scindia Cricket Ground\" site:rajkot.nic.in",
+      "\"Madhavrao Scindia\" site:bcci.tv \"2026\""
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-089",
+    "display_name": "Maharashtra Cricket Association Stadium, Pune",
+    "aliases": [
+      "Maharashtra Cricket Association Stadium, Pune"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-090",
+    "display_name": "Mahinda Rajapaksa International Cricket Stadium, Sooriyawewa, Hambantota",
+    "aliases": [
+      "Mahinda Rajapaksa International Cricket Stadium, Sooriyawewa, Hambantota"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://srilankacricket.lk/wp-content/uploads/2025/06/SLC-Annual-Report-2024-soft-copy-1.pdf",
+      "https://srilankacricket.lk/2026/04/sri-lanka-a-whitewash-new-zealand-a-in-dramatic-high-scoring-chase/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "SLC April 2026 report continues to name Mahinda Rajapaksa International Cricket Stadium. Earlier board annual report locates it in Hambantota; no speculative political renaming.",
+    "researched_on": "2026-10-21",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-093",
+    "display_name": "Mannofield Park, Aberdeen",
+    "aliases": [
+      "Mannofield Park, Aberdeen"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.aberdeenshirecc.org.uk/a/welcome-to-aberdeenshire-cricket-club-32892.html?page=2"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-094",
+    "display_name": "Manuka Oval, Canberra",
+    "aliases": [
+      "Manuka Oval, Canberra"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-095",
+    "display_name": "Maple Leaf North-West Ground, King City",
+    "aliases": [
+      "Maple Leaf North-West Ground, King City",
+      "Maple Leaf North-West Ground, Toronto"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/road-to-2023-cricket-world-cup-continues-in-canada"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ICC explicitly locates the Maple Leaf North-West facility in King City just outside Toronto. Both raw labels specify North-West; no other Maple Leaf oval or Toronto Cricket Club is merged. Retired ID remains resolvable.",
+    "legacy_ids": [
+      "odi-ground-096"
+    ],
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-097",
+    "display_name": "Marrara Stadium, Darwin",
+    "aliases": [
+      "Marrara Cricket Ground, Darwin",
+      "Marrara Stadium, Darwin"
+    ],
+    "search_aliases": [
+      "marrara stadium",
+      "tio stadium"
+    ],
+    "sources": [
+      "https://resources.cricket-australia.pulselive.com/cricket-australia/document/2023/10/09/31150531-9966-4ded-8dff-9af3174175e4/Tier-2-Venue-Guidelines-for-Australian-Cricket-2023-24.pdf",
+      "https://www.cricket.com.au/matches/series/CA%3A4677/cricket-australia-xi-v-bangladesh-warm-up-match-2026",
+      "https://www.darwin.nt.gov.au/sites/default/files/publications/attachments/2008-09-annual-report_0.pdf#page=46",
+      "https://www.cricket.com.au/news/4549609/australia-v-bangladesh-first-test-match-preview-guide-darwin-marrara-broadcast-details-how-to-watch-team-squad-news-session-start-times-top-end-2026-tigers",
+      "https://www.cricket.com.au/news/4328279/ultimate-guide-australia-south-africa-t20-international-series-darwin-marrara-cairns-cazalys-broadcast-information-teams-foxtel-streaming-scores-three-matches",
+      "https://www.darwin.nt.gov.au/sites/default/files/old_7_publications_files/2008-09-annual-report_0.pdf#page=46"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Dataset raw Marrara Cricket Ground, Darwin covers only Australia–Bangladesh ODIs 336201 (2008-08-30), 336202 (2008-09-03), 336204 (2008-09-06). Darwin City Council 2008–09 report p46 places those fixtures at Marrara Stadium; CA August 2026 preview confirms the stadium hosted the 2008 ODI series and currently uses Marrara Stadium. CA 2025 guide explicitly calls Marrara Cricket Ground neighbouring: this mapping is scoped to these historical dataset ODIs, not the separate cricket oval or future records using that ambiguous label. No complex-wide merge.",
+    "researched_on": "2026-10-22",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "site.cricket.com.au \"Marrara Cricket Ground\" \"TIO\"",
+      "\"Marrara Cricket Ground\" ODI Australia Bangladesh official",
+      "site:ntcricket.com.au \"2008\" \"Marrara\"",
+      "\"Bangladesh\" \"2008\" \"Marrara\" (CA/NT government domains)"
+    ],
+    "unresolved_match_ids": [
+      "336201",
+      "336202",
+      "336204"
+    ]
+  },
+  {
+    "id": "odi-ground-098",
+    "display_name": "McLean Park, Napier",
+    "aliases": [
+      "McLean Park, Napier"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1447.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 domestic schedule confirms current name and location; ground history preserves the exact site distinction.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-099",
+    "display_name": "Melbourne Cricket Ground",
+    "aliases": [
+      "Melbourne Cricket Ground"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-100",
+    "display_name": "Tin Kwong Road Recreation Ground, Hong Kong",
+    "aliases": [
+      "Tin Kwong Road Recreation Ground, Hong Kong",
+      "Mission Road Ground, Mong Kok, Hong Kong"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.lcsd.gov.hk/clpss/en/webApp/Facility/Details.do?did=4&fcid=6&ftid=56",
+      "https://www.hkcricket.org/uploads/CHK-Playing-Conditions-2020-21.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Current government operator lists Tin Kwong Road Recreation Ground. Cricket Hong Kong playing conditions explicitly identify it as Mission Road; unqualified nickname retained as hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-101",
+    "display_name": "Mombasa Sports Club Ground",
+    "aliases": [
+      "Mombasa Sports Club Ground"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.wpbsa.com/gd-clubs/mombasa-sports-club/",
+      "https://citizenship.ncbagroup.com/ncba-t20-cricket-tournament/",
+      "https://www.icc-cricket.com/news/dates-announced-for-third-round-of-icc-intercontinental-cup",
+      "https://www.icc-cricket.com/news/mooney-stars-in-ireland-win",
+      "https://www.linkedin.com/company/mombasa-sports-club"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "ICC exact 2012 ODI fixtures and ground report establish the international Mombasa Sports Club venue. Operator self-description identifies continuing cricket at the same club/address; WPBSA corroborates operator website. Retain historical ground name with corroborated operator continuity; homepage returned an empty body, so no successful current oval-specific certificate is claimed. No Coast Gymkhana or other Mombasa-site merge.",
+    "verification_scope": "corroborated_current_listing",
+    "research_queries": [
+      "\"Mombasa Sports Club\" cricket official"
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-102",
+    "display_name": "Moosa Cricket Stadium, Pearland",
+    "aliases": [
+      "Moosa Cricket Stadium, Pearland"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://mcs.moosastadium.com/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-103",
+    "display_name": "Mulpani International Cricket Ground, Kathmandu",
+    "aliases": [
+      "Mulpani Cricket Ground",
+      "Upper Mulpani Cricket Ground",
+      "Upper Mulpani Cricket Ground, Kathmandu",
+      "Mulpani International Cricket Ground",
+      "Mulpani International Cricket Ground, Kathmandu"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/storming-nepal-aim-for-premier-cup-supremacy-on-home-soil",
+      "https://www.icc-cricket.com/media-releases/icc-women-s-t20-world-cup-2026-qualifier-final-four-spots-up-for-grabs-in-nepal",
+      "https://english.khabarhub.com/2023/28/302090/",
+      "https://www.cricnepal.com/can-rename-mulpani-cricket-ground-in-honour-of-the-late-former-president",
+      "https://kathmandupost.com/cricket/2023/07/02/can-general-manager-resigns-blames-harassment-by-president",
+      "https://radionepalonline.com/en/2026/05/09/429613.html",
+      "https://cricketnepal.org.np/ground-detail/",
+      "https://www.onlinekhabar.com/2023/07/1330821/%E0%A4%AA%E0%A4%9B%E0%A4%BF-%E0%A4%B9%E0%A4%9F%E0%A5%8D%E0%A4%AF%E0%A5%8B-%E0%A4%95%E0%A5%8D%E0%A4%AF%E0%A4%BE%E0%A4%A8-%E0%A4%AE%E0%A5%82%E0%A4%B2%E0%A4%AA%E0%A4%BE%E0%A4%A8%E0%A5%80-%E0%A4%AE"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "CAN official current ground directory names Mulpani International Cricket Ground with ODI status from 2023. The 28 April 2023 preview explicitly places the next-day Oman-UAE semifinal at Upper Mulpani, quoting CAN acting secretary; local match 1368000 has the exact date and teams. July 2023 reporting states the proposed Jayakumar Nath Shah rename was suspended after objections. Use CAN current Mulpani name, not the suspended proposal. Upper Mulpani and historical raw name remain aliases; Lower Mulpani is separate. Official directory text was available through search index; direct fetch returned 403. Current official label and proposal-suspension evidence supersede earlier rename-only reports.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Mulpani\" \"ODI\" site:icc-cricket.com",
+      "site.can.cricket \"Mulpani\" \"TU\""
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved",
+    "suspended_name_proposals": [
+      "Jayakumar Shah International Cricket Ground, Upper Mulpani, Kathmandu",
+      "Jayakumar Shah International Cricket Ground",
+      "Jai Kumar Nath Shah International Cricket Stadium"
+    ]
+  },
+  {
+    "id": "odi-ground-104",
+    "display_name": "Multan Cricket Stadium",
+    "aliases": [
+      "Multan Cricket Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.pcb.com.pk/press-release-detail/hbl-psl-11-tickets-to-go-on-sale-online-from-tuesday.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-105",
+    "display_name": "Nahar Singh Cricket Stadium, Faridabad",
+    "aliases": [
+      "Nahar Singh Stadium, Faridabad",
+      "Nahar Singh Cricket Stadium, Faridabad"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1003.html",
+      "https://haryanatourism.gov.in/places_of_interest/nahar-singh-cricket-stadium/",
+      "https://haryanatourism.gov.in/destinations/faridabad/"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Haryana Tourism currently lists Nahar Singh Cricket Stadium in Faridabad with its New Industrial Town location. Indexed official text verifies the name; direct-page fetch timed out in this session. Existing statistical ground record supplies same-site historical identity. Current naming does not assert renovation completion or active ODIs.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Nahar Singh Stadium\" site:faridabad.nic.in",
+      "\"Nahar Singh Stadium\" site:haryanasports.gov.in"
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-108",
+    "display_name": "National Cricket Stadium, St George's, Grenada",
+    "aliases": [
+      "National Cricket Stadium, St George's, Grenada"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/queens-park-new-st-georges/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-109",
+    "display_name": "National Bank Stadium, Karachi",
+    "aliases": [
+      "National Bank Stadium, Karachi",
+      "National Stadium, Karachi",
+      "National Bank Cricket Arena, Karachi"
+    ],
+    "search_aliases": [
+      "national stadium karachi",
+      "national bank stadium",
+      "national bank cricket arena"
+    ],
+    "sources": [
+      "https://www.pcb.com.pk/press-release-detail/nbp-earns-naming-rights-for-national-stadium.html",
+      "https://www.pcb.com.pk/press-release-detail/newly-look-national-bank-stadium-to-be-unveiled-today.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "PCB naming-rights agreement and current official stadium usage; distinct from National Bank of Pakistan Sports Complex.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-110",
+    "display_name": "Pandit Jawaharlal Nehru Stadium, Fatorda, Margao",
+    "aliases": [
+      "Pandit Jawaharlal Nehru Stadium, Fatorda, Margao",
+      "Nehru Stadium, Fatorda, Margao"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://fcgoa.in/about"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Current tenant FC Goa identifies its home at Fatorda as Pandit Jawaharlal Nehru Stadium. Historical ODI ground retained; no claim of current cricket use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-111",
+    "display_name": "Nehru Stadium, Guwahati",
+    "aliases": [
+      "Nehru Stadium, Guwahati"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://usp2.amtron.in/citizen/424"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-112",
+    "display_name": "Jawaharlal Nehru Stadium, Kochi",
+    "aliases": [
+      "Jawaharlal Nehru Stadium, Kochi",
+      "Nehru Stadium, Kochi"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.keralacricketassociation.com/venues/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "KCA venue directory identifies Jawaharlal Nehru Stadium at Kaloor, Kochi. Historical ODI ground retained; no claim of current cricket use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-113",
+    "display_name": "Nehru Stadium, Pune",
+    "aliases": [
+      "Nehru Stadium, Pune"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1177.html",
+      "https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2311424&lang=1&reg=3",
+      "https://www.icc-cricket.com/news/maharashtra-cricket-association-stadium"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Government PIB announcement dated 17 September 2026 names Nehru Stadium, Pune as the venue campus for a Vice-President visit. ICC 2023 venue history explicitly distinguishes downtown Nehru Stadium from the newer MCA ground at Gahunje. No current sponsor change is asserted.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Nehru Stadium\" \"Pune\" site:pmc.gov.in"
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-115",
+    "display_name": "World Sports Betting Newlands Cricket Ground, Cape Town",
+    "aliases": [
+      "World Sports Betting Newlands Cricket Ground, Cape Town",
+      "Newlands, Cape Town"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/south-africa-unveil-schedule-for-key-wtc-series"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-116",
+    "display_name": "Niaz Stadium, Hyderabad, Sind",
+    "aliases": [
+      "Niaz Stadium, Hyderabad, Sind"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.pcb.com.pk/press-release-detail/pcb-future-stars-talent-hunt-programme-to-begin-from-11-february.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "PCB January 2026 talent-hunt announcement lists Niaz Stadium, Hyderabad, for 12-13 February. Distinct from all Indian Hyderabad grounds.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-118",
+    "display_name": "Old Hararians, Harare",
+    "aliases": [
+      "Old Hararians, Harare"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://npl.co.zw/teams/old-hararians"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-119",
+    "display_name": "Emirates Old Trafford, Manchester",
+    "aliases": [
+      "Emirates Old Trafford, Manchester",
+      "Old Trafford, Manchester"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-120",
+    "display_name": "P Sara Oval, Colombo",
+    "aliases": [
+      "P Sara Oval, Colombo",
+      "P Saravanamuttu Stadium, Colombo"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1704.html",
+      "https://tamilunioncac.com/media-centre/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Current operator Tamil Union names P Sara Oval; club history and NZC archive explicitly connect the older P Saravanamuttu name to this same site.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-121",
+    "display_name": "Pallekele International Cricket Stadium",
+    "aliases": [
+      "Pallekele International Cricket Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://srilankacricket.lk/2026/01/icc-t20-world-cup-trophy-tour-in-the-country-launched-under-presidents-patronage/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-122",
+    "display_name": "Optus Stadium, Perth",
+    "aliases": [
+      "Optus Stadium, Perth",
+      "Perth Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues/perth-stadium"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "CA explicitly identifies Perth Stadium as Optus Stadium on Burswood Peninsula; WACA remains separate.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-123",
+    "display_name": "Guyana National Stadium, Providence, Guyana",
+    "aliases": [
+      "Guyana National Stadium, Providence, Guyana",
+      "Providence Stadium, Guyana"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/guyana-national-stadium-providence/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-126",
+    "display_name": "Queen's Park Oval, Port of Spain, Trinidad",
+    "aliases": [
+      "Queen's Park Oval, Port of Spain, Trinidad"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/queens-park-oval-port-of-spain/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-127",
+    "display_name": "Queens Sports Club, Bulawayo",
+    "aliases": [
+      "Queens Sports Club, Bulawayo"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/victoria-falls-stadium-in-zimbabwe-nears-completion-for-cwc27"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-128",
+    "display_name": "Sir John Davies Oval, Queenstown",
+    "aliases": [
+      "Sir John Davies Oval, Queenstown",
+      "John Davies Oval, Queenstown",
+      "Queenstown Events Centre"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1459.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/",
+      "https://www.qldc.govt.nz/venues/queenstown-events-centre"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 schedule uses Sir John Davies Oval at Queenstown Events Centre. Council current venue page and historical NZC record establish the same site; John Davies Oval and Queenstown Events Centre remain aliases.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-129",
+    "display_name": "R Premadasa Stadium, Colombo",
+    "aliases": [
+      "R Premadasa Stadium, Colombo"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://srilankacricket.lk/2026/01/icc-t20-world-cup-trophy-tour-in-the-country-launched-under-presidents-patronage/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-130",
+    "display_name": "Rajiv Gandhi International Cricket Stadium, Dehradun",
+    "aliases": [
+      "Rajiv Gandhi International Cricket Stadium, Dehradun",
+      "Rajiv Gandhi International Stadium, Dehradun"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://environmentclearance.nic.in/writereaddata/FormB/EC/FORM_1/29012019OX0QWP76form1.pdf",
+      "https://sansad.in/getFile/loksabhaquestions/annex/6/AU2467.pdf?source=pqals",
+      "https://www.uttarakhandgoldcup.com/tournament",
+      "https://www.iip.res.in/wp-content/uploads/2024/03/Souvenir_51st-SSBMT_CSIR-IIP_compressed.pdf"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Tournament organizer 2026 Gold Cup fixtures repeatedly identify Rajiv Gandhi International Stadium, Dehradun separately from Maharana Pratap Sports College and Abhimanyu academy; CSIR-IIP 2024 venue description locates the international cricket stadium in Raipur, Dehradun. Keep full established cricket name; distinct from Uppal/Hyderabad.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Rajiv Gandhi International Cricket Stadium\" Dehradun official",
+      "\"Rajiv Gandhi\" stadium site:sports.uk.gov.in",
+      "\"Dehradun\" stadium site:cricket.af"
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-131",
+    "display_name": "Rajiv Gandhi International Stadium, Uppal, Hyderabad",
+    "aliases": [
+      "Rajiv Gandhi International Stadium, Uppal, Hyderabad"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-132",
+    "display_name": "Rangiri Dambulla International Stadium",
+    "aliases": [
+      "Rangiri Dambulla International Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.lankapremierleaguet20.com/news/lpl-2026-tickets-now-available-online-via-bookmyshow/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-133",
+    "display_name": "Rawalpindi Cricket Stadium",
+    "aliases": [
+      "Rawalpindi Cricket Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.pcb.com.pk/press-release-detail/hbl-psl-11-tickets-to-go-on-sale-online-from-tuesday.html"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-135",
+    "display_name": "Banks Homes Riverside, Chester-le-Street",
+    "aliases": [
+      "Banks Homes Riverside, Chester-le-Street",
+      "Riverside Ground, Chester-le-Street"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-137",
+    "display_name": "Ruaraka Sports Club Ground, Nairobi",
+    "aliases": [
+      "Ruaraka Sports Club Ground, Nairobi"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketkenya.org/match-centre/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-138",
+    "display_name": "Sabina Park, Kingston, Jamaica",
+    "aliases": [
+      "Sabina Park, Kingston, Jamaica"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/sabina-park-kingston/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-140",
+    "display_name": "Niranjan Shah Stadium, Rajkot",
+    "aliases": [
+      "Niranjan Shah Stadium, Rajkot",
+      "Saurashtra Cricket Association Stadium, Rajkot"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.greentribunal.gov.in/sites/default/files/news_updates/Reply%20of%20Saurashtra%20Cricket%20Association%20in%20EA%20NO%2041%20of%202021%20IN%20OA%20NO%2094%20of%202021%20%28Haider%20Ali%20Vs.%20UOI%20%26%20Ors.%29.pdf",
+      "https://www.bcci.tv/matches/38c1f407-1747-40cc-8ff7-822226632b5c/More/match-details"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "SCA own response to National Green Tribunal identifies its Niranjan Shah Stadium with Saurashtra Cricket Association Stadium address on the same filing. Current BCCI scorecards confirm name. Madhavrao Scindia Racecourse ground remains separate.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-141",
+    "display_name": "Sawai Mansingh Stadium, Jaipur",
+    "aliases": [
+      "Sawai Mansingh Stadium, Jaipur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.rajasthanroyals.com/ipl-stadium/sawai-mansingh-stadium-jaipur"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-142",
+    "display_name": "Saxton Oval, Nelson",
+    "aliases": [
+      "Saxton Oval, Nelson"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/6679.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 domestic schedule confirms current name and location; ground history preserves the exact site distinction.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-143",
+    "display_name": "Sector 16 Stadium, Chandigarh",
+    "aliases": [
+      "Sector 16 Stadium, Chandigarh"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://chandigarhdistrict.nic.in/sports-youth/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-144",
+    "display_name": "Seddon Park, Hamilton",
+    "aliases": [
+      "Seddon Park, Hamilton"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1429.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 domestic schedule confirms current name and location; ground history preserves the exact site distinction.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-147",
+    "display_name": "Shaheed Chandu Stadium, Bogra",
+    "aliases": [
+      "Shaheed Chandu Stadium, Bogra"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://nsc.gov.bd/pages/static-pages/6922e119933eb65569e2a33c"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-148",
+    "display_name": "Shaheed Veer Narayan Singh International Stadium, Raipur",
+    "aliases": [
+      "Shaheed Veer Narayan Singh International Stadium, Raipur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/photos/india-women-vs-zimbabwe-women-2026-3rd-t20i"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-153",
+    "display_name": "Sheikhupura Stadium",
+    "aliases": [
+      "Sheikhupura Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.pcb.com.pk/downloads/Schedule%20of%20Regional%20Inter%20District%20U-19%20Two%20day%20tournament%202015-2016.pdf",
+      "https://sheikhupura.punjab.gov.pk/imp_places"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Current district government Important Places directory lists Sheikhupura Stadium and its Pakistan–Zimbabwe ODI history. Same historical stadium; no merge with Rana Naveed Academy. Directory does not assert current international use.",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Sheikhupura Stadium\" site:pcb.com.pk",
+      "\"Sheikhupura Stadium\" \"2026\"",
+      "\"Sheikhupura Stadium\" site:archive.nzc.nz"
+    ],
+    "researched_on": "2026-10-22"
+  },
+  {
+    "id": "odi-ground-154",
+    "display_name": "Sher-e-Bangla National Cricket Stadium, Mirpur",
+    "aliases": [
+      "Sher-e-Bangla National Cricket Stadium, Mirpur",
+      "Shere Bangla National Stadium, Mirpur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.tigercricket.com.bd/public/images/opportunity_file/1846320434990363.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-155",
+    "display_name": "Sinhalese Sports Club Ground, Colombo",
+    "aliases": [
+      "Sinhalese Sports Club Ground, Colombo"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://srilankacricket.lk/2026/01/icc-t20-world-cup-trophy-tour-in-the-country-launched-under-presidents-patronage/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-156",
+    "display_name": "Sir Vivian Richards Stadium, North Sound, Antigua",
+    "aliases": [
+      "Sir Vivian Richards Stadium, North Sound, Antigua"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/sir-vivian-richards-stadium-north-sound/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-157",
+    "display_name": "Sophia Gardens, Cardiff",
+    "aliases": [
+      "Sophia Gardens, Cardiff"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-158",
+    "display_name": "Sportpark Het Schootsveld, Deventer",
+    "aliases": [
+      "Sportpark Het Schootsveld, Deventer"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://kncb.nl/clubs.php"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-159",
+    "display_name": "Sportpark Maarschalkerweerd, Utrecht",
+    "aliases": [
+      "Sportpark Maarschalkerweerd, Utrecht"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://kncb.nl/clubs.php"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-160",
+    "display_name": "Sportpark Thurlede, Schiedam",
+    "aliases": [
+      "Sportpark Thurlede, Schiedam"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://kncb.nl/clubs.php"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-161",
+    "display_name": "Sportpark Westvliet, The Hague",
+    "aliases": [
+      "Sportpark Westvliet, The Hague",
+      "Sportpark Westvliet, Voorburg"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://kncb.nl/clubs.php",
+      "https://dvy7d3tlxdpkf.cloudfront.net/kncb/2012-Kleefstra-Almanak.pdf?v=1612182006"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "KNCB club directory places Voorburg CC at Sportpark Westvliet, Groene Zoom 20, Den Haag. Its 2012 almanac records the 2010 World Cricket League at Westvliet, Voorburg. These are locality variants of the VCC main ground, not Sportpark Duivesteijn. Retired ID remains resolvable.",
+    "legacy_ids": [
+      "odi-ground-162"
+    ],
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-165",
+    "display_name": "The Spitfire Ground, Canterbury",
+    "aliases": [
+      "The Spitfire Ground, Canterbury",
+      "St Lawrence Ground, Canterbury"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-166",
+    "display_name": "SuperSport Park, Centurion",
+    "aliases": [
+      "SuperSport Park, Centurion"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/south-africa-unveil-schedule-for-key-wtc-series"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-167",
+    "display_name": "Sydney Cricket Ground",
+    "aliases": [
+      "Sydney Cricket Ground"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.cricket.com.au/tickets/venues"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-168",
+    "display_name": "Sylhet International Cricket Stadium",
+    "aliases": [
+      "Sylhet International Cricket Stadium"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.tigercricket.com.bd/public/images/opportunity_file/1846320434990363.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-169",
+    "display_name": "Takashinga Sports Club, Highfield, Harare",
+    "aliases": [
+      "Takashinga Sports Club, Highfield, Harare"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/victoria-falls-stadium-in-zimbabwe-nears-completion-for-cwc27"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-170",
+    "display_name": "The Cooper Associates County Ground, Taunton",
+    "aliases": [
+      "The Cooper Associates County Ground, Taunton"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-174",
+    "display_name": "Titwood, Glasgow",
+    "aliases": [
+      "Titwood, Glasgow"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://site2023.clydesdalecricket.org.uk/contact/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-176",
+    "display_name": "Toronto Cricket, Skating and Curling Club",
+    "aliases": [
+      "Toronto Cricket, Skating and Curling Club"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://torontocricketclub.com/documents/20124/16434988/campcricketbrochure26iii.pdf/37af1e9b-e666-6c7b-7735-69808427aba2?t=1770135272504"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Club 2026 brochure locates Toronto Cricket Skating and Curling Club at 141 Wilson Avenue, Toronto. This is not Maple Leaf North-West in King City; no claim of current ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-177",
+    "display_name": "Trent Bridge, Nottingham",
+    "aliases": [
+      "Trent Bridge, Nottingham"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.ecb.co.uk/news/4320034"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "ECB 2026 international fixtures confirm the current display name and city. Historical dataset spelling remains a hidden alias.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-178",
+    "display_name": "Tribhuvan University International Cricket Ground, Kirtipur",
+    "aliases": [
+      "Tribhuvan University International Cricket Ground, Kirtipur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/media-releases/icc-women-s-t20-world-cup-2026-qualifier-final-four-spots-up-for-grabs-in-nepal"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-179",
+    "display_name": "United Cricket Club Ground, Windhoek",
+    "aliases": [
+      "United Cricket Club Ground, Windhoek"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketnamibia.com/namibia-crowned-icc-world-cricket-league-division-2-champions-with-victory-over-oman/",
+      "https://cricketnamibia.com/schedule-released-for-icc-mens-cricket-world-cup-qualifier-playoff-in-namibia/",
+      "https://cricketnamibia.com/u14-nashua-junior-franchise-competition-opens-with-outstanding-cricket-talent/",
+      "https://cricketnamibia.com/veterans-cricket-association-of-namibia-to-host-the-over-50s-africa-cup/"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Board 2023 exact ground/fixture naming and 2024 events establish United Cricket Club Ground. Board explicitly distinguishes United from HP Oval and separately schedules FNB, United and Wanderers. Retain established United name, without asserting a current Trustco sponsorship; new national stadium is not a rename.",
+    "researched_on": "2026-10-22",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"United\" \"Ground\" \"2026\" site:cricketnamibia.com"
+    ],
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-180",
+    "display_name": "University of Otago Oval, Dunedin",
+    "aliases": [
+      "University of Otago Oval, Dunedin",
+      "University Oval, Dunedin"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://archive.blackcaps.co.nz/Grounds/1427.html",
+      "https://www.nzc.nz/cricket-across-aotearoa-ford-trophy-and-hallyburton-johnstone-shield-schedules-announced/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "NZC August 2026 schedule uses University of Otago Oval, Dunedin. Historical University Oval alias remains; no merge with Kensington Oval.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-181",
+    "display_name": "VRA Ground, Amstelveen",
+    "aliases": [
+      "VRA Ground, Amstelveen"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://kncb.nl/clubs.php"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-182",
+    "display_name": "VCA Civil Lines Stadium, Nagpur",
+    "aliases": [
+      "VCA Civil Lines Stadium, Nagpur",
+      "Vidarbha Cricket Association Ground, Nagpur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://vca.co.in/about/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "VCA 2026 league invitation distinguishes its Civil Lines ground from the Jamtha International Stadium 16 km away.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-183",
+    "display_name": "Vidarbha Cricket Association Stadium, Jamtha, Nagpur",
+    "aliases": [
+      "Vidarbha Cricket Association Stadium, Jamtha, Nagpur"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.vca.co.in/pages/vca-jamtha-stadium"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "VCA identifies its Jamtha International Stadium and explicitly places it 16 km from the separate Civil Lines stadium.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-184",
+    "display_name": "Wanderers Cricket Ground, Windhoek",
+    "aliases": [
+      "Wanderers Cricket Ground, Windhoek"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://cricketnamibia.com/namibia-crowned-icc-world-cricket-league-division-2-champions-with-victory-over-oman/",
+      "https://cricketnamibia.com/celebrating-excellence-at-2026-cricket-namibia-annual-awards/",
+      "https://cricketnamibia.com/wanderers-cricket-ground/",
+      "https://cricketnamibia.com/schedule-released-for-icc-mens-cricket-world-cup-qualifier-playoff-in-namibia/",
+      "https://cricketnamibia.com/veterans-cricket-association-of-namibia-to-host-the-over-50s-africa-cup/",
+      "https://www.icc-cricket.com/news/new-cricket-world-cup-2027-venue-hosts-thrilling-first-international-fixture"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Live board stadium directory names Wanderers Cricket Ground; 2023-24 board fixture assignments and ICC 2025 description distinguish old Wanderers from new FNB venue. Retain exact historical ground name. Live directory retrieval date is not its 2016 publication date; no new sponsorship assertion.",
+    "researched_on": "2026-10-22",
+    "verification_scope": "official_current_listing",
+    "research_queries": [
+      "\"Wanderers\" \"Ground\" \"2026\" site:cricketnamibia.com"
+    ],
+    "identity_status": "resolved"
+  },
+  {
+    "id": "odi-ground-185",
+    "display_name": "Wankhede Stadium, Mumbai",
+    "aliases": [
+      "Wankhede Stadium, Mumbai"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-186",
+    "display_name": "Warner Park, Basseterre, St Kitts",
+    "aliases": [
+      "Warner Park, Basseterre, St Kitts"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/warner-park-basseterre/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-187",
+    "display_name": "West End Park International Cricket Stadium, Doha",
+    "aliases": [
+      "West End Park International Cricket Stadium, Doha"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.olympic.qa/qatar-cricket-association"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-188",
+    "display_name": "WACA Ground, Perth",
+    "aliases": [
+      "WACA Ground, Perth",
+      "Western Australia Cricket Association Ground, Perth"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.wacricket.com.au/news/4459186/waca-ground-enters-news-era"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-190",
+    "display_name": "Willowmoore Park, Benoni",
+    "aliases": [
+      "Willowmoore Park, Benoni"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.icc-cricket.com/news/south-africa-unveil-schedule-for-key-wtc-series"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "odi-ground-191",
+    "display_name": "Windsor Park, Roseau, Dominica",
+    "aliases": [
+      "Windsor Park, Roseau, Dominica"
+    ],
+    "search_aliases": [],
+    "sources": [
+      "https://www.windiescricket.com/grounds/windsor-park-roseau/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "nz-christchurch-lancaster",
+    "display_name": "Lancaster Park, Christchurch",
+    "aliases": [
+      "Lancaster Park, Christchurch",
+      "AMI Stadium, Christchurch",
+      "Jade Stadium, Christchurch"
+    ],
+    "search_aliases": [
+      "lancaster park",
+      "ami stadium",
+      "jade stadium"
+    ],
+    "sources": [
+      "https://christchurchcitylibraries.com/Heritage/Places/Public/Lancaster-Park/",
+      "https://archived.ccc.govt.nz/MediaReleases/1998/project_manager_appointed.asp",
+      "https://resources.ccc.govt.nz/files/TheCouncil/meetingsminutes/agendas/2013/December/Council12December2013-SeparatelyCirculatedAttachments2.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Historical ODI venue at Lancaster Park; not the later AMI-branded Rugby League Park, Hagley Oval, or the new Te Kaha stadium.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "in-indore-holkar",
+    "display_name": "Holkar Cricket Stadium, Indore",
+    "aliases": [
+      "Holkar Cricket Stadium, Indore",
+      "Maharani Usharaje Trust Cricket Ground, Indore"
+    ],
+    "search_aliases": [
+      "holkar cricket stadium",
+      "maharani usharaje trust cricket ground"
+    ],
+    "sources": [
+      "https://documents.bcci.tv/documents/bcci/documents/1638362349_BCCI%20Annual%20Report%202015-16.pdf",
+      "https://www.bcci.tv/venues?map=1"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit identity verified against ground history; no city-based inference.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "in-vadodara-ipcl",
+    "display_name": "Reliance Stadium, Vadodara",
+    "aliases": [
+      "Reliance Cricket Stadium, Vadodara",
+      "Reliance Stadium, Vadodara",
+      "Indian Petrochemicals Corporation Limited Sports Complex Ground, Vadodara"
+    ],
+    "search_aliases": [
+      "reliance cricket stadium",
+      "reliance stadium",
+      "indian petrochemicals corporation limited sports complex ground"
+    ],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1259.html",
+      "https://www.cricbuzz.com/cricket-series/12398/ranji-trophy-elite-2026-27/venues/79/reliance-stadium",
+      "https://documents.bcci.tv/documents/bcci/document/2022/08/Payments_above_25_Lacs_List-June_2021.pdf"
+    ],
+    "verified_on": "2026-10-22",
+    "status": "verified",
+    "notes": "Current 2026-27 Ranji venue record names Reliance Stadium, Vadodara and explicitly gives the IPCL Sports Complex alias. BCCI payment record independently names the Reliance venue; NZC ground history links the historical aliases. No evidence that a 2016 proposed Dhirubhai Ambani rename was implemented; keep the attested Reliance name, separate from Kotambi.",
+    "verification_scope": "corroborated_current_listing",
+    "research_queries": [
+      "\"Reliance Stadium\" Vadodara site:ril.com",
+      "\"Reliance Stadium\" site:bcci.tv \"2026\"",
+      "Reliance Cricket Stadium Vadodara official name"
+    ],
+    "researched_on": "2026-10-22",
+    "identity_status": "resolved"
+  },
+  {
+    "id": "za-potchefstroom-oval",
+    "display_name": "JB Marks Cricket Oval, Potchefstroom",
+    "aliases": [
+      "JB Marks Cricket Oval, Potchefstroom",
+      "Senwes Park, Potchefstroom",
+      "Sedgars Park, Potchefstroom"
+    ],
+    "search_aliases": [
+      "jb marks cricket oval",
+      "senwes park",
+      "sedgars park"
+    ],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1642.html",
+      "https://images.icc-cricket.com/image/upload/prd/hzrlig5alokdzqmyrflu.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit identity verified against ground history; no city-based inference.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "ie-malahide-village",
+    "display_name": "The Village, Malahide, Dublin",
+    "aliases": [
+      "The Village, Malahide, Dublin",
+      "Malahide, Dublin"
+    ],
+    "search_aliases": [
+      "the village",
+      "malahide"
+    ],
+    "sources": [
+      "https://cricketireland.ie/international/venues-facilities/international-grounds/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit identity verified against ground history; no city-based inference.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "au-townsville-riverway",
+    "display_name": "Riverway Stadium, Townsville",
+    "aliases": [
+      "Riverway Stadium, Townsville",
+      "Tony Ireland Stadium, Townsville"
+    ],
+    "search_aliases": [
+      "riverway stadium",
+      "tony ireland stadium"
+    ],
+    "sources": [
+      "https://www.townsville.qld.gov.au/facilities-and-recreation/sport-and-leisure-facilities/riverway-stadium",
+      "https://www.townsville.qld.gov.au/__data/assets/pdf_file/0025/65536/190412-TCC-S-and-R-Facility-Strategy-part-B-low-res.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit identity verified against ground history; no city-based inference.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "za-kimberley-oval",
+    "display_name": "Kimberley Oval, Kimberley",
+    "aliases": [
+      "Kimberley Oval, Kimberley",
+      "Diamond Oval, Kimberley",
+      "De Beers Diamond Oval, Kimberley"
+    ],
+    "search_aliases": [
+      "kimberley oval",
+      "diamond oval",
+      "de beers diamond oval"
+    ],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1619.html",
+      "https://cricket.co.za/fixtures-schedules/"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit identity verified against ground history; no city-based inference.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "za-johannesburg-wanderers",
+    "display_name": "DP World Wanderers Stadium, Johannesburg",
+    "aliases": [
+      "DP World Wanderers Stadium, Johannesburg",
+      "The Wanderers Stadium, Johannesburg",
+      "New Wanderers Stadium, Johannesburg"
+    ],
+    "search_aliases": [
+      "dp world wanderers stadium",
+      "the wanderers stadium",
+      "new wanderers stadium"
+    ],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1609.html",
+      "https://www.icc-cricket.com/news/south-africa-unveil-schedule-for-key-wtc-series"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Official board/operator venue listing confirms this ground name; listing does not assert active ODI use.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "in-visakhapatnam-aca-vdca",
+    "display_name": "ACA-VDCA Cricket Stadium, Visakhapatnam",
+    "aliases": [
+      "ACA-VDCA Cricket Stadium, Visakhapatnam",
+      "Andhra Cricket Association-Visakhapatnam District Cricket Association Stadium, Visakhapatnam",
+      "Dr. Y.S. Rajasekhara Reddy ACA-VDCA Cricket Stadium, Visakhapatnam"
+    ],
+    "search_aliases": [
+      "aca-vdca cricket stadium",
+      "andhra cricket association-visakhapatnam district cricket association stadium",
+      "dr. y.s. rajasekhara reddy aca-vdca cricket stadium"
+    ],
+    "sources": [
+      "https://archive.nzc.nz/Grounds/1955.html",
+      "https://www.bcci.tv/venues?map=1",
+      "https://www.icc-cricket.com/tournaments/womens-cricket-worldcup-2025/news/mithali-raj-stand-inaugurated-at-aca-vdca-cricket-stadium"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Explicit identity verified against ground history; no city-based inference.",
+    "verification_scope": "official_current_listing"
+  },
+  {
+    "id": "in-mohali-pca",
+    "display_name": "Punjab Cricket Association IS Bindra Stadium, Mohali, Chandigarh",
+    "aliases": [
+      "Punjab Cricket Association IS Bindra Stadium, Mohali, Chandigarh",
+      "Punjab Cricket Association Stadium, Mohali, Chandigarh"
+    ],
+    "search_aliases": [
+      "punjab cricket association is bindra stadium",
+      "punjab cricket association stadium"
+    ],
+    "sources": [
+      "https://cricketpunjab.in/index.php",
+      "https://www.cricketpunjab.in/pdf/Terms-In-stadia-Advertisement-Rights.pdf"
+    ],
+    "verified_on": "2026-10-21",
+    "status": "verified",
+    "notes": "Sector 63 Mohali ground; distinct from Sector 16 Chandigarh and Mullanpur/New Chandigarh.",
+    "verification_scope": "official_current_listing"
+  }
+]

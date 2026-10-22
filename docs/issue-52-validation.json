@@ -1,0 +1,189 @@
+{
+  "date": "2026-10-22",
+  "python": "Python 3.12.2",
+  "environment": "/tmp/issue52-streamlit155-env (system site packages, local Streamlit and resolved cachetools; production environment unchanged)",
+  "versions": {
+    "streamlit": "1.55.0",
+    "cachetools": "7.2.4",
+    "duckdb": "1.5.3",
+    "pytest": "9.1.0",
+    "pandas": "2.2.2",
+    "numpy": "1.26.4",
+    "protobuf": "4.25.3"
+  },
+  "focused_before_last_source_updates": {
+    "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests/streamlit tests/backend/test_venue_identity.py tests/backend/test_chat_phase1_e2e.py::test_ambiguous_venue_follow_up_offers_choices_without_mutating_state -q",
+    "passed": 174,
+    "seconds": 27.6
+  },
+  "exploratory_streamlit_166": {
+    "passed": 1433,
+    "failed": 3,
+    "failures": [
+      "test_ambiguous_venue_follow_up_offers_choices_without_mutating_state (stale Docklands expectation; corrected)",
+      "test_streamlit_apply_and_reset_preserve_resolved_question (existing Apply/Reset behavior under 1.66.1)",
+      "test_streamlit_venue_filter_applies_before_top_ten_and_resets (existing Apply/Reset behavior under 1.66.1)"
+    ]
+  },
+  "audit": {
+    "observed_raw_names": 194,
+    "physical_ground_ids": 166,
+    "total_deliveries": 1364851,
+    "mapped_deliveries": 1364851,
+    "verified_identities": 166,
+    "verified_current_listings": 162,
+    "verified_archive_names": 0,
+    "corroborated_current_names": 3,
+    "verified_historical_names": 1,
+    "retained_separate_identities": 0,
+    "csv_inventory_matches_database": true,
+    "csv_delivery_and_match_counts_match_database": true
+  },
+  "audit_byte_reproduction": true,
+  "compileall": "passed",
+  "git_diff_check": "passed",
+  "pre_fix_locked_full_suite": {
+    "passed": 1543,
+    "failed": 1,
+    "seconds": 615.52,
+    "failure": "test_other_broadening_wording_removes_only_the_result[Regardless of the result?]",
+    "cause": "of token in University of Otago / Port of Spain caused fuzzy venue ambiguity",
+    "fix": "Ignore of in venue follow-up stopwords; verified current names retained"
+  },
+  "targeted_fix_verification": {
+    "passed": 4,
+    "seconds": 6.04,
+    "coverage": "All three result-broadening variants plus Melbourne ambiguity clarification"
+  },
+  "completed_on_resume_full_suite": {
+    "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests -q",
+    "status": "passed",
+    "log": "/tmp/issue52-final-full155-fixed.log",
+    "passed": 1544,
+    "failed": 0,
+    "seconds": 615.02,
+    "registry_state": "Registry on resume, before Marrara source correction"
+  },
+  "full_suite": {
+    "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests -q",
+    "status": "passed",
+    "log": "/tmp/issue52-final-academy-full155.log",
+    "registry_sha256": "61e6f6f847990845e1bcb1e69c084aa47bb97d6edc58ab13f8903d784990fdf3",
+    "passed": 1549,
+    "failed": 0,
+    "warnings": 3,
+    "seconds": 622.24
+  },
+  "post_marrara_identity_suite": {
+    "passed": 147,
+    "seconds": 25.99,
+    "warnings": 2,
+    "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests/backend/test_venue_identity.py -q"
+  },
+  "final_audit_byte_reproduction": true,
+  "post_marrara_full_suite": {
+    "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests -q",
+    "status": "passed",
+    "log": "/tmp/issue52-resume-final-full155.log",
+    "passed": 1546,
+    "failed": 0,
+    "warnings": 3,
+    "seconds": 626.08,
+    "registry_state": "After Marrara correction, before Academy merge; registry imported before later merge edits"
+  },
+  "audit_negative_smoke": "passed: identical venue names and row counts but different raw CSV/database distinct-match counts rejected",
+  "resume_changed_files": [
+    "backend/app/domain/data/odi_venues.json",
+    "docs/issue-52-validation.json",
+    "docs/issue-52-venue-audit.md",
+    "docs/issue-52-venue-count-proof.json",
+    "docs/issue-52-venue-inventory.csv",
+    "docs/issue-52-venue-research.json",
+    "scripts/audit_odi_venues.py",
+    "tests/backend/test_venue_identity.py"
+  ],
+  "preexisting_edits_outside_resume_scope_preserved": true,
+  "self_review": "Shared registry SQL/alias/profile paths reviewed; no new runtime correction needed. Ground 2 remains distinct; old Academy ID redirects; current names and all aliases resolve. Raw CSV/database only read.",
+  "artifact_sha256": {
+    "docs/issue-52-venue-inventory.csv": "88f8dcf4ac6e682eab7a40d452e640e01b5dac0e2003d2b0043330efe1965e92",
+    "docs/issue-52-venue-count-proof.json": "9bf502a0327034b65b384478e7f13c169a95c238b29af7c8d93bc59115b148fe"
+  },
+  "prior_round_full_suite": {
+    "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests -q",
+    "status": "passed",
+    "log": "/tmp/issue52-final-academy-full155.log",
+    "registry_sha256": "61e6f6f847990845e1bcb1e69c084aa47bb97d6edc58ab13f8903d784990fdf3",
+    "passed": 1549,
+    "failed": 0,
+    "warnings": 3,
+    "seconds": 622.24
+  },
+  "final_15_resolution": {
+    "date": "2026-10-22",
+    "focused_command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests/backend/test_venue_identity.py tests/backend/test_chat_phase1_e2e.py -q",
+    "focused_passed": 210,
+    "focused_failed": 0,
+    "focused_warnings": 3,
+    "focused_seconds": 86.58,
+    "focused_log": "/tmp/issue52-r4-final-focused.log",
+    "registry_sha256": "46d81a3197329be4dd2dd11cc1848a350d431f43cf91a011267244f0b65521c1",
+    "audit": {
+      "observed_raw_names": 194,
+      "physical_ground_ids": 166,
+      "total_deliveries": 1364851,
+      "mapped_deliveries": 1364851,
+      "verified_identities": 166,
+      "verified_current_listings": 162,
+      "verified_archive_names": 0,
+      "corroborated_current_names": 3,
+      "verified_historical_names": 1,
+      "retained_separate_identities": 0,
+      "csv_inventory_matches_database": true,
+      "csv_delivery_and_match_counts_match_database": true
+    },
+    "audit_byte_reproduction": true,
+    "notes": "Final focused run includes current CAN name after discovering suspended Mulpani rename. Broad run was started before that final label correction and is separately recorded; it is not claimed to test that later registry snapshot. Registry status updates for African evidence do not change runtime names. No source CSV/database writes.",
+    "broad_regression": {
+      "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests -q",
+      "passed": 1564,
+      "failed": 0,
+      "warnings": 3,
+      "seconds": 644.76,
+      "log": "/tmp/issue52-r4-full.log",
+      "snapshot": "Started before final CAN/Mulpani naming correction. Final identity and chat suite rechecked after that correction: 210 passed."
+    },
+    "compileall": "passed",
+    "git_diff_check": "passed"
+  },
+  "historical_validation_scope": "All prior results in this document ran in a shared working tree containing unrelated ranking-control edits. They do not independently validate the scoped issue-52 commit.",
+  "isolated_integration": {
+    "scope": "git checkout-index export of the 24 scoped files plus unchanged HEAD files; excludes unrelated ranking-control edits; source CSV/database linked locally read-only",
+    "status": "passed after installing frontend dependencies and rerunning launcher tests",
+    "full_command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests -q",
+    "full_log": "/tmp/issue52-isolated-full-final.log",
+    "full_run": {
+      "passed": 1552,
+      "failed": 2,
+      "warnings": 3,
+      "seconds": 627.32,
+      "failures": "Two unchanged frontend launcher tests require frontend/node_modules, absent from initial export."
+    },
+    "dependency_setup": "npm ci in exported frontend using exported package-lock.json",
+    "targeted_rerun": {
+      "command": "/tmp/issue52-streamlit155-env/bin/python -m pytest tests/test_run_local.py -q",
+      "passed": 4,
+      "failed": 0,
+      "seconds": 0.04
+    },
+    "remaining_test_failures": 0,
+    "frontend_build": "npm run build passed in isolated export (includes TypeScript checks)",
+    "frontend_build_log": "/tmp/issue52-isolated-build.log",
+    "audit": "Inventory and count proof reproduced byte for byte from isolated export; all 1364851 deliveries reconciled",
+    "compileall": "passed: backend ingestion scripts streamlit_app.py",
+    "git_diff_check": "passed",
+    "preservation": "All seven pre-existing/mixed production files retain initial working content exactly; index contains only issue-52 changes.",
+    "test_fixture": "Shared read-only module fixture; qualifying 24-ball alias observations preserve original venue API; distinct-match assertions query combined rows independently.",
+    "self_review": "Reviewed staged runtime changes, registry resolution and retired IDs, parameterized aliases, stable-ID grouping, raw data read-only connections, provenance distinctions and UI preservation. No outstanding code finding.",
+    "interrupted_runs": "Initial function-scoped fixture runs were deliberately interrupted for test-fixture performance; no completed-run claim. A mistakenly started shared-tree run was stopped immediately and is not validation evidence."
+  }
+}

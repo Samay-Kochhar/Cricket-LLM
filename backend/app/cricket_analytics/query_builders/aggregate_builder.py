@@ -21,6 +21,7 @@ from backend.app.cricket_analytics.match_state_filters import (
 from backend.app.cricket_analytics.metric_registry import metric_sql_expression
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, QueryBuildResult
+from backend.app.domain.venues import venue_filter, venue_id_sql, venue_display_sql
 
 
 LEGAL_BALL = LEGAL_BALL_PREDICATE
@@ -32,6 +33,7 @@ class DimensionSql:
     expression: str
     alias: str
     not_null_expression: str | None = None
+    group_expression: str | None = None
 
 
 DIMENSION_SQL: dict[str, DimensionSql] = {
@@ -45,7 +47,7 @@ DIMENSION_SQL: dict[str, DimensionSql] = {
     "shot_type": DimensionSql("shot", "shot_type", "shot"),
     "bowling_style": DimensionSql("bowl_style", "bowling_style", "bowl_style"),
     "batter_hand": DimensionSql("bat_hand", "batter_hand", "bat_hand"),
-    "venue": DimensionSql("ground", "venue", "ground"),
+    "venue": DimensionSql(venue_display_sql(venue_id_sql()), "venue", "ground", venue_id_sql()),
     "innings": DimensionSql("inns", "innings", "inns"),
     "year": DimensionSql("TRY_CAST(year AS INTEGER)", "year", "year"),
     "phase": DimensionSql(
@@ -89,7 +91,7 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
     dimensions = plan.group_by or ([plan.entity] if plan.entity in DIMENSION_SQL else [])
     dimension_defs = [DIMENSION_SQL[dimension] for dimension in dimensions]
     select_dimensions = [f"{definition.expression} AS {definition.alias}" for definition in dimension_defs]
-    group_expressions = [definition.expression for definition in dimension_defs]
+    group_expressions = [definition.group_expression or definition.expression for definition in dimension_defs]
     columns = [definition.alias for definition in dimension_defs]
 
     where_clauses = ["1 = 1"]
@@ -259,12 +261,11 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
         elif key == "batter_hand":
             clauses.append(("bat_hand = ?", [value]))
         elif key == "venue":
-            clauses.append(("ground = ?", [value]))
+            clauses.append(venue_filter([str(value)]))
         elif key == "venues" and isinstance(value, list) and value:
             venues = [venue for venue in value if isinstance(venue, str)]
             if venues:
-                placeholders = ", ".join("?" for _ in venues)
-                clauses.append((f"ground IN ({placeholders})", venues))
+                clauses.append(venue_filter(venues))
         elif key == "opposition":
             if entity == "bowler" or ("bowler" in filters and "batter" not in filters):
                 clauses.append(("team_bat = ?", [value]))

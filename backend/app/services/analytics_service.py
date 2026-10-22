@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass, field
 from statistics import mean
 
+from backend.app.domain.venues import matching_venues, resolve_venue, venue_id_sql, venue_display_sql
 from backend.app.db.repository import AnalyticsRepository
 from backend.app.domain.evidence_models import (
     ChartBlock,
@@ -1294,8 +1295,8 @@ LIMIT :limit
                 for index, row in enumerate(rows)
             ],
         )
-        sql = """
-SELECT ground AS venue,
+        sql = f"""
+SELECT {venue_display_sql(venue_id_sql())} AS venue,
        COUNT(DISTINCT p_match) AS matches,
        COUNT(DISTINCT p_match || ':' || inns || ':' || team_bat) AS innings,
        SUM(batruns) AS runs,
@@ -1304,7 +1305,7 @@ SELECT ground AS venue,
        AVG(control) AS control
 FROM analytics.deliveries_v1
 WHERE bat = :player
-GROUP BY ground
+GROUP BY {venue_id_sql()}
 ORDER BY runs DESC, runs / NULLIF(dismissals, 0) DESC, balls DESC
 LIMIT :limit
 """.strip()
@@ -1400,8 +1401,8 @@ LIMIT :limit
                 for index, row in enumerate(rows)
             ],
         )
-        sql = """
-SELECT ground AS venue,
+        sql = f"""
+SELECT {venue_display_sql(venue_id_sql())} AS venue,
        COUNT(DISTINCT p_match) AS matches,
        COUNT(DISTINCT p_match || ':' || inns || ':' || team_bowl) AS bowling_innings,
        SUM(CASE WHEN legal ball THEN 1 ELSE 0 END) AS legal_balls,
@@ -1409,7 +1410,7 @@ SELECT ground AS venue,
        SUM(CASE WHEN dismissal is credited to bowler THEN 1 ELSE 0 END) AS wickets
 FROM analytics.deliveries_v1
 WHERE bowl = :player
-GROUP BY ground
+GROUP BY {venue_id_sql()}
 ORDER BY wickets DESC, runs_conceded / NULLIF(wickets, 0) ASC, legal_balls DESC
 LIMIT :limit
 """.strip()
@@ -2193,7 +2194,7 @@ GROUP BY bat, bowling_type
             "       SUM(bowlruns) AS runs_conceded,",
             "       SUM(CASE WHEN dismissal is credited to bowler THEN 1 ELSE 0 END) AS wickets",
             "FROM analytics.deliveries_v1",
-            "WHERE ground = :venue_name",
+            "WHERE ground IN (:venue_aliases)",
         ]
         if excluded_teams:
             sql_lines.append("  AND team_bowl NOT IN (:excluded_teams)")
@@ -2226,7 +2227,7 @@ GROUP BY bat, bowling_type
                     title="Venue bowling leaderboard source",
                     description="Filters deliveries to the resolved ODI venue and ranks bowlers by bowler-credit wickets.",
                     sql=venue_sql,
-                    parameters=[venue_name, *excluded_teams, 24, 10],
+                    parameters=[*resolve_venue(venue_name).aliases, *excluded_teams, 24, 10],
                     table=venue_table,
                 )
             ],
@@ -4450,6 +4451,11 @@ ORDER BY year
         )
 
     def _match_venue(self, question: str) -> str | None:
+        matches = matching_venues(question, self.available_venues)
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            return None
         lowered = question.lower()
         question_tokens = self._venue_match_tokens(lowered)
         best_match: tuple[float, str] | None = None

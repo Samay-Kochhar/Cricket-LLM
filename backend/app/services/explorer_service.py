@@ -2,13 +2,17 @@ from __future__ import annotations
 
 from typing import Any
 
+from backend.app.domain.venues import resolve_venue
+
 from backend.app.services.player_resolution import resolve_player_name
 
 
 def build_venue_profile(repository: object, venue_name: str) -> dict[str, Any]:
     """Build the venue explorer payload shared by FastAPI and Streamlit."""
+    venue = resolve_venue(venue_name)
     return {
-        "venue_name": venue_name,
+        "venue_id": venue.id,
+        "venue_name": venue.display_name,
         "bowling_leaderboard": repository.get_venue_bowling_leaderboard(venue_name),
     }
 

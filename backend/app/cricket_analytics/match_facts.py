@@ -15,6 +15,7 @@ from datetime import date
 from typing import Literal, Protocol
 
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, SortSpec
+from backend.app.domain.venues import resolve_venue, venue_display_name
 
 
 @dataclass(frozen=True, slots=True)
@@ -777,7 +778,7 @@ def resolve_match_fact(
         candidate_year = _one(candidate.years)
         candidate_date = _one(candidate.dates)
         candidate_competition = _one(candidate.competitions)
-        ground = _one(candidate.grounds)
+        ground = _one(tuple(dict.fromkeys(venue_display_name(value) for value in candidate.grounds)))
         if not all(
             (
                 candidate.match_id,
@@ -848,7 +849,7 @@ def resolve_match_fact(
             ),
             **identity,
         )
-    if venue is not None and venue != ground:
+    if venue is not None and resolve_venue(venue).id != resolve_venue(ground).id:
         return ResolvedMatchFact(
             status="data_limitation",
             detail=(

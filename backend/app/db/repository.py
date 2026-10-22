@@ -16,6 +16,10 @@ from backend.app.cricket_analytics.match_facts import (
     MatchMetadataCandidate,
 )
 from backend.app.cricket_analytics.player_roles import PlayerParticipation
+from backend.app.domain.venues import (
+    venue_filter, venue_options, resolve_venue,
+    matching_venues, venue_id_sql, venue_display_sql,
+)
 from backend.app.db.connection import get_connection
 from backend.app.services.player_resolution import normalize_name
 
@@ -169,8 +173,9 @@ class AnalyticsRepository:
             clauses.append(f"TRY_CAST(year AS INTEGER) IN ({', '.join('?' for _ in years)})")
             params.extend(years)
         if venue:
-            clauses.append("ground = ?")
-            params.append(venue)
+            clause, venue_params = venue_filter([venue])
+            clauses.append(clause)
+            params.extend(venue_params)
         where_clause = " WHERE " + " AND ".join(clauses)
         phase_clause, phase_params = self._phase_clause(phase)
         return where_clause + phase_clause, params + phase_params
@@ -254,7 +259,7 @@ class AnalyticsRepository:
             ORDER BY ground
             """
         )
-        return [str(row[0]) for row in rows]
+        return venue_options(str(row[0]) for row in rows)
 
     def list_teams(self) -> list[str]:
         rows = self._fetchall(
@@ -717,9 +722,9 @@ class AnalyticsRepository:
 
     def get_player_batting_venue_summary(self, player_name: str, limit: int = 20) -> list[dict[str, Any]]:
         rows = self._fetchall(
-            """
+            f"""
             SELECT
-              ground AS venue,
+              {venue_display_sql(venue_id_sql())} AS venue,
               COUNT(DISTINCT p_match) AS matches,
               COUNT(DISTINCT
                 CAST(p_match AS VARCHAR) || ':' ||
@@ -735,7 +740,7 @@ class AnalyticsRepository:
             FROM analytics.deliveries_v1
             WHERE bat = ?
               AND NULLIF(TRIM(CAST(ground AS VARCHAR)), '') IS NOT NULL
-            GROUP BY ground
+            GROUP BY {venue_id_sql()}
             HAVING COUNT(*) > 0
             ORDER BY runs_scored DESC, runs_scored / NULLIF(dismissals, 0) DESC, balls_faced DESC
             LIMIT ?
@@ -780,7 +785,7 @@ class AnalyticsRepository:
         rows = self._fetchall(
             f"""
             SELECT
-              ground AS venue,
+              {venue_display_sql(venue_id_sql())} AS venue,
               COUNT(DISTINCT p_match) AS matches,
               COUNT(DISTINCT
                 CAST(p_match AS VARCHAR) || ':' ||
@@ -796,7 +801,7 @@ class AnalyticsRepository:
             FROM analytics.deliveries_v1
             WHERE bowl = ?
               AND NULLIF(TRIM(CAST(ground AS VARCHAR)), '') IS NOT NULL
-            GROUP BY ground
+            GROUP BY {venue_id_sql()}
             HAVING SUM(CASE WHEN {legal_ball_predicate} THEN 1 ELSE 0 END) > 0
             ORDER BY wickets DESC, runs_conceded / NULLIF(wickets, 0) ASC, legal_balls DESC
             LIMIT ?
@@ -1190,7 +1195,8 @@ class AnalyticsRepository:
             "LOWER(CAST(dismissal AS VARCHAR)) IN "
             "('caught', 'bowled', 'leg before wicket', 'stumped', 'hit wicket', 'caught and bowled')"
         )
-        params: list[Any] = [venue_name]
+        venue_clause, venue_params = venue_filter([venue_name])
+        params: list[Any] = list(venue_params)
         team_exclusion_clause = ""
         if excluded_teams:
             placeholders = ", ".join("?" for _ in excluded_teams)
@@ -1206,7 +1212,7 @@ class AnalyticsRepository:
               SUM(TRY_CAST(bowlruns AS INTEGER)) AS runs_conceded,
               SUM(CASE WHEN {bowler_wicket_predicate} THEN 1 ELSE 0 END) AS wickets
             FROM analytics.deliveries_v1
-            WHERE ground = ?
+            WHERE {venue_clause}
               {team_exclusion_clause}
             GROUP BY bowl
             HAVING SUM(CASE WHEN {legal_ball_predicate} THEN 1 ELSE 0 END) >= 24
@@ -2360,13 +2366,17 @@ class AnalyticsRepository:
         return output
 
     def search_venues(self, query: str, limit: int = 10) -> list[str]:
+        options = self.list_venues()
+        exact = matching_venues(query, options)
+        if exact:
+            return exact[:limit]
         query_tokens = self._tokenize(query)
         if not query_tokens:
             return []
 
         scored: list[tuple[int, str]] = []
-        for venue in self.list_venues():
-            venue_tokens = self._tokenize(venue)
+        for venue in options:
+            venue_tokens = self._tokenize(" ".join(resolve_venue(venue).aliases))
             overlap = len(query_tokens & venue_tokens)
             if overlap:
                 scored.append((overlap, venue))
