@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from pydantic import BaseModel
 
 from backend.app.bootstrap import get_services
@@ -43,8 +43,18 @@ def player_profile(player_name: str, services=Depends(get_services)):
 
 
 @router.get("/venues/{venue_name}")
-def venue_profile(venue_name: str, services=Depends(get_services)):
-    return build_venue_profile(services["repository"], venue_name)
+def venue_profile(
+    venue_name: str, metric: str = "wickets_taken", phase: str | None = None,
+    year_start: int | None = None, year_end: int | None = None,
+    sample_unit: str = "legal_balls", minimum_sample: int = 24, limit: int = 10,
+    services=Depends(get_services),
+):
+    try:
+        return build_venue_profile(services["repository"], venue_name, metric=metric, phase=phase,
+                                  year_start=year_start, year_end=year_end, sample_unit=sample_unit,
+                                  minimum_sample=minimum_sample, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/compare")

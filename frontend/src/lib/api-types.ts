@@ -246,9 +246,33 @@ export type VenueLeaderboardRow = {
   runs_conceded: number;
   wickets: number;
   economy_rate?: number | null;
+  matches: number;
+  delivery_rows: number;
+  bowling_average: number | null;
+  bowling_strike_rate: number | null;
+  dot_percentage: number | null;
+  boundary_percentage: number | null;
 };
 
+export type VenueBowlingFilters = {
+  metric: string;
+  phase: string | null;
+  year_start: number | null;
+  year_end: number | null;
+  sample_unit: string;
+  minimum_sample: number;
+  limit: number;
+};
+export type VenueRanking = { metric: string; label: string; field: keyof VenueLeaderboardRow; direction: string };
 export type VenueProfileResponse = {
+  venue_id: string;
+  filters: VenueBowlingFilters;
+  ranking: VenueRanking;
+  metric_options: VenueRanking[];
+  phase_options: Record<string, string>;
+  sample_units: Record<string, string>;
+  venue_options: string[];
+  sample_policy: string;
   venue_name: string;
   bowling_leaderboard: VenueLeaderboardRow[];
 };
