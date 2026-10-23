@@ -54,3 +54,44 @@ Zero-denominator rates are null and displayed as unavailable, never zero.
 Rows unavailable for the selected metric are excluded before top N. Other null
 rates remain visible in the detailed table. Ties use bowling average ascending
 (null last), legal deliveries descending, then bowler name ascending.
+
+## Compare modes and venue batting (#54, #55, #57)
+
+`GET /api/compare` accepts two `player` values, `mode=batting|bowling`, a
+mode-specific `metric`, `phase`, paired inclusive `year_start` / `year_end`, and
+an optional canonical venue name, alias or ID in `venue`. Batting is the default;
+its chart defaults to `batting_strike_rate`. Bowling defaults to `economy_rate`.
+The shared service resolves player names and applies one identical context to
+both players. Empty samples retain both player rows with zero counts and null
+rates. Samples below 24 balls faced or legal balls are flagged; comparison does
+not exclude players or assign an overall winner. Metric metadata explains higher
+or lower preference; balls, runs conceded, and dismissal totals are descriptive.
+
+`GET /api/venues/{venue}` adds `mode=batting` while preserving the existing
+bowling default and `bowling_leaderboard` response field. `leaderboard` always
+contains the active mode; `batting_leaderboard` contains batting rows only.
+Both modes return canonical venue identity, filter metadata, metric options and
+sample units through the same profile service used by Streamlit and Next.js.
+Switching mode preserves the applied context and minimum, resets the metric to a
+valid default, and maps the ball sample unit to balls faced or legal balls;
+distinct-match units remain unchanged. Reset applies the current mode's defaults.
+
+Batting metrics are `runs_scored`, `batting_average`, `batting_strike_rate`,
+`control_percentage`, `batter_dot_percentage`, `boundary_percentage`,
+`balls_faced` and `dismissals`. Dot percentage ranks ascending; the others rank
+descending. Balls faced and dismissals are labelled descriptive totals.
+Ties use player name ascending. The default minimum is 24 balls faced; callers
+can select distinct matches or an explicit zero minimum. Venue aliases, phase
+and inclusive years filter delivery rows before aggregation, sample eligibility,
+selected-metric availability and top N.
+
+Balls faced count recorded `ballfaced = 1` events. Batting runs sum all recorded
+striker runs, including runs on events not counted as a ball faced; dismissals
+count recorded striker `out` events. Average is runs / dismissals, and strike
+rate is runs / balls faced × 100. Batter dots and boundaries count balls faced
+with zero bat runs or four/six bat runs, divided by balls faced. Control percentage
+uses the average recorded control value on balls faced × 100 and exposes
+`control_balls`, the count of balls with usable control. Missing control is
+excluded from that denominator. Zero denominators remain null, render as `—`,
+and do not become zero-valued comparison bars. Venue rankings exclude null
+values only for the chosen ranking metric, retaining nulls elsewhere in the table.

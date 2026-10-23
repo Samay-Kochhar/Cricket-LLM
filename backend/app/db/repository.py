@@ -1181,6 +1181,18 @@ class AnalyticsRepository:
             "control_percentage": float(avg_control) * 100 if avg_control is not None else None,
         }
 
+    def get_explorer_player_summary(self, player_name: str, mode: str, **context):
+        from backend.app.db.explorer_stats import query_stats
+        rows = query_stats(self, mode, player=player_name, **context)
+        return rows[0] if rows else None
+
+    def get_venue_batting_leaderboard(self, venue_name: str, **filters):
+        from backend.app.db.explorer_stats import query_stats
+        from backend.app.domain.venue_leaderboard import VenueBattingOptions
+        options = VenueBattingOptions(**filters)
+        return query_stats(self, "batting", venue=venue_name, phase=options.phase,
+                           year_start=options.year_start, year_end=options.year_end, ranking=options)
+
     def get_venue_bowling_leaderboard(
         self,
         venue_name: str,
