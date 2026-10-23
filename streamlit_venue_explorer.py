@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from backend.app.services.explorer_service import build_venue_profile
-from backend.app.domain.venue_leaderboard import METRICS, PHASES, SAMPLE_UNITS, VenueBowlingOptions
+from backend.app.domain.venue_leaderboard import METRICS, PHASES, SAMPLE_UNITS, VenueBowlingOptions, mode_options
 
 
 LOGGER = logging.getLogger("cricatlas.streamlit.venue")
@@ -18,8 +18,8 @@ def load_venue_profile(repository: object, venue_name: str, **filters: Any) -> d
     return build_venue_profile(repository, venue_name, **filters)
 
 
-def build_wickets_figure(rows: list[dict[str, Any]], metric: str = "wickets_taken") -> go.Figure:
-    label, field, _ = METRICS[metric]
+def build_wickets_figure(rows: list[dict[str, Any]], metric: str = "wickets_taken", mode: str = "bowling") -> go.Figure:
+    label, field, _ = mode_options(mode).metrics[metric]
     leaders = rows[:6]
     figure = go.Figure(
         go.Bar(
@@ -61,6 +61,11 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
 
+    mode = st.radio("Mode", ["bowling", "batting"], format_func=str.title, horizontal=True, key="venue-mode")
+    defaults = mode_options(mode)().as_dict()
+    metrics = mode_options(mode).metrics
+    sample_units = mode_options(mode).sample_units
+
     venue = st.selectbox(
         "Venue",
         options=venues,
@@ -77,9 +82,9 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
     if submitted:
         try:
             with st.spinner("Loading ground-specific ODI evidence…"):
-                st.session_state["venue-profile"] = load_venue_profile(repository, venue)
+                st.session_state["venue-profile"] = load_venue_profile(repository, venue, mode=mode)
                 st.session_state["venue-request"] = venue
-                st.session_state["venue-filter"] = dict(DEFAULT_FILTER)
+                st.session_state["venue-filter"] = dict(defaults)
                 st.session_state["venue-filter-version"] = st.session_state.get("venue-filter-version", 0) + 1
                 st.session_state.pop("venue-error", None)
         except Exception:
@@ -98,29 +103,38 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
             st.info("Choose a venue, then press Explore venue.")
         return
 
+    if profile.get("mode", "bowling") != mode:
+        selected = {**defaults, **{key: profile["filters"][key] for key in ("phase", "year_start", "year_end", "minimum_sample", "limit")}}
+        if profile["filters"]["sample_unit"] == "matches":
+            selected["sample_unit"] = "matches"
+        profile = load_venue_profile(repository, venue, mode=mode, **selected)
+        st.session_state["venue-profile"] = profile
+        st.session_state["venue-filter"] = selected
+        st.session_state["venue-filter-version"] = st.session_state.get("venue-filter-version", 0) + 1
+
     if "venue-filter" not in st.session_state or "ranking" not in profile:
         # An open session may still hold the previous sorting controls' result.
-        profile = load_venue_profile(repository, venue, **{**DEFAULT_FILTER, **st.session_state.get("venue-filter", {})})
+        profile = load_venue_profile(repository, venue, mode=mode, **{**defaults, **st.session_state.get("venue-filter", {})})
         st.session_state["venue-profile"] = profile
         st.session_state["venue-filter"] = profile["filters"]
 
     st.markdown(f"## {profile['venue_name']}")
-    active_filter = {**DEFAULT_FILTER, **st.session_state["venue-filter"]}
-    st.markdown("### Filter bowlers")
+    active_filter = {**defaults, **st.session_state["venue-filter"]}
+    st.markdown("### Filter bowlers" if mode == "bowling" else "### Filter batters")
     version = st.session_state.get("venue-filter-version", 0)
     with st.form(key=f"venue-filter-controls-{version}"):
         sample_unit = st.selectbox(
-            "Filter by", list(SAMPLE_UNITS), key=f"venue-sample-unit-{version}",
-            index=list(SAMPLE_UNITS).index(active_filter["sample_unit"]),
-            format_func=SAMPLE_UNITS.get,
+            "Filter by", list(sample_units), key=f"venue-sample-unit-{version}",
+            index=list(sample_units).index(active_filter["sample_unit"]),
+            format_func=sample_units.get,
         )
         minimum_sample = st.number_input(
             "Minimum number (0 = no minimum)", key=f"venue-minimum-{version}",
             min_value=0, max_value=1_000_000, value=active_filter["minimum_sample"], step=1,
         )
-        metric = st.selectbox("Rank and chart by", list(METRICS), key=f"venue-metric-{version}",
-                              index=list(METRICS).index(active_filter["metric"]),
-                              format_func=lambda key: METRICS[key][0])
+        metric = st.selectbox("Rank and chart by", list(metrics), key=f"venue-metric-{version}",
+                              index=list(metrics).index(active_filter["metric"]),
+                              format_func=lambda key: metrics[key][0])
         phase = st.selectbox("Phase", list(PHASES), key=f"venue-phase-{version}",
                              index=list(PHASES).index(active_filter["phase"] or ""),
                              format_func=PHASES.get)
@@ -135,7 +149,7 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
 
     if apply_submitted or reset_submitted:
         selected = (
-            dict(DEFAULT_FILTER)
+            dict(defaults)
             if reset_submitted
             else {
                 "sample_unit": sample_unit,
@@ -147,9 +161,9 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
             }
         )
         try:
-            updated = load_venue_profile(repository, venue, **selected)
-            if not updated["bowling_leaderboard"]:
-                st.error("No bowlers qualify for the selected filters and metric.")
+            updated = load_venue_profile(repository, venue, mode=mode, **selected)
+            if not updated["leaderboard"]:
+                st.error("No players qualify for the selected filters and metric.")
                 return
             st.session_state["venue-profile"] = updated
             st.session_state["venue-filter"] = selected
@@ -166,21 +180,21 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
             st.error("The venue filter could not be updated.")
             return
 
-    unit_label = SAMPLE_UNITS[active_filter["sample_unit"]]
+    unit_label = sample_units[active_filter["sample_unit"]]
     sample_label = (
         f"at least {active_filter['minimum_sample']} {unit_label[0].lower() + unit_label[1:]}"
         if active_filter["minimum_sample"]
         else "no minimum sample"
     )
     st.caption(
-        f"Filter{' (default)' if active_filter == DEFAULT_FILTER else ''}: {sample_label}. "
+        f"Filter{' (default)' if active_filter == defaults else ''}: {sample_label}. "
         f"{PHASES[active_filter['phase'] or '']}; "
         f"{str(active_filter['year_start']) + '–' + str(active_filter['year_end']) if active_filter['year_start'] else 'All years'}; "
         f"top 10 by {profile['ranking']['label']} ({profile['ranking']['direction']}). "
         "Eligibility applies after phase/year filters and before top 10."
     )
     st.caption(profile["sample_policy"])
-    leaderboard = profile["bowling_leaderboard"]
+    leaderboard = profile["leaderboard"]
     if not leaderboard:
         st.warning("No venue leaderboard data is available.")
         return
@@ -201,12 +215,19 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
         }
         for row in leaderboard
     ]
+    if mode == "batting":
+        table_rows = [{"Batter": row["player_name"], "Balls faced": row["balls_faced"],
+                       "Matches": row["matches"], "Runs": row["runs_scored"], "Dismissals": row["dismissals"],
+                       "Batting average": _format_economy(row["average"]), "Strike Rate": _format_economy(row["strike_rate"]),
+                       "Control %": _format_economy(row["control_percentage"]), "Control balls": row["control_balls"],
+                       "Dot %": _format_economy(row["dot_percentage"]), "Boundary %": _format_economy(row["boundary_percentage"])}
+                      for row in leaderboard]
     st.markdown("### Top Wicket Takers" if active_filter["metric"] == "wickets_taken" else f"### {profile['ranking']['label']} leaders")
     st.plotly_chart(
-        build_wickets_figure(leaderboard, active_filter["metric"]),
+        build_wickets_figure(leaderboard, active_filter["metric"], mode),
         use_container_width=True,
         config={"displayModeBar": False},
     )
 
-    st.markdown("### Bowling Leaderboard")
+    st.markdown("### Bowling Leaderboard" if mode == "bowling" else "### Batting Leaderboard")
     st.dataframe(table_rows, use_container_width=True, hide_index=True)

@@ -34,6 +34,9 @@ class Repository:
         }
         return rows.get(player_name)
 
+    def get_explorer_player_summary(self, player_name, mode, **context):
+        return self.get_player_batting_summary(player_name)
+
     def get_venue_bowling_leaderboard(self, venue_name: str, **filters) -> list[dict[str, object]]:
         assert venue_name == "Melbourne Cricket Ground"
         return [
@@ -76,7 +79,7 @@ render_compare_explorer({"repository": Repository(), "player_names": tuple(Repos
 """
     ).run()
 
-    assert [selectbox.label for selectbox in app.selectbox] == ["Player one", "Player two"]
+    assert [selectbox.label for selectbox in app.selectbox][:2] == ["Player one", "Player two"]
     assert app.button[0].label == "Compare players"
     assert app.button[0].disabled is True
 

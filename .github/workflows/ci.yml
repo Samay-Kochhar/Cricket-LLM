@@ -25,6 +25,11 @@ jobs:
           tests/ingestion/test_profile_dataset.py
           tests/backend/test_answer_composer.py
           tests/backend/test_player_resolution.py
+          tests/backend/test_explorer_modes.py
+          tests/backend/test_venue_bowling_leaderboard.py
+          tests/streamlit/test_compare_venue_explorers.py
+          tests/streamlit/test_explorer_mode_controls.py
+          tests/streamlit/test_issue_56_venue_leaderboard.py
       - name: Compile Python entry points
         run: python -m compileall backend ingestion scripts streamlit_app.py
 
