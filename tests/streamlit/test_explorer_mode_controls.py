@@ -46,11 +46,11 @@ def test_venue_batting_mode_preserves_filters_and_reset(repository):
     app = app_for(repository, 'venue')
     app.selectbox[0].select('Arun Jaitley Stadium, Delhi').run()
     app.button[0].click().run()
-    app.number_input[0].set_value(1).run()
-    app.selectbox[3].select('middle').run()
-    app.checkbox[0].check().run()
-    app.number_input[1].set_value(2023).run()
-    app.number_input[2].set_value(2024).run()
+    app.number_input[0].set_value(1)
+    app.selectbox[3].select('middle')
+    app.checkbox[0].check()
+    app.number_input[1].set_value(2023)
+    app.number_input[2].set_value(2024)
     app.button[1].click().run()
     app.radio[0].set_value('batting').run()
     assert not app.exception
@@ -59,7 +59,7 @@ def test_venue_batting_mode_preserves_filters_and_reset(repository):
     assert profile['filters']['year_start'] == 2023 and profile['filters']['minimum_sample'] == 1
     assert profile['filters']['sample_unit'] == 'balls_faced'
     assert 'Balls faced' in app.dataframe[0].value
-    app.selectbox[2].select('batter_dot_percentage').run()
+    app.selectbox[2].select('batter_dot_percentage')
     app.button[1].click().run()
     assert app.dataframe[0].value.iloc[0]['Batter'] == 'A'
     elements = list(app.main)

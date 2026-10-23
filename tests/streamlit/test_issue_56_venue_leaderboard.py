@@ -23,13 +23,14 @@ def test_controls_apply_independently_and_reset(repository):
     app = app_for(repository)
     assert app.dataframe[0].value.iloc[0]["Bowler"] == "A"
     assert "Bowling average" in app.dataframe[0].value
-    app.selectbox[1].select("matches").run()
-    app.number_input[0].set_value(1).run()
-    app.selectbox[2].select("economy_rate").run()
-    app.selectbox[3].select("middle").run()
-    app.checkbox[0].check().run()
-    app.number_input[1].set_value(2023).run()
-    app.number_input[2].set_value(2024).run()
+    app.selectbox[1].select("matches")
+    app.number_input[0].set_value(1)
+    app.selectbox[2].select("economy_rate")
+    app.selectbox[3].select("middle")
+    app.checkbox[0].check()
+    app.number_input[1].set_value(2023)
+    app.number_input[2].set_value(2024)
+    # Form edits stay in the browser until submission; batch them before run().
     # Draft controls do not mutate applied evidence.
     assert app.session_state["venue-profile"]["filters"]["metric"] == "wickets_taken"
     app.button[1].click().run()
@@ -41,7 +42,7 @@ def test_controls_apply_independently_and_reset(repository):
     assert profile["filters"]["sample_unit"] == "matches"
     assert app.dataframe[0].value.iloc[0]["Bowler"] == "B"
     assert any("Middle; 2023–2024" in caption.value for caption in app.caption)
-    app.checkbox[0].uncheck().run()
+    app.checkbox[0].uncheck()
     app.button[1].click().run()
     filters = app.session_state["venue-profile"]["filters"]
     assert filters["year_start"] is None
@@ -54,13 +55,13 @@ def test_controls_apply_independently_and_reset(repository):
 
 def test_invalid_and_empty_filters_do_not_show_misleading_results(repository):
     app = app_for(repository)
-    app.checkbox[0].check().run()
-    app.number_input[1].set_value(2024).run()
-    app.number_input[2].set_value(2023).run()
+    app.checkbox[0].check()
+    app.number_input[1].set_value(2024)
+    app.number_input[2].set_value(2023)
     app.button[1].click().run()
     assert app.error and not app.dataframe
-    app.number_input[2].set_value(2024).run()
-    app.number_input[0].set_value(999).run()
+    app.number_input[2].set_value(2024)
+    app.number_input[0].set_value(999)
     app.button[1].click().run()
     assert app.error and not app.dataframe
 

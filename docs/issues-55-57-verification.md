@@ -50,3 +50,19 @@ pass. Preview navigation worked, but two snapshot attempts failed with
 `Preview automation snapshot timed out after 15000ms.` Visual checks used the
 repository's Playwright setup with installed Chrome. Python checks use the
 compatible temporary Streamlit 1.55 environment.
+
+
+## CI follow-up: Streamlit 1.66.1
+
+CI resolved the floating Streamlit dependency to 1.66.1, while the initial local
+suite used 1.55. A minimal form probe reproduced the difference: calling
+`AppTest.run()` after each unsubmitted form edit discards those edits in 1.66.1;
+batching edits and running only on submission retains them. Three venue tests
+were exercising the former pattern, which is not how browser forms submit.
+The tests now batch edits before clicking Apply. Application code, assertions
+and dependencies are unchanged. Running against the version resolved by CI
+would have caught the mismatch before the first push.
+
+- Exact CI test selection in the isolated export with Streamlit 1.66.1: 70 passed.
+- Focused explorer selection with Streamlit 1.55: 60 passed.
+- The original failing three tests pass in both versions; no assertions were removed.
