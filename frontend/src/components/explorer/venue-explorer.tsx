@@ -17,9 +17,17 @@ const columns: [string, keyof VenueLeaderboardRow][] = [
   ["Boundary % conceded", "boundary_percentage"],
 ];
 
+const battingColumns: typeof columns = [
+  ["Batter", "player_name"], ["Balls faced", "balls_faced"], ["Matches", "matches"],
+  ["Runs", "runs_scored"], ["Dismissals", "dismissals"], ["Control balls", "control_balls"],
+  ["Batting average", "average"], ["Strike rate", "strike_rate"], ["Control %", "control_percentage"],
+  ["Dot %", "dot_percentage"], ["Boundary %", "boundary_percentage"],
+];
+
 export function VenueExplorer({ venueName }: VenueExplorerProps) {
   const [data, setData] = useState<VenueProfileResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedMode, setSelectedMode] = useState("bowling");
   const [request, setRequest] = useState({ venue: venueName, query: "" });
   const [loading, setLoading] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
@@ -31,16 +39,18 @@ export function VenueExplorer({ venueName }: VenueExplorerProps) {
     setError(null);
     setLoading(true);
     fetchApi<VenueProfileResponse>(`/api/venues/${encodeURIComponent(request.venue)}${request.query}`)
-      .then((payload) => { if (!cancelled) { setData(payload); setYearsEnabled(payload.filters.year_start != null); setFormVersion((value) => value + 1); } })
-      .catch((failure) => { if (!cancelled) setError(failure instanceof Error ? failure.message : "Unable to load venue explorer"); })
+      .then((payload) => { if (!cancelled) { setData(payload); setSelectedMode(payload.mode ?? "bowling"); setYearsEnabled(payload.filters.year_start != null); setFormVersion((value) => value + 1); } })
+      .catch((failure) => { if (!cancelled) { setSelectedMode(data?.mode ?? "bowling"); setError(failure instanceof Error ? failure.message : "Unable to load venue explorer"); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [request]);
 
+  const rows = data?.leaderboard ?? data?.bowling_leaderboard ?? [];
+  const activeColumns = data?.mode === "batting" ? battingColumns : columns;
   const chart = data ? {
     kind: "chart" as const,
     title: `${data.ranking.label} at venue`, chart_type: "bar",
-    series: data.bowling_leaderboard.slice(0, 6).map((row) => ({
+    series: rows.slice(0, 6).map((row) => ({
       label: row.player_name, value: Number(Number(row[data.ranking.field]).toFixed(2)),
     })),
   } : null;
@@ -50,17 +60,28 @@ export function VenueExplorer({ venueName }: VenueExplorerProps) {
       <section className="panel hero-panel">
         <div className="brand-kicker">CricAtlas Venue Explorer</div>
         <h1 className="hero-title">{data?.venue_name ?? venueName}</h1>
-        <p className="hero-copy">Ground-specific ODI bowling evidence for venue leaderboard questions and follow-up exploration.</p>
+        <p className="hero-copy">Ground-specific ODI batting and bowling evidence for venue leaderboard questions and follow-up exploration.</p>
         <Link className="ghost-button inline-button" href="/">Back To Workbench</Link>
       </section>
       {error ? <section className="panel result-panel"><p role="alert" className="muted-copy">{error}</p></section> : null}
       {data ? <>
         <section className="panel result-panel">
-          <h2 className="section-title">Filter bowlers</h2>
+          <fieldset className="explorer-mode"><legend>Mode</legend>{["bowling", "batting"].map((mode) => <label key={mode}>
+            <input type="radio" name="venue-mode" value={mode} checked={selectedMode === mode} disabled={loading}
+              onChange={() => {
+                setSelectedMode(mode);
+                const query = new URLSearchParams({ mode, minimum_sample: String(data.filters.minimum_sample) });
+                if (data.filters.phase) query.set("phase", data.filters.phase);
+                if (data.filters.year_start != null) { query.set("year_start", String(data.filters.year_start)); query.set("year_end", String(data.filters.year_end)); }
+                if (data.filters.sample_unit === "matches") query.set("sample_unit", "matches");
+                setRequest({ venue: data.venue_name, query: `?${query}` });
+              }} />{mode === "batting" ? "Batting" : "Bowling"}
+          </label>)}</fieldset>
+          <h2 className="section-title">{data.mode === "batting" ? "Filter batters" : "Filter bowlers"}</h2>
           <form key={`${data.venue_id}-${formVersion}`} onSubmit={(event) => {
             event.preventDefault();
             const form = new FormData(event.currentTarget);
-            const query = new URLSearchParams();
+            const query = new URLSearchParams({ mode: data.mode ?? "bowling" });
             for (const field of ["metric", "phase", "sample_unit", "minimum_sample"]) {
               const value = String(form.get(field) ?? "");
               if (value) query.set(field, value);
@@ -83,23 +104,23 @@ export function VenueExplorer({ venueName }: VenueExplorerProps) {
             </div>
             <button className="primary-button" disabled={loading} type="submit">Apply filter</button>{" "}
             <button className="ghost-button" disabled={loading} type="button" onClick={() => {
-              setRequest({ venue: data.venue_name, query: "" });
+              setRequest({ venue: data.venue_name, query: `?mode=${data.mode ?? "bowling"}` });
             }}>Reset filter</button>
           </form>
-          <p className="muted-copy">Active filters: {data.venue_name}; {data.phase_options[data.filters.phase ?? ""]}; {data.filters.year_start == null ? "All years" : `${data.filters.year_start}–${data.filters.year_end}`}; {data.filters.minimum_sample ? `at least ${data.filters.minimum_sample} ${data.sample_units[data.filters.sample_unit].toLowerCase()}` : "no minimum sample"}; top {data.filters.limit} by {data.ranking.label} ({data.ranking.direction}). Deliveries are legal balls.</p>
+          <p className="muted-copy">Active filters: {data.venue_name}; {data.phase_options[data.filters.phase ?? ""]}; {data.filters.year_start == null ? "All years" : `${data.filters.year_start}–${data.filters.year_end}`}; {data.filters.minimum_sample ? `at least ${data.filters.minimum_sample} ${data.sample_units[data.filters.sample_unit].toLowerCase()}` : "no minimum sample"}; top {data.filters.limit} by {data.ranking.label} ({data.ranking.direction}). {data.mode === "batting" ? "Balls faced use the recorded ballfaced flag." : "Deliveries are legal balls."}</p>
           <p className="muted-copy">{data.sample_policy}</p>
           {loading ? <p role="status" className="muted-copy">Loading venue explorer...</p> : null}
         </section>
         <div className="explorer-grid venue-leaderboard-grid">
           <section className="panel result-panel">
             <h2 className="section-title">{data.filters.metric === "wickets_taken" ? "Top Wicket Takers" : `${data.ranking.label} leaders`}</h2>
-            {chart && data.bowling_leaderboard.length ? <SimpleChart chart={chart} /> : <p className="muted-copy">No bowlers qualify for the selected filters and metric.</p>}
+            {chart && rows.length ? <SimpleChart chart={chart} /> : <p className="muted-copy">No players qualify for the selected filters and metric.</p>}
           </section>
           <section className="panel result-panel">
-            <h2 className="section-title">Bowling Leaderboard</h2>
+            <h2 className="section-title">{data.mode === "batting" ? "Batting Leaderboard" : "Bowling Leaderboard"}</h2>
             <div className="table-wrap"><table className="result-table">
-              <thead><tr>{columns.map(([label]) => <th key={label}>{label}</th>)}</tr></thead>
-              <tbody>{data.bowling_leaderboard.map((row) => <tr key={row.player_name}>{columns.map(([label, field], index) => <td key={field}>{index >= 6 ? formatRate(row[field] as number | null) : row[field] ?? "—"}</td>)}</tr>)}</tbody>
+              <thead><tr>{activeColumns.map(([label]) => <th key={label}>{label}</th>)}</tr></thead>
+              <tbody>{rows.map((row) => <tr key={row.player_name}>{activeColumns.map(([label, field], index) => <td key={field}>{index >= 6 ? formatRate(row[field] as number | null) : row[field] ?? "—"}</td>)}</tr>)}</tbody>
             </table></div>
           </section>
         </div>

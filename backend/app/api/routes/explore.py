@@ -44,22 +44,31 @@ def player_profile(player_name: str, services=Depends(get_services)):
 
 @router.get("/venues/{venue_name}")
 def venue_profile(
-    venue_name: str, metric: str = "wickets_taken", phase: str | None = None,
+    venue_name: str, mode: str = "bowling", metric: str | None = None, phase: str | None = None,
     year_start: int | None = None, year_end: int | None = None,
-    sample_unit: str = "legal_balls", minimum_sample: int = 24, limit: int = 10,
+    sample_unit: str | None = None, minimum_sample: int = 24, limit: int = 10,
     services=Depends(get_services),
 ):
     try:
-        return build_venue_profile(services["repository"], venue_name, metric=metric, phase=phase,
-                                  year_start=year_start, year_end=year_end, sample_unit=sample_unit,
+        return build_venue_profile(services["repository"], venue_name, mode=mode,
+                                  **({"metric": metric} if metric is not None else {}), phase=phase,
+                                  year_start=year_start, year_end=year_end,
+                                  **({"sample_unit": sample_unit} if sample_unit is not None else {}),
                                   minimum_sample=minimum_sample, limit=limit)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/compare")
-def compare_players(player: list[str] = Query(default=[]), services=Depends(get_services)):
-    return build_player_comparison(services["repository"], player)
+def compare_players(player: list[str] = Query(default=[]), mode: str = "batting",
+                    metric: str | None = None, phase: str | None = None,
+                    year_start: int | None = None, year_end: int | None = None,
+                    venue: str | None = None, services=Depends(get_services)):
+    try:
+        return build_player_comparison(services["repository"], player, mode=mode, metric=metric,
+                                       phase=phase, year_start=year_start, year_end=year_end, venue=venue)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("/workbench/search")

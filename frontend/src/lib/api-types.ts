@@ -241,15 +241,23 @@ export type PlayerProfileResponse = {
 };
 
 export type VenueLeaderboardRow = {
+  balls_faced?: number;
+  runs_scored?: number;
+  dismissals?: number;
+  average?: number | null;
+  strike_rate?: number | null;
+  control_percentage?: number | null;
+  control_balls?: number;
+  small_sample?: boolean;
   player_name: string;
-  deliveries: number;
-  runs_conceded: number;
-  wickets: number;
+  deliveries?: number;
+  runs_conceded?: number;
+  wickets?: number;
   economy_rate?: number | null;
   matches: number;
   delivery_rows: number;
-  bowling_average: number | null;
-  bowling_strike_rate: number | null;
+  bowling_average?: number | null;
+  bowling_strike_rate?: number | null;
   dot_percentage: number | null;
   boundary_percentage: number | null;
 };
@@ -265,6 +273,9 @@ export type VenueBowlingFilters = {
 };
 export type VenueRanking = { metric: string; label: string; field: keyof VenueLeaderboardRow; direction: string };
 export type VenueProfileResponse = {
+  mode: "batting" | "bowling";
+  leaderboard: VenueLeaderboardRow[];
+  batting_leaderboard: VenueLeaderboardRow[];
   venue_id: string;
   filters: VenueBowlingFilters;
   ranking: VenueRanking;
@@ -278,7 +289,14 @@ export type VenueProfileResponse = {
 };
 
 export type CompareResponse = {
-  players: PlayerBattingSummary[];
+  mode: "batting" | "bowling";
+  players: VenueLeaderboardRow[];
+  filters: { phase: string | null; year_start: number | null; year_end: number | null; venue: string | null };
+  ranking: VenueRanking & { preference: string };
+  metric_options: VenueRanking[];
+  phase_options: Record<string, string>;
+  venue_options: string[];
+  sample_policy: string;
 };
 
 export type ChatHistoryTurn = {

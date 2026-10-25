@@ -2510,3 +2510,9 @@ code {
 .venue-leaderboard-grid { grid-template-columns: minmax(0, 1fr); }
 .explorer-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 16px; }
 .explorer-filters input[type="checkbox"] { width: auto; min-height: auto; justify-self: start; }
+
+
+.explorer-mode { display: flex; flex-wrap: wrap; gap: 20px; border: 0; padding: 0; margin: 0 0 20px; }
+.explorer-mode legend { color: var(--muted); font-weight: 700; margin-bottom: 10px; padding: 0; }
+.explorer-mode label { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.explorer-mode input[type="radio"] { width: 16px; height: 16px; margin: 0; accent-color: var(--orange); }
