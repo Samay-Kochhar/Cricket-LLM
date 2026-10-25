@@ -6,11 +6,21 @@ from typing import Any
 import plotly.graph_objects as go
 import streamlit as st
 
+from streamlit_explorer_tables import render_numeric_table
+
 from backend.app.services.explorer_service import build_player_comparison
-from backend.app.domain.venue_leaderboard import mode_options, PHASES
+from backend.app.domain.venue_leaderboard import mode_options
 
 
 LOGGER = logging.getLogger("cricatlas.streamlit.compare")
+
+# Presentation only: preserve the shared phase IDs and recorded-over predicates.
+COMPARE_PHASES = {
+    "": "All overs",
+    "powerplay": "ODI powerplay (overs 1–10)",
+    "middle": "Middle overs (11–40)",
+    "death": "Death overs (after 40)",
+}
 
 
 def load_comparison(repository: object, players: list[str], **filters) -> list[dict[str, Any]]:
@@ -42,14 +52,10 @@ def build_strike_rate_figure(players: list[dict[str, Any]], metric: str = "batti
     return figure
 
 
-def _format_number(value: object, digits: int = 2) -> str:
-    if value is None:
-        return "—"
-    return f"{float(value):.{digits}f}"
-
-
 def render_compare_explorer(services: dict[str, Any]) -> None:
     repository = services["repository"]
+    if st.session_state.get("compare-phase") == "first6":
+        st.session_state["compare-phase"] = ""
     player_names = list(services.get("player_names") or repository.list_player_names())
 
     st.markdown("<div class='atlas-kicker'>◆ CricAtlas compare explorer</div>", unsafe_allow_html=True)
@@ -58,7 +64,7 @@ def render_compare_explorer(services: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p class='atlas-copy'>Side-by-side ODI batting evidence pulled from the same database-backed service used by the workbench.</p>",
+        "<p class='atlas-copy'>Side-by-side ODI batting and bowling evidence pulled from the same database-backed service used by the workbench.</p>",
         unsafe_allow_html=True,
     )
 
@@ -82,26 +88,42 @@ def render_compare_explorer(services: dict[str, Any]) -> None:
             key="compare-player-two",
         )
 
-    with st.expander("Comparison context", expanded=True):
-        phase = st.selectbox("Phase", list(PHASES), format_func=PHASES.get, key="compare-phase")
-        venue = st.selectbox("Venue", [""] + repository.list_venues(), format_func=lambda v: v or "All venues", key="compare-venue")
-        years_enabled = st.checkbox("Filter by year or inclusive year range", key="compare-years")
-        year_start = st.number_input("From year", min_value=1800, max_value=2200, value=2023, step=1, key="compare-year-start")
-        year_end = st.number_input("Through year", min_value=1800, max_value=2200, value=2023, step=1, key="compare-year-end")
-        metric = st.selectbox("Chart metric", list(metrics),
-                              index=list(metrics).index("batting_strike_rate" if mode == "batting" else "economy_rate"),
-                              format_func=lambda key: metrics[key][0], key=f"compare-metric-{mode}")
+    # Submit context edits together. Outside a form, blurring a year input can
+    # trigger a separate rerun just as the user clicks Compare.
+    with st.form("compare-context", border=False):
+        with st.expander("Comparison context", expanded=True):
+            phase_column, venue_column, metric_column = st.columns(3)
+            with phase_column:
+                phase = st.selectbox(
+                    "Phase", list(COMPARE_PHASES), format_func=COMPARE_PHASES.get,
+                    key="compare-phase",
+                )
+            with venue_column:
+                venue = st.selectbox("Venue", [""] + repository.list_venues(), format_func=lambda v: v or "All venues", key="compare-venue")
+            with metric_column:
+                metric = st.selectbox("Chart metric", list(metrics),
+                                      index=list(metrics).index("batting_strike_rate" if mode == "batting" else "economy_rate"),
+                                      format_func=lambda key: metrics[key][0], key=f"compare-metric-{mode}")
+            start_column, end_column = st.columns(2)
+            with start_column:
+                year_start = st.number_input("From year", min_value=1800, max_value=2200, value=None, step=1, placeholder="All years", key="compare-year-start")
+            with end_column:
+                year_end = st.number_input("Through year", min_value=1800, max_value=2200, value=None, step=1, placeholder="All years", key="compare-year-end")
+            st.caption("Leave both years blank for all years. Enter one year for that year, or both for an inclusive range. "
+                       "Changes apply when you press Compare players.")
+        submitted = st.form_submit_button(
+            "Compare players",
+            disabled=not first or not second or first == second,
+            type="primary",
+            use_container_width=True,
+        )
+    start = year_start if year_start is not None else year_end
+    end = year_end if year_end is not None else year_start
     context = dict(mode=mode, metric=metric, phase=phase or None, venue=venue or None,
-                   year_start=int(year_start) if years_enabled else None,
-                   year_end=int(year_end) if years_enabled else None)
+                   year_start=int(start) if start is not None else None,
+                   year_end=int(end) if end is not None else None)
     request = [first, second] if first and second else []
     signature = (request, context)
-    submitted = st.button(
-        "Compare players",
-        disabled=not first or not second or first == second,
-        type="primary",
-        use_container_width=True,
-    )
     if submitted:
         try:
             with st.spinner("Loading ODI comparison evidence…"):
@@ -138,7 +160,7 @@ def render_compare_explorer(services: dict[str, Any]) -> None:
 
     profile = st.session_state["compare-profile"]
     filters = profile["filters"]
-    st.caption(f"Active filters: {mode.title()}; {PHASES[filters['phase'] or '']}; "
+    st.caption(f"Active filters: {mode.title()}; {COMPARE_PHASES[filters['phase'] or '']}; "
                f"{str(filters['year_start']) + '–' + str(filters['year_end']) if filters['year_start'] else 'All years'}; "
                f"{filters['venue'] or 'All venues'}. {profile['ranking']['preference']}.")
     st.caption(profile["sample_policy"])
@@ -151,13 +173,13 @@ def render_compare_explorer(services: dict[str, Any]) -> None:
             "Runs": player.get("runs_scored"),
             "Balls": player.get("balls_faced"),
             "Dismissals": player.get("dismissals"),
-            "Batting average": _format_number(player.get("average")),
+            "Batting average": player.get("average"),
             "Matches": player.get("matches"),
             "Control balls": player.get("control_balls"),
-            "Dot %": _format_number(player.get("dot_percentage")),
-            "Strike Rate": _format_number(player.get("strike_rate")),
-            "Boundary %": _format_number(player.get("boundary_percentage")),
-            "Control %": _format_number(player.get("control_percentage")),
+            "Dot %": player.get("dot_percentage"),
+            "Strike Rate": player.get("strike_rate"),
+            "Boundary %": player.get("boundary_percentage"),
+            "Control %": player.get("control_percentage"),
         }
         for player in players
     ]
@@ -165,12 +187,17 @@ def render_compare_explorer(services: dict[str, Any]) -> None:
         table_rows = [{"Player": player["player_name"], "Legal balls": player.get("deliveries", 0),
                        "Matches": player.get("matches", 0), "Runs conceded": player.get("runs_conceded"),
                        "Wickets": player.get("wickets"),
-                       "Bowling average": _format_number(player.get("bowling_average")),
-                       "Economy": _format_number(player.get("economy_rate")),
-                       "Bowling strike rate": _format_number(player.get("bowling_strike_rate")),
-                       "Dot %": _format_number(player.get("dot_percentage")),
-                       "Boundary % conceded": _format_number(player.get("boundary_percentage"))} for player in players]
+                       "Bowling average": player.get("bowling_average"),
+                       "Economy": player.get("economy_rate"),
+                       "Bowling strike rate": player.get("bowling_strike_rate"),
+                       "Dot %": player.get("dot_percentage"),
+                       "Boundary % conceded": player.get("boundary_percentage")} for player in players]
     st.markdown("### Comparison Table")
-    st.dataframe(table_rows, use_container_width=True, hide_index=True)
+    rate_columns = (
+        ["Batting average", "Strike Rate", "Control %", "Dot %", "Boundary %"]
+        if mode == "batting"
+        else ["Bowling average", "Economy", "Bowling strike rate", "Dot %", "Boundary % conceded"]
+    )
+    render_numeric_table(table_rows, rate_columns)
     st.markdown(f"### {profile['ranking']['label']}")
     st.plotly_chart(build_strike_rate_figure(players, metric, mode), use_container_width=True, config={"displayModeBar": False})

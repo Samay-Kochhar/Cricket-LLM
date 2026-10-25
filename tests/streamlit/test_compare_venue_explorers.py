@@ -104,7 +104,7 @@ render_venue_explorer({"repository": Repository()})
 
     assert app.selectbox[0].label == "Venue"
     app.selectbox[0].select("Melbourne Cricket Ground").run()
-    app.button[0].click().run()
+    app.button[2].click().run()
 
     assert not app.exception
     assert any(markdown.value == "## Melbourne Cricket Ground" for markdown in app.markdown)
