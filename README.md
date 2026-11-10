@@ -22,6 +22,8 @@ ODI-first, evidence-first cricket analysis workbench.
   county and domestic cricket, men's and women's) is built separately into
   `data/cricket_all.duckdb`, with line and length attached where the sources record them.
   See [Data sources](docs/data-sources.md) and [Data coverage and limitations](docs/data-coverage.md).
+  The Streamlit app's **All Formats** page explores it (player, compare, matchups, venue) by
+  format, gender and competition; the four ODI explorers are unchanged.
   It is served read-only at `/api/v2/data`, and the chat answers questions naming other
   formats or leagues (IPL, Tests, T20Is, BBL, ...) from it, stating the line/length limits;
   ODI questions keep their existing path.

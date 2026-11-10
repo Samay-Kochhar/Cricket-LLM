@@ -364,7 +364,7 @@ def render_page() -> None:
         st.markdown("Database statistics remain the source of truth. Gemini assists with interpretation and explanation.")
         view = st.radio(
             "Navigate",
-            ["Ask Atlas", "Player Explorer", "Compare", "Matchups", "Venue Explorer"],
+            ["Ask Atlas", "Player Explorer", "Compare", "Matchups", "Venue Explorer", "All Formats"],
             label_visibility="collapsed",
         )
         if view == "Ask Atlas":
@@ -376,6 +376,16 @@ def render_page() -> None:
         st.divider()
         st.caption("Private testing deployment")
         st.caption("Chat and all four ODI explorers are hosted here using the shared CricAtlas analytics engine.")
+
+    if view == "All Formats":
+        try:
+            from streamlit_multiformat_explorer import default_db_path, render_multiformat_explorer
+
+            render_multiformat_explorer(default_db_path(ROOT))
+        except Exception:
+            LOGGER.exception("CricAtlas Streamlit All Formats failed")
+            st.error("CricAtlas could not prepare All Formats. Check the private app logs for details.")
+        return
 
     if view in {"Player Explorer", "Compare", "Matchups", "Venue Explorer"}:
         try:
