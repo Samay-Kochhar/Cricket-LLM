@@ -114,7 +114,7 @@ def render_chart(chart: Any) -> None:
         font_color="#F3EDE4",
         yaxis=dict(autorange="reversed"),
     )
-    st.plotly_chart(figure, width="stretch", config={"displayModeBar": False})
+    st.plotly_chart(figure, use_container_width=True, config={"displayModeBar": False})
 
 
 def render_query_response(response: Any) -> None:
@@ -134,7 +134,7 @@ def render_query_response(response: Any) -> None:
     for table in response.tables:
         st.markdown(f"#### {table.title}")
         rows = [dict(zip(table.columns, row, strict=False)) for row in table.rows]
-        st.dataframe(rows, width="stretch", hide_index=True)
+        st.dataframe(rows, use_container_width=True, hide_index=True)
 
     for chart in response.charts:
         render_chart(chart)
@@ -151,15 +151,164 @@ def render_query_response(response: Any) -> None:
                 st.markdown(f"- [{citation.label}]({citation.locator}) — {citation.source_type.value}")
 
 
-def render_reply(reply_data: dict[str, Any]) -> None:
+def apply_ranking_controls(message_index: int, widget_prefix: str) -> None:
+    """Commit a submitted ranking before Streamlit renders either answer."""
+    from backend.app.cricket_analytics.ranking_controls import controlled_plan
+    from backend.app.cricket_analytics.schemas import CricketQueryPlan
+
+    message = st.session_state.messages[message_index]
+    reply_data = message["reply"]
+    try:
+        plan = CricketQueryPlan.model_validate(reply_data["query_response"]["ranking_plan"])
+        next_plan = controlled_plan(
+            plan,
+            unit=st.session_state[f"{widget_prefix}-unit"],
+            minimum=st.session_state[f"{widget_prefix}-minimum"],
+            sort_by=st.session_state[f"{widget_prefix}-sort"],
+            direction=st.session_state[f"{widget_prefix}-direction"],
+        )
+        services = initialize_services(SERVICE_BUNDLE_VERSION)
+        question = reply_data["query_response"]["interpretation"]["original_question"]
+        response = services["semantic_service"].answer_ranking_plan(question, next_plan)
+        if response.status.value != "supported":
+            message["ranking_error"] = (
+                response.insufficiencies[0].detail
+                if response.insufficiencies
+                else "No ranking matched these controls."
+            )
+            return
+        updated = dict(reply_data)
+        updated["query_response"] = response.model_dump(mode="json")
+        updated["message"] = response.summaries[0].body
+        message["reply"] = updated
+        message["content"] = updated["message"]
+        message.pop("ranking_error", None)
+        message["ranking_controls_revision"] = message.get("ranking_controls_revision", 0) + 1
+    except ValueError as exc:
+        message["ranking_error"] = str(exc)
+    except Exception:
+        LOGGER.exception("CricAtlas ranking control failed")
+        message["ranking_error"] = "The ranking could not be updated. Try a different sample or sort."
+
+
+def reset_ranking_controls(message_index: int) -> None:
+    message = st.session_state.messages[message_index]
+    base = message.get("base_reply")
+    if base:
+        message["reply"] = base
+        message["content"] = base["message"]
+        message.pop("ranking_error", None)
+        message["ranking_controls_revision"] = message.get("ranking_controls_revision", 0) + 1
+
+
+def render_ranking_controls(reply_data: dict[str, Any], message_index: int) -> bool:
+    from backend.app.cricket_analytics.ranking_controls import ranking_options
+    from backend.app.cricket_analytics.metric_registry import get_metric
+    from backend.app.cricket_analytics.schemas import CricketQueryPlan
+
+    raw_plan = reply_data["query_response"].get("ranking_plan")
+    if not raw_plan:
+        return True
+    message = st.session_state.messages[message_index]
+    message.setdefault("base_reply", reply_data)
+    try:
+        plan = CricketQueryPlan.model_validate(raw_plan)
+        units, sorts = ranking_options(plan)
+    except ValueError as exc:
+        st.error(str(exc))
+        return False
+    sample = plan.minimum_sample
+    active_unit = next(
+        (unit for unit in units if sample and getattr(sample, unit) is not None),
+        next(iter(units)),
+    )
+    active_minimum = getattr(sample, active_unit) if sample else None
+    active_sort = plan.sort.by if plan.sort and plan.sort.by in sorts else plan.metric
+    active_direction = (
+        plan.sort.direction
+        if plan.sort
+        else get_metric(plan.metric, entity=plan.entity, filters=plan.filters).default_sort
+    )
+    threshold_label = (
+        "minimum " + " and ".join(
+            f"{getattr(sample, unit)} {label.lower()}"
+            for unit, label in units.items()
+            if getattr(sample, unit) is not None
+        )
+        if sample and active_minimum is not None
+        else "no minimum"
+    )
+    base_plan = message["base_reply"]["query_response"]["ranking_plan"]
+    is_default = not plan.minimum_sample_explicit and raw_plan.get("sort") == base_plan.get("sort")
+    st.caption(
+        f"Active ranking{' (default)' if is_default else ''}: "
+        f"{threshold_label} · "
+        f"{sorts[active_sort]} {'ascending' if active_direction == 'asc' else 'descending'}"
+    )
+    revision = message.get("ranking_controls_revision", 0)
+    widget_prefix = f"ranking-controls-{message_index}-{revision}"
+    with st.form(key=f"ranking-controls-{message_index}-{revision}", border=False):
+        unit_col, minimum_col, sort_col, direction_col, apply, reset = st.columns(
+            [1.5, 1.1, 2, 1.4, 0.8, 0.8], gap="small", vertical_alignment="bottom",
+        )
+        with unit_col:
+            st.selectbox(
+                "Minimum sample unit", list(units), index=list(units).index(active_unit),
+                format_func=units.get, label_visibility="collapsed",
+                key=f"{widget_prefix}-unit",
+            )
+        with minimum_col:
+            st.number_input(
+                "Minimum sample (0 = no minimum)", min_value=0, max_value=1_000_000,
+                value=active_minimum if active_minimum is not None else 0, step=1,
+                label_visibility="collapsed",
+                key=f"{widget_prefix}-minimum",
+            )
+        with sort_col:
+            st.selectbox(
+                "Sort column", list(sorts), index=list(sorts).index(active_sort),
+                format_func=sorts.get, label_visibility="collapsed",
+                key=f"{widget_prefix}-sort",
+            )
+        with direction_col:
+            st.selectbox(
+                "Sort direction", ["desc", "asc"],
+                index=["desc", "asc"].index(active_direction),
+                format_func=lambda value: "Descending" if value == "desc" else "Ascending",
+                label_visibility="collapsed",
+                key=f"{widget_prefix}-direction",
+            )
+        apply.form_submit_button(
+            "Apply", use_container_width=True,
+            on_click=apply_ranking_controls, args=(message_index, widget_prefix),
+        )
+        reset.form_submit_button(
+            "Reset", use_container_width=True,
+            on_click=reset_ranking_controls, args=(message_index,),
+        )
+    if message.get("ranking_error"):
+        st.error(message["ranking_error"])
+        return False
+    return True
+
+
+def render_reply(reply_data: dict[str, Any], message_index: int | None = None) -> None:
     from backend.app.services.chat_service import ChatReply
 
     reply = ChatReply.model_validate(reply_data)
     display_message = reply.message.split("\n\n", maxsplit=1)[0] if reply.query_response else reply.message
-    st.markdown(display_message)
+    headline = st.empty()
+    headline.markdown(display_message)
     if reply.resolution_note:
         st.caption(reply.resolution_note)
     if reply.query_response:
+        if (
+            message_index is not None
+            and reply.query_response.ranking_plan
+            and not render_ranking_controls(reply_data, message_index)
+        ):
+            headline.empty()
+            return
         render_query_response(reply.query_response)
     clarification_options = getattr(reply, "clarification_options", [])
     if clarification_options:
@@ -283,10 +432,10 @@ def render_page() -> None:
                 st.session_state.pending_prompt = example
                 st.rerun()
 
-    for message in st.session_state.messages:
+    for message_index, message in enumerate(st.session_state.messages):
         with st.chat_message(message["role"]):
             if message["role"] == "assistant" and message.get("reply"):
-                render_reply(message["reply"])
+                render_reply(message["reply"], message_index)
             else:
                 st.markdown(message["content"])
 
@@ -326,7 +475,9 @@ def render_page() -> None:
         return
 
     reply_data = reply.model_dump(mode="json")
-    st.session_state.messages.append({"role": "assistant", "content": reply.message, "reply": reply_data})
+    st.session_state.messages.append(
+        {"role": "assistant", "content": reply.message, "reply": reply_data, "base_reply": reply_data}
+    )
     st.session_state.history.extend(
         [
             {"role": "user", "content": question},

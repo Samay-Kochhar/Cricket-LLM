@@ -167,6 +167,23 @@ class SemanticAnalyticsService:
             return self._answer_dismissal_types(question, plan, trace)
         return self._answer_aggregate(question, plan, trace)
 
+    def answer_ranking_plan(self, question: str, plan: CricketQueryPlan) -> QueryResponse:
+        """Re-run an approved ranking plan after typed UI controls change it."""
+        from backend.app.cricket_analytics.ranking_controls import ranking_options
+
+        units, sorts = ranking_options(plan)
+        if plan.sort and plan.sort.by not in sorts:
+            raise ValueError("This ranking uses an unsupported sort column.")
+        if plan.minimum_sample:
+            samples = plan.minimum_sample.model_dump(exclude_none=True)
+            if any(
+                key not in units or isinstance(value, bool) or not isinstance(value, int)
+                or value < 1 or value > 1_000_000
+                for key, value in samples.items()
+            ):
+                raise ValueError("This ranking uses an unsupported minimum sample.")
+        return self._answer_aggregate(question, plan, self._structured_trace(question, plan))
+
     def answer_matchup_page(
         self,
         batter: str,
@@ -269,6 +286,7 @@ class SemanticAnalyticsService:
                         plan.minimum_sample.balls,
                         plan.minimum_sample.legal_balls,
                         plan.minimum_sample.innings,
+                        plan.minimum_sample.matches,
                     )
                 )
             )
@@ -299,6 +317,13 @@ class SemanticAnalyticsService:
         return QueryResponse(
             status=EvidenceStatus.supported,
             interpretation=self._interpretation(question, plan),
+            ranking_plan=(
+                plan.model_dump(mode="json")
+                if plan.entity in {"batter", "bowler"}
+                and (plan.group_by or [plan.entity]) == [plan.entity]
+                and plan.entity not in plan.filters
+                else None
+            ),
             summaries=[summary],
             tables=[table],
             charts=[aggregate_chart] if aggregate_chart else [],
@@ -1580,6 +1605,9 @@ class SemanticAnalyticsService:
                 raw_plan = raw_trace.get(field)
                 public_plan = public_trace.get(field)
                 if isinstance(raw_plan, dict) and isinstance(public_plan, dict):
+                    public_sample = public_plan.get("minimum_sample")
+                    if isinstance(public_sample, dict) and public_sample.get("matches") is None:
+                        public_sample.pop("matches", None)
                     raw_values = raw_plan.get("compare_values")
                     if isinstance(raw_values, list):
                         public_plan["compare_values"] = raw_values
@@ -1909,6 +1937,8 @@ class SemanticAnalyticsService:
             *_metric_evidence_columns(plan.metric, plan.entity),
             "matches",
         ]
+        if plan.sort and plan.sort.by not in columns:
+            columns.append(plan.sort.by)
         table_rows: list[list[str | int | float | None]] = []
         for row in rows:
             table_rows.append(
@@ -1963,6 +1993,21 @@ class SemanticAnalyticsService:
             sample_text = (
                 f" from {top.get('legal_balls')} legal balls and "
                 f"{top.get('wickets')} bowler-credit wickets"
+            )
+        if (
+            plan.sort and plan.sort.by != plan.metric
+            and dimension_columns == [plan.entity]
+            and plan.entity in {"batter", "bowler"}
+            and plan.entity not in plan.filters
+        ):
+            sort_value = _display_value(top.get(plan.sort.by))
+            order = "lowest first" if plan.sort.direction == "asc" else "highest first"
+            return SummaryBlock(
+                title="Semantic aggregate answer",
+                body=(
+                    f"{context}{subject} ranks first for {_label(plan.sort.by)} at {sort_value} "
+                    f"({order}); {_label(plan.metric)} is {metric_text}{sample_text}."
+                ),
             )
         if plan.question_subject == "weakness_check" and dimension_columns:
             context_parts = []
@@ -2445,6 +2490,7 @@ def _summary_context(plan: CricketQueryPlan, scope: str = "") -> str:
             (plan.minimum_sample.legal_balls, "legal balls"),
             (plan.minimum_sample.balls, "balls"),
             (plan.minimum_sample.innings, "innings"),
+            (plan.minimum_sample.matches, "matches"),
         )
         for value, label in minimums:
             if value is not None:
