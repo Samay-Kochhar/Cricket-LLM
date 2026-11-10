@@ -163,26 +163,22 @@ so when a player's matches fall outside the covered period.
 
 | Competition | Format | Matches | First | Last | % deliveries with line/length | Line/length first | Line/length last |
 |---|---|---|---|---|---|---|---|
+| T20 Blast | T20 domestic | 1,570 | 2014-05-16 | 2026-07-18 | 60.9 | 2016-05-20 | 2026-07-18 |
 | Indian Premier League | T20 domestic | 1,243 | 2008-04-18 | 2026-05-31 | 44.1 | 2015-04-22 | 2026-05-31 |
-| Vitality Blast | T20 domestic | 835 | 2018-07-04 | 2024-09-14 | 84.9 | 2018-07-04 | 2024-09-14 |
 | Syed Mushtaq Ali Trophy | T20 domestic | 695 | 2016-01-02 | 2024-12-15 | 0.0 | - | - |
 | Big Bash League | T20 domestic | 662 | 2011-12-16 | 2026-01-25 | 55.5 | 2012-12-23 | 2026-01-25 |
-| NatWest T20 Blast | T20 domestic | 488 | 2014-05-16 | 2017-09-02 | 0.0 | 2016-05-20 | 2017-09-02 |
 | Bangladesh Premier League | T20 domestic | 469 | 2012-02-11 | 2026-01-23 | 0.0 | - | - |
 | Caribbean Premier League | T20 domestic | 445 | 2013-07-30 | 2026-09-20 | 51.4 | 2019-09-04 | 2025-09-21 |
 | Pakistan Super League | T20 domestic | 357 | 2016-02-04 | 2026-05-03 | 0.0 | - | - |
-| Super Smash | T20 domestic | 266 | 2017-12-13 | 2026-01-31 | 0.0 | - | - |
-| Vitality Blast Men | T20 domestic | 247 | 2025-05-29 | 2026-07-18 | 100.0 | 2025-05-29 | 2026-07-18 |
+| CSA T20 Challenge | T20 domestic | 314 | 2012-02-15 | 2024-10-27 | 0.0 | - | - |
+| Super Smash | T20 domestic | 270 | 2013-01-20 | 2026-01-31 | 0.0 | - | - |
 | The Hundred Men's Competition | The Hundred | 201 | 2021-07-22 | 2026-08-16 | 99.9 | 2021-07-22 | 2026-08-16 |
-| CSA T20 Challenge | T20 domestic | 154 | 2016-11-12 | 2024-10-27 | 0.0 | - | - |
 | Lanka Premier League | T20 domestic | 143 | 2020-11-26 | 2026-08-08 | 0.0 | - | - |
 | International League T20 | T20 domestic | 134 | 2023-01-13 | 2026-01-04 | 0.0 | - | - |
 | SA20 | T20 domestic | 130 | 2023-01-10 | 2026-01-25 | 0.0 | - | - |
-| Ram Slam T20 Challenge | T20 domestic | 130 | 2013-02-17 | 2017-12-16 | 0.0 | - | - |
 | Major Clubs T20 Tournament | T20 domestic | 121 | 2024-05-12 | 2026-09-16 | 0.0 | - | - |
 | Cricket Ireland Inter-Provincial Twenty20 Trophy | T20 domestic | 111 | 2016-05-27 | 2026-07-29 | 0.0 | - | - |
 | Major League Cricket | T20 domestic | 109 | 2023-07-13 | 2026-07-18 | 79.6 | 2024-07-05 | 2026-07-18 |
 | Nepal Premier League | T20 domestic | 76 | 2024-11-30 | 2026-11-03 | 0.0 | - | - |
 | Mzansi Super League | T20 domestic | 56 | 2018-11-16 | 2019-12-16 | 0.0 | - | - |
 | European T20 Premier League | T20 domestic | 31 | 2026-08-26 | 2026-09-20 | 0.0 | - | - |
-| MiWAY T20 Challenge | T20 domestic | 30 | 2012-02-15 | 2012-04-01 | 0.0 | - | - |

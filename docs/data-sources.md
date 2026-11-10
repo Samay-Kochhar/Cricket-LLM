@@ -115,6 +115,25 @@ AUCB's contact type, checked against ESPN on shared balls:
   ESPN knows, with the date as the fallback. The validation step re-checks
   this on every build. odata's hand field contradicts both and is not used.
 
+### Competition names
+
+Sources rename the same league with each sponsor, and the AUCB and ESPN feeds
+add the year. `matches.competition` holds one name per competition, and
+`matches.event_name` keeps the source's own name. Examples:
+
+- **T20 Blast:** NatWest T20 Blast, Vitality Blast and Vitality Blast Men.
+- **County Championship:** the LV= and Specsavers eras.
+- **One-Day Cup (England):** Royal London One-Day Cup and One-Day Cup.
+- **One-Day Cup (Australia):** the Marsh names.
+- **CSA T20 Challenge:** MiWAY and Ram Slam.
+- **Super Smash:** HRV Cup.
+- **ICC Men's T20 World Cup:** ICC World Twenty20.
+- **ICC Cricket World Cup:** ICC World Cup, and "World Cup 2023" from ESPN.
+
+A year or " - Men" suffix is dropped only when what remains is a known
+competition, so bilateral series and one-off tours keep their year. The
+validation step fails if a league name is still split by a sponsor or a year.
+
 ## How the AUCB balls were matched to Cricsheet deliveries
 
 1. **Normalize.** The two AUCB exports merge into one table, keeping the new

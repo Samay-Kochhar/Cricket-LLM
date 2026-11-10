@@ -212,6 +212,21 @@ def _checks(conn: duckdb.DuckDBPyConnection) -> list[Check]:
     )[0]
     add("No double counting", "AUCB-only matches that look like an ESPN-only ODI", "0", dup_e, dup_e == 0)
 
+    # --- Competition names ---------------------------------------------------
+    split = _one(
+        conn,
+        """
+        SELECT count(DISTINCT competition) FROM analytics.matches
+        WHERE format IN ('T20 domestic', 'List A domestic', 'First-class domestic', 'The Hundred')
+          AND competition NOT ILIKE '%tour%'  -- one-off tours keep their year
+          AND (regexp_matches(competition, ' (19|20)[0-9]{2}(-[0-9]{2})?$')
+               OR regexp_matches(competition, '^(NatWest|Vitality|LV=|Specsavers|Royal London|Marsh|MiWAY|Ram Slam|HRV) '))
+        """,
+    )[0]
+    add("Competition names", "League names still split by a sponsor or a year suffix", "0", split, split == 0)
+    blast = _one(conn, "SELECT count(*) FROM analytics.matches WHERE competition = 'T20 Blast' AND gender = 'male'")[0]
+    add("Competition names", "Men's T20 Blast matches under one name (NatWest + Vitality eras)", ">= 1500", blast, blast >= 1500)
+
     # --- Player attributes -------------------------------------------------
     for unique_name, field, expected in [
         ("MA Starc", "bowling_style_group", "Left-arm pace"),

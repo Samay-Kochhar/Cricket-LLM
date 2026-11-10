@@ -495,6 +495,51 @@ UPDATE out.analytics.matches m SET venue = u.new_venue
 FROM extra_venue_unify u
 WHERE m.venue = u.old_venue AND m.score_source <> 'cricsheet' AND u.new_venue <> u.old_venue;
 
+-- One name per competition. Sources rename events with sponsors ("LV=",
+-- "Specsavers", "NatWest", "Vitality") and the AUCB/ESPN feeds add the year
+-- ("ICC Men's T20 World Cup 2024"); without this a league splits across
+-- several names. The source's own name stays in event_name. A year or
+-- " - Men" suffix is only dropped when the remaining name is a known
+-- competition, so bilateral series keep their year.
+ALTER TABLE out.analytics.matches ADD COLUMN event_name VARCHAR;
+UPDATE out.analytics.matches SET event_name = competition;
+CREATE OR REPLACE TEMP TABLE competition_alias AS SELECT * FROM (VALUES
+  ('NatWest T20 Blast', 'T20 Blast'), ('Vitality Blast', 'T20 Blast'), ('Vitality Blast Men', 'T20 Blast'),
+  ('Vitality Blast Women', 'Women''s T20 Blast'),
+  ('LV= County Championship', 'County Championship'), ('Specsavers County Championship', 'County Championship'),
+  ('Marsh Sheffield Shield', 'Sheffield Shield'),
+  ('Royal London One-Day Cup', 'One-Day Cup (England)'), ('England One-Day Cup', 'One-Day Cup (England)'),
+  ('One-Day Cup', 'One-Day Cup (England)'),
+  ('Marsh One-Day Cup', 'One-Day Cup (Australia)'), ('The Marsh Cup', 'One-Day Cup (Australia)'),
+  ('MiWAY T20 Challenge', 'CSA T20 Challenge'), ('Ram Slam T20 Challenge', 'CSA T20 Challenge'),
+  ('HRV Cup', 'Super Smash'), ('HRV Twenty20', 'Super Smash'),
+  ('Women''s T20 Blaze', 'T20 Blaze'), ('Women''s T20 Challenge Match', 'Women''s T20 Challenge'),
+  ('ICC World Cup', 'ICC Cricket World Cup'), ('World Cup', 'ICC Cricket World Cup'),
+  ('ICC Men''s Champions Trophy', 'ICC Champions Trophy'),
+  ('World Cup Super League', 'ICC Men''s Cricket World Cup Super League'),
+  ('CWC League 2', 'ICC Men''s Cricket World Cup League 2'),
+  ('ICC World Cup Qualifiers', 'ICC Cricket World Cup Qualifier'),
+  ('Cricket WC Qualifier', 'ICC Cricket World Cup Qualifier'), ('CWC QLF', 'ICC Cricket World Cup Qualifier'),
+  ('Men''s T20 Asia Cup', 'Asia Cup'),
+  ('Global Super League', 'Global Super League'), ('Tamil Nadu Premier League', 'Tamil Nadu Premier League')
+) t(src, competition);
+UPDATE out.analytics.matches SET competition = replace(competition, '’', '''') WHERE competition LIKE '%’%';
+UPDATE out.analytics.matches m SET competition = s.stripped
+FROM (
+  SELECT DISTINCT competition AS name,
+         regexp_replace(regexp_replace(competition, ' - (Men|Women)$', ''), ' (19|20)[0-9]{2}(-[0-9]{2})?$', '') AS stripped
+  FROM out.analytics.matches
+) s
+WHERE m.competition = s.name AND s.stripped <> s.name
+  AND (s.stripped IN (SELECT competition FROM cs.matches WHERE competition IS NOT NULL)
+       OR s.stripped IN (SELECT src FROM competition_alias));
+UPDATE out.analytics.matches m SET competition = a.competition
+FROM competition_alias a WHERE m.competition = a.src;
+-- The men's and women's World Twenty20 were renamed T20 World Cup in 2021.
+UPDATE out.analytics.matches
+SET competition = CASE gender WHEN 'male' THEN 'ICC Men''s T20 World Cup' ELSE 'ICC Women''s T20 World Cup' END
+WHERE competition IN ('ICC World Twenty20', 'World T20', 'ICC Women''s World Twenty20');
+
 CREATE OR REPLACE TABLE out.analytics.excluded_matches AS
 SELECT x.match_id, x.reason, e.score_source, e.format, e.competition, e.start_date, e.team1, e.team2
 FROM excluded_matches x LEFT JOIN extra_matches e USING (match_id);
