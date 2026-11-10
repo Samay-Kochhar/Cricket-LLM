@@ -16,6 +16,8 @@ venv/
 *.duckdb
 *.duckdb.wal
 data/*.csv
+data/sources/
+data/build/
 !data/.gitkeep
 
 # Environment

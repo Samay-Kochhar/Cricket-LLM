@@ -142,15 +142,15 @@ def unsupported_and_ambiguous_cases() -> list[dict[str, Any]]:
         ),
         (
             "unsupported-test-cricket",
-            "unsupported",
+            "supported",
             "What is Joe Root's Test batting average?",
-            "CricAtlas is ODI-only, so Test cricket is outside the dataset scope.",
+            "Answered from the multi-format database (Cricsheet scores): Joe Root's Test batting average, with matches, runs, balls faced and dismissals.",
         ),
         (
             "unsupported-ipl",
-            "unsupported",
+            "supported",
             "Which batter has the best strike rate in the IPL?",
-            "CricAtlas is ODI-only, so IPL/T20 franchise cricket is outside the dataset scope.",
+            "Answered from the multi-format database (Cricsheet scores): an IPL batting strike-rate ranking with the default 60-ball minimum.",
         ),
         (
             "unsupported-ball-speed",

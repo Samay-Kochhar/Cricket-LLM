@@ -10075,21 +10075,21 @@
 - id: unsupported-test-cricket
   category: ambiguous_or_unsupported
   question: What is Joe Root's Test batting average?
-  expected_status: unsupported
-  expected_behavior: CricAtlas is ODI-only, so Test cricket is outside the dataset scope.
+  expected_status: supported
+  expected_behavior: Answered from the multi-format database (Cricsheet scores): Joe Root's Test batting average, with matches, runs, balls faced and dismissals.
   answer_key:
     source: curated_scope_label
-    status: unsupported
-    expected_response: CricAtlas is ODI-only, so Test cricket is outside the dataset scope.
+    status: supported
+    expected_response: Answered from the multi-format database (Cricsheet scores): Joe Root's Test batting average, with matches, runs, balls faced and dismissals.
 - id: unsupported-ipl
   category: ambiguous_or_unsupported
   question: Which batter has the best strike rate in the IPL?
-  expected_status: unsupported
-  expected_behavior: CricAtlas is ODI-only, so IPL/T20 franchise cricket is outside the dataset scope.
+  expected_status: supported
+  expected_behavior: Answered from the multi-format database (Cricsheet scores): an IPL batting strike-rate ranking with the default 60-ball minimum.
   answer_key:
     source: curated_scope_label
-    status: unsupported
-    expected_response: CricAtlas is ODI-only, so IPL/T20 franchise cricket is outside the dataset scope.
+    status: supported
+    expected_response: Answered from the multi-format database (Cricsheet scores): an IPL batting strike-rate ranking with the default 60-ball minimum.
 - id: unsupported-ball-speed
   category: ambiguous_or_unsupported
   question: What is Mitchell Starc's fastest ball speed?

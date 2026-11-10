@@ -17,7 +17,14 @@ ODI-first, evidence-first cricket analysis workbench.
 - The app runs end-to-end, but several question families are still partial or experimental.
 - Comparisons and contextual follow-ups are not yet product-ready.
 - See [Product Readiness](docs/product-readiness.md) for the current user-facing support status.
-- ODI-only scope with database-first truth.
+- The app answers ODI questions with database-first truth.
+- A multi-format database (Tests, ODIs, T20Is, IPL and other T20 leagues, The Hundred,
+  county and domestic cricket, men's and women's) is built separately into
+  `data/cricket_all.duckdb`, with line and length attached where the sources record them.
+  See [Data sources](docs/data-sources.md) and [Data coverage and limitations](docs/data-coverage.md).
+  It is served read-only at `/api/v2/data`, and the chat answers questions naming other
+  formats or leagues (IPL, Tests, T20Is, BBL, ...) from it, stating the line/length limits;
+  ODI questions keep their existing path.
 - Source dataset expected at `data/odi_bbb-25.csv` (not committed — see below).
 
 ---

@@ -87,6 +87,20 @@ python ingestion/app/profile_dataset.py
 This generates `data/odi_analytics.duckdb` (also gitignored) and refreshes
 `docs/data-profile.md`.
 
+### Step 3b — (Optional) Build the multi-format database
+Every format with line/length enrichment, built into `data/cricket_all.duckdb`
+(about 5 minutes). It needs `data/sources/` populated: the Cricsheet archive
+(`cricsheet/all_json.zip`, `people.csv`, `names.csv` from cricsheet.org),
+`aucb_bbb.csv` and `odata_full.csv`, and it reuses `data/odi_analytics.duckdb`
+from Step 3. Optionally put TigZig's `cricket_all_tables.duckdb` in
+`data/sources/tigzig/` to enable the independent cross-check.
+```bash
+python -m ingestion.app.multiformat.build
+```
+The validation step fails the build on any broken check and regenerates
+`docs/data-coverage.md` and `docs/data-validation.md`. Read
+[docs/data-sources.md](docs/data-sources.md) for which source is trusted for what.
+
 ### Step 4 — Run backend + frontend
 ```powershell
 # terminal 1

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from functools import lru_cache
 
+from backend.app.api.routes.multiformat import get_multiformat_service
 from backend.app.config import AppConfig
 from backend.app.db.repository import AnalyticsRepository
 from backend.app.domain.metric_models import QueryClass
+from backend.app.multiformat.chat import MultiFormatChat
 from backend.app.cricket_analytics.semantic_service import SemanticAnalyticsService
 from backend.app.services.analytics_service import AnalyticsService
 from backend.app.services.answer_composer import AnswerComposer
@@ -71,10 +73,13 @@ def get_services():
     def matchup_handler(**filters):
         return semantic_service.answer_matchup_page(**filters)
 
+    multiformat_service = get_multiformat_service()
     chat_service = ChatService(
         repository=repository,
         query_handler=query_handler,
         gemini_client=gemini_client,
+        # Only when the multi-format database has been built; ODI chat is unchanged either way.
+        multiformat=MultiFormatChat(multiformat_service) if multiformat_service.db_path.exists() else None,
     )
     workbench_service = WorkbenchService(
         repository=repository,

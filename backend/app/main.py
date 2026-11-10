@@ -9,6 +9,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.routes.explore import router as explore_router
+from backend.app.api.routes.multiformat import router as multiformat_router
 from backend.app.api.routes.query import router as query_router
 from backend.app.bootstrap import get_services
 
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
 
     app.include_router(query_router)
     app.include_router(explore_router)
+    app.include_router(multiformat_router)
     return app
 
 

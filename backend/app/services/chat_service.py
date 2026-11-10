@@ -107,6 +107,9 @@ class ChatService:
     repository: object
     query_handler: object
     gemini_client: GeminiClient
+    # Answers questions naming a non-ODI format or competition (IPL, Tests, T20Is,
+    # ...) from the multi-format database; returns None for everything else.
+    multiformat: object | None = None
     _venue_names: tuple[str, ...] | None = field(default=None, init=False, repr=False)
 
     def reply(
@@ -116,6 +119,22 @@ class ChatService:
         conversation_state: ConversationState | None = None,
     ) -> ChatReply:
         normalized_message = message.strip()
+        if self.multiformat is not None and (
+            conversation_state is None or conversation_state.pending_clarification is None
+        ):
+            answer = self.multiformat.answer(normalized_message)
+            if answer is not None:
+                return ChatReply(
+                    mode="clarification" if answer.clarification else "conversation",
+                    message=answer.message,
+                    suggestions=answer.suggestions,
+                    clarification_options=[
+                        ClarificationOption(label=option.rsplit("(", 1)[-1].rstrip(")"), message=option)
+                        for option in answer.clarification or []
+                    ],
+                    conversation_state=conversation_state,
+                    activity_trace=["Multi-format database"],
+                )
         venue_lookup_message = normalized_message
         if conversation_state is not None and conversation_state.pending_clarification is not None:
             pending = conversation_state.pending_clarification
