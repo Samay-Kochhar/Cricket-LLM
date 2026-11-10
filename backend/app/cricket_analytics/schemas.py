@@ -31,12 +31,14 @@ class MinimumSampleSpec(BaseModel):
     balls: int | None = None
     legal_balls: int | None = None
     innings: int | None = None
+    matches: int | None = None
 
     def merged_with_defaults(self, defaults: dict[str, int]) -> "MinimumSampleSpec":
         return MinimumSampleSpec(
             balls=self.balls if self.balls is not None else defaults.get("balls"),
             legal_balls=self.legal_balls if self.legal_balls is not None else defaults.get("legal_balls"),
             innings=self.innings if self.innings is not None else defaults.get("innings"),
+            matches=self.matches if self.matches is not None else defaults.get("matches"),
         )
 
 

@@ -38,20 +38,24 @@ def _aggregate_chart(plan: CricketQueryPlan, table: TableBlock) -> ChartBlock | 
             series=series,
         )
 
-    if len(plan.group_by) != 1:
+    dimensions = plan.group_by or ([plan.entity] if plan.entity in {"batter", "bowler"} else [])
+    if len(dimensions) != 1:
         return None
-    dimension = plan.group_by[0]
+    dimension = dimensions[0]
     is_trend = dimension == "year" and plan.question_subject == "yearly_trend"
     is_breakdown = dimension in {"line", "length", "bowling_style"}
-    is_ranking = dimension == plan.entity and dimension not in plan.filters and bool(
-        plan.sort and plan.sort.by == plan.metric
-    )
+    is_ranking = dimension == plan.entity and dimension not in plan.filters
     if not is_trend and not is_breakdown and not is_ranking:
         return None
+    chart_metric = plan.sort.by if is_ranking and plan.sort else plan.metric
+    try:
+        value_index = table.columns.index(_label(chart_metric))
+    except ValueError:
+        return None
     series = [
-        {"label": str(row[0]), "value": row[1]}
+        {"label": str(row[0]), "value": row[value_index]}
         for row in table.rows
-        if len(row) > 1 and isinstance(row[1], int | float)
+        if len(row) > value_index and isinstance(row[value_index], int | float)
     ]
     if not series:
         return None
@@ -59,7 +63,7 @@ def _aggregate_chart(plan: CricketQueryPlan, table: TableBlock) -> ChartBlock | 
         title=(
             f"{_label(plan.metric)} by {_label(dimension)}"
             if is_breakdown or is_trend
-            else f"{_label(plan.metric)} ranking"
+            else f"{_label(chart_metric)} ranking"
         ),
         chart_type="line" if is_trend else "horizontal_bar",
         series=series,

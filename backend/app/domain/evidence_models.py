@@ -210,6 +210,7 @@ class QueryResponse(BaseModel):
     clarification_options: list[str] = Field(default_factory=list)
     failure_state: Literal["data_limitation", "unsupported_capability", "planner_uncertainty"] | None = None
     interpretation: QueryInterpretation
+    ranking_plan: dict[str, object] | None = None
     summaries: list[SummaryBlock] = Field(default_factory=list)
     tables: list[TableBlock] = Field(default_factory=list)
     charts: list[ChartBlock] = Field(default_factory=list)

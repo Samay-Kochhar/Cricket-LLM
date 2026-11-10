@@ -130,6 +130,9 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
         if plan.minimum_sample.innings:
             having_clauses.append("innings >= ?")
             params.append(plan.minimum_sample.innings)
+        if plan.minimum_sample.matches:
+            having_clauses.append("matches >= ?")
+            params.append(plan.minimum_sample.matches)
     if plan.metric == "bowling_strike_rate" and "bowler" not in plan.filters:
         having_clauses.append("wickets > 0")
 
@@ -215,7 +218,7 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
         "yorker_balls",
         plan.metric,
     ]
-    sample_columns = ["balls", "legal_balls", "innings"]
+    sample_columns = ["balls", "legal_balls", "innings", "matches"]
     return QueryBuildResult(
         sql=_clean_sql(sql),
         params=params,
