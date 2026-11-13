@@ -261,7 +261,7 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p class='atlas-copy'>Choose an ODI batter and bowler, then narrow the question by phase, year or venue.</p>",
+        "<p class='atlas-copy'>Choose a batter and bowler, then narrow the question by phase, year or venue.</p>",
         unsafe_allow_html=True,
     )
 
@@ -331,7 +331,7 @@ def render_matchup_explorer(services: dict[str, Any]) -> None:
     )
     if submitted:
         try:
-            with st.spinner("Checking the ODI ball-by-ball evidence…"):
+            with st.spinner("Checking the ball-by-ball evidence…"):
                 st.session_state["matchup-page"] = load_matchup_page(services, **request)
                 st.session_state["matchup-request"] = request
                 st.session_state.pop("matchup-error", None)

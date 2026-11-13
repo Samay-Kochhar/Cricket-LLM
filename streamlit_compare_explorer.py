@@ -60,11 +60,11 @@ def render_compare_explorer(services: dict[str, Any]) -> None:
 
     st.markdown("<div class='atlas-kicker'>◆ CricAtlas compare explorer</div>", unsafe_allow_html=True)
     st.markdown(
-        "<h1 class='atlas-title explorer-title'>Compare ODI players.<br>Inspect the evidence.</h1>",
+        "<h1 class='atlas-title explorer-title'>Compare players.<br>Inspect the evidence.</h1>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p class='atlas-copy'>Side-by-side ODI batting and bowling evidence pulled from the same database-backed service used by the workbench.</p>",
+        "<p class='atlas-copy'>Side-by-side batting and bowling evidence pulled from the same database-backed service used by the workbench.</p>",
         unsafe_allow_html=True,
     )
 
@@ -126,7 +126,7 @@ def render_compare_explorer(services: dict[str, Any]) -> None:
     signature = (request, context)
     if submitted:
         try:
-            with st.spinner("Loading ODI comparison evidence…"):
+            with st.spinner("Loading comparison evidence…"):
                 profile = build_player_comparison(repository, request, **context)
                 st.session_state["compare-profile"] = profile
                 st.session_state["compare-players"] = profile["players"]

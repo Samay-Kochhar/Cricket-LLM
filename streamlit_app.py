@@ -360,11 +360,11 @@ def render_page() -> None:
 
     with st.sidebar:
         st.markdown("### CricAtlas")
-        st.caption("ODI-first · evidence-first")
+        st.caption("All formats · evidence-first")
         st.markdown("Database statistics remain the source of truth. Gemini assists with interpretation and explanation.")
         view = st.radio(
             "Navigate",
-            ["Ask Atlas", "Player Explorer", "Compare", "Matchups", "Venue Explorer", "All Formats"],
+            ["Ask Atlas", "Player Explorer", "Compare", "Matchups", "Venue Explorer"],
             label_visibility="collapsed",
         )
         if view == "Ask Atlas":
@@ -375,21 +375,31 @@ def render_page() -> None:
                 st.rerun()
         st.divider()
         st.caption("Private testing deployment")
-        st.caption("Chat and all four ODI explorers are hosted here using the shared CricAtlas analytics engine.")
-
-    if view == "All Formats":
-        try:
-            from streamlit_multiformat_explorer import default_db_path, render_multiformat_explorer
-
-            render_multiformat_explorer(default_db_path(ROOT))
-        except Exception:
-            LOGGER.exception("CricAtlas Streamlit All Formats failed")
-            st.error("CricAtlas could not prepare All Formats. Check the private app logs for details.")
-        return
+        st.caption(
+            "Chat and the four explorers cover Tests, ODIs, T20Is, the IPL and other leagues, The Hundred "
+            "and domestic cricket, men's and women's, using the shared CricAtlas analytics engine."
+        )
 
     if view in {"Player Explorer", "Compare", "Matchups", "Venue Explorer"}:
+        from streamlit_format_explorer import ExplorerScope, default_db_path, render_other_format_view, render_scope_selector
+
+        multiformat_db = default_db_path(ROOT)
         try:
-            with st.spinner("Preparing the ODI player database…"):
+            scope = render_scope_selector(multiformat_db)
+        except Exception:
+            LOGGER.exception("CricAtlas Streamlit format selector failed")
+            st.error("CricAtlas could not list the other formats, so men's ODIs are shown.")
+            scope = ExplorerScope()
+        if not scope.original_odi:
+            try:
+                with st.spinner("Preparing the player database…"):
+                    render_other_format_view(view, multiformat_db, scope)
+            except Exception:
+                LOGGER.exception("CricAtlas Streamlit %s failed for %s", view, scope.key)
+                st.error(f"CricAtlas could not prepare {view}. Check the private app logs for details.")
+            return
+        try:
+            with st.spinner("Preparing the player database…"):
                 services = (
                     initialize_player_explorer_services(PLAYER_EXPLORER_BUNDLE_VERSION)
                     if view in {"Player Explorer", "Compare", "Venue Explorer"}
@@ -419,7 +429,7 @@ def render_page() -> None:
     st.markdown("<div class='atlas-kicker'>◆ Cricket intelligence workbench</div>", unsafe_allow_html=True)
     st.markdown("<h1 class='atlas-title'>Ask cricket questions.<br>Inspect the evidence.</h1>", unsafe_allow_html=True)
     st.markdown(
-        "<p class='atlas-copy'>Database-backed ODI analysis with question-specific tables, Plotly charts, metric definitions and explicit limitations.</p>",
+        "<p class='atlas-copy'>Database-backed analysis of Tests, ODIs, T20Is, leagues and domestic cricket, men's and women's, with question-specific tables, Plotly charts, metric definitions and explicit limitations.</p>",
         unsafe_allow_html=True,
     )
 
@@ -460,7 +470,7 @@ def render_page() -> None:
         st.markdown(question)
 
     try:
-        with st.spinner("Preparing the ODI evidence…"):
+        with st.spinner("Preparing the evidence…"):
             services = initialize_services(SERVICE_BUNDLE_VERSION)
             from backend.app.services.chat_service import ChatHistoryTurn
 

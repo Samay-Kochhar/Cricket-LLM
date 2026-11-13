@@ -585,7 +585,7 @@ def render_player_explorer(services: dict[str, Any]) -> None:
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p class='atlas-copy'>Search an ODI player and explore career output, phase performance, "
+        "<p class='atlas-copy'>Search a player and explore career output, phase performance, "
         "line and length scoring, wagon-wheel zones and recorded shot evidence.</p>",
         unsafe_allow_html=True,
     )

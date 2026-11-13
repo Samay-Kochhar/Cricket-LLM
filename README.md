@@ -1,8 +1,9 @@
 # CricAtlas
 
-ODI-first, evidence-first cricket analysis workbench.
+Evidence-first cricket analysis workbench for every format: Tests, ODIs, T20Is,
+leagues, The Hundred and domestic cricket, men's and women's.
 
-- **Database is the truth.** ODI ball-by-ball data is loaded into DuckDB and all
+- **Database is the truth.** Ball-by-ball data is loaded into DuckDB and all
   statistics come from there.
 - **Gemini assists, it does not decide.** It handles query interpretation,
   grounded external context, narrative wording, and follow-up suggestions — never
@@ -22,8 +23,10 @@ ODI-first, evidence-first cricket analysis workbench.
   county and domestic cricket, men's and women's) is built separately into
   `data/cricket_all.duckdb`, with line and length attached where the sources record them.
   See [Data sources](docs/data-sources.md) and [Data coverage and limitations](docs/data-coverage.md).
-  The Streamlit app's **All Formats** page explores it (player, compare, matchups, venue) by
-  format, gender and competition; the four ODI explorers are unchanged.
+  The Streamlit app's four explorers (Player, Compare, Matchups, Venue) each start with a
+  Format / Gender / Competition selector. Men's ODIs (the default) use the original ODI
+  database and pages; every other selection reads the multi-format database and says
+  plainly when an ODI-only feature (e.g. wagon wheels) is not available for that format.
   It is served read-only at `/api/v2/data`, and the chat answers questions naming other
   formats or leagues (IPL, Tests, T20Is, BBL, ...) from it, stating the line/length limits;
   ODI questions keep their existing path.
@@ -229,7 +232,8 @@ return `insufficient_evidence`, never invented analysis), not coverage. See
 - Browser-local session persistence
 
 ## Notes
-- V1 is ODI-only.
+- Men's ODIs have the deepest data (control, wagon wheels, shots); other formats
+  show what their data records and state what is missing.
 - Database-derived stats are the primary truth source.
 - The CSV and generated DuckDB are intentionally not committed. Configure the
   automatic source download or place the CSV in `data/` manually.

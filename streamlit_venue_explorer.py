@@ -52,11 +52,11 @@ def render_venue_explorer(services: dict[str, Any]) -> None:
 
     st.markdown("<div class='atlas-kicker'>◆ CricAtlas venue explorer</div>", unsafe_allow_html=True)
     st.markdown(
-        "<h1 class='atlas-title explorer-title'>Explore an ODI venue.<br>See who succeeds.</h1>",
+        "<h1 class='atlas-title explorer-title'>Explore a venue.<br>See who succeeds.</h1>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        "<p class='atlas-copy'>Ground-specific ODI bowling evidence for venue leaderboard questions and follow-up exploration.</p>",
+        "<p class='atlas-copy'>Ground-specific bowling and batting evidence for venue leaderboard questions and follow-up exploration.</p>",
         unsafe_allow_html=True,
     )
 

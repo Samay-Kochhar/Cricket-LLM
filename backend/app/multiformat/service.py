@@ -330,8 +330,12 @@ class MultiFormatService:
         flt: "DeliveryFilter",
         min_balls: int = 60,
         limit: int = 10,
+        min_matches: int | None = None,
     ) -> list[dict[str, Any]]:
-        """Ranking within the filter; rate metrics need ``min_balls`` (CONTEXT.md default 60)."""
+        """Ranking within the filter; rate metrics need ``min_balls`` (CONTEXT.md default 60).
+
+        ``min_matches`` replaces the ball threshold with a distinct-match one.
+        """
         where, params = flt.sql()
         source, key, agg, rates = _role_parts(role)
         if role == "batting":
@@ -364,7 +368,15 @@ class MultiFormatService:
                 """,
                 params,
             )
-        ranked = [rates(r) for r in rows if (r["balls"] or 0) >= min_balls]
+        ranked = [
+            rates(r)
+            for r in rows
+            if (
+                (r["matches"] or 0) >= min_matches
+                if min_matches is not None
+                else (r["balls"] or 0) >= min_balls
+            )
+        ]
         column, direction = orders[metric].split()
         ranked = [r for r in ranked if r.get(column) is not None]
         ranked.sort(key=lambda r: r[column], reverse=direction == "DESC")
@@ -578,6 +590,112 @@ class MultiFormatService:
             "dismissal_kinds": dismissals,
         }
 
+    def batting_control(
+        self, player_id: str, flt: DeliveryFilter, bowler_id: str | None = None
+    ) -> dict[str, Any]:
+        """Balls faced, how many carry a recorded control judgement, and how many were in control."""
+        where, params = flt.sql()
+        bowler = "AND d.bowler_id = ?" if bowler_id else ""
+        with self._connect() as conn:
+            balls, recorded, controlled = conn.execute(
+                f"""
+                SELECT count(*), count(*) FILTER (d.in_control IS NOT NULL),
+                       count(*) FILTER (d.in_control)
+                FROM analytics.deliveries d
+                WHERE d.batter_id = ? {bowler} AND d.wides IS NULL AND {where}
+                """,
+                [player_id, *([bowler_id] if bowler_id else []), *params],
+            ).fetchone()
+        return {
+            "balls": balls,
+            "recorded_balls": recorded,
+            "control_balls": controlled,
+            "control_percentage": round(100 * controlled / recorded, 2) if recorded else None,
+            "false_shot_percentage": (
+                round(100 * (recorded - controlled) / recorded, 2) if recorded else None
+            ),
+        }
+
+    def shot_profile(
+        self, player_id: str, flt: DeliveryFilter, limit: int = 12
+    ) -> dict[str, Any]:
+        """Recorded shot labels for a batter's balls faced, with the share of balls that carry one."""
+        where, params = flt.sql()
+        with self._connect() as conn:
+            rows = _rows(
+                conn,
+                f"""
+                SELECT d.shot, count(*) AS balls, sum(d.runs_batter) AS runs,
+                       count(*) FILTER (d.in_control IS NOT NULL) AS control_known,
+                       count(*) FILTER (d.in_control) AS control_balls,
+                       count(*) FILTER (d.is_wicket AND d.player_out_id = d.batter_id
+                         AND coalesce(d.wicket_kind, '') NOT IN ('retired hurt', 'retired not out', 'retired not out (hurt)', 'not out')) AS dismissals
+                FROM analytics.deliveries d
+                WHERE d.batter_id = ? AND d.wides IS NULL AND d.shot IS NOT NULL AND {where}
+                GROUP BY ALL ORDER BY runs DESC, balls DESC
+                """,
+                [player_id, *params],
+            )
+            total = conn.execute(
+                f"SELECT count(*) FROM analytics.deliveries d WHERE d.batter_id = ? AND d.wides IS NULL AND {where}",
+                [player_id, *params],
+            ).fetchone()[0]
+        covered = sum(r["balls"] for r in rows)
+        covered_runs = sum(r["runs"] or 0 for r in rows)
+        metrics = [
+            {
+                "shot": r["shot"],
+                "balls": r["balls"],
+                "runs": r["runs"] or 0,
+                "run_share_percentage": round(100 * (r["runs"] or 0) / covered_runs, 2) if covered_runs else None,
+                "strike_rate": round(100 * (r["runs"] or 0) / r["balls"], 2) if r["balls"] else None,
+                "control_percentage": round(100 * r["control_balls"] / r["control_known"], 2) if r["control_known"] else None,
+                "dismissals": r["dismissals"],
+                "dismissal_rate": round(100 * r["dismissals"] / r["balls"], 2) if r["balls"] else None,
+            }
+            for r in rows[:limit]
+        ]
+        return {
+            "metrics": metrics,
+            "coverage": {
+                "total_balls": total,
+                "covered_balls": covered,
+                "coverage_percentage": round(100 * covered / total, 2) if total else 0.0,
+                "detail": "Only balls with a recorded shot label are included.",
+            },
+        }
+
+    def matchup_pitch(
+        self, batter_id: str, bowler_id: str, flt: DeliveryFilter
+    ) -> dict[str, Any]:
+        """Line × length cells for one batter against one bowler, with boundaries and dismissals."""
+        where, params = flt.sql()
+        with self._connect() as conn:
+            cells = _rows(
+                conn,
+                f"""
+                SELECT d.line, d.length, count(*) FILTER (d.wides IS NULL) AS balls,
+                       sum(d.runs_batter) AS runs,
+                       count(*) FILTER (d.runs_batter = 4 AND NOT coalesce(d.non_boundary, FALSE)) AS fours,
+                       count(*) FILTER (d.runs_batter = 6 AND NOT coalesce(d.non_boundary, FALSE)) AS sixes,
+                       count(*) FILTER (d.is_wicket AND d.player_out_id = d.batter_id
+                         AND coalesce(d.wicket_kind, '') NOT IN ('retired hurt', 'retired not out', 'retired not out (hurt)', 'not out')) AS dismissals
+                FROM analytics.deliveries d
+                WHERE d.batter_id = ? AND d.bowler_id = ? AND {where}
+                  AND d.line IS NOT NULL AND d.length IS NOT NULL
+                GROUP BY ALL
+                """,
+                [batter_id, bowler_id, *params],
+            )
+            hand = conn.execute(
+                f"SELECT mode(d.batter_hand) FROM analytics.deliveries d WHERE d.batter_id = ? AND {where}",
+                [batter_id, *params],
+            ).fetchone()[0]
+        for cell in cells:
+            cell["wicket_balls"] = cell["dismissals"]
+            cell["strike_rate"] = round(100 * cell["runs"] / cell["balls"], 2) if cell["balls"] else None
+        return {"handedness": hand, "cells": [c for c in cells if c["balls"]]}
+
     def venues(self, flt: DeliveryFilter) -> list[dict[str, Any]]:
         where, params = flt.sql()
         with self._connect() as conn:
@@ -599,6 +717,7 @@ class MultiFormatService:
         flt: DeliveryFilter,
         min_balls: int = 60,
         limit: int = 15,
+        min_matches: int | None = None,
     ) -> dict[str, Any]:
         """Ground summary (first-innings scoring, run rate) and the player leaderboard at it."""
         venue_flt = DeliveryFilter(**{**_filter_fields(flt), "venue": venue})
@@ -624,7 +743,7 @@ class MultiFormatService:
                 params,
             )[0]
         leaders = self.leaderboard(
-            role, metric, venue_flt, min_balls=min_balls, limit=limit
+            role, metric, venue_flt, min_balls=min_balls, limit=limit, min_matches=min_matches
         )
         return {"venue": venue, "summary": summary, "leaders": leaders}
 
