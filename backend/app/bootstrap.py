@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 import os
+from pathlib import Path
 
 from backend.app.api.routes.multiformat import get_multiformat_service
 from backend.app.config import AppConfig
@@ -101,6 +102,29 @@ def get_services():
             multiformat_service.db_path.parent / "planner_cache",
             offline=os.getenv("MULTIFORMAT_PLANNER_OFFLINE", "false").lower() == "true",
         )
+    if multiformat_chat is not None:
+        from backend.app.multiformat.investigation import UnansweredBacklog
+
+        multiformat_chat.backlog = UnansweredBacklog(
+            Path(os.getenv("UNANSWERED_BACKLOG_PATH", str(multiformat_service.db_path.parent / "unanswered_questions.jsonl")))
+        )
+        investigation_model = os.getenv("MULTIFORMAT_INVESTIGATION_MODEL", "").strip()
+        if investigation_model and investigation_model.lower() not in {"off", "false", "none"}:
+            from backend.app.multiformat.investigation import GeminiToolModel, Investigator, ReadOnlyDatabase
+            from backend.app.multiformat.investigation_knowledge import build_knowledge_pack
+
+            odi_db = Path(os.getenv("DUCKDB_PATH", str(multiformat_service.db_path.parent / "odi_analytics.duckdb")))
+            multiformat_chat.investigator = Investigator(
+                GeminiToolModel(
+                    config.gemini_api_key,
+                    investigation_model,
+                    multiformat_service.db_path.parent / "investigation_cache",
+                    offline=os.getenv("MULTIFORMAT_INVESTIGATION_OFFLINE", "false").lower() == "true",
+                ),
+                ReadOnlyDatabase(multiformat_service.db_path, odi_db),
+                build_knowledge_pack(multiformat_service.db_path, odi_db),
+                backlog=multiformat_chat.backlog,
+            )
     chat_service = ChatService(
         repository=repository,
         query_handler=query_handler,

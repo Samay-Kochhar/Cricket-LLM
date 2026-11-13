@@ -1,0 +1,116 @@
+# AI-fallback evaluation v1 (written 2026-11-13).
+#
+# Set A: existing questions the database rules hand off (they refuse them), re-listed with gold.
+# Set B: 10 NEW questions the rules were not built for. Gold answers were computed with
+# independent SQL (written from scratch against analytics.deliveries / analytics.matches, no app
+# code) BEFORE any AI run, and cross-checked against the independent TigZig copy where it covers
+# the same matches (ai-05, ai-06, ai-10 agree). Database: data/cricket_all.duckdb, men's unless stated.
+#
+# Grading: an answer is correct when its headline numbers (key_numbers) match gold and the
+# interpretation is the one in `expect`. A clarification is graded separately (not wrong).
+#
+# Shared definitions used for gold: super overs excluded; dismissals exclude retired hurt/not out;
+# a partnership's runs are all runs (including extras) between consecutive wickets; bowling runs
+# conceded = runs off the bat + wides + no-balls; over_no is zero-based.
+
+- id: part-04
+  set: A
+  source: multiformat_questions_100.yaml
+  question: Best opening partnerships in the Big Bash League
+  expect: >-
+    Either the highest single opening stands (top: 207, MP Stoinis & HWR Cartwright, Melbourne Stars
+    v Sydney Sixers, 12 Jan 2020; then 203 MS Wade & DJM Short) or opening pairs by total runs,
+    with the interpretation stated. A clarification between the two readings is acceptable.
+  key_numbers: [207, 203]
+
+- id: fresh-25
+  set: A
+  source: multiformat_fresh_v1.yaml
+  question: What are the biggest third-wicket stands in Test cricket?
+  expect: >-
+    Highest men's Test third-wicket partnerships in the recorded data (from Dec 2001): 624 DPMD
+    Jayawardene & KC Sangakkara (Sri Lanka v South Africa, Jul 2006), 377* JH Kallis & HM Amla
+    (2012), 364 Hashmatullah Shahidi & Rahmat Shah (2024), 363 Mohammad Yousuf & Younis Khan (2006),
+    363 HM Nicholls & KS Williamson (2023).
+  key_numbers: [624, 377, 364, 363]
+
+- id: fresh-28
+  set: A
+  source: multiformat_fresh_v1.yaml
+  question: Heinrich Klassen against Kuldeep Yadav in the IPL
+  expect: H Klaasen (misspelled) v Kuldeep Yadav in the IPL - 18 balls, 31 runs, 0 dismissals.
+  key_numbers: [18, 31]
+
+- id: ai-01
+  set: B
+  question: What are the five highest opening partnerships in men's T20Is?
+  expect: >-
+    258* Japan (L Yamamoto-Lake & K Kadowaki-Fleming) v China 2024; 238 Germany v Austria 2026;
+    231 Afghanistan (Hazratullah Zazai & Usman Ghani) v Ireland 2019; 223 Australia (AJ Finch & DJM
+    Short) v Zimbabwe 2018; 220 Czech Republic v Bulgaria 2022.
+  key_numbers: [258, 238, 231, 223, 220]
+
+- id: ai-02
+  set: B
+  question: What is the highest successful run chase at the Wankhede Stadium in the IPL?
+  expect: >-
+    249/4 by Sunrisers Hyderabad (29 Apr 2026). Next: 229/4 and 224/4 by Mumbai Indians (2026).
+  key_numbers: [249]
+
+- id: ai-03
+  set: B
+  question: >-
+    In the IPL since 2022, what is the average first-innings total when the batting team scored
+    under 20 runs in the first three overs, compared with 20 or more?
+  expect: >-
+    Under 20 in overs 1-3: 168.42 average over 93 first innings; 20 or more: 190.66 over 274.
+  key_numbers: [168.42, 93, 190.66, 274]
+
+- id: ai-04
+  set: B
+  question: >-
+    Who has the best economy rate in the last two overs of men's T20I innings, minimum 300 balls
+    bowled in those overs?
+  expect: >-
+    SL Malinga 7.36 (301 balls, 369 runs); then Shaheen Shah Afridi 8.66, Mustafizur Rahman 8.67.
+  key_numbers: [7.36]
+
+- id: ai-05
+  set: B
+  question: >-
+    Who has taken the most men's Test wickets with the new ball (the first 10 overs of an innings)
+    since 2015?
+  expect: MA Starc 107; then SCJ Broad 83, JM Anderson 74, K Rabada 68, JR Hazlewood 60.
+  key_numbers: [107, 83]
+
+- id: ai-06
+  set: B
+  question: What is the most sixes hit by one batter in a single IPL innings, and who did it?
+  expect: CH Gayle, 17 sixes v Pune Warriors (23 Apr 2013). Next best 13 (McCullum 2008, Gayle 2012).
+  key_numbers: [17]
+
+- id: ai-07
+  set: B
+  question: What is Joe Root's batting average in the fourth innings of Tests?
+  expect: 44.76 (2,059 runs, 46 dismissals, 4,022 balls) in the fourth innings of men's Tests.
+  key_numbers: [44.76, 2059, 46]
+
+- id: ai-08
+  set: B
+  question: Which bowler has bowled the most maiden overs in the IPL?
+  expect: >-
+    Tie: P Kumar and B Kumar, 14 maidens each (a maiden = a complete six-legal-ball over by one
+    bowler conceding no runs off the bat, wides or no-balls); then TA Boult 11.
+  key_numbers: [14]
+
+- id: ai-09
+  set: B
+  question: How many ducks has Babar Azam made in T20Is?
+  expect: 10 ducks (dismissed for 0) in men's T20Is.
+  key_numbers: [10]
+
+- id: ai-10
+  set: B
+  question: What is the highest team total in women's T20Is?
+  expect: 333 by Argentina v Chile (15 Oct 2023); then 318 Bahrain v Saudi Arabia (2022).
+  key_numbers: [333]

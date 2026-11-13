@@ -59,3 +59,17 @@ _Avoid_: Balls per wicket, strike rate when the role is unclear
 **Ambiguous strike rate**:
 Any unqualified strike-rate request that does not say batting or bowling. It requires the user to choose the metric before CricAtlas calculates an answer.
 _Avoid_: Guessing from the most recent role
+
+## Answer Paths
+
+**Database rules**:
+CricAtlas's fixed, tested question reader and SQL. They answer only when every part of the question is accounted for.
+_Avoid_: Deterministic planner (in user-facing text)
+
+**AI investigation**:
+The fallback when the database rules refuse or leave part of a question unaccounted for: an AI model runs read-only database queries and every number it reports is checked against their results.
+_Avoid_: AI answer, model reading
+
+**Saved case**:
+A question that ended without a checked answer, recorded with the reason and what was tried so it can be improved later.
+_Avoid_: Failure log
