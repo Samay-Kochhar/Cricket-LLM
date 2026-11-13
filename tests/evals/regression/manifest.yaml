@@ -52,3 +52,16 @@ intended_changes:
       instead of the old safe refusal.
   - case_id: unseen-unsupported-team-econ-b
     reason: Same as unseen-unsupported-team-econ-a.
+
+# 2026-11-13 dismissal-ownership correction (approved by the user): 18 golden
+# answers were updated in place, field by field, from the verified diff. A
+# batter's dismissals are now the times he was out (p_out), including his own
+# non-striker run-outs and excluding a partner's run-out or retirement on a ball
+# he faced; matchups count only the striker's own dismissal. Examples: Kohli
+# ODI dismissals 248 -> 241, Rohit 221 -> 223, Smith 135 -> 131, Miller v
+# Chahal 4 -> 3; zero-ball non-striker appearances add a match (Kohli 284 ->
+# 285). Cases: unseen-match-miller-false-a/b, unseen-match-kohli-pace-a/b,
+# unseen-compare-kohli-rohit-a/b, unseen-compare-babar-smith-a/b,
+# unseen-compare-rohit-warner-pp-a/b, unseen-trend-kohli-sr-a/b,
+# unseen-context-kohli-phase-a/b, unseen-context-comparison-a/b,
+# next-kohli-sixes, next-successful-chases.
