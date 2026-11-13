@@ -4,6 +4,11 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from backend.app.cricket_analytics.dismissal_sql import (
+    OWN_DISMISSAL,
+    batting_relation_sql,
+    batting_query_scope,
+)
 from backend.app.cricket_analytics.ontology import METRICS
 from backend.app.cricket_analytics.cricket_definitions import phase_case_expression
 from backend.app.cricket_analytics.match_lighting import (
@@ -20,7 +25,14 @@ from backend.app.cricket_analytics.query_builders.aggregate_builder import (
 from backend.app.cricket_analytics.schemas import CricketQueryPlan, QueryBuildResult
 
 
-SUPPORTED_SPLITS = {"phase", "batter_hand", "bowling_style_group", "balls_faced_window", "over_range", "match_lighting"}
+SUPPORTED_SPLITS = {
+    "phase",
+    "batter_hand",
+    "bowling_style_group",
+    "balls_faced_window",
+    "over_range",
+    "match_lighting",
+}
 SUPPORTED_METRICS = {
     "batting_strike_rate",
     "economy_rate",
@@ -55,7 +67,9 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
         raise ValueError(unsupported_reason(plan))
 
     entity_expression, entity_alias = _entity_sql(plan.entity)
-    split_case, split_a, split_b, split_a_label, split_b_label, split_params = _split_sql(plan)
+    split_case, split_a, split_b, split_a_label, split_b_label, split_params = (
+        _split_sql(plan)
+    )
     value_a_column = f"{_safe_identifier(split_a_label)}_value"
     value_b_column = f"{_safe_identifier(split_b_label)}_value"
     sample_a_column = f"{_safe_identifier(split_a_label)}_sample"
@@ -71,7 +85,10 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
     where_clauses = ["1 = 1"]
     filter_params: list[Any] = []
     skip_filters = _split_filter_keys(plan)
-    for clause, clause_params in _filter_clauses({key: value for key, value in plan.filters.items() if key not in skip_filters}, entity=plan.entity):
+    for clause, clause_params in _filter_clauses(
+        {key: value for key, value in plan.filters.items() if key not in skip_filters},
+        entity=plan.entity,
+    ):
         where_clauses.append(clause)
         filter_params.extend(clause_params)
 
@@ -90,6 +107,19 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
         params.extend([minimum_sample, minimum_sample])
     params.append(limit)
 
+    batting, ball_context = batting_query_scope(plan)
+    relation = batting_relation_sql() if batting else "analytics.deliveries_v1"
+    dismissal_sql = (
+        "is_batter_dismissal"
+        if batting
+        else (
+            BOWLER_WICKET
+            if plan.entity == "bowler" and plan.question_subject == "matchup"
+            else OWN_DISMISSAL
+        )
+    )
+    if batting and ball_context:
+        where_clauses.append("NOT synthetic_dismissal")
     sql = f"""
             WITH bucketed AS (
               SELECT
@@ -99,15 +129,15 @@ def build_split_compare_query(plan: CricketQueryPlan) -> SplitCompareBuild:
                 inns,
                 team_bat,
                 CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END AS balls_faced,
-                CASE WHEN {LEGAL_BALL} THEN 1 ELSE 0 END AS legal_balls,
+                CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{LEGAL_BALL} THEN 1 ELSE 0 END AS legal_balls,
                 CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END AS runs_scored,
-                TRY_CAST(bowlruns AS INTEGER) AS runs_conceded,
-                CASE WHEN {BOWLER_WICKET} THEN 1 ELSE 0 END AS wickets,
-                CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END AS dismissals,
+                CASE WHEN {"NOT synthetic_dismissal" if batting else "TRUE"} THEN TRY_CAST(bowlruns AS INTEGER) ELSE 0 END AS runs_conceded,
+                CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{BOWLER_WICKET} THEN 1 ELSE 0 END AS wickets,
+                CASE WHEN {dismissal_sql} THEN 1 ELSE 0 END AS dismissals,
                 CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND COALESCE(TRY_CAST(batruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END AS dot_balls,
-                CASE WHEN {LEGAL_BALL} AND COALESCE(TRY_CAST(bowlruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END AS bowler_dot_balls,
+                CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{LEGAL_BALL} AND COALESCE(TRY_CAST(bowlruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END AS bowler_dot_balls,
                 CASE WHEN {_boundary_condition(plan)} THEN 1 ELSE 0 END AS boundary_balls
-              FROM analytics.deliveries_v1
+              FROM {relation}
               WHERE {' AND '.join(where_clauses)}
                 AND NULLIF(TRIM(CAST({entity_expression} AS VARCHAR)), '') IS NOT NULL
             ),
@@ -208,7 +238,14 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
         return split_case, split_a, split_b, split_a, split_b, []
     if plan.split_by == "batter_hand":
         split_a, split_b = _two_values(compare_values, "LHB", "RHB")
-        return "bat_hand", split_a, split_b, _hand_label(split_a), _hand_label(split_b), []
+        return (
+            "bat_hand",
+            split_a,
+            split_b,
+            _hand_label(split_a),
+            _hand_label(split_b),
+            [],
+        )
     if plan.split_by == "bowling_style_group":
         split_a, split_b = _two_values(compare_values, "wrist_spin", "finger_spin")
         split_case = (
@@ -223,12 +260,18 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
     if plan.split_by == "match_lighting":
         # Literal stored categories only; the values are validated against the
         # registry before they reach SQL.
-        if len(compare_values) != 2 or not all(is_lighting_value(value) for value in compare_values):
-            raise ValueError("Match-lighting splits require two recorded lighting categories.")
+        if len(compare_values) != 2 or not all(
+            is_lighting_value(value) for value in compare_values
+        ):
+            raise ValueError(
+                "Match-lighting splits require two recorded lighting categories."
+            )
         split_a, split_b = compare_values[0], compare_values[1]
         return lighting_split_case_expression(), split_a, split_b, split_a, split_b, []
     if plan.split_by == "balls_faced_window":
-        split_a, split_b = _two_values(compare_values, "after_20_balls", "first_20_balls")
+        split_a, split_b = _two_values(
+            compare_values, "after_20_balls", "first_20_balls"
+        )
         split_case = (
             "CASE WHEN TRY_CAST(cur_bat_bf AS INTEGER) <= 20 THEN 'first_20_balls' "
             "WHEN TRY_CAST(cur_bat_bf AS INTEGER) > 20 THEN 'after_20_balls' ELSE NULL END"
@@ -236,7 +279,9 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
         return split_case, split_a, split_b, split_a, split_b, []
     if plan.split_by == "over_range":
         explicit_ranges = [_parse_over_range_label(value) for value in compare_values]
-        if len(explicit_ranges) >= 2 and all(item is not None for item in explicit_ranges[:2]):
+        if len(explicit_ranges) >= 2 and all(
+            item is not None for item in explicit_ranges[:2]
+        ):
             first = explicit_ranges[0]
             second = explicit_ranges[1]
             assert first is not None and second is not None
@@ -247,12 +292,19 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
                 f"'{split_b}' ELSE NULL END"
             )
             # Stored `over` is the 1-based over number, so human overs are inclusive.
-            return split_case, split_a, split_b, split_a, split_b, [
-                float(first[0]),
-                float(first[1]),
-                float(second[0]),
-                float(second[1]),
-            ]
+            return (
+                split_case,
+                split_a,
+                split_b,
+                split_a,
+                split_b,
+                [
+                    float(first[0]),
+                    float(first[1]),
+                    float(second[0]),
+                    float(second[1]),
+                ],
+            )
         start, end = _over_range(plan)
         split_a = f"overs_{start}_to_{end}"
         split_b = f"before_over_{start}"
@@ -260,11 +312,20 @@ def _split_sql(plan: CricketQueryPlan) -> tuple[str, str, str, str, str, list[An
             "CASE WHEN TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ? THEN "
             f"'{split_a}' WHEN TRY_CAST(over AS DOUBLE) < ? THEN '{split_b}' ELSE NULL END"
         )
-        return split_case, split_a, split_b, split_a, split_b, [float(start), float(end), float(start)]
+        return (
+            split_case,
+            split_a,
+            split_b,
+            split_a,
+            split_b,
+            [float(start), float(end), float(start)],
+        )
     raise ValueError(unsupported_reason(plan))
 
 
-def _two_values(compare_values: list[str], default_a: str, default_b: str) -> tuple[str, str]:
+def _two_values(
+    compare_values: list[str], default_a: str, default_b: str
+) -> tuple[str, str]:
     if len(compare_values) >= 2:
         return compare_values[0], compare_values[1]
     return default_a, default_b
@@ -295,12 +356,18 @@ def _metric_expression(plan: CricketQueryPlan) -> str:
 
 
 def _sample_expression(plan: CricketQueryPlan) -> str:
-    if METRICS[plan.metric].denominator == "legal_balls" or plan.metric in {"economy_rate", "run_rate", "wickets"}:
+    if METRICS[plan.metric].denominator == "legal_balls" or plan.metric in {
+        "economy_rate",
+        "run_rate",
+        "wickets",
+    }:
         return "SUM(legal_balls)"
     return "SUM(balls_faced)"
 
 
-def _difference_expression(plan: CricketQueryPlan, value_a_column: str, value_b_column: str) -> str:
+def _difference_expression(
+    plan: CricketQueryPlan, value_a_column: str, value_b_column: str
+) -> str:
     if plan.explanation_intent == "canonical cricket meaning":
         return f"{value_a_column} - {value_b_column}"
     if plan.split_by == "balls_faced_window":
@@ -325,7 +392,11 @@ def _rank_expression(plan: CricketQueryPlan, difference_expression: str) -> str:
 def _minimum_sample(plan: CricketQueryPlan) -> int:
     sample = plan.minimum_sample
     if sample is not None:
-        if METRICS[plan.metric].denominator == "legal_balls" or plan.metric in {"economy_rate", "run_rate", "wickets"}:
+        if METRICS[plan.metric].denominator == "legal_balls" or plan.metric in {
+            "economy_rate",
+            "run_rate",
+            "wickets",
+        }:
             return sample.legal_balls or sample.balls or 24
         return sample.balls or sample.legal_balls or 20
     defaults = METRICS[plan.metric].minimum_sample
@@ -341,7 +412,9 @@ def _dot_ball_condition(plan: CricketQueryPlan) -> str:
 def _boundary_condition(plan: CricketQueryPlan) -> str:
     if plan.entity == "bowler":
         return f"{LEGAL_BALL} AND TRY_CAST(batruns AS INTEGER) IN (4, 6)"
-    return "TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6)"
+    return (
+        "TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6)"
+    )
 
 
 def _split_filter_keys(plan: CricketQueryPlan) -> set[str]:
@@ -367,7 +440,9 @@ def _hand_label(value: str) -> str:
 
 
 def _safe_identifier(value: str) -> str:
-    cleaned = "".join(character.lower() if character.isalnum() else "_" for character in value)
+    cleaned = "".join(
+        character.lower() if character.isalnum() else "_" for character in value
+    )
     cleaned = "_".join(part for part in cleaned.split("_") if part)
     if not cleaned:
         return "split"

@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from backend.app.cricket_analytics.dismissal_sql import (
+    OWN_DISMISSAL,
+    batting_relation_sql,
+    batting_query_scope,
+)
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -61,8 +67,12 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
         raise ValueError(unsupported_reason(plan))
 
     dimensions = _dimensions_for_plan(plan)
-    select_dimensions = [f"{dimension.expression} AS {dimension.alias}" for dimension in dimensions]
-    group_expressions = [dimension.expression for dimension in dimensions if dimension.group]
+    select_dimensions = [
+        f"{dimension.expression} AS {dimension.alias}" for dimension in dimensions
+    ]
+    group_expressions = [
+        dimension.expression for dimension in dimensions if dimension.group
+    ]
     dimension_columns = [dimension.alias for dimension in dimensions]
 
     where_clauses = ["1 = 1"]
@@ -72,12 +82,16 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
         params.extend(clause_params)
     for dimension in dimensions:
         if dimension.group:
-            where_clauses.append(f"NULLIF(TRIM(CAST({dimension.expression} AS VARCHAR)), '') IS NOT NULL")
+            where_clauses.append(
+                f"NULLIF(TRIM(CAST({dimension.expression} AS VARCHAR)), '') IS NOT NULL"
+            )
 
     soft_minimum = _soft_minimum_sample(plan)
     limit = plan.limit or 10
     sort_expression, sort_direction, ranking_note = _sort_expression(plan)
-    canonical_ranking = plan.question_subject == "matchup" and plan.operation == "aggregate"
+    canonical_ranking = (
+        plan.question_subject == "matchup" and plan.operation == "aggregate"
+    )
     if canonical_ranking and plan.entity == "bowler" and plan.metric == "dismissals":
         sort_expression = "wickets"
     if plan.sort:
@@ -85,18 +99,39 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
     eligibility = []
     apply_eligibility = plan.minimum_sample_explicit or canonical_ranking
     if apply_eligibility and plan.minimum_sample:
-        for column, value in (("balls", plan.minimum_sample.balls), ("legal_balls", plan.minimum_sample.legal_balls), ("innings", plan.minimum_sample.innings)):
+        for column, value in (
+            ("balls", plan.minimum_sample.balls),
+            ("legal_balls", plan.minimum_sample.legal_balls),
+            ("innings", plan.minimum_sample.innings),
+        ):
             if value is not None:
                 eligibility.append(f"{column} >= ?")
     eligibility_sql = "WHERE " + " AND ".join(eligibility) if eligibility else ""
-    group_by_sql = "GROUP BY " + ", ".join(group_expressions) if group_expressions else ""
-    select_dimension_sql = ",\n                ".join(select_dimensions) + "," if select_dimensions else ""
+    group_by_sql = (
+        "GROUP BY " + ", ".join(group_expressions) if group_expressions else ""
+    )
+    select_dimension_sql = (
+        ",\n                ".join(select_dimensions) + "," if select_dimensions else ""
+    )
     metric_projection_sql = ",\n              ".join(matchup_projection_sql())
     tie_breakers = ", ".join(f"{column} ASC" for column in dimension_columns)
     order_sql = f"ORDER BY rank_value {sort_direction}, sample_size DESC"
     if tie_breakers:
         order_sql += f", {tie_breakers}"
 
+    batting, ball_context = batting_query_scope(plan)
+    relation = batting_relation_sql() if batting else "analytics.deliveries_v1"
+    dismissal_sql = (
+        "is_batter_dismissal"
+        if batting
+        else (
+            BOWLER_WICKET
+            if plan.entity == "bowler" and plan.question_subject == "matchup"
+            else OWN_DISMISSAL
+        )
+    )
+    if batting and ball_context:
+        where_clauses.append("NOT synthetic_dismissal")
     sql = f"""
             WITH aggregate_rows AS (
               SELECT
@@ -104,16 +139,16 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
                 COUNT(DISTINCT p_match) AS matches,
                 COUNT(DISTINCT CAST(p_match AS VARCHAR) || ':' || CAST(inns AS VARCHAR) || ':' || CAST(team_bat AS VARCHAR)) AS innings,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END) AS balls,
-                SUM(CASE WHEN {LEGAL_BALL} THEN 1 ELSE 0 END) AS legal_balls,
+                SUM(CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{LEGAL_BALL} THEN 1 ELSE 0 END) AS legal_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS runs,
-                SUM(TRY_CAST(bowlruns AS INTEGER)) AS runs_conceded,
-                SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
-                SUM(CASE WHEN {BOWLER_WICKET} THEN 1 ELSE 0 END) AS wickets,
+                SUM(CASE WHEN {"NOT synthetic_dismissal" if batting else "TRUE"} THEN TRY_CAST(bowlruns AS INTEGER) ELSE 0 END) AS runs_conceded,
+                SUM(CASE WHEN {dismissal_sql} THEN 1 ELSE 0 END) AS dismissals,
+                SUM(CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{BOWLER_WICKET} THEN 1 ELSE 0 END) AS wickets,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND COALESCE(TRY_CAST(batruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END) AS dot_balls,
-                SUM(CASE WHEN {LEGAL_BALL} AND COALESCE(TRY_CAST(bowlruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END) AS bowler_dot_balls,
+                SUM(CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{LEGAL_BALL} AND COALESCE(TRY_CAST(bowlruns AS INTEGER), 0) = 0 THEN 1 ELSE 0 END) AS bowler_dot_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(control AS DOUBLE) = 0 THEN 1 ELSE 0 END) AS false_shots
-              FROM analytics.deliveries_v1
+              FROM {relation}
               WHERE {' AND '.join(where_clauses)}
               {group_by_sql}
             )
@@ -137,7 +172,15 @@ def build_matchup_query(plan: CricketQueryPlan) -> MatchupBuild:
             """
     params.append(soft_minimum)
     if apply_eligibility and plan.minimum_sample:
-        params.extend(value for value in (plan.minimum_sample.balls, plan.minimum_sample.legal_balls, plan.minimum_sample.innings) if value is not None)
+        params.extend(
+            value
+            for value in (
+                plan.minimum_sample.balls,
+                plan.minimum_sample.legal_balls,
+                plan.minimum_sample.innings,
+            )
+            if value is not None
+        )
     params.append(limit)
     columns = [
         *dimension_columns,
@@ -185,7 +228,9 @@ def _dimensions_for_plan(plan: CricketQueryPlan) -> list[MatchupDimension]:
 
     def add(alias: str, expression: str, group: bool = True) -> None:
         if alias not in {dimension.alias for dimension in dimensions}:
-            dimensions.append(MatchupDimension(alias=alias, expression=expression, group=group))
+            dimensions.append(
+                MatchupDimension(alias=alias, expression=expression, group=group)
+            )
 
     if "batter" in plan.filters:
         add("batter", "MIN(bat)", group=False)

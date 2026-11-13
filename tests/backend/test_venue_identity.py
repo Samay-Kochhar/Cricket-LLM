@@ -31,11 +31,14 @@ def repository(tmp_path_factory) -> AnalyticsRepository:
     path = tmp_path_factory.mktemp("venue-identities") / "venues.duckdb"
     with duckdb.connect(str(path)) as conn:
         conn.execute('CREATE SCHEMA analytics')
+        # Every wicket in this fixture is the striker's own; declare that identity
+        # explicitly (production never infers who was out from the striker's flag).
         conn.execute('''CREATE TABLE analytics.deliveries_v1 (
             ground VARCHAR, p_match INTEGER, inns INTEGER, team_bat VARCHAR,
             team_bowl VARCHAR, bat VARCHAR, bowl VARCHAR, ballfaced INTEGER,
             wide INTEGER, noball INTEGER, batruns INTEGER, bowlruns INTEGER,
-            dismissal VARCHAR, out BOOLEAN, control INTEGER, length VARCHAR
+            dismissal VARCHAR, out BOOLEAN, control INTEGER, length VARCHAR,
+            p_bat VARCHAR GENERATED ALWAYS AS (bat) VIRTUAL, p_out VARCHAR GENERATED ALWAYS AS (CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN bat END) VIRTUAL
         )''')
         rows = []
         for group_index, venue in enumerate(ALL_GROUPS):

@@ -21,10 +21,11 @@ def client(tmp_path: Path):
 def test_batting_stats_follow_the_metric_definitions(client) -> None:
     body = client.get("/api/v2/data/players/bat/stats", params={"gender": "male"}).json()
     [row] = body["by_format"]
-    # wides are not balls faced: 3 balls faced, 10 runs, 1 dismissal
-    assert (row["balls"], row["runs"], row["dismissals"]) == (3, 10, 1)
+    # wides are not balls faced: 3 balls faced, 10 runs; dismissals include the
+    # run-out at the non-striker's end
+    assert (row["balls"], row["runs"], row["dismissals"]) == (3, 10, 2)
     assert row["strike_rate"] == pytest.approx(333.33)
-    assert row["average"] == 10.0
+    assert row["average"] == 5.0
 
 
 def test_bowling_stats_charge_wides_and_count_bowler_wickets(client) -> None:

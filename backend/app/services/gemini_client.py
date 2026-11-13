@@ -39,6 +39,8 @@ class GeminiStructuredResult:
     output_token_count: int | None = None
     error_kind: str | None = None
     schema_constrained: bool = True
+    thoughts_token_count: int | None = None
+    total_token_count: int | None = None
 
 
 @dataclass(slots=True)
@@ -132,6 +134,7 @@ class GeminiClient:
         prefer_complex: bool = False,
         max_output_tokens: int = 2048,
         model_name: str | None = None,
+        thinking_level: str | None = None,
     ) -> GeminiStructuredResult:
         model_name = model_name or (self.complex_model if prefer_complex else self.default_model)
         started_at = perf_counter()
@@ -154,6 +157,8 @@ class GeminiClient:
                 "responseJsonSchema": response_schema,
             },
         }
+        if thinking_level is not None:
+            payload["generationConfig"]["thinkingConfig"] = {"thinkingLevel": thinking_level}
         try:
             response = httpx.post(
                 f"{self.api_base_url}/models/{model_name}:generateContent",
@@ -226,6 +231,8 @@ class GeminiClient:
                 else None
             ),
             error_kind=None if candidate else "empty_response",
+            thoughts_token_count=usage.get("thoughtsTokenCount"),
+            total_token_count=usage.get("totalTokenCount"),
         )
 
     @staticmethod

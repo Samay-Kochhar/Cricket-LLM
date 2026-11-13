@@ -17,9 +17,14 @@ from backend.app.cricket_analytics.match_facts import (
 )
 from backend.app.cricket_analytics.player_roles import PlayerParticipation
 from backend.app.domain.venues import (
-    venue_filter, venue_options, resolve_venue,
-    matching_venues, venue_id_sql, venue_display_sql,
+    venue_filter,
+    venue_options,
+    resolve_venue,
+    matching_venues,
+    venue_id_sql,
+    venue_display_sql,
 )
+from backend.app.cricket_analytics.dismissal_sql import OWN_DISMISSAL
 from backend.app.db.connection import get_connection
 from backend.app.services.player_resolution import normalize_name
 
@@ -52,13 +57,21 @@ class AnalyticsRepository:
 
     @staticmethod
     def _tokenize(value: str) -> set[str]:
-        return {token for token in re.findall(r"[a-z0-9]+", value.lower()) if len(token) >= 3}
+        return {
+            token
+            for token in re.findall(r"[a-z0-9]+", value.lower())
+            if len(token) >= 3
+        }
 
-    def _fetchall(self, sql: str, params: list[Any] | None = None) -> list[tuple[Any, ...]]:
+    def _fetchall(
+        self, sql: str, params: list[Any] | None = None
+    ) -> list[tuple[Any, ...]]:
         with get_connection(self.db_path) as conn:
             return conn.execute(sql, params or []).fetchall()
 
-    def _fetchone(self, sql: str, params: list[Any] | None = None) -> tuple[Any, ...] | None:
+    def _fetchone(
+        self, sql: str, params: list[Any] | None = None
+    ) -> tuple[Any, ...] | None:
         with get_connection(self.db_path) as conn:
             return conn.execute(sql, params or []).fetchone()
 
@@ -91,7 +104,9 @@ class AnalyticsRepository:
         ]
 
     @staticmethod
-    def _coverage_dict(total_balls: int, covered_balls: int, detail: str) -> dict[str, Any]:
+    def _coverage_dict(
+        total_balls: int, covered_balls: int, detail: str
+    ) -> dict[str, Any]:
         percentage = (covered_balls / total_balls * 100.0) if total_balls else 0.0
         return {
             "total_balls": int(total_balls),
@@ -111,7 +126,9 @@ class AnalyticsRepository:
 
     @staticmethod
     def _wagon_labels_for_hand(handedness: str | None) -> dict[int, str]:
-        return LEFT_HAND_WAGON_LABELS if handedness == "LHB" else RIGHT_HAND_WAGON_LABELS
+        return (
+            LEFT_HAND_WAGON_LABELS if handedness == "LHB" else RIGHT_HAND_WAGON_LABELS
+        )
 
     @staticmethod
     def _field_zone_condition(field_zone: str) -> str:
@@ -146,7 +163,10 @@ class AnalyticsRepository:
         start = max(0, int(over_range[0]))
         end = max(start, int(over_range[-1]))
         # Stored `over` is the 1-based over number, so human overs are inclusive.
-        return " AND TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ?", [float(start), float(end)]
+        return " AND TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ?", [
+            float(start),
+            float(end),
+        ]
 
     @staticmethod
     def _bowling_style_group_clause(style_group: str | None) -> tuple[str, list[Any]]:
@@ -170,7 +190,9 @@ class AnalyticsRepository:
             clauses.append("bowl = ?")
             params.append(bowler_name)
         if years:
-            clauses.append(f"TRY_CAST(year AS INTEGER) IN ({', '.join('?' for _ in years)})")
+            clauses.append(
+                f"TRY_CAST(year AS INTEGER) IN ({', '.join('?' for _ in years)})"
+            )
             params.extend(years)
         if venue:
             clause, venue_params = venue_filter([venue])
@@ -180,20 +202,28 @@ class AnalyticsRepository:
         phase_clause, phase_params = self._phase_clause(phase)
         return where_clause + phase_clause, params + phase_params
 
-    def _bowler_where_clause(self, bowler_name: str, phase: str | None = None) -> tuple[str, list[Any]]:
+    def _bowler_where_clause(
+        self, bowler_name: str, phase: str | None = None
+    ) -> tuple[str, list[Any]]:
         phase_clause, phase_params = self._phase_clause(phase)
         return " WHERE bowl = ?" + phase_clause, [bowler_name, *phase_params]
 
     def health(self) -> dict[str, Any]:
         row = self._fetchone("SELECT COUNT(*) FROM analytics.deliveries_v1")
-        return {"database_available": row is not None, "delivery_rows": int(row[0]) if row else 0}
+        return {
+            "database_available": row is not None,
+            "delivery_rows": int(row[0]) if row else 0,
+        }
 
     def list_player_names(self) -> list[str]:
-        rows = self._fetchall("SELECT DISTINCT player_name FROM analytics.player_lookup ORDER BY player_name")
+        rows = self._fetchall(
+            "SELECT DISTINCT player_name FROM analytics.player_lookup ORDER BY player_name"
+        )
         return [str(row[0]) for row in rows]
 
     def player_participation(self) -> dict[str, PlayerParticipation]:
-        rows = self._fetchall("""
+        rows = self._fetchall(
+            """
             SELECT player, SUM(faced), SUM(bowled), MAX(pace), MAX(spin) FROM (
                 SELECT bat AS player, COUNT(*) AS faced, 0 AS bowled, 0 AS pace, 0 AS spin
                 FROM analytics.deliveries_v1 GROUP BY bat
@@ -203,14 +233,20 @@ class AnalyticsRepository:
                     MAX(CASE WHEN bowl_kind = 'spin bowler' THEN 1 ELSE 0 END) AS spin
                 FROM analytics.deliveries_v1 GROUP BY bowl
             ) GROUP BY player
-        """)
+        """
+        )
         return {
             str(player): PlayerParticipation(
                 int(faced),
                 int(bowled),
-                frozenset(kind for kind, present in (("pace", pace), ("spin", spin)) if present),
+                frozenset(
+                    kind
+                    for kind, present in (("pace", pace), ("spin", spin))
+                    if present
+                ),
             )
-            for player, faced, bowled, pace, spin in rows if player
+            for player, faced, bowled, pace, spin in rows
+            if player
         }
 
     def search_players(self, query: str, limit: int = 10) -> list[str]:
@@ -367,7 +403,11 @@ class AnalyticsRepository:
                 summary_parts.append("Left-hand bat")
             if bowl_style:
                 summary_parts.append(bowl_style)
-            role_summary = " | ".join(summary_parts) if summary_parts else "Role data limited in ODI feed"
+            role_summary = (
+                " | ".join(summary_parts)
+                if summary_parts
+                else "Role data limited in ODI feed"
+            )
             squad.append(
                 {
                     "player_name": player_name,
@@ -378,28 +418,38 @@ class AnalyticsRepository:
             )
         return squad
 
-    def get_player_batting_summary(self, player_name: str, phase: str | None = None) -> dict[str, Any] | None:
+    def get_player_batting_summary(
+        self, player_name: str, phase: str | None = None
+    ) -> dict[str, Any] | None:
         where_clause, params = self._batter_where_clause(player_name, phase=phase)
         row = self._fetchone(
-            """
+            f"""
             SELECT
               SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END) AS balls_faced,
               SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS runs_scored,
-              SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
               SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
               AVG(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(control AS DOUBLE) ELSE NULL END) AS avg_control
-            FROM analytics.deliveries_v1
+            FROM batting_events_v1
             """
             + where_clause,
             params,
         )
         if row is None or row[0] == 0:
             return None
-        balls_faced, runs_scored, dismissals, boundary_balls, dot_balls, avg_control = row
-        strike_rate = float(runs_scored) / float(balls_faced) * 100 if balls_faced else None
-        boundary_percentage = float(boundary_balls) / float(balls_faced) * 100 if balls_faced else None
-        dot_percentage = float(dot_balls) / float(balls_faced) * 100 if balls_faced else None
+        balls_faced, runs_scored, dismissals, boundary_balls, dot_balls, avg_control = (
+            row
+        )
+        strike_rate = (
+            float(runs_scored) / float(balls_faced) * 100 if balls_faced else None
+        )
+        boundary_percentage = (
+            float(boundary_balls) / float(balls_faced) * 100 if balls_faced else None
+        )
+        dot_percentage = (
+            float(dot_balls) / float(balls_faced) * 100 if balls_faced else None
+        )
         return {
             "player_name": player_name,
             "balls_faced": int(balls_faced),
@@ -407,14 +457,20 @@ class AnalyticsRepository:
             "dismissals": int(dismissals or 0),
             "boundary_balls": int(boundary_balls or 0),
             "dot_balls": int(dot_balls or 0),
-            "average": (float(runs_scored or 0) / float(dismissals)) if dismissals else None,
+            "average": (
+                (float(runs_scored or 0) / float(dismissals)) if dismissals else None
+            ),
             "strike_rate": strike_rate,
             "boundary_percentage": boundary_percentage,
             "dot_percentage": dot_percentage,
-            "control_percentage": float(avg_control) * 100 if avg_control is not None else None,
+            "control_percentage": (
+                float(avg_control) * 100 if avg_control is not None else None
+            ),
         }
 
-    def get_player_bowling_summary(self, player_name: str, phase: str | None = None) -> dict[str, Any] | None:
+    def get_player_bowling_summary(
+        self, player_name: str, phase: str | None = None
+    ) -> dict[str, Any] | None:
         where_clause, params = self._bowler_where_clause(player_name, phase=phase)
         legal_ball_predicate = (
             "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
@@ -446,7 +502,15 @@ class AnalyticsRepository:
         if row is None or row[1] == 0:
             return None
 
-        innings, legal_balls, delivery_rows, runs_conceded, wickets, boundary_balls, dot_balls = row
+        (
+            innings,
+            legal_balls,
+            delivery_rows,
+            runs_conceded,
+            wickets,
+            boundary_balls,
+            dot_balls,
+        ) = row
         balls = int(legal_balls or 0)
         runs = int(runs_conceded or 0)
         wicket_count = int(wickets or 0)
@@ -591,8 +655,12 @@ class AnalyticsRepository:
             "wickets_taken": int(row[13] or 0),
             "bowler_dot_balls": int(row[14] or 0),
             "boundaries_conceded": int(row[15] or 0),
-            "economy_rate": (runs_conceded / (balls_bowled / 6.0)) if balls_bowled else None,
-            "batting_strike_rate": (runs_scored / balls_faced * 100.0) if balls_faced else None,
+            "economy_rate": (
+                (runs_conceded / (balls_bowled / 6.0)) if balls_bowled else None
+            ),
+            "batting_strike_rate": (
+                (runs_scored / balls_faced * 100.0) if balls_faced else None
+            ),
         }
         return {
             "player_name": player_name,
@@ -607,7 +675,9 @@ class AnalyticsRepository:
             "values": values,
         }
 
-    def get_player_best_bowling_figures(self, player_name: str, limit: int = 5) -> list[dict[str, Any]]:
+    def get_player_best_bowling_figures(
+        self, player_name: str, limit: int = 5
+    ) -> list[dict[str, Any]]:
         legal_ball_predicate = (
             "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
             "AND COALESCE(TRY_CAST(noball AS INTEGER), 0) = 0"
@@ -655,7 +725,9 @@ class AnalyticsRepository:
             for row in rows
         ]
 
-    def get_player_bowling_opponent_summary(self, player_name: str, limit: int = 20) -> list[dict[str, Any]]:
+    def get_player_bowling_opponent_summary(
+        self, player_name: str, limit: int = 20
+    ) -> list[dict[str, Any]]:
         legal_ball_predicate = (
             "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
             "AND COALESCE(TRY_CAST(noball AS INTEGER), 0) = 0"
@@ -692,7 +764,17 @@ class AnalyticsRepository:
         )
         output: list[dict[str, Any]] = []
         for row in rows:
-            opponent, matches, innings, legal_balls, delivery_rows, runs_conceded, wickets, dot_balls, boundary_balls = row
+            (
+                opponent,
+                matches,
+                innings,
+                legal_balls,
+                delivery_rows,
+                runs_conceded,
+                wickets,
+                dot_balls,
+                boundary_balls,
+            ) = row
             balls = int(legal_balls or 0)
             runs = int(runs_conceded or 0)
             wicket_count = int(wickets or 0)
@@ -712,15 +794,21 @@ class AnalyticsRepository:
                     "wickets": wicket_count,
                     "economy_rate": (runs / overs) if overs else None,
                     "bowling_average": (runs / wicket_count) if wicket_count else None,
-                    "balls_per_wicket": (balls / wicket_count) if wicket_count else None,
+                    "balls_per_wicket": (
+                        (balls / wicket_count) if wicket_count else None
+                    ),
                     "dot_percentage": (dots / balls * 100.0) if balls else None,
-                    "boundary_percentage": (boundaries / balls * 100.0) if balls else None,
+                    "boundary_percentage": (
+                        (boundaries / balls * 100.0) if balls else None
+                    ),
                     "balls_per_boundary": (balls / boundaries) if boundaries else None,
                 }
             )
         return output
 
-    def get_player_batting_venue_summary(self, player_name: str, limit: int = 20) -> list[dict[str, Any]]:
+    def get_player_batting_venue_summary(
+        self, player_name: str, limit: int = 20
+    ) -> list[dict[str, Any]]:
         rows = self._fetchall(
             f"""
             SELECT
@@ -731,13 +819,13 @@ class AnalyticsRepository:
                 CAST(inns AS VARCHAR) || ':' ||
                 CAST(team_bat AS VARCHAR)
               ) AS innings,
-              COUNT(*) AS balls_faced,
+              SUM(TRY_CAST(ballfaced AS INTEGER)) AS balls_faced,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs_scored,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
-              SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
+              SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
               AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
-            FROM analytics.deliveries_v1
+            FROM batting_events_v1
             WHERE bat = ?
               AND NULLIF(TRIM(CAST(ground AS VARCHAR)), '') IS NOT NULL
             GROUP BY {venue_id_sql()}
@@ -749,7 +837,17 @@ class AnalyticsRepository:
         )
         output: list[dict[str, Any]] = []
         for row in rows:
-            venue, matches, innings, balls_faced, runs_scored, dismissals, boundary_balls, dot_balls, avg_control = row
+            (
+                venue,
+                matches,
+                innings,
+                balls_faced,
+                runs_scored,
+                dismissals,
+                boundary_balls,
+                dot_balls,
+                avg_control,
+            ) = row
             balls = int(balls_faced or 0)
             runs = int(runs_scored or 0)
             outs = int(dismissals or 0)
@@ -766,14 +864,20 @@ class AnalyticsRepository:
                     "dismissals": outs,
                     "average": (runs / outs) if outs else None,
                     "strike_rate": (runs / balls * 100.0) if balls else None,
-                    "boundary_percentage": (boundaries / balls * 100.0) if balls else None,
+                    "boundary_percentage": (
+                        (boundaries / balls * 100.0) if balls else None
+                    ),
                     "dot_percentage": (dots / balls * 100.0) if balls else None,
-                    "control_percentage": float(avg_control) * 100 if avg_control is not None else None,
+                    "control_percentage": (
+                        float(avg_control) * 100 if avg_control is not None else None
+                    ),
                 }
             )
         return output
 
-    def get_player_bowling_venue_summary(self, player_name: str, limit: int = 20) -> list[dict[str, Any]]:
+    def get_player_bowling_venue_summary(
+        self, player_name: str, limit: int = 20
+    ) -> list[dict[str, Any]]:
         legal_ball_predicate = (
             "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
             "AND COALESCE(TRY_CAST(noball AS INTEGER), 0) = 0"
@@ -810,7 +914,17 @@ class AnalyticsRepository:
         )
         output: list[dict[str, Any]] = []
         for row in rows:
-            venue, matches, innings, legal_balls, delivery_rows, runs_conceded, wickets, dot_balls, boundary_balls = row
+            (
+                venue,
+                matches,
+                innings,
+                legal_balls,
+                delivery_rows,
+                runs_conceded,
+                wickets,
+                dot_balls,
+                boundary_balls,
+            ) = row
             balls = int(legal_balls or 0)
             runs = int(runs_conceded or 0)
             wicket_count = int(wickets or 0)
@@ -830,9 +944,13 @@ class AnalyticsRepository:
                     "wickets": wicket_count,
                     "economy_rate": (runs / overs) if overs else None,
                     "bowling_average": (runs / wicket_count) if wicket_count else None,
-                    "balls_per_wicket": (balls / wicket_count) if wicket_count else None,
+                    "balls_per_wicket": (
+                        (balls / wicket_count) if wicket_count else None
+                    ),
                     "dot_percentage": (dots / balls * 100.0) if balls else None,
-                    "boundary_percentage": (boundaries / balls * 100.0) if balls else None,
+                    "boundary_percentage": (
+                        (boundaries / balls * 100.0) if balls else None
+                    ),
                     "balls_per_boundary": (balls / boundaries) if boundaries else None,
                 }
             )
@@ -844,7 +962,9 @@ class AnalyticsRepository:
         positions: list[int],
         phase: str | None = None,
     ) -> dict[str, Any] | None:
-        normalized_positions = [position for position in positions if 1 <= position <= 11]
+        normalized_positions = [
+            position for position in positions if 1 <= position <= 11
+        ]
         if not normalized_positions:
             return None
 
@@ -859,7 +979,7 @@ class AnalyticsRepository:
                 team_bat,
                 bat,
                 MIN(TRY_CAST(ball_id AS DOUBLE)) AS first_ball_id
-              FROM analytics.deliveries_v1
+              FROM batting_events_v1
               WHERE NULLIF(TRIM(CAST(bat AS VARCHAR)), '') IS NOT NULL
                 AND TRY_CAST(ball_id AS DOUBLE) IS NOT NULL
               GROUP BY p_match, inns, team_bat, bat
@@ -882,13 +1002,13 @@ class AnalyticsRepository:
                 CAST(d.inns AS VARCHAR) || ':' ||
                 CAST(d.team_bat AS VARCHAR)
               ) AS innings,
-              COUNT(*) AS balls_faced,
+              SUM(TRY_CAST(d.ballfaced AS INTEGER)) AS balls_faced,
               SUM(TRY_CAST(d.batruns AS INTEGER)) AS runs_scored,
-              SUM(CASE WHEN LOWER(CAST(d.out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN d.is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(d.batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
-              SUM(CASE WHEN TRY_CAST(d.batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
+              SUM(CASE WHEN TRY_CAST(d.ballfaced AS INTEGER) = 1 AND TRY_CAST(d.batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
               AVG(TRY_CAST(d.control AS DOUBLE)) AS avg_control
-            FROM analytics.deliveries_v1 d
+            FROM batting_events_v1 d
             JOIN batting_order bo
               ON d.p_match = bo.p_match
              AND d.inns = bo.inns
@@ -903,7 +1023,15 @@ class AnalyticsRepository:
         if row is None or row[1] == 0:
             return None
 
-        innings, balls_faced, runs_scored, dismissals, boundary_balls, dot_balls, avg_control = row
+        (
+            innings,
+            balls_faced,
+            runs_scored,
+            dismissals,
+            boundary_balls,
+            dot_balls,
+            avg_control,
+        ) = row
         runs = int(runs_scored or 0)
         balls = int(balls_faced)
         wickets = int(dismissals or 0)
@@ -916,16 +1044,30 @@ class AnalyticsRepository:
             "dismissals": wickets,
             "strike_rate": (runs / balls * 100.0) if balls else None,
             "average": (runs / wickets) if wickets else None,
-            "boundary_percentage": (int(boundary_balls or 0) / balls * 100.0) if balls else None,
+            "boundary_percentage": (
+                (int(boundary_balls or 0) / balls * 100.0) if balls else None
+            ),
             "dot_percentage": (int(dot_balls or 0) / balls * 100.0) if balls else None,
-            "control_percentage": float(avg_control) * 100 if avg_control is not None else None,
+            "control_percentage": (
+                float(avg_control) * 100 if avg_control is not None else None
+            ),
             "balls_per_dismissal": (balls / wickets) if wickets else None,
             "runs_per_innings": (runs / int(innings)) if innings else None,
         }
 
     @staticmethod
-    def _rate_summary(row: tuple[Any, ...], label: str, player_name: str) -> dict[str, Any]:
-        innings, balls_faced, runs_scored, dismissals, boundary_balls, dot_balls, avg_control = row
+    def _rate_summary(
+        row: tuple[Any, ...], label: str, player_name: str
+    ) -> dict[str, Any]:
+        (
+            innings,
+            balls_faced,
+            runs_scored,
+            dismissals,
+            boundary_balls,
+            dot_balls,
+            avg_control,
+        ) = row
         innings_count = int(innings or 0)
         balls = int(balls_faced or 0)
         runs = int(runs_scored or 0)
@@ -944,13 +1086,18 @@ class AnalyticsRepository:
             "runs_per_innings": (runs / innings_count) if innings_count else None,
             "boundary_percentage": (boundaries / balls * 100.0) if balls else None,
             "dot_percentage": (dots / balls * 100.0) if balls else None,
-            "control_percentage": float(avg_control) * 100 if avg_control is not None else None,
+            "control_percentage": (
+                float(avg_control) * 100 if avg_control is not None else None
+            ),
         }
 
     def get_player_phase_summary(self, player_name: str) -> list[dict[str, Any]]:
         phases = [
             ("Powerplay (0-10)", "TRY_CAST(over AS DOUBLE) <= 10.0"),
-            ("Middle overs (10-40)", "TRY_CAST(over AS DOUBLE) > 10.0 AND TRY_CAST(over AS DOUBLE) <= 40.0"),
+            (
+                "Middle overs (10-40)",
+                "TRY_CAST(over AS DOUBLE) > 10.0 AND TRY_CAST(over AS DOUBLE) <= 40.0",
+            ),
             ("Death overs (40-50)", "TRY_CAST(over AS DOUBLE) > 40.0"),
         ]
         output = []
@@ -963,13 +1110,13 @@ class AnalyticsRepository:
                     CAST(inns AS VARCHAR) || ':' ||
                     CAST(team_bat AS VARCHAR)
                   ) AS innings,
-                  COUNT(*) AS balls_faced,
+                  SUM(TRY_CAST(ballfaced AS INTEGER)) AS balls_faced,
                   SUM(TRY_CAST(batruns AS INTEGER)) AS runs_scored,
-                  SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+                  SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
                   SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
-                  SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
+                  SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
                   AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
-                FROM analytics.deliveries_v1
+                FROM batting_events_v1
                 WHERE bat = ?
                   AND {predicate}
                 """,
@@ -981,7 +1128,7 @@ class AnalyticsRepository:
 
     def get_player_bowling_kind_summary(self, player_name: str) -> list[dict[str, Any]]:
         rows = self._fetchall(
-            """
+            f"""
             SELECT
               CASE
                 WHEN bowl_kind = 'pace bowler' THEN 'Pace'
@@ -995,7 +1142,7 @@ class AnalyticsRepository:
               ) AS innings,
               COUNT(*) AS balls_faced,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs_scored,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
               AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
@@ -1013,9 +1160,11 @@ class AnalyticsRepository:
             output.append(self._rate_summary(row[1:], label, player_name))
         return output
 
-    def get_player_bowling_style_summary(self, player_name: str) -> list[dict[str, Any]]:
+    def get_player_bowling_style_summary(
+        self, player_name: str
+    ) -> list[dict[str, Any]]:
         rows = self._fetchall(
-            """
+            f"""
             SELECT
               bowl_style,
               bowl_kind,
@@ -1026,7 +1175,7 @@ class AnalyticsRepository:
               ) AS innings,
               COUNT(*) AS balls_faced,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs_scored,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
               AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
@@ -1046,7 +1195,9 @@ class AnalyticsRepository:
             output.append(summary)
         return output
 
-    def get_player_shot_breakdown(self, player_name: str, limit: int = 8, phase: str | None = None) -> list[dict[str, Any]]:
+    def get_player_shot_breakdown(
+        self, player_name: str, limit: int = 8, phase: str | None = None
+    ) -> list[dict[str, Any]]:
         where_clause, params = self._batter_where_clause(player_name, phase=phase)
         rows = self._fetchall(
             """
@@ -1062,7 +1213,10 @@ class AnalyticsRepository:
             """,
             params + [limit],
         )
-        return [{"shot": row[0], "balls": int(row[1]), "runs": int(row[2] or 0)} for row in rows]
+        return [
+            {"shot": row[0], "balls": int(row[1]), "runs": int(row[2] or 0)}
+            for row in rows
+        ]
 
     def get_player_year_trend(self, player_name: str) -> list[dict[str, Any]]:
         rows = self._fetchall(
@@ -1079,12 +1233,16 @@ class AnalyticsRepository:
                 "year": int(row[0]),
                 "balls_faced": int(row[1]),
                 "runs_scored": int(row[2]),
-                "control_percentage": float(row[3]) * 100 if row[3] is not None else None,
+                "control_percentage": (
+                    float(row[3]) * 100 if row[3] is not None else None
+                ),
             }
             for row in rows
         ]
 
-    def get_player_bowling_year_trend(self, player_name: str, phase: str | None = None) -> list[dict[str, Any]]:
+    def get_player_bowling_year_trend(
+        self, player_name: str, phase: str | None = None
+    ) -> list[dict[str, Any]]:
         phase_clause, phase_params = self._phase_clause(phase)
         legal_ball_predicate = (
             "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
@@ -1124,7 +1282,17 @@ class AnalyticsRepository:
         )
         output = []
         for row in rows:
-            year, matches, innings, legal_balls, delivery_rows, runs_conceded, wickets, dot_balls, boundary_balls = row
+            (
+                year,
+                matches,
+                innings,
+                legal_balls,
+                delivery_rows,
+                runs_conceded,
+                wickets,
+                dot_balls,
+                boundary_balls,
+            ) = row
             balls = int(legal_balls or 0)
             runs = int(runs_conceded or 0)
             wicket_count = int(wickets or 0)
@@ -1144,24 +1312,32 @@ class AnalyticsRepository:
                     "wickets": wicket_count,
                     "economy_rate": (runs / overs) if overs else None,
                     "bowling_average": (runs / wicket_count) if wicket_count else None,
-                    "balls_per_wicket": (balls / wicket_count) if wicket_count else None,
+                    "balls_per_wicket": (
+                        (balls / wicket_count) if wicket_count else None
+                    ),
                     "dot_balls": dots,
                     "dot_percentage": (dots / balls * 100.0) if balls else None,
                     "boundary_balls": boundaries,
-                    "boundary_percentage": (boundaries / balls * 100.0) if balls else None,
+                    "boundary_percentage": (
+                        (boundaries / balls * 100.0) if balls else None
+                    ),
                     "balls_per_boundary": (balls / boundaries) if boundaries else None,
                 }
             )
         return output
 
-    def get_matchup_summary(self, batter_name: str, bowler_name: str, phase: str | None = None) -> dict[str, Any] | None:
-        where_clause, params = self._batter_where_clause(batter_name, bowler_name, phase=phase)
+    def get_matchup_summary(
+        self, batter_name: str, bowler_name: str, phase: str | None = None
+    ) -> dict[str, Any] | None:
+        where_clause, params = self._batter_where_clause(
+            batter_name, bowler_name, phase=phase
+        )
         row = self._fetchone(
-            """
+            f"""
             SELECT
               COUNT(*) AS balls,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs_scored,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
               AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
             FROM analytics.deliveries_v1
             """
@@ -1178,20 +1354,31 @@ class AnalyticsRepository:
             "runs_scored": int(runs_scored or 0),
             "dismissals": int(dismissals or 0),
             "strike_rate": float(runs_scored) / float(balls) * 100 if balls else None,
-            "control_percentage": float(avg_control) * 100 if avg_control is not None else None,
+            "control_percentage": (
+                float(avg_control) * 100 if avg_control is not None else None
+            ),
         }
 
     def get_explorer_player_summary(self, player_name: str, mode: str, **context):
         from backend.app.db.explorer_stats import query_stats
+
         rows = query_stats(self, mode, player=player_name, **context)
         return rows[0] if rows else None
 
     def get_venue_batting_leaderboard(self, venue_name: str, **filters):
         from backend.app.db.explorer_stats import query_stats
         from backend.app.domain.venue_leaderboard import VenueBattingOptions
+
         options = VenueBattingOptions(**filters)
-        return query_stats(self, "batting", venue=venue_name, phase=options.phase,
-                           year_start=options.year_start, year_end=options.year_end, ranking=options)
+        return query_stats(
+            self,
+            "batting",
+            venue=venue_name,
+            phase=options.phase,
+            year_start=options.year_start,
+            year_end=options.year_end,
+            ranking=options,
+        )
 
     def get_venue_bowling_leaderboard(
         self,
@@ -1208,7 +1395,9 @@ class AnalyticsRepository:
     ) -> list[dict[str, Any]]:
         from backend.app.domain.venue_leaderboard import VenueBowlingOptions
 
-        options = VenueBowlingOptions(metric, phase, year_start, year_end, sample_unit, minimum_sample, limit)
+        options = VenueBowlingOptions(
+            metric, phase, year_start, year_end, sample_unit, minimum_sample, limit
+        )
         venue_clause, params = venue_filter([venue_name])
         phase_clause, phase_params = self._phase_clause(phase)
         clauses = venue_clause + phase_clause
@@ -1217,7 +1406,9 @@ class AnalyticsRepository:
             clauses += " AND TRY_CAST(year AS INTEGER) BETWEEN ? AND ?"
             params.extend([year_start, year_end])
         if excluded_teams:
-            clauses += " AND team_bowl NOT IN (" + ", ".join("?" for _ in excluded_teams) + ")"
+            clauses += (
+                " AND team_bowl NOT IN (" + ", ".join("?" for _ in excluded_teams) + ")"
+            )
             params.extend(excluded_teams)
         field = options.ranking["field"]
         direction = options.ranking["direction"].upper()
@@ -1252,8 +1443,19 @@ class AnalyticsRepository:
             """,
             [*params, minimum_sample, limit],
         )
-        fields = ("player_name", "deliveries", "matches", "delivery_rows", "runs_conceded", "wickets",
-                  "bowling_average", "economy_rate", "bowling_strike_rate", "dot_percentage", "boundary_percentage")
+        fields = (
+            "player_name",
+            "deliveries",
+            "matches",
+            "delivery_rows",
+            "runs_conceded",
+            "wickets",
+            "bowling_average",
+            "economy_rate",
+            "bowling_strike_rate",
+            "dot_percentage",
+            "boundary_percentage",
+        )
         return [dict(zip(fields, row)) for row in rows]
 
     @staticmethod
@@ -1289,7 +1491,9 @@ class AnalyticsRepository:
         limit: int = 10,
         min_legal_balls: int = 60,
     ) -> list[dict[str, Any]]:
-        order_expression, order_direction = self._bowling_leaderboard_order(metric, rank_intent)
+        order_expression, order_direction = self._bowling_leaderboard_order(
+            metric, rank_intent
+        )
         tiebreak_expression = self._bowling_leaderboard_tiebreak(metric)
         phase_clause, phase_params = self._phase_clause(phase)
         year_clause = ""
@@ -1364,7 +1568,17 @@ class AnalyticsRepository:
         )
         output = []
         for row in rows:
-            player_name, matches, innings, legal_balls, delivery_rows, runs_conceded, wickets, dot_balls, boundary_balls = row
+            (
+                player_name,
+                matches,
+                innings,
+                legal_balls,
+                delivery_rows,
+                runs_conceded,
+                wickets,
+                dot_balls,
+                boundary_balls,
+            ) = row
             balls = int(legal_balls or 0)
             runs = int(runs_conceded or 0)
             wicket_count = int(wickets or 0)
@@ -1383,9 +1597,13 @@ class AnalyticsRepository:
                     "wickets": wicket_count,
                     "economy_rate": (runs / overs) if overs else None,
                     "bowling_average": (runs / wicket_count) if wicket_count else None,
-                    "balls_per_wicket": (balls / wicket_count) if wicket_count else None,
+                    "balls_per_wicket": (
+                        (balls / wicket_count) if wicket_count else None
+                    ),
                     "dot_percentage": (dots / balls * 100.0) if balls else None,
-                    "boundary_percentage": (boundaries / balls * 100.0) if balls else None,
+                    "boundary_percentage": (
+                        (boundaries / balls * 100.0) if balls else None
+                    ),
                     "balls_per_boundary": (balls / boundaries) if boundaries else None,
                 }
             )
@@ -1412,7 +1630,9 @@ class AnalyticsRepository:
             min_legal_balls=min_legal_balls,
         )
 
-    def get_fielding_catches_coverage(self, competition: str | None = None, years: list[int] | None = None) -> dict[str, Any]:
+    def get_fielding_catches_coverage(
+        self, competition: str | None = None, years: list[int] | None = None
+    ) -> dict[str, Any]:
         clauses = ["LOWER(CAST(dismissal AS VARCHAR)) = 'caught'"]
         params: list[Any] = []
         if competition:
@@ -1478,7 +1698,9 @@ class AnalyticsRepository:
             "false_shot_percentage": "false_shots / NULLIF(legal_balls, 0) * 100.0",
         }
         lower_is_better = metric in {"economy_rate", "boundaries_per_over"}
-        metric_expression = metric_expressions.get(metric, metric_expressions["wickets_taken"])
+        metric_expression = metric_expressions.get(
+            metric, metric_expressions["wickets_taken"]
+        )
         if rank_intent == "worst":
             direction = "ASC" if not lower_is_better else "DESC"
         else:
@@ -1486,7 +1708,9 @@ class AnalyticsRepository:
 
         phase_clause, phase_params = self._phase_clause(phase)
         over_clause, over_params = self._over_range_clause(over_range)
-        style_clause, style_params = self._bowling_style_group_clause(bowling_style_group)
+        style_clause, style_params = self._bowling_style_group_clause(
+            bowling_style_group
+        )
         clauses = ["NULLIF(TRIM(CAST(bowl AS VARCHAR)), '') IS NOT NULL"]
         params: list[Any] = []
         if length:
@@ -1550,7 +1774,14 @@ class AnalyticsRepository:
             ORDER BY metric_value {direction}, legal_balls DESC
             LIMIT ?
             """,
-            [*params, *phase_params, *over_params, *style_params, min_legal_balls, limit],
+            [
+                *params,
+                *phase_params,
+                *over_params,
+                *style_params,
+                min_legal_balls,
+                limit,
+            ],
         )
         return [self._analyst_bowling_row(row) for row in rows]
 
@@ -1598,9 +1829,13 @@ class AnalyticsRepository:
             "boundary_percentage": (boundaries / balls * 100.0) if balls else None,
             "boundaries_per_over": (boundaries / overs) if overs else None,
             "balls_per_boundary": (balls / boundaries) if boundaries else None,
-            "yorker_success_rate": (yorker_success_count / yorkers * 100.0) if yorkers else None,
+            "yorker_success_rate": (
+                (yorker_success_count / yorkers * 100.0) if yorkers else None
+            ),
             "yorker_percentage": (yorkers / balls * 100.0) if balls else None,
-            "false_shot_percentage": (false_shot_count / balls * 100.0) if balls else None,
+            "false_shot_percentage": (
+                (false_shot_count / balls * 100.0) if balls else None
+            ),
             "metric_value": float(metric_value) if metric_value is not None else None,
         }
 
@@ -1627,7 +1862,9 @@ class AnalyticsRepository:
             "dismissals": "dismissals",
         }
         lower_is_better = metric in {"dot_percentage"}
-        metric_expression = metric_expressions.get(metric, metric_expressions["batting_strike_rate"])
+        metric_expression = metric_expressions.get(
+            metric, metric_expressions["batting_strike_rate"]
+        )
         if rank_intent == "worst":
             direction = "DESC" if lower_is_better else "ASC"
         else:
@@ -1635,7 +1872,9 @@ class AnalyticsRepository:
 
         phase_clause, phase_params = self._phase_clause(phase)
         over_clause, over_params = self._over_range_clause(over_range)
-        style_clause, style_params = self._bowling_style_group_clause(bowling_style_group)
+        style_clause, style_params = self._bowling_style_group_clause(
+            bowling_style_group
+        )
         clauses = ["NULLIF(TRIM(CAST(bat AS VARCHAR)), '') IS NOT NULL"]
         params: list[Any] = []
         if length:
@@ -1655,12 +1894,12 @@ class AnalyticsRepository:
                 COUNT(DISTINCT CAST(p_match AS VARCHAR) || ':' || CAST(inns AS VARCHAR) || ':' || CAST(team_bat AS VARCHAR)) AS innings,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END) AS balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS runs,
-                SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+                SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (1, 2, 3) THEN 1 ELSE 0 END) AS rotation_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(control AS DOUBLE) = 0 THEN 1 ELSE 0 END) AS false_shots
-              FROM analytics.deliveries_v1
+              FROM batting_events_v1
             """
             + where_sql
             + phase_clause
@@ -1690,7 +1929,19 @@ class AnalyticsRepository:
         )
         output = []
         for row in rows:
-            player_name, matches, innings, balls, runs, dismissals, boundary_balls, dot_balls, rotation_balls, false_shots, metric_value = row
+            (
+                player_name,
+                matches,
+                innings,
+                balls,
+                runs,
+                dismissals,
+                boundary_balls,
+                dot_balls,
+                rotation_balls,
+                false_shots,
+                metric_value,
+            ) = row
             ball_count = int(balls or 0)
             run_count = int(runs or 0)
             boundary_count = int(boundary_balls or 0)
@@ -1705,14 +1956,30 @@ class AnalyticsRepository:
                     "balls": ball_count,
                     "runs": run_count,
                     "dismissals": int(dismissals or 0),
-                    "average": (run_count / int(dismissals)) if int(dismissals or 0) else None,
-                    "balls_per_dismissal": (ball_count / int(dismissals)) if int(dismissals or 0) else None,
-                    "strike_rate": (run_count / ball_count * 100.0) if ball_count else None,
-                    "boundary_percentage": (boundary_count / ball_count * 100.0) if ball_count else None,
-                    "dot_percentage": (dot_count / ball_count * 100.0) if ball_count else None,
-                    "strike_rotation_percentage": (rotation_count / ball_count * 100.0) if ball_count else None,
-                    "false_shot_percentage": (false_count / ball_count * 100.0) if ball_count else None,
-                    "metric_value": float(metric_value) if metric_value is not None else None,
+                    "average": (
+                        (run_count / int(dismissals)) if int(dismissals or 0) else None
+                    ),
+                    "balls_per_dismissal": (
+                        (ball_count / int(dismissals)) if int(dismissals or 0) else None
+                    ),
+                    "strike_rate": (
+                        (run_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "boundary_percentage": (
+                        (boundary_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "dot_percentage": (
+                        (dot_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "strike_rotation_percentage": (
+                        (rotation_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "false_shot_percentage": (
+                        (false_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "metric_value": (
+                        float(metric_value) if metric_value is not None else None
+                    ),
                 }
             )
         return output
@@ -1827,9 +2094,19 @@ class AnalyticsRepository:
                     "first_runs": int(first_runs or 0),
                     "after_balls": int(after_balls or 0),
                     "after_runs": int(after_runs or 0),
-                    "first_strike_rate": float(first_strike_rate) if first_strike_rate is not None else None,
-                    "after_strike_rate": float(after_strike_rate) if after_strike_rate is not None else None,
-                    "metric_value": float(metric_value) if metric_value is not None else None,
+                    "first_strike_rate": (
+                        float(first_strike_rate)
+                        if first_strike_rate is not None
+                        else None
+                    ),
+                    "after_strike_rate": (
+                        float(after_strike_rate)
+                        if after_strike_rate is not None
+                        else None
+                    ),
+                    "metric_value": (
+                        float(metric_value) if metric_value is not None else None
+                    ),
                 }
             )
         return output
@@ -1881,7 +2158,16 @@ class AnalyticsRepository:
         )
         output = []
         for row in rows:
-            player_name, matches, innings, balls, runs, dot_balls, boundary_balls, false_shots = row
+            (
+                player_name,
+                matches,
+                innings,
+                balls,
+                runs,
+                dot_balls,
+                boundary_balls,
+                false_shots,
+            ) = row
             ball_count = int(balls or 0)
             run_count = int(runs or 0)
             dot_count = int(dot_balls or 0)
@@ -1894,10 +2180,18 @@ class AnalyticsRepository:
                     "innings": int(innings or 0),
                     "balls": ball_count,
                     "runs": run_count,
-                    "strike_rate": (run_count / ball_count * 100.0) if ball_count else None,
-                    "dot_percentage": (dot_count / ball_count * 100.0) if ball_count else None,
-                    "boundary_percentage": (boundary_count / ball_count * 100.0) if ball_count else None,
-                    "false_shot_percentage": (false_count / ball_count * 100.0) if ball_count else None,
+                    "strike_rate": (
+                        (run_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "dot_percentage": (
+                        (dot_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "boundary_percentage": (
+                        (boundary_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "false_shot_percentage": (
+                        (false_count / ball_count * 100.0) if ball_count else None
+                    ),
                     "metric_value": run_count,
                 }
             )
@@ -1926,7 +2220,7 @@ class AnalyticsRepository:
                 TRY_CAST(cur_bat_bf AS INTEGER) AS ball_number,
                 TRY_CAST(cur_bat_runs AS INTEGER) AS current_runs,
                 TRY_CAST(batruns AS INTEGER) AS runs_on_ball,
-                CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END AS dismissal,
+                CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END AS dismissal,
                 CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END AS dot_ball,
                 CASE WHEN TRY_CAST(control AS DOUBLE) = 0 THEN 1 ELSE 0 END AS false_shot
               FROM analytics.deliveries_v1
@@ -2032,7 +2326,13 @@ class AnalyticsRepository:
             ORDER BY metric_value {direction}, post_balls DESC
             LIMIT ?
             """,
-            [post_milestone_balls, min_milestones, min_post_balls, min_baseline_balls, limit],
+            [
+                post_milestone_balls,
+                min_milestones,
+                min_post_balls,
+                min_baseline_balls,
+                limit,
+            ],
         )
         output = []
         for row in rows:
@@ -2061,13 +2361,29 @@ class AnalyticsRepository:
                     "post_false_shots": int(post_false_shots or 0),
                     "baseline_balls": int(baseline_balls or 0),
                     "baseline_dismissals": int(baseline_dismissals or 0),
-                    "post_dismissal_percentage": float(post_dismissal_percentage) if post_dismissal_percentage is not None else None,
-                    "baseline_dismissal_percentage": float(baseline_dismissal_percentage)
-                    if baseline_dismissal_percentage is not None
-                    else None,
-                    "metric_value": float(metric_value) if metric_value is not None else None,
-                    "post_dot_percentage": float(post_dot_percentage) if post_dot_percentage is not None else None,
-                    "post_false_shot_percentage": float(post_false_shot_percentage) if post_false_shot_percentage is not None else None,
+                    "post_dismissal_percentage": (
+                        float(post_dismissal_percentage)
+                        if post_dismissal_percentage is not None
+                        else None
+                    ),
+                    "baseline_dismissal_percentage": (
+                        float(baseline_dismissal_percentage)
+                        if baseline_dismissal_percentage is not None
+                        else None
+                    ),
+                    "metric_value": (
+                        float(metric_value) if metric_value is not None else None
+                    ),
+                    "post_dot_percentage": (
+                        float(post_dot_percentage)
+                        if post_dot_percentage is not None
+                        else None
+                    ),
+                    "post_false_shot_percentage": (
+                        float(post_false_shot_percentage)
+                        if post_false_shot_percentage is not None
+                        else None
+                    ),
                 }
             )
         return output
@@ -2094,6 +2410,8 @@ class AnalyticsRepository:
             "LOWER(CAST(dismissal AS VARCHAR)) IN "
             "('caught', 'bowled', 'leg before wicket', 'stumped', 'hit wicket', 'caught and bowled')"
         )
+        if subject == "batter":
+            bowler_wicket_predicate = OWN_DISMISSAL
         metric_expressions = {
             "wickets_taken": "dismissals",
             "batting_strike_rate": "runs / NULLIF(balls, 0) * 100.0",
@@ -2102,8 +2420,14 @@ class AnalyticsRepository:
             "false_shot_percentage": "false_shots / NULLIF(balls, 0) * 100.0",
             "dot_percentage": "dot_balls / NULLIF(balls, 0) * 100.0",
         }
-        lower_is_better = metric in {"economy_rate", "false_shot_percentage", "dot_percentage"}
-        metric_expression = metric_expressions.get(metric, metric_expressions["wickets_taken"])
+        lower_is_better = metric in {
+            "economy_rate",
+            "false_shot_percentage",
+            "dot_percentage",
+        }
+        metric_expression = metric_expressions.get(
+            metric, metric_expressions["wickets_taken"]
+        )
         if rank_intent == "worst":
             direction = "DESC" if lower_is_better else "ASC"
         else:
@@ -2123,7 +2447,9 @@ class AnalyticsRepository:
         if length:
             clauses.append("length = ?")
             params.append(length)
-        style_clause, style_params = self._bowling_style_group_clause(bowling_style_group)
+        style_clause, style_params = self._bowling_style_group_clause(
+            bowling_style_group
+        )
         where_sql = " WHERE " + " AND ".join(clauses)
 
         rows = self._fetchall(
@@ -2166,7 +2492,18 @@ class AnalyticsRepository:
         )
         output = []
         for row in rows:
-            player_name, bowling_style, balls, legal_balls, runs, dismissals, dot_balls, boundary_balls, false_shots, metric_value = row
+            (
+                player_name,
+                bowling_style,
+                balls,
+                legal_balls,
+                runs,
+                dismissals,
+                dot_balls,
+                boundary_balls,
+                false_shots,
+                metric_value,
+            ) = row
             ball_count = int(balls or 0)
             legal_balls_count = int(legal_balls or 0)
             run_count = int(runs or 0)
@@ -2174,7 +2511,9 @@ class AnalyticsRepository:
             output.append(
                 {
                     "player_name": str(player_name),
-                    "bowling_style": str(bowling_style) if bowling_style is not None else None,
+                    "bowling_style": (
+                        str(bowling_style) if bowling_style is not None else None
+                    ),
                     "balls": ball_count,
                     "legal_balls": legal_balls_count,
                     "runs": run_count,
@@ -2182,11 +2521,23 @@ class AnalyticsRepository:
                     "dot_balls": int(dot_balls or 0),
                     "boundary_balls": int(boundary_balls or 0),
                     "false_shots": int(false_shots or 0),
-                    "strike_rate": (run_count / ball_count * 100.0) if ball_count else None,
+                    "strike_rate": (
+                        (run_count / ball_count * 100.0) if ball_count else None
+                    ),
                     "economy_rate": (run_count / overs) if overs else None,
-                    "dot_percentage": (int(dot_balls or 0) / ball_count * 100.0) if ball_count else None,
-                    "false_shot_percentage": (int(false_shots or 0) / ball_count * 100.0) if ball_count else None,
-                    "metric_value": float(metric_value) if metric_value is not None else None,
+                    "dot_percentage": (
+                        (int(dot_balls or 0) / ball_count * 100.0)
+                        if ball_count
+                        else None
+                    ),
+                    "false_shot_percentage": (
+                        (int(false_shots or 0) / ball_count * 100.0)
+                        if ball_count
+                        else None
+                    ),
+                    "metric_value": (
+                        float(metric_value) if metric_value is not None else None
+                    ),
                 }
             )
         return output
@@ -2210,6 +2561,8 @@ class AnalyticsRepository:
             "LOWER(CAST(dismissal AS VARCHAR)) IN "
             "('caught', 'bowled', 'leg before wicket', 'stumped', 'hit wicket', 'caught and bowled')"
         )
+        if metric != "wickets_taken":
+            bowler_wicket_predicate = OWN_DISMISSAL
         metric_expressions = {
             "wickets_taken": "dismissals",
             "batting_strike_rate": "runs / NULLIF(balls, 0) * 100.0",
@@ -2218,8 +2571,14 @@ class AnalyticsRepository:
             "false_shot_percentage": "false_shots / NULLIF(balls, 0) * 100.0",
             "dot_percentage": "dot_balls / NULLIF(balls, 0) * 100.0",
         }
-        lower_is_better = metric in {"economy_rate", "false_shot_percentage", "dot_percentage"}
-        metric_expression = metric_expressions.get(metric, metric_expressions["wickets_taken"])
+        lower_is_better = metric in {
+            "economy_rate",
+            "false_shot_percentage",
+            "dot_percentage",
+        }
+        metric_expression = metric_expressions.get(
+            metric, metric_expressions["wickets_taken"]
+        )
         if rank_intent == "worst":
             direction = "DESC" if lower_is_better else "ASC"
         else:
@@ -2236,7 +2595,9 @@ class AnalyticsRepository:
         if length:
             clauses.append("length = ?")
             params.append(length)
-        style_clause, style_params = self._bowling_style_group_clause(bowling_style_group)
+        style_clause, style_params = self._bowling_style_group_clause(
+            bowling_style_group
+        )
         where_sql = " WHERE " + " AND ".join(clauses)
 
         rows = self._fetchall(
@@ -2279,7 +2640,18 @@ class AnalyticsRepository:
         )
         output = []
         for row in rows:
-            style, bowlers, balls, legal_balls, runs, dismissals, dot_balls, boundary_balls, false_shots, metric_value = row
+            (
+                style,
+                bowlers,
+                balls,
+                legal_balls,
+                runs,
+                dismissals,
+                dot_balls,
+                boundary_balls,
+                false_shots,
+                metric_value,
+            ) = row
             ball_count = int(balls or 0)
             legal_balls_count = int(legal_balls or 0)
             run_count = int(runs or 0)
@@ -2295,11 +2667,23 @@ class AnalyticsRepository:
                     "dot_balls": int(dot_balls or 0),
                     "boundary_balls": int(boundary_balls or 0),
                     "false_shots": int(false_shots or 0),
-                    "strike_rate": (run_count / ball_count * 100.0) if ball_count else None,
+                    "strike_rate": (
+                        (run_count / ball_count * 100.0) if ball_count else None
+                    ),
                     "economy_rate": (run_count / overs) if overs else None,
-                    "dot_percentage": (int(dot_balls or 0) / ball_count * 100.0) if ball_count else None,
-                    "false_shot_percentage": (int(false_shots or 0) / ball_count * 100.0) if ball_count else None,
-                    "metric_value": float(metric_value) if metric_value is not None else None,
+                    "dot_percentage": (
+                        (int(dot_balls or 0) / ball_count * 100.0)
+                        if ball_count
+                        else None
+                    ),
+                    "false_shot_percentage": (
+                        (int(false_shots or 0) / ball_count * 100.0)
+                        if ball_count
+                        else None
+                    ),
+                    "metric_value": (
+                        float(metric_value) if metric_value is not None else None
+                    ),
                 }
             )
         return output
@@ -2323,7 +2707,9 @@ class AnalyticsRepository:
             "dot_percentage": "dot_balls / NULLIF(balls, 0) * 100.0",
             "false_shot_percentage": "false_shots / NULLIF(balls, 0) * 100.0",
         }
-        metric_expression = metric_expressions.get(metric, metric_expressions["wickets_taken"])
+        metric_expression = metric_expressions.get(
+            metric, metric_expressions["wickets_taken"]
+        )
         if metric == "batting_strike_rate" and rank_intent == "worst":
             direction = "ASC"
         elif metric == "dot_percentage" and rank_intent == "worst":
@@ -2338,7 +2724,7 @@ class AnalyticsRepository:
                 {group_by} AS bucket,
                 COUNT(*) AS balls,
                 SUM(TRY_CAST(batruns AS INTEGER)) AS runs,
-                SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+                SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
                 SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
                 SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
                 SUM(CASE WHEN TRY_CAST(control AS DOUBLE) = 0 THEN 1 ELSE 0 END) AS false_shots
@@ -2368,7 +2754,16 @@ class AnalyticsRepository:
         )
         output = []
         for row in rows:
-            bucket, balls, runs, dismissals, dot_balls, boundary_balls, false_shots, metric_value = row
+            (
+                bucket,
+                balls,
+                runs,
+                dismissals,
+                dot_balls,
+                boundary_balls,
+                false_shots,
+                metric_value,
+            ) = row
             ball_count = int(balls or 0)
             run_count = int(runs or 0)
             output.append(
@@ -2380,10 +2775,22 @@ class AnalyticsRepository:
                     "dot_balls": int(dot_balls or 0),
                     "boundary_balls": int(boundary_balls or 0),
                     "false_shots": int(false_shots or 0),
-                    "strike_rate": (run_count / ball_count * 100.0) if ball_count else None,
-                    "dot_percentage": (int(dot_balls or 0) / ball_count * 100.0) if ball_count else None,
-                    "false_shot_percentage": (int(false_shots or 0) / ball_count * 100.0) if ball_count else None,
-                    "metric_value": float(metric_value) if metric_value is not None else None,
+                    "strike_rate": (
+                        (run_count / ball_count * 100.0) if ball_count else None
+                    ),
+                    "dot_percentage": (
+                        (int(dot_balls or 0) / ball_count * 100.0)
+                        if ball_count
+                        else None
+                    ),
+                    "false_shot_percentage": (
+                        (int(false_shots or 0) / ball_count * 100.0)
+                        if ball_count
+                        else None
+                    ),
+                    "metric_value": (
+                        float(metric_value) if metric_value is not None else None
+                    ),
                 }
             )
         return output
@@ -2407,8 +2814,12 @@ class AnalyticsRepository:
         scored.sort(key=lambda item: (-item[0], item[1]))
         return [venue for _, venue in scored[:limit]]
 
-    def get_primary_batting_hand(self, player_name: str, bowler_name: str | None = None, phase: str | None = None) -> str | None:
-        where_clause, params = self._batter_where_clause(player_name, bowler_name, phase=phase)
+    def get_primary_batting_hand(
+        self, player_name: str, bowler_name: str | None = None, phase: str | None = None
+    ) -> str | None:
+        where_clause, params = self._batter_where_clause(
+            player_name, bowler_name, phase=phase
+        )
         row = self._fetchone(
             f"""
             SELECT bat_hand, COUNT(*) AS usage_count
@@ -2459,7 +2870,7 @@ class AnalyticsRepository:
               length,
               COUNT(*) AS balls,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 1 THEN 1 ELSE 0 END) AS singles,
@@ -2467,7 +2878,7 @@ class AnalyticsRepository:
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 3 THEN 1 ELSE 0 END) AS triples,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 4 THEN 1 ELSE 0 END) AS fours,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 6 THEN 1 ELSE 0 END) AS sixes,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS wicket_balls,
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS wicket_balls,
               AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
             FROM analytics.deliveries_v1
             {where_clause}
@@ -2479,7 +2890,9 @@ class AnalyticsRepository:
             params,
         )
         return {
-            "handedness": self.get_primary_batting_hand(player_name, bowler_name, phase=phase),
+            "handedness": self.get_primary_batting_hand(
+                player_name, bowler_name, phase=phase
+            ),
             "coverage": self._coverage_dict(
                 int(total_row[0] or 0),
                 int(covered_row[0] or 0),
@@ -2491,7 +2904,11 @@ class AnalyticsRepository:
                     "length": str(row[1]),
                     "balls": int(row[2]),
                     "runs": int(row[3] or 0),
-                    "strike_rate": round((int(row[3] or 0) / int(row[2])) * 100.0, 2) if int(row[2]) else None,
+                    "strike_rate": (
+                        round((int(row[3] or 0) / int(row[2])) * 100.0, 2)
+                        if int(row[2])
+                        else None
+                    ),
                     "dismissals": int(row[4] or 0),
                     "boundary_balls": int(row[5] or 0),
                     "dot_balls": int(row[6] or 0),
@@ -2501,7 +2918,9 @@ class AnalyticsRepository:
                     "fours": int(row[10] or 0),
                     "sixes": int(row[11] or 0),
                     "wicket_balls": int(row[12] or 0),
-                    "control_percentage": round(float(row[13]) * 100, 2) if row[13] is not None else None,
+                    "control_percentage": (
+                        round(float(row[13]) * 100, 2) if row[13] is not None else None
+                    ),
                 }
                 for row in rows
             ],
@@ -2514,8 +2933,12 @@ class AnalyticsRepository:
         point_limit: int = 160,
         phase: str | None = None,
     ) -> dict[str, Any]:
-        where_clause, params = self._batter_where_clause(player_name, bowler_name, phase=phase)
-        total_row = self._fetchone(f"SELECT COUNT(*) FROM analytics.deliveries_v1 {where_clause}", params)
+        where_clause, params = self._batter_where_clause(
+            player_name, bowler_name, phase=phase
+        )
+        total_row = self._fetchone(
+            f"SELECT COUNT(*) FROM analytics.deliveries_v1 {where_clause}", params
+        )
         covered_row = self._fetchone(
             f"""
             SELECT COUNT(*)
@@ -2536,7 +2959,7 @@ class AnalyticsRepository:
               TRY_CAST(wagonX AS DOUBLE) AS wagon_x,
               TRY_CAST(wagonY AS DOUBLE) AS wagon_y,
               TRY_CAST(batruns AS INTEGER) AS batruns,
-              LOWER(CAST(out AS VARCHAR)) AS out_flag
+              CASE WHEN {OWN_DISMISSAL} THEN 'true' ELSE 'false' END AS out_flag
             FROM analytics.deliveries_v1
             {where_clause}
               AND NULLIF(TRIM(CAST(wagonX AS VARCHAR)), '') IS NOT NULL
@@ -2558,17 +2981,25 @@ class AnalyticsRepository:
                     "outcome": (
                         "wicket"
                         if str(row[3]) == "true"
-                        else "six"
-                        if int(row[2] or 0) == 6
-                        else "four"
-                        if int(row[2] or 0) == 4
-                        else "triple"
-                        if int(row[2] or 0) == 3
-                        else "double"
-                        if int(row[2] or 0) == 2
-                        else "single"
-                        if int(row[2] or 0) == 1
-                        else "dot"
+                        else (
+                            "six"
+                            if int(row[2] or 0) == 6
+                            else (
+                                "four"
+                                if int(row[2] or 0) == 4
+                                else (
+                                    "triple"
+                                    if int(row[2] or 0) == 3
+                                    else (
+                                        "double"
+                                        if int(row[2] or 0) == 2
+                                        else (
+                                            "single" if int(row[2] or 0) == 1 else "dot"
+                                        )
+                                    )
+                                )
+                            )
+                        )
                     ),
                 }
                 for row in point_rows
@@ -2576,7 +3007,9 @@ class AnalyticsRepository:
             point_limit,
         )
 
-        handedness = self.get_primary_batting_hand(player_name, bowler_name, phase=phase)
+        handedness = self.get_primary_batting_hand(
+            player_name, bowler_name, phase=phase
+        )
         label_map = self._wagon_labels_for_hand(handedness)
         sector_rows = self._fetchall(
             f"""
@@ -2584,13 +3017,13 @@ class AnalyticsRepository:
               TRY_CAST(wagonZone AS INTEGER) AS zone_id,
               COUNT(*) AS balls,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 1 THEN 1 ELSE 0 END) AS singles,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 2 THEN 1 ELSE 0 END) AS doubles,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 3 THEN 1 ELSE 0 END) AS triples,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 4 THEN 1 ELSE 0 END) AS fours,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 6 THEN 1 ELSE 0 END) AS sixes,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS wicket_balls
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS wicket_balls
             FROM analytics.deliveries_v1
             {where_clause}
               AND TRY_CAST(wagonZone AS INTEGER) BETWEEN 1 AND 8
@@ -2607,8 +3040,16 @@ class AnalyticsRepository:
                 "balls": int(row[1]),
                 "runs": int(row[2] or 0),
                 "dismissals": int(row[3] or 0),
-                "strike_rate": round((int(row[2] or 0) / int(row[1])) * 100.0, 2) if int(row[1]) else None,
-                "run_share_percentage": round((int(row[2] or 0) / total_sector_runs * 100.0), 2) if total_sector_runs else 0.0,
+                "strike_rate": (
+                    round((int(row[2] or 0) / int(row[1])) * 100.0, 2)
+                    if int(row[1])
+                    else None
+                ),
+                "run_share_percentage": (
+                    round((int(row[2] or 0) / total_sector_runs * 100.0), 2)
+                    if total_sector_runs
+                    else 0.0
+                ),
                 "singles": int(row[4] or 0),
                 "doubles": int(row[5] or 0),
                 "triples": int(row[6] or 0),
@@ -2636,8 +3077,12 @@ class AnalyticsRepository:
         limit: int = 10,
         phase: str | None = None,
     ) -> dict[str, Any]:
-        where_clause, params = self._batter_where_clause(player_name, bowler_name, phase=phase)
-        total_row = self._fetchone(f"SELECT COUNT(*) FROM analytics.deliveries_v1 {where_clause}", params)
+        where_clause, params = self._batter_where_clause(
+            player_name, bowler_name, phase=phase
+        )
+        total_row = self._fetchone(
+            f"SELECT COUNT(*) FROM analytics.deliveries_v1 {where_clause}", params
+        )
         covered_row = self._fetchone(
             f"""
             SELECT COUNT(*)
@@ -2655,7 +3100,7 @@ class AnalyticsRepository:
               COUNT(*) AS balls,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs,
               AVG(TRY_CAST(control AS DOUBLE)) AS avg_control,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls
             FROM analytics.deliveries_v1
             {where_clause}
@@ -2671,17 +3116,31 @@ class AnalyticsRepository:
         metrics = []
         for row in rows:
             balls = int(row[1])
-            control_percentage = round(float(row[3]) * 100, 2) if row[3] is not None else None
+            control_percentage = (
+                round(float(row[3]) * 100, 2) if row[3] is not None else None
+            )
             metrics.append(
                 {
                     "shot": str(row[0]),
                     "balls": balls,
                     "runs": int(row[2] or 0),
-                    "run_share_percentage": round((int(row[2] or 0) / total_runs) * 100.0, 2) if total_runs else None,
+                    "run_share_percentage": (
+                        round((int(row[2] or 0) / total_runs) * 100.0, 2)
+                        if total_runs
+                        else None
+                    ),
                     "control_percentage": control_percentage,
-                    "false_shot_percentage": round(100 - control_percentage, 2) if control_percentage is not None else None,
-                    "dismissal_rate": round((int(row[4] or 0) / balls) * 100.0, 2) if balls else None,
-                    "boundary_percentage": round((int(row[5] or 0) / balls) * 100.0, 2) if balls else None,
+                    "false_shot_percentage": (
+                        round(100 - control_percentage, 2)
+                        if control_percentage is not None
+                        else None
+                    ),
+                    "dismissal_rate": (
+                        round((int(row[4] or 0) / balls) * 100.0, 2) if balls else None
+                    ),
+                    "boundary_percentage": (
+                        round((int(row[5] or 0) / balls) * 100.0, 2) if balls else None
+                    ),
                 }
             )
         return {
@@ -2693,10 +3152,18 @@ class AnalyticsRepository:
             "metrics": metrics,
         }
 
-    def get_field_zone_profile(self, player_name: str, bowler_name: str | None = None, phase: str | None = None) -> dict[str, Any]:
-        wagon = self.get_wagon_wheel(player_name, bowler_name, point_limit=0, phase=phase)
-        where_clause, params = self._batter_where_clause(player_name, bowler_name, phase=phase)
-        total_row = self._fetchone(f"SELECT COUNT(*) FROM analytics.deliveries_v1 {where_clause}", params)
+    def get_field_zone_profile(
+        self, player_name: str, bowler_name: str | None = None, phase: str | None = None
+    ) -> dict[str, Any]:
+        wagon = self.get_wagon_wheel(
+            player_name, bowler_name, point_limit=0, phase=phase
+        )
+        where_clause, params = self._batter_where_clause(
+            player_name, bowler_name, phase=phase
+        )
+        total_row = self._fetchone(
+            f"SELECT COUNT(*) FROM analytics.deliveries_v1 {where_clause}", params
+        )
         covered_row = self._fetchone(
             f"""
             SELECT COUNT(*)
@@ -2716,7 +3183,9 @@ class AnalyticsRepository:
             "zones": wagon["sectors"],
         }
 
-    def get_player_split_summary(self, player_name: str, phase: str | None = None) -> dict[str, float | None]:
+    def get_player_split_summary(
+        self, player_name: str, phase: str | None = None
+    ) -> dict[str, float | None]:
         where_clause, params = self._batter_where_clause(player_name, phase=phase)
         rows = self._fetchall(
             """
@@ -2744,25 +3213,31 @@ class AnalyticsRepository:
             key_prefix = "pace" if row[0] == "pace bowler" else "spin"
             balls = int(row[1] or 0)
             runs = int(row[2] or 0)
-            output[f"{key_prefix}_strike_rate"] = round((runs / balls) * 100.0, 2) if balls else None
-            output[f"{key_prefix}_control_percentage"] = round(float(row[3]) * 100.0, 2) if row[3] is not None else None
+            output[f"{key_prefix}_strike_rate"] = (
+                round((runs / balls) * 100.0, 2) if balls else None
+            )
+            output[f"{key_prefix}_control_percentage"] = (
+                round(float(row[3]) * 100.0, 2) if row[3] is not None else None
+            )
         return output
 
-    def get_global_batting_baseline(self, phase: str | None = None) -> dict[str, float | None]:
+    def get_global_batting_baseline(
+        self, phase: str | None = None
+    ) -> dict[str, float | None]:
         phase_clause, params = self._phase_clause(phase)
         row = self._fetchone(
-            """
+            f"""
             SELECT
-              COUNT(*) AS balls,
+              SUM(TRY_CAST(ballfaced AS INTEGER)) AS balls,
               SUM(TRY_CAST(batruns AS INTEGER)) AS runs_scored,
-              SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+              SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
               SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
               AVG(TRY_CAST(control AS DOUBLE)) AS avg_control,
               SUM(CASE WHEN bowl_kind = 'pace bowler' THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS pace_runs,
               SUM(CASE WHEN bowl_kind = 'pace bowler' THEN 1 ELSE 0 END) AS pace_balls,
               SUM(CASE WHEN bowl_kind = 'spin bowler' THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS spin_runs,
               SUM(CASE WHEN bowl_kind = 'spin bowler' THEN 1 ELSE 0 END) AS spin_balls
-            FROM analytics.deliveries_v1
+            FROM batting_events_v1
             WHERE 1 = 1
             """
             + phase_clause,
@@ -2773,10 +3248,22 @@ class AnalyticsRepository:
         balls = int(row[0] or 0)
         dismissals = int(row[2] or 0)
         return {
-            "strike_rate": round((int(row[1] or 0) / balls) * 100.0, 2) if balls else None,
-            "boundary_percentage": round((int(row[3] or 0) / balls) * 100.0, 2) if balls else None,
-            "control_percentage": round(float(row[4]) * 100.0, 2) if row[4] is not None else None,
-            "dismissal_resistance": round(100.0 - ((dismissals / balls) * 100.0), 2) if balls else None,
-            "pace_strike_rate": round((int(row[5] or 0) / int(row[6])) * 100.0, 2) if row[6] else None,
-            "spin_strike_rate": round((int(row[7] or 0) / int(row[8])) * 100.0, 2) if row[8] else None,
+            "strike_rate": (
+                round((int(row[1] or 0) / balls) * 100.0, 2) if balls else None
+            ),
+            "boundary_percentage": (
+                round((int(row[3] or 0) / balls) * 100.0, 2) if balls else None
+            ),
+            "control_percentage": (
+                round(float(row[4]) * 100.0, 2) if row[4] is not None else None
+            ),
+            "dismissal_resistance": (
+                round(100.0 - ((dismissals / balls) * 100.0), 2) if balls else None
+            ),
+            "pace_strike_rate": (
+                round((int(row[5] or 0) / int(row[6])) * 100.0, 2) if row[6] else None
+            ),
+            "spin_strike_rate": (
+                round((int(row[7] or 0) / int(row[8])) * 100.0, 2) if row[8] else None
+            ),
         }

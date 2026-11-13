@@ -305,7 +305,8 @@ def test_run_outs_use_dismissed_batter_attribution_including_non_striker(reposit
         "(SELECT DISTINCT p_bat FROM analytics.deliveries_v1 WHERE bat = 'Virat Kohli')"
     ).fetchone()[0]
     assert (non_striker, partner_on_strike) == (4, 11)
-    assert "run out" in response.evidence_notes[-1].detail
+    assert any("run out" in note.detail for note in response.evidence_notes)
+    assert response.evidence_notes[-1].title == "Afghanistan coverage"
 
 
 def test_bowler_wicket_rules_still_exclude_run_outs() -> None:
@@ -367,7 +368,8 @@ def test_percentage_share_has_an_explicit_denominator(repository) -> None:
     assert rows["Caught"][2:] == [170, 70.54, 241]
     assert rows["Bowled"][2:] == [34, 14.11, 241]
     assert "70.54% (170 of 241)" in response.summaries[0].body
-    assert "all recorded dismissals" in response.evidence_notes[-1].detail
+    assert any("all recorded dismissals" in note.detail for note in response.evidence_notes)
+    assert response.evidence_notes[-1].title == "Afghanistan coverage"
 
 
 def test_counts_and_shares_are_distinct_meanings(repository) -> None:
@@ -614,7 +616,7 @@ def test_existing_dismissal_wicket_and_fielding_answers_are_unchanged(repository
 
     total = chat.reply("How many times has Kohli been dismissed?", history=[]).query_response
     assert _trace(total)["normalized_plan"]["group_by"] == ["batter"]
-    assert total.tables[0].rows[0][1] == 248
+    assert total.tables[0].rows[0][1] == 241
 
     matchup = _trace(
         chat.reply("Which bowler gets David Warner out most?", history=[]).query_response

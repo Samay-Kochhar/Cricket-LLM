@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+import os
 
 from backend.app.api.routes.multiformat import get_multiformat_service
 from backend.app.config import AppConfig
@@ -24,7 +25,9 @@ def get_services():
     config = AppConfig.from_env()
     repository = AnalyticsRepository(config.duckdb_path)
     metric_catalog = MetricCatalog()
-    analytics_service = AnalyticsService(repository=repository, metric_catalog=metric_catalog)
+    analytics_service = AnalyticsService(
+        repository=repository, metric_catalog=metric_catalog
+    )
     gemini_client = GeminiClient(
         api_key=config.gemini_api_key,
         default_model=config.gemini_default_model,
@@ -50,17 +53,23 @@ def get_services():
                 question,
                 conversation_state=conversation_state,
             )
-            grounded_notes, grounded_citations = grounded_context.gather(question, semantic_response)
+            grounded_notes, grounded_citations = grounded_context.gather(
+                question, semantic_response
+            )
             query_class = QueryClass(semantic_response.interpretation.query_class)
             follow_ups = suggest_follow_ups(query_class)
-            return answer_composer.compose(semantic_response, grounded_notes, grounded_citations, follow_ups)
+            return answer_composer.compose(
+                semantic_response, grounded_notes, grounded_citations, follow_ups
+            )
 
         interpreted = query_interpreter.interpret(question)
         response = analytics_service.answer_route(question, interpreted.route)
         grounded_notes, grounded_citations = grounded_context.gather(question, response)
         query_class = QueryClass(response.interpretation.query_class)
         follow_ups = suggest_follow_ups(query_class)
-        return answer_composer.compose(response, grounded_notes, grounded_citations, follow_ups)
+        return answer_composer.compose(
+            response, grounded_notes, grounded_citations, follow_ups
+        )
 
     def legacy_query_handler(question: str):
         interpreted = query_interpreter.interpret(question)
@@ -68,18 +77,36 @@ def get_services():
         grounded_notes, grounded_citations = grounded_context.gather(question, response)
         query_class = QueryClass(response.interpretation.query_class)
         follow_ups = suggest_follow_ups(query_class)
-        return answer_composer.compose(response, grounded_notes, grounded_citations, follow_ups)
+        return answer_composer.compose(
+            response, grounded_notes, grounded_citations, follow_ups
+        )
 
     def matchup_handler(**filters):
         return semantic_service.answer_matchup_page(**filters)
 
     multiformat_service = get_multiformat_service()
+    multiformat_chat = (
+        MultiFormatChat(multiformat_service)
+        if multiformat_service.db_path.exists()
+        else None
+    )
+    reading_model = os.getenv("MULTIFORMAT_PLANNER_MODEL")
+    if multiformat_chat is not None and reading_model:
+        from backend.app.multiformat.model_planner import GeminiPlanner
+
+        multiformat_chat.reader = GeminiPlanner(
+            gemini_client,
+            reading_model,
+            multiformat_chat.planner,
+            multiformat_service.db_path.parent / "planner_cache",
+            offline=os.getenv("MULTIFORMAT_PLANNER_OFFLINE", "false").lower() == "true",
+        )
     chat_service = ChatService(
         repository=repository,
         query_handler=query_handler,
         gemini_client=gemini_client,
         # Only when the multi-format database has been built; ODI chat is unchanged either way.
-        multiformat=MultiFormatChat(multiformat_service) if multiformat_service.db_path.exists() else None,
+        multiformat=multiformat_chat,
     )
     workbench_service = WorkbenchService(
         repository=repository,

@@ -1,0 +1,1557 @@
+# Fresh unseen multi-format question set v1 (40 questions), written 2026-11-12 by an
+# independent tester without reading the implementation. Do NOT use for tuning.
+# Each item: id, category, question, expect (what a correct answer must contain), gold
+# (correct structured reading, same schema as multiformat_gold_plans.yaml `plan`).
+# Notes: fresh-06 is the Afghanistan item; fresh-28 is the misspelled-name item;
+# fresh-39 must route to the ODI path; fresh-25 is expected to be partly unsupported;
+# fresh-38 hits the women's line/length data limitation.
+- id: fresh-01
+  category: batting_stats
+  question: What's Heinrich Klaasen's strike rate in the SA20?
+  expect: SA20 batting strike rate for H Klaasen (runs per 100 balls faced, wides excluded)
+  gold:
+    intent: stats
+    players:
+    - H Klaasen
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: SA20
+      format: null
+      formats: []
+      competition: SA20
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-02
+  category: batting_stats
+  question: Usman Khawaja Test runs since 2021
+  expect: Test runs for UT Khawaja filtered to 2021 onwards (data has his matches from 2022), span stated
+  gold:
+    intent: stats
+    players:
+    - UT Khawaja
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: 2021
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-03
+  category: batting_stats
+  question: What percentage of balls does Rinku Singh play out as dots in the IPL?
+  expect: Batting dot-ball % for Rinku Singh (canonical RK Singh, player_id 0a509d6b — not the other RK Singh) in the IPL; batter, not bowler
+  gold:
+    intent: stats
+    players:
+    - RK Singh
+    role: batting
+    metrics:
+    - dot_ball_pct
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-04
+  category: bowling_stats
+  question: What's Kagiso Rabada's strike rate in Test cricket?
+  expect: Bowling strike rate (balls per wicket) for K Rabada in Tests — he is a bowler, so not batting SR; span stated
+  gold:
+    intent: stats
+    players:
+    - K Rabada
+    role: bowling
+    metrics:
+    - strike_rate
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-05
+  category: bowling_stats
+  question: Haris Rauf dot ball % in the PSL
+  expect: Bowling dot-ball % for Haris Rauf in the PSL (balls he bowled that conceded nothing)
+  gold:
+    intent: stats
+    players:
+    - Haris Rauf
+    role: bowling
+    metrics:
+    - dot_ball_pct
+    scopes:
+    - label: PSL
+      format: null
+      formats: []
+      competition: Pakistan Super League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-06
+  category: bowling_stats
+  question: Mohammad Nabi's bowling average and economy in T20 internationals
+  expect: 'Afghanistan player: T20I bowling average and economy for Mohammad Nabi (men''s T20I)'
+  gold:
+    intent: stats
+    players:
+    - Mohammad Nabi
+    role: bowling
+    metrics:
+    - average
+    - economy
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-07
+  category: ranking
+  question: Highest strike rates in the PSL, minimum 300 balls
+  expect: PSL batting strike-rate leaderboard honouring the 300-ball minimum (stated), 10 rows
+  gold:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: PSL
+      format: null
+      formats: []
+      competition: Pakistan Super League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 300
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-08
+  category: ranking
+  question: Who are the most economical bowlers in the Caribbean Premier League?
+  expect: CPL bowling economy leaderboard, lowest first, default minimum stated
+  gold:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: CPL
+      format: null
+      formats: []
+      competition: Caribbean Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: false
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-09
+  category: ranking
+  question: Most T20I runs from 2022 to 2024
+  expect: Men's T20I runs leaderboard restricted to 2022–2024 inclusive (years [2022,2023,2024] equivalent)
+  gold:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: 2022
+    year_to: 2024
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-10
+  category: line_length
+  question: How does Yashasvi Jaiswal handle short-pitched bowling in the IPL?
+  expect: Jaiswal batting vs SHORT + SHORT_OF_A_GOOD_LENGTH in the IPL, IPL line/length coverage stated
+  gold:
+    intent: stats
+    players:
+    - YBK Jaiswal
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: &id001
+    - SHORT
+    - SHORT_OF_A_GOOD_LENGTH
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-11
+  category: line_length
+  question: Where does Josh Hazlewood bowl in Tests?
+  expect: Hazlewood's bowling distribution by line and length in Tests, coverage (from 2016/2018) stated
+  gold:
+    intent: stats
+    players:
+    - JR Hazlewood
+    role: bowling
+    metrics:
+    - balls
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-12
+  category: line_length
+  question: Tim David against yorkers in the IPL
+  expect: Tim David BATTING against YORKER-length balls in the IPL (small sample flagged), coverage stated
+  gold:
+    intent: stats
+    players:
+    - TH David
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths:
+    - YORKER
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-13
+  category: line_length
+  question: How many yorkers has Arshdeep Singh bowled in the IPL?
+  expect: 'Arshdeep BOWLING: count of YORKER-length balls bowled in the IPL (plus wickets/economy if shown), coverage stated'
+  gold:
+    intent: stats
+    players:
+    - Arshdeep Singh
+    role: bowling
+    metrics:
+    - balls
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths:
+    - YORKER
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-14
+  category: coverage
+  question: Is the PSL covered?
+  expect: 'Yes: PSL ball-by-ball 2016–2026 (~357 matches); no line/length recorded for the PSL — stated'
+  gold:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes:
+    - label: PSL
+      format: null
+      formats: []
+      competition: Pakistan Super League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-15
+  category: coverage
+  question: how far back does your Test data go
+  expect: Men's Test ball-by-ball from Dec 2001; line/length from Aug 2016 (regular from 2018) — stated
+  gold:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-16
+  category: coverage
+  question: Do you have line data for the BBL?
+  expect: 'BBL line coverage: partial (~55% line/length, from Dec 2012), span and % stated'
+  gold:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-17
+  category: bowling_type
+  question: How does Rishabh Pant go against left-arm orthodox spin in the IPL?
+  expect: Pant batting vs SLA bowlers in the IPL; share of balls with known style stated
+  gold:
+    intent: stats
+    players:
+    - RR Pant
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - SLA
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-18
+  category: bowling_type
+  question: Devon Conway against off-spinners in T20Is
+  expect: Conway batting vs OB bowlers in men's T20Is
+  gold:
+    intent: stats
+    players:
+    - DP Conway
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - OB
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-19
+  category: bowling_type
+  question: Ben Duckett vs right-arm pace in Test cricket
+  expect: Duckett batting vs right-arm pace (RF/RFM/RMF/RM) in Tests — a bowling-type split, NOT a two-player comparison
+  gold:
+    intent: stats
+    players:
+    - BM Duckett
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - RF
+    - RFM
+    - RMF
+    - RM
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-20
+  category: phase
+  question: Phil Salt's powerplay strike rate in the IPL
+  expect: Overs 1–6 only, IPL, balls and strike rate for PD Salt
+  gold:
+    intent: stats
+    players:
+    - PD Salt
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: powerplay
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-21
+  category: phase
+  question: How economical is Varun Chakaravarthy in the middle overs of the IPL?
+  expect: Overs 7–15 bowling economy for CV Varun (Varun Chakaravarthy) in the IPL
+  gold:
+    intent: stats
+    players:
+    - CV Varun
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: middle
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-22
+  category: phase
+  question: Who has scored the most runs in the last five overs in the CPL?
+  expect: CPL batting runs leaderboard for overs 16–20 (phase death, or over_from 16 / over_to 20, both acceptable)
+  gold:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: CPL
+      format: null
+      formats: []
+      competition: Caribbean Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: death
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-23
+  category: phase
+  question: Who has taken the most wickets in the powerplay in The Hundred?
+  expect: Men's Hundred powerplay (first 25 balls) wickets leaderboard
+  gold:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: powerplay
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-24
+  category: partnership
+  question: Travis Head and Abhishek Sharma partnership runs in the IPL
+  expect: 'Named pair: total runs together, number of stands, best stand (IPL)'
+  gold:
+    intent: partnership
+    players:
+    - TM Head
+    - Abhishek Sharma
+    role: batting
+    metrics:
+    - partnership_runs
+    - stands
+    - best_stand
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-25
+  category: partnership
+  question: What are the biggest third-wicket stands in Test cricket?
+  expect: 'UNSUPPORTED part: says explicitly it can''t filter by wicket number (''I can''t answer the third-wicket part yet''); must not present all-wicket stands as third-wicket stands'
+  gold:
+    intent: partnership
+    players: []
+    role: batting
+    metrics:
+    - best_stand
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported:
+    - third-wicket (wicket-number) partnership filter is not representable in this schema
+- id: fresh-26
+  category: matchup
+  question: Zak Crawley vs Mitchell Starc in Tests
+  expect: 'Head-to-head Crawley batting vs Starc bowling in Tests: balls, runs, SR, dismissals'
+  gold:
+    intent: matchup
+    players:
+    - Z Crawley
+    - MA Starc
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-27
+  category: matchup
+  question: How many times has Mohammed Siraj dismissed Travis Head in Tests?
+  expect: Bowler-credited dismissals of TM Head by Mohammed Siraj in Tests
+  gold:
+    intent: matchup
+    players:
+    - Mohammed Siraj
+    - TM Head
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-28
+  category: matchup
+  question: Heinrich Klassen against Kuldeep Yadav in the IPL
+  expect: Misspelled 'Klassen' resolves to H Klaasen (or asks to confirm); head-to-head vs Kuldeep Yadav in the IPL
+  gold:
+    intent: matchup
+    players:
+    - H Klaasen
+    - Kuldeep Yadav
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-29
+  category: venue
+  question: Average first-innings score at the SCG in the BBL
+  expect: '''SCG'' resolves to Sydney Cricket Ground; BBL average first-innings total'
+  gold:
+    intent: venue
+    players: []
+    role: batting
+    metrics:
+    - avg_first_innings_runs
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Sydney Cricket Ground
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-30
+  category: venue
+  question: Who has taken the most IPL wickets at Eden Gardens?
+  expect: IPL bowling wickets leaderboard at Eden Gardens, Kolkata
+  gold:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Eden Gardens
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-31
+  category: venue
+  question: How many Test wickets has Mitchell Starc taken at the Gabba?
+  expect: '''the Gabba'' resolves to Brisbane Cricket Ground; Starc Test wickets there, span stated'
+  gold:
+    intent: stats
+    players:
+    - MA Starc
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Brisbane Cricket Ground
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-32
+  category: venue
+  question: run rate at Old Trafford in the T20 Blast
+  expect: T20 Blast run rate at Old Trafford (all Blast eras)
+  gold:
+    intent: venue
+    players: []
+    role: batting
+    metrics:
+    - run_rate
+    scopes:
+    - label: Blast
+      format: null
+      formats: []
+      competition: '%Blast%'
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Old Trafford
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-33
+  category: comparison
+  question: Ruturaj Gaikwad vs Sai Sudharsan in the IPL
+  expect: Side-by-side IPL batting for RD Gaikwad and B Sai Sudharsan
+  gold:
+    intent: comparison
+    players:
+    - RD Gaikwad
+    - B Sai Sudharsan
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-34
+  category: comparison
+  question: Who is more economical at the death in the IPL, Matheesha Pathirana or Harshal Patel?
+  expect: Overs 16–20 economy for both bowlers in the IPL, clear winner named
+  gold:
+    intent: comparison
+    players:
+    - M Pathirana
+    - HV Patel
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: death
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-35
+  category: comparison
+  question: Compare Ravi Bishnoi and Adil Rashid as T20I bowlers
+  expect: 'Side-by-side men''s T20I bowling: wickets, average, economy, strike rate'
+  gold:
+    intent: comparison
+    players:
+    - Ravi Bishnoi
+    - AU Rashid
+    role: bowling
+    metrics:
+    - wickets
+    - average
+    - economy
+    - strike_rate
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-36
+  category: comparison
+  question: Ben Stokes's batting average in Tests compared with T20Is
+  expect: 'Same player across two formats: Stokes Test average vs T20I average'
+  gold:
+    intent: comparison
+    players:
+    - BA Stokes
+    role: batting
+    metrics:
+    - average
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-37
+  category: womens
+  question: Top wicket-takers in the Women's Hundred
+  expect: Women's Hundred bowling wickets leaderboard
+  gold:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-38
+  category: womens
+  question: How does Beth Mooney go against full deliveries in the WBBL?
+  expect: 'Women''s line/length not recorded: limitation stated plainly; no fabricated length breakdown (overall WBBL figures optional)'
+  gold:
+    intent: stats
+    players:
+    - BL Mooney
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: WBBL
+      format: null
+      formats: []
+      competition: Women's Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths:
+    - FULL
+    - YORKER
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-39
+  category: odi_routing
+  question: Quinton de Kock's ODI batting average
+  expect: Routed to the existing ODI path, not the multi-format chat
+  gold:
+    intent: stats
+    players:
+    - Q de Kock
+    role: batting
+    metrics:
+    - average
+    scopes:
+    - label: ODI
+      format: ODI
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: fresh-40
+  category: common_word_name
+  question: Who scores fastest against the short ball in the Big Bash?
+  expect: '''short'' is a length, NOT D''Arcy Short / Matt Short; BBL batting SR leaderboard vs SHORT + SHORT_OF_A_GOOD_LENGTH, minimum stated, coverage stated'
+  gold:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: *id001
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []

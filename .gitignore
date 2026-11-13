@@ -38,3 +38,9 @@ frontend/test-results/
 # Intermediate presentation exports (keep the final deck tracked)
 outputs/cricatlas-dl4nlp-presentation.pptx
 outputs/cricatlas-dl4nlp-presentation-v2.pptx
+
+# Evaluation run outputs and reports stay local (scripts write them here)
+tests/evals/results/multiformat/
+tests/evals/results/odi_nonstriker/
+# Live Gemini reading cache written by the app next to the database
+data/planner_cache/

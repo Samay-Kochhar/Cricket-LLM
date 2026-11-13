@@ -1,0 +1,146 @@
+# Split: every question carries `split: dev` or `split: holdout` (stratified 50/50
+# per category, seeded shuffle 20261112). Fixes are made by looking at dev failures
+# only; the holdout is run once at the end as the real test. Gold plans (the correct
+# structured reading of each question) live in multiformat_gold_plans.yaml.
+# Multi-format question set (draft, awaiting approval).
+# Each question names a non-ODI format or league (or asks about coverage), so it
+# exercises the multi-format database. `expect` says what a correct answer must
+# contain; numbers are checked against data/cricket_all.duckdb after approval.
+
+# --- A. Batting stats by format or league (15) -------------------------------
+- {id: bat-01, category: batting_stats, split: dev, question: "How many IPL runs has Virat Kohli scored?", expect: "IPL runs, balls, SR, average for V Kohli"}
+- {id: bat-02, category: batting_stats, split: holdout, question: "What is Rohit Sharma's strike rate in T20 internationals?", expect: "T20I strike rate (wides not balls faced)"}
+- {id: bat-03, category: batting_stats, split: dev, question: "Joe Root's Test batting average", expect: "Test average from Cricsheet ball-by-ball, with the date span stated"}
+- {id: bat-04, category: batting_stats, split: holdout, question: "How many runs has David Warner made in the Big Bash League?", expect: "BBL totals for DA Warner"}
+- {id: bat-05, category: batting_stats, split: dev, question: "Kieron Pollard's CPL record with the bat", expect: "CPL runs, SR, average"}
+- {id: bat-06, category: batting_stats, split: dev, question: "How many sixes has Andre Russell hit in the IPL?", expect: "IPL sixes for AD Russell"}
+- {id: bat-07, category: batting_stats, split: holdout, question: "Babar Azam's runs in the Pakistan Super League", expect: "PSL totals"}
+- {id: bat-08, category: batting_stats, split: dev, question: "Steve Smith Test runs since 2020", expect: "Test runs filtered to 2020 onwards"}
+- {id: bat-09, category: batting_stats, split: holdout, question: "How has Jos Buttler batted in The Hundred?", expect: "Men's Hundred batting totals"}
+- {id: bat-10, category: batting_stats, split: dev, question: "Kane Williamson's Test average and strike rate", expect: "Both metrics, Test"}
+- {id: bat-11, category: batting_stats, split: dev, question: "Suryakumar Yadav T20I strike rate", expect: "T20I SR"}
+- {id: bat-12, category: batting_stats, split: holdout, question: "James Vince runs in the T20 Blast", expect: "All Blast eras (NatWest + Vitality) combined"}
+- {id: bat-13, category: batting_stats, split: holdout, question: "Faf du Plessis in the SA20 – how many runs?", expect: "SA20 totals"}
+- {id: bat-14, category: batting_stats, split: dev, question: "Shubman Gill IPL 2023 runs", expect: "IPL runs in 2023 only"}
+- {id: bat-15, category: batting_stats, split: holdout, question: "What is Marnus Labuschagne's Test dot-ball percentage?", expect: "Test dot-ball %"}
+
+# --- B. Bowling stats (12) -----------------------------------------------------
+- {id: bowl-01, category: bowling_stats, split: holdout, question: "How many IPL wickets has Jasprit Bumrah taken?", expect: "Bowler-credited IPL wickets, economy"}
+- {id: bowl-02, category: bowling_stats, split: dev, question: "Rashid Khan's economy rate in T20 internationals", expect: "T20I economy (wides + no-balls charged)"}
+- {id: bowl-03, category: bowling_stats, split: dev, question: "James Anderson Test wickets", expect: "Test wickets in the ball-by-ball era, span stated"}
+- {id: bowl-04, category: bowling_stats, split: holdout, question: "Sunil Narine's bowling in the CPL", expect: "CPL wickets, economy, SR"}
+- {id: bowl-05, category: bowling_stats, split: holdout, question: "Yuzvendra Chahal IPL bowling average", expect: "IPL average"}
+- {id: bowl-06, category: bowling_stats, split: dev, question: "How many Test wickets has Pat Cummins taken since 2019?", expect: "Test wickets 2019 onwards"}
+- {id: bowl-07, category: bowling_stats, split: holdout, question: "Shaheen Afridi's PSL economy", expect: "PSL economy"}
+- {id: bowl-08, category: bowling_stats, split: holdout, question: "Adam Zampa's BBL wickets", expect: "BBL wickets"}
+- {id: bowl-09, category: bowling_stats, split: dev, question: "Nathan Lyon Test strike rate", expect: "Balls per wicket, Test"}
+- {id: bowl-10, category: bowling_stats, split: holdout, question: "Ravichandran Ashwin's Test bowling record", expect: "Test wickets, average, economy, SR"}
+- {id: bowl-11, category: bowling_stats, split: dev, question: "Tymal Mills in The Hundred – wickets and economy", expect: "Hundred bowling, economy per 6 balls stated"}
+- {id: bowl-12, category: bowling_stats, split: dev, question: "Trent Boult's T20I dot ball percentage", expect: "T20I dot %"}
+
+# --- C. Rankings / leaderboards (11) --------------------------------------------
+- {id: rank-01, category: ranking, split: holdout, question: "Who has scored the most runs in IPL history?", expect: "Top run scorers, IPL"}
+- {id: rank-02, category: ranking, split: holdout, question: "Top 10 wicket takers in the Big Bash League", expect: "BBL wickets leaderboard"}
+- {id: rank-03, category: ranking, split: dev, question: "Best IPL strike rates (minimum 500 balls)", expect: "SR ranking honouring the 500-ball minimum"}
+- {id: rank-04, category: ranking, split: dev, question: "Most economical bowlers in T20 internationals", expect: "Economy ranking with default 60-ball minimum stated"}
+- {id: rank-05, category: ranking, split: holdout, question: "Leading run scorers in Test cricket since 2015", expect: "Test runs 2015+"}
+- {id: rank-06, category: ranking, split: holdout, question: "Who has taken the most wickets in the CPL?", expect: "CPL wickets leaderboard"}
+- {id: rank-07, category: ranking, split: dev, question: "Highest batting averages in the PSL", expect: "PSL average ranking"}
+- {id: rank-08, category: ranking, split: dev, question: "Top wicket takers in The Hundred", expect: "Men's Hundred wickets"}
+- {id: rank-09, category: ranking, split: holdout, question: "Best bowling strike rate in Test cricket", expect: "Lowest balls per wicket, minimum stated"}
+- {id: rank-10, category: ranking, split: dev, question: "Most runs in the SA20", expect: "SA20 runs leaderboard"}
+- {id: rank-12, category: ranking, split: dev, question: "Most wickets in the County Championship", expect: "County Championship (all sponsor eras) wickets"}
+
+# --- D. Line & length where coverage exists (12) ---------------------------------
+- {id: ll-01, category: line_length, split: holdout, question: "How does Virat Kohli score against each length in the IPL?", expect: "Length breakdown + coverage % and date span"}
+- {id: ll-02, category: line_length, split: dev, question: "Steve Smith's Test record by line", expect: "Line breakdown, Test, coverage stated"}
+- {id: ll-03, category: line_length, split: holdout, question: "Where does Jasprit Bumrah pitch the ball in T20Is?", expect: "Bowling length distribution, coverage stated"}
+- {id: ll-04, category: line_length, split: holdout, question: "How does Joe Root handle short-pitched bowling in Tests?", expect: "Short / short-of-length rows, coverage stated"}
+- {id: ll-05, category: line_length, split: holdout, question: "Glenn Maxwell against full-length deliveries in the BBL", expect: "Full/yorker rows, BBL coverage stated"}
+- {id: ll-06, category: line_length, split: dev, question: "What length does Rashid Khan bowl most often in the IPL?", expect: "Most frequent length, coverage stated"}
+- {id: ll-07, category: line_length, split: holdout, question: "Pat Cummins Test wickets by length", expect: "Wickets per length"}
+- {id: ll-08, category: line_length, split: dev, question: "Jos Buttler strike rate by length in The Hundred", expect: "Length breakdown, Hundred (near-complete coverage)"}
+- {id: ll-09, category: line_length, split: dev, question: "How does David Warner do against balls outside off stump in Tests?", expect: "Outside-off rows"}
+- {id: ll-10, category: line_length, split: dev, question: "Nicholas Pooran's line and length profile in the CPL", expect: "Line and length, CPL coverage stated"}
+- {id: ll-11, category: line_length, split: dev, question: "Mitchell Starc yorkers in T20 internationals", expect: "Yorker row for Starc bowling"}
+- {id: ll-12, category: line_length, split: holdout, question: "Which length does Suryakumar Yadav score fastest against in T20Is?", expect: "Best SR length, minimum sample respected"}
+
+# --- E. Line & length where coverage is partial or missing (5) -------------------
+- {id: lim-01, category: line_length_limit, split: dev, question: "Virat Kohli's strike rate by length in IPL 2010", expect: "No line/length for 2010: states when IPL coverage starts"}
+- {id: lim-02, category: line_length_limit, split: holdout, question: "Smriti Mandhana against short balls in the WBBL", expect: "Women's line/length not recorded: limitation stated"}
+- {id: lim-04, category: line_length_limit, split: holdout, question: "Sachin Tendulkar Test runs by line", expect: "Outside ball-by-ball/line-length coverage: limit stated"}
+- {id: lim-07, category: line_length_limit, split: dev, question: "How did Alastair Cook score against each length in Tests?", expect: "Partial coverage (from 2016) stated, figures only for covered balls"}
+- {id: lim-09, category: line_length_limit, split: dev, question: "Line data for the T20 Blast", expect: "Length recorded but line essentially missing: stated"}
+
+# --- E2. Bowling types (5) ---------------------------------------------------------
+# "T20" means T20Is plus every T20 league; "franchise/other leagues" means every
+# domestic T20 league in the data, not only the IPL.
+- {id: type-01, category: bowling_type, split: holdout, question: "How has AB de Villiers performed against leg spinners in T20 cricket?", expect: "Leg-spin (LB/LBG) rows across T20Is and all T20 leagues; share of balls with a known bowling style stated"}
+- {id: type-02, category: bowling_type, split: holdout, question: "AB de Villiers against leg spin in the IPL", expect: "Leg-spin rows, IPL only"}
+- {id: type-03, category: bowling_type, split: dev, question: "AB de Villiers vs leg spinners in franchise leagues other than the IPL", expect: "All domestic T20 leagues except the IPL (BBL, PSL, CPL, ...)"}
+- {id: type-04, category: bowling_type, split: dev, question: "KL Rahul against left-arm fast bowling in the IPL", expect: "LF + LFM bowlers"}
+- {id: type-05, category: bowling_type, split: dev, question: "KL Rahul against left-arm medium pace in the IPL", expect: "LM + LMF bowlers"}
+
+# --- E3. Phases and partnerships (12; pp-03..07 and part-02..06 added so each category can be split) -------------------------------------------------
+- {id: pp-01, category: phase, split: dev, question: "Top 10 batsmen by strike rate in the powerplay in the IPL", expect: "Overs 1-6, minimum sample stated, 10 rows"}
+- {id: pp-03, category: phase, split: dev, question: "Jos Buttler's strike rate in the powerplay in T20 internationals", expect: "Overs 1-6 only, T20I, balls and strike rate"}
+- {id: pp-04, category: phase, split: dev, question: "Best economy rates in the death overs in the IPL", expect: "Overs 16-20 bowling economy ranking, minimum sample stated"}
+- {id: pp-05, category: phase, split: holdout, question: "How does Rashid Khan bowl in the middle overs in the IPL?", expect: "Overs 7-15 bowling numbers for Rashid Khan"}
+- {id: pp-06, category: phase, split: holdout, question: "MS Dhoni's batting at the death in the IPL", expect: "Overs 16-20 batting numbers for MS Dhoni"}
+- {id: pp-07, category: phase, split: holdout, question: "Top run scorers in the powerplay in The Hundred", expect: "Balls 1-25 of each innings, men's Hundred, runs leaderboard"}
+- {id: pp-02, category: partnership, split: dev, question: "Which pair has the most partnership runs in the IPL?", expect: "Batting pair (either order) with total partnership runs"}
+- {id: part-02, category: partnership, split: holdout, question: "What is the highest partnership in Test cricket?", expect: "Largest single stand with the pair, runs, match/date"}
+- {id: part-03, category: partnership, split: holdout, question: "Virat Kohli and AB de Villiers partnership runs in the IPL", expect: "Named pair: total runs together, number of stands, best stand"}
+- {id: part-04, category: partnership, split: holdout, question: "Best opening partnerships in the Big Bash League", expect: "First-wicket stands only, BBL"}
+- {id: part-05, category: partnership, split: dev, question: "Babar Azam and Mohammad Rizwan's partnerships in T20Is", expect: "Named pair, T20I, total runs together and best stand"}
+- {id: part-06, category: partnership, split: dev, question: "How many 100-run partnerships have Rohit Sharma and Shikhar Dhawan had in T20Is?", expect: "Count of stands of 100+ for the named pair"}
+
+# --- F. Matchups (8) ---------------------------------------------------------------
+- {id: mu-01, category: matchup, split: dev, question: "Virat Kohli vs Jasprit Bumrah in the IPL", expect: "Balls, runs, SR, dismissals"}
+- {id: mu-02, category: matchup, split: holdout, question: "How has Steve Smith fared against James Anderson in Tests?", expect: "Head-to-head, Test"}
+- {id: mu-03, category: matchup, split: dev, question: "MS Dhoni against Rashid Khan in the IPL", expect: "Head-to-head"}
+- {id: mu-04, category: matchup, split: holdout, question: "David Warner vs Stuart Broad Test record", expect: "Dismissals emphasised"}
+- {id: mu-05, category: matchup, split: dev, question: "How many times has Pat Cummins dismissed Joe Root in Tests?", expect: "Bowler-credited dismissals"}
+- {id: mu-06, category: matchup, split: dev, question: "Jos Buttler v Adil Rashid in the T20 Blast", expect: "Head-to-head or clear 'never met' answer"}
+- {id: mu-07, category: matchup, split: holdout, question: "Rohit Sharma against Trent Boult in T20Is", expect: "Head-to-head"}
+- {id: mu-08, category: matchup, split: holdout, question: "Kane Williamson vs Ravichandran Ashwin in Test cricket", expect: "Head-to-head"}
+
+# --- G. Venues (7) -----------------------------------------------------------------
+- {id: ven-01, category: venue, split: dev, question: "Average first-innings score at Wankhede in the IPL", expect: "Venue average first-innings total"}
+- {id: ven-02, category: venue, split: holdout, question: "Best bowlers at the MCG in Test cricket", expect: "Venue bowling leaderboard"}
+- {id: ven-03, category: venue, split: dev, question: "Top run scorers at Chinnaswamy in the IPL", expect: "Venue batting leaderboard"}
+- {id: ven-04, category: venue, split: dev, question: "Run rate at Lord's in The Hundred", expect: "Venue run rate"}
+- {id: ven-05, category: venue, split: holdout, question: "Who has taken the most Test wickets at Galle?", expect: "Venue wickets leaderboard"}
+- {id: ven-06, category: venue, split: holdout, question: "How does Virat Kohli bat at Chinnaswamy Stadium in the IPL?", expect: "Player at venue"}
+- {id: ven-07, category: venue, split: dev, question: "Highest scoring venue in the Big Bash League", expect: "Venue comparison by run rate or average total"}
+
+# --- H. Two-player comparisons (8) ---------------------------------------------------
+- {id: cmp-01, category: comparison, split: dev, question: "Compare Virat Kohli and Rohit Sharma in the IPL", expect: "Side-by-side batting"}
+- {id: cmp-02, category: comparison, split: holdout, question: "Joe Root vs Steve Smith Test batting", expect: "Side-by-side, Test"}
+- {id: cmp-03, category: comparison, split: dev, question: "Bumrah or Rashid Khan – who is more economical in T20Is?", expect: "Economy for both, clear winner"}
+- {id: cmp-04, category: comparison, split: dev, question: "Compare Anderson and Broad in Tests", expect: "Side-by-side bowling"}
+- {id: cmp-05, category: comparison, split: holdout, question: "Babar Azam vs Mohammad Rizwan in the PSL", expect: "Side-by-side batting"}
+- {id: cmp-06, category: comparison, split: holdout, question: "Who has the better IPL strike rate, Andre Russell or Glenn Maxwell?", expect: "Both SRs, clear winner"}
+- {id: cmp-07, category: comparison, split: dev, question: "Compare Meg Lanning and Smriti Mandhana in women's T20Is", expect: "Women's T20I side-by-side"}
+- {id: cmp-08, category: comparison, split: holdout, question: "Kohli's IPL strike rate vs his T20I strike rate", expect: "Same player across two formats"}
+
+# --- I. Coverage and availability (5) -------------------------------------------------
+- {id: cov-01, category: coverage, split: dev, question: "Which formats do you have ball-by-ball data for?", expect: "Format list with date ranges"}
+- {id: cov-02, category: coverage, split: dev, question: "From what year do you have IPL line and length data?", expect: "IPL line/length span and %"}
+- {id: cov-04, category: coverage, split: holdout, question: "Do you have data for the Caribbean Premier League?", expect: "Yes, with span and line/length coverage"}
+- {id: cov-05, category: coverage, split: holdout, question: "Is The Hundred covered?", expect: "Men's and women's, line/length men's only"}
+- {id: cov-06, category: coverage, split: dev, question: "What are the limits of your line and length data?", expect: "Limitation statements by format"}
+
+# --- J. Women's cricket (6) -------------------------------------------------------------
+- {id: wom-01, category: womens, split: holdout, question: "How many runs has Meg Lanning scored in women's T20Is?", expect: "Women's T20I totals"}
+- {id: wom-02, category: womens, split: dev, question: "Top wicket takers in the Women's Premier League", expect: "WPL leaderboard"}
+- {id: wom-03, category: womens, split: dev, question: "Ellyse Perry's WBBL batting record", expect: "WBBL totals"}
+- {id: wom-04, category: womens, split: holdout, question: "Sophie Ecclestone T20I economy", expect: "Women's T20I economy"}
+- {id: wom-05, category: womens, split: dev, question: "Most runs in the Women's Hundred", expect: "Women's Hundred leaderboard"}
+- {id: wom-06, category: womens, split: holdout, question: "Harmanpreet Kaur's WPL strike rate", expect: "WPL SR"}
+
+# --- K. Edge cases (4) --------------------------------------------------------------------
+- {id: edge-01, category: edge, split: holdout, question: "How many runs has Kohli scored in the IPL?", expect: "Surname only resolves to V Kohli"}
+- {id: edge-02, category: edge, split: dev, question: "Bumrah IPL wickets in 2024 and 2025", expect: "Year range filter applied"}
+- {id: edge-03, category: edge, split: dev, question: "Jasprit Bumra T20 internationals economy", expect: "Misspelling still resolves, or asks to confirm"}
+- {id: edge-04, category: edge, split: holdout, question: "Virat Kohli ODI runs", expect: "Routed to the existing ODI path, not the multi-format one"}

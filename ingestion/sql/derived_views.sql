@@ -16,7 +16,7 @@ SELECT
   TRY_CAST(year AS INTEGER) AS year,
   COUNT(*) AS deliveries,
   SUM(TRY_CAST(bowlruns AS INTEGER)) AS runs_conceded,
-  SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS wickets_on_ball
+  SUM(CASE WHEN LOWER(TRIM(CAST(dismissal AS VARCHAR))) IN ('caught', 'bowled', 'leg before wicket', 'stumped', 'hit wicket', 'caught and bowled') THEN 1 ELSE 0 END) AS wickets_on_ball
 FROM analytics.deliveries_v1
 GROUP BY 1, 2;
 

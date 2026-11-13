@@ -96,20 +96,20 @@ CATALOG: dict[str, MetricDefinition] = {
     "batting_average": MetricDefinition(
         metric_id="batting_average",
         label="Batting Average",
-        formula="SUM(batruns) / NULLIF(SUM(CASE WHEN LOWER(out) = 'true' THEN 1 ELSE 0 END), 0)",
+        formula="SUM(batruns) / NULLIF(SUM(is_batter_dismissal), 0)",
         description="Runs scored per dismissal in the selected batting sample.",
         unit="runs_per_dismissal",
         supported_query_classes=[
             QueryClass.role_comparison,
             QueryClass.trend_progression,
         ],
-        required_fields=["batruns", "out"],
+        required_fields=["batruns", "out", "p_out", "p_bat", "dismissal"],
     ),
     "dismissals": MetricDefinition(
         metric_id="dismissals",
         label="Dismissals",
-        formula="SUM(CASE WHEN LOWER(out) = 'true' THEN 1 ELSE 0 END)",
-        description="Dismissals recorded on the selected ball set.",
+        formula="SUM(is_batter_dismissal)",
+        description="Dismissals attributed to the dismissed batter by p_out, excluding retired hurt and not out. Career totals include non-striker dismissals.",
         unit="dismissals",
         supported_query_classes=[
             QueryClass.role_comparison,
@@ -117,7 +117,7 @@ CATALOG: dict[str, MetricDefinition] = {
             QueryClass.head_to_head_matchup,
             QueryClass.trend_progression,
         ],
-        required_fields=["out"],
+        required_fields=["out", "p_out", "p_bat", "dismissal"],
     ),
     "boundary_percentage": MetricDefinition(
         metric_id="boundary_percentage",

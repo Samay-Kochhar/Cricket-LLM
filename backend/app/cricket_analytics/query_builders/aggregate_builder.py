@@ -3,6 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from backend.app.cricket_analytics.dismissal_sql import (
+    OWN_DISMISSAL,
+    batting_relation_sql,
+    batting_query_scope,
+)
 from backend.app.cricket_analytics.cricket_definitions import (
     BOWLER_WICKET_PREDICATE,
     LEGAL_BALL_PREDICATE,
@@ -47,7 +52,9 @@ DIMENSION_SQL: dict[str, DimensionSql] = {
     "shot_type": DimensionSql("shot", "shot_type", "shot"),
     "bowling_style": DimensionSql("bowl_style", "bowling_style", "bowl_style"),
     "batter_hand": DimensionSql("bat_hand", "batter_hand", "bat_hand"),
-    "venue": DimensionSql(venue_display_sql(venue_id_sql()), "venue", "ground", venue_id_sql()),
+    "venue": DimensionSql(
+        venue_display_sql(venue_id_sql()), "venue", "ground", venue_id_sql()
+    ),
     "innings": DimensionSql("inns", "innings", "inns"),
     "year": DimensionSql("TRY_CAST(year AS INTEGER)", "year", "year"),
     "phase": DimensionSql(
@@ -75,7 +82,9 @@ DIMENSION_SQL: dict[str, DimensionSql] = {
         "field_zone",
         "wagonZone",
     ),
-    "matchup": DimensionSql("CAST(bat AS VARCHAR) || ' vs ' || CAST(bowl AS VARCHAR)", "matchup", "bat"),
+    "matchup": DimensionSql(
+        "CAST(bat AS VARCHAR) || ' vs ' || CAST(bowl AS VARCHAR)", "matchup", "bat"
+    ),
 }
 
 
@@ -88,10 +97,18 @@ NON_MIGRATED_METRIC_SQL = {
 
 
 def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
-    dimensions = plan.group_by or ([plan.entity] if plan.entity in DIMENSION_SQL else [])
+    dimensions = plan.group_by or (
+        [plan.entity] if plan.entity in DIMENSION_SQL else []
+    )
     dimension_defs = [DIMENSION_SQL[dimension] for dimension in dimensions]
-    select_dimensions = [f"{definition.expression} AS {definition.alias}" for definition in dimension_defs]
-    group_expressions = [definition.group_expression or definition.expression for definition in dimension_defs]
+    select_dimensions = [
+        f"{definition.expression} AS {definition.alias}"
+        for definition in dimension_defs
+    ]
+    group_expressions = [
+        definition.group_expression or definition.expression
+        for definition in dimension_defs
+    ]
     columns = [definition.alias for definition in dimension_defs]
 
     where_clauses = ["1 = 1"]
@@ -101,23 +118,24 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
         params.extend(clause_params)
     for definition in dimension_defs:
         if definition.not_null_expression:
-            where_clauses.append(f"NULLIF(TRIM(CAST({definition.not_null_expression} AS VARCHAR)), '') IS NOT NULL")
+            where_clauses.append(
+                f"NULLIF(TRIM(CAST({definition.not_null_expression} AS VARCHAR)), '') IS NOT NULL"
+            )
 
-    metric_expression = NON_MIGRATED_METRIC_SQL.get(plan.metric) or metric_sql_expression(
+    metric_expression = NON_MIGRATED_METRIC_SQL.get(
+        plan.metric
+    ) or metric_sql_expression(
         plan.metric,
         entity=plan.entity,
         filters=plan.filters,
     )
     sort = plan.sort
-    direction = sort.direction.upper() if sort else METRICS[plan.metric].default_sort.upper()
+    direction = (
+        sort.direction.upper() if sort else METRICS[plan.metric].default_sort.upper()
+    )
     sort_expression = plan.metric if not sort or sort.by == plan.metric else sort.by
     limit = plan.limit
     limit_sql = "LIMIT ?" if limit is not None else ""
-    dismissal_predicate = (
-        BOWLER_WICKET
-        if plan.question_subject == "matchup" and plan.entity == "bowler"
-        else "TRY_CAST(ballfaced AS INTEGER) = 1 AND LOWER(CAST(out AS VARCHAR)) = 'true'"
-    )
 
     having_clauses = []
     if plan.minimum_sample:
@@ -136,14 +154,31 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
     if plan.metric == "bowling_strike_rate" and "bowler" not in plan.filters:
         having_clauses.append("wickets > 0")
 
-    select_prefix = ",\n                ".join(select_dimensions) + "," if select_dimensions else ""
-    group_by_sql = "GROUP BY " + ", ".join(group_expressions) if group_expressions else ""
+    select_prefix = (
+        ",\n                ".join(select_dimensions) + "," if select_dimensions else ""
+    )
+    group_by_sql = (
+        "GROUP BY " + ", ".join(group_expressions) if group_expressions else ""
+    )
     having_sql = "WHERE " + " AND ".join(having_clauses) if having_clauses else ""
     tie_breakers = ", ".join(f"{column} ASC" for column in columns)
     order_sql = f"ORDER BY {sort_expression} {direction}, sample_balls DESC"
     if tie_breakers:
         order_sql += f", {tie_breakers}"
 
+    batting, ball_context = batting_query_scope(plan)
+    relation = batting_relation_sql() if batting else "analytics.deliveries_v1"
+    dismissal_sql = (
+        "is_batter_dismissal"
+        if batting
+        else (
+            BOWLER_WICKET
+            if plan.entity == "bowler" and plan.question_subject == "matchup"
+            else OWN_DISMISSAL
+        )
+    )
+    if batting and ball_context:
+        where_clauses.append("NOT synthetic_dismissal")
     sql = f"""
             WITH aggregate_rows AS (
               SELECT
@@ -151,22 +186,22 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
                 COUNT(DISTINCT p_match) AS matches,
                 COUNT(DISTINCT CAST(p_match AS VARCHAR) || ':' || CAST(inns AS VARCHAR) || ':' || CAST(team_bat AS VARCHAR)) AS innings,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END) AS balls_faced,
-                SUM(CASE WHEN {LEGAL_BALL} THEN 1 ELSE 0 END) AS legal_balls,
+                SUM(CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{LEGAL_BALL} THEN 1 ELSE 0 END) AS legal_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN 1 ELSE 0 END) AS sample_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS runs_scored,
-                SUM(TRY_CAST(bowlruns AS INTEGER)) AS runs_conceded,
-                SUM(CASE WHEN {BOWLER_WICKET} THEN 1 ELSE 0 END) AS wickets,
-                SUM(CASE WHEN {dismissal_predicate} THEN 1 ELSE 0 END) AS dismissals,
+                SUM(CASE WHEN {"NOT synthetic_dismissal" if batting else "TRUE"} THEN TRY_CAST(bowlruns AS INTEGER) ELSE 0 END) AS runs_conceded,
+                SUM(CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{BOWLER_WICKET} THEN 1 ELSE 0 END) AS wickets,
+                SUM(CASE WHEN {dismissal_sql} THEN 1 ELSE 0 END) AS dismissals,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
-                SUM(CASE WHEN {LEGAL_BALL} AND TRY_CAST(bowlruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS bowler_dot_balls,
+                SUM(CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{LEGAL_BALL} AND TRY_CAST(bowlruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS bowler_dot_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 4 THEN 1 ELSE 0 END) AS four_count,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 6 THEN 1 ELSE 0 END) AS six_count,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END) AS boundary_runs,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(control AS DOUBLE) = 0 THEN 1 ELSE 0 END) AS false_shots,
                 SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(control AS DOUBLE) = 1 THEN 1 ELSE 0 END) AS controlled_balls,
-                SUM(CASE WHEN {LEGAL_BALL} AND length = 'YORKER' THEN 1 ELSE 0 END) AS yorker_balls
-              FROM analytics.deliveries_v1
+                SUM(CASE WHEN {"NOT synthetic_dismissal AND " if batting else ""}{LEGAL_BALL} AND length = 'YORKER' THEN 1 ELSE 0 END) AS yorker_balls
+              FROM {relation}
               WHERE {' AND '.join(where_clauses)}
               {group_by_sql}
             )
@@ -229,7 +264,9 @@ def build_aggregate_query(plan: CricketQueryPlan) -> QueryBuildResult:
     )
 
 
-def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> list[tuple[str, list[Any]]]:
+def _filter_clauses(
+    filters: dict[str, object], entity: str | None = None
+) -> list[tuple[str, list[Any]]]:
     clauses: list[tuple[str, list[Any]]] = []
     for key, value in filters.items():
         if value is None:
@@ -252,7 +289,12 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
             start = int(value[0])
             end = int(value[-1])
             # Stored `over` is the 1-based over number, so human overs are inclusive.
-            clauses.append(("TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ?", [float(start), float(end)]))
+            clauses.append(
+                (
+                    "TRY_CAST(over AS DOUBLE) >= ? AND TRY_CAST(over AS DOUBLE) <= ?",
+                    [float(start), float(end)],
+                )
+            )
         elif key == "line":
             clauses.append(("line = ?", [value]))
         elif key == "length":
@@ -291,12 +333,24 @@ def _filter_clauses(filters: dict[str, object], entity: str | None = None) -> li
         elif key == "years" and isinstance(value, list) and value:
             year_mode = filters.get("year_mode")
             if year_mode == "after":
-                clauses.append(("TRY_CAST(year AS INTEGER) >= ?", [min(int(year) for year in value)]))
+                clauses.append(
+                    (
+                        "TRY_CAST(year AS INTEGER) >= ?",
+                        [min(int(year) for year in value)],
+                    )
+                )
             elif year_mode == "before":
-                clauses.append(("TRY_CAST(year AS INTEGER) <= ?", [max(int(year) for year in value)]))
+                clauses.append(
+                    (
+                        "TRY_CAST(year AS INTEGER) <= ?",
+                        [max(int(year) for year in value)],
+                    )
+                )
             else:
                 placeholders = ", ".join("?" for _ in value)
-                clauses.append((f"TRY_CAST(year AS INTEGER) IN ({placeholders})", list(value)))
+                clauses.append(
+                    (f"TRY_CAST(year AS INTEGER) IN ({placeholders})", list(value))
+                )
         elif key == "competition":
             clauses.append(("competition = ?", [value]))
         elif key == BATTING_RESULT_FILTER:

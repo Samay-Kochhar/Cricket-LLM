@@ -20,13 +20,16 @@ class Repository:
     def __init__(self) -> None:
         self.connection = duckdb.connect(":memory:")
         self.connection.execute("CREATE SCHEMA analytics")
+        # Every wicket in this fixture is the striker's own; declare that identity
+        # explicitly (production never infers who was out from the striker's flag).
         self.connection.execute(
             """CREATE TABLE analytics.deliveries_v1 (
                 bat VARCHAR, bowl VARCHAR, team_bat VARCHAR, team_bowl VARCHAR,
                 p_match INTEGER, inns INTEGER, ballfaced INTEGER, wide INTEGER,
                 noball INTEGER, batruns INTEGER, bowlruns INTEGER, dismissal VARCHAR,
                 out VARCHAR, control INTEGER, length VARCHAR, over INTEGER,
-                bowl_kind VARCHAR, ground VARCHAR, year INTEGER
+                bowl_kind VARCHAR, ground VARCHAR, year INTEGER,
+                p_bat VARCHAR GENERATED ALWAYS AS (bat) VIRTUAL, p_out VARCHAR GENERATED ALWAYS AS (CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN bat END) VIRTUAL
             )"""
         )
         rows = [

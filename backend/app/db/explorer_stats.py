@@ -1,13 +1,25 @@
 """Context-filtered explorer aggregates, shared by comparison and venue rankings."""
+
 from backend.app.cricket_analytics.cricket_definitions import (
-    BOWLER_WICKET_PREDICATE, LEGAL_BALL_PREDICATE, phase_filter_clause,
+    BOWLER_WICKET_PREDICATE,
+    LEGAL_BALL_PREDICATE,
+    phase_filter_clause,
 )
 from backend.app.domain.venues import venue_filter
 from backend.app.domain.venue_leaderboard import mode_options
 
 
-def query_stats(repository, mode, *, phase=None, year_start=None, year_end=None,
-                venue=None, player=None, ranking=None):
+def query_stats(
+    repository,
+    mode,
+    *,
+    phase=None,
+    year_start=None,
+    year_end=None,
+    venue=None,
+    player=None,
+    ranking=None,
+):
     """Filter delivery rows first; aggregate once, then apply sample eligibility/top N."""
     mode_options(mode)(phase=phase, year_start=year_start, year_end=year_end)
     clauses, params = ["1=1"], []
@@ -30,7 +42,7 @@ def query_stats(repository, mode, *, phase=None, year_start=None, year_end=None,
         counts = f"""
             SUM(CASE WHEN {faced} THEN 1 ELSE 0 END) AS balls_faced,
             COALESCE(SUM(TRY_CAST(batruns AS INTEGER)), 0) AS runs_scored,
-            SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+            SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
             SUM(CASE WHEN {faced} AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
             SUM(CASE WHEN {faced} AND TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
             COUNT(CASE WHEN {faced} THEN TRY_CAST(control AS DOUBLE) END) AS control_balls,
@@ -56,16 +68,27 @@ def query_stats(repository, mode, *, phase=None, year_start=None, year_end=None,
     tail = "ORDER BY player_name"
     if ranking:
         field, direction = ranking.ranking["field"], ranking.ranking["direction"]
-        unit = "deliveries" if ranking.sample_unit == "legal_balls" else ranking.sample_unit
+        unit = (
+            "deliveries"
+            if ranking.sample_unit == "legal_balls"
+            else ranking.sample_unit
+        )
         tail = f"WHERE {unit} >= ? AND {field} IS NOT NULL ORDER BY {field} {direction}, player_name ASC LIMIT ?"
         params.extend([ranking.minimum_sample, ranking.limit])
+    relation = "batting_events_v1" if mode == "batting" else "analytics.deliveries_v1"
+    delivery_count = (
+        "COUNT(*) FILTER (WHERE NOT synthetic_dismissal)"
+        if mode == "batting"
+        else "COUNT(*)"
+    )
     sql = f"""WITH counts AS (
         SELECT {name} AS player_name, COUNT(DISTINCT p_match) AS matches,
-            COUNT(*) AS delivery_rows, {counts}
-        FROM analytics.deliveries_v1 WHERE {' AND '.join(clauses)} GROUP BY {name}
+            {delivery_count} AS delivery_rows, {counts}
+        FROM {relation} WHERE {' AND '.join(clauses)} GROUP BY {name}
     ), rates AS (SELECT *, {rates} FROM counts) SELECT * FROM rates {tail}"""
     # Retain column names at the database boundary; no positional parallel schema.
     from backend.app.db.connection import get_connection
+
     with get_connection(repository.db_path) as conn:
         result = conn.execute(sql, params)
         fields = [col[0] for col in result.description]

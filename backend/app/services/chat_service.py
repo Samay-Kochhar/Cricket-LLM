@@ -118,6 +118,21 @@ class ChatService:
         history: list[ChatHistoryTurn],
         conversation_state: ConversationState | None = None,
     ) -> ChatReply:
+        reply = self._reply(message, history, conversation_state)
+        if reply.query_response is not None:
+            from backend.app.domain.evidence_models import EvidenceNote
+            from backend.app.multiformat.answers import AFGHAN_NOTE
+            notes = reply.query_response.evidence_notes
+            notes[:] = [n for n in notes if n.title != "Afghanistan coverage"]
+            notes.append(EvidenceNote(title="Afghanistan coverage", detail=AFGHAN_NOTE))
+        return reply
+
+    def _reply(
+        self,
+        message: str,
+        history: list[ChatHistoryTurn],
+        conversation_state: ConversationState | None = None,
+    ) -> ChatReply:
         normalized_message = message.strip()
         if self.multiformat is not None and (
             conversation_state is None or conversation_state.pending_clarification is None
@@ -125,8 +140,11 @@ class ChatService:
             answer = self.multiformat.answer(normalized_message)
             if answer is not None:
                 return ChatReply(
-                    mode="clarification" if answer.clarification else "conversation",
+                    mode=("clarification" if answer.clarification else
+                          "analysis" if answer.query_response is not None and answer.query_response.status.value == "unsupported"
+                          else "conversation"),
                     message=answer.message,
+                    query_response=answer.query_response,
                     suggestions=answer.suggestions,
                     clarification_options=[
                         ClarificationOption(label=option.rsplit("(", 1)[-1].rstrip(")"), message=option)

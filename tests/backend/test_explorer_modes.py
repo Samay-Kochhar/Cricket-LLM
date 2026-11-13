@@ -21,7 +21,7 @@ def repository(tmp_path):
             bat VARCHAR, bowl VARCHAR, ground VARCHAR, p_match INTEGER, team_bowl VARCHAR,
             wide INTEGER, noball INTEGER, batruns INTEGER, bowlruns INTEGER,
             dismissal VARCHAR, year INTEGER, over DOUBLE, ballfaced INTEGER,
-            out BOOLEAN, control DOUBLE)''')
+            out BOOLEAN, control DOUBLE, p_bat VARCHAR, p_out VARCHAR)''')
         rows = []
         for ground in ('Feroz Shah Kotla, Delhi', 'Arun Jaitley Stadium, Delhi'):
             for year in (2022, 2023, 2024):
@@ -38,7 +38,10 @@ def repository(tmp_path):
             ('Extras', 'Extra bowler', 'Arun Jaitley Stadium, Delhi', 1, 'India', 0, 1, 4, 5, '', 2023, 10, 0, False, 0),
             ('Other', 'Other bowler', 'Wankhede Stadium, Mumbai', 2, 'India', 0, 0, 6, 6, 'bowled', 2023, 10, 1, True, 1),
         ])
-        conn.executemany('INSERT INTO analytics.deliveries_v1 VALUES (' + ','.join('?' * 15) + ')', rows)
+        # Every wicket in this fixture dismisses the striker. Declare that
+        # identity explicitly; production must never infer it from the out flag.
+        rows = [(*row, row[0], row[0] if row[13] else None) for row in rows]
+        conn.executemany('INSERT INTO analytics.deliveries_v1 VALUES (' + ','.join('?' * 17) + ')', rows)
         conn.execute("CREATE VIEW analytics.player_lookup AS SELECT bat AS player_name FROM analytics.deliveries_v1 UNION SELECT bowl FROM analytics.deliveries_v1")
     return AnalyticsRepository(path)
 

@@ -33,17 +33,39 @@ FILTER_COLUMNS = ("format", "gender", "competition", "venue")
 class DeliveryFilter:
     format: str | None = None
     gender: str | None = None
-    competition: str | None = None  # exact name, or an ILIKE pattern when it contains '%'
+    competition: str | None = (
+        None  # exact name, or an ILIKE pattern when it contains '%'
+    )
     year_from: int | None = None
     year_to: int | None = None
     formats: tuple[str, ...] | None = None  # any of these formats
     venue: str | None = None
+    competitions: tuple[str, ...] = ()
+    excluded_competitions: tuple[str, ...] = ()
+    years: tuple[int, ...] = ()
+    phase: str | None = None
+    over_from: int | None = None
+    over_to: int | None = None
+    bowler_styles: tuple[str, ...] = ()
+    bowler_arm: str | None = None
+    bowler_kind: str | None = None
+    lengths: tuple[str, ...] = ()
+    lines: tuple[str, ...] = ()
+    opponent: str | None = None
+    role: str = "batting"
 
     def sql(self) -> tuple[str, list[Any]]:
         clauses, params = [], []
         for column in FILTER_COLUMNS:
             value = getattr(self, column)
             if value is not None:
+                if column == "venue" and "|" in value:
+                    venues = value.split("|")
+                    clauses.append(
+                        "d.venue IN (" + ", ".join("?" for _ in venues) + ")"
+                    )
+                    params.extend(venues)
+                    continue
                 operator = "ILIKE" if column == "competition" and "%" in value else "="
                 clauses.append(f"d.{column} {operator} ?")
                 params.append(value)
@@ -56,6 +78,43 @@ class DeliveryFilter:
         if self.year_to is not None:
             clauses.append("d.year <= ?")
             params.append(self.year_to)
+        for column, values, negate in (
+            ("competition", self.competitions, False),
+            ("competition", self.excluded_competitions, True),
+            ("year", self.years, False),
+            ("bowler_style_code", self.bowler_styles, False),
+            ("length", self.lengths, False),
+            ("line", self.lines, False),
+        ):
+            if values:
+                clauses.append(
+                    f"d.{column} {'NOT IN' if negate else 'IN'} ({', '.join('?' for _ in values)})"
+                )
+                params.extend(values)
+        for column, value in (
+            ("bowler_arm", self.bowler_arm),
+            ("bowler_kind", self.bowler_kind),
+        ):
+            if value:
+                clauses.append(f"lower(d.{column}) = lower(?)")
+                params.append(value)
+        if self.opponent:
+            clauses.append(
+                f"d.{'bowling_team' if self.role == 'batting' else 'batting_team'} = ?"
+            )
+            params.append(self.opponent)
+        if self.over_from is not None:
+            clauses.append("d.over_no >= ?")
+            params.append(self.over_from - 1)
+        if self.over_to is not None:
+            clauses.append("d.over_no < ?")
+            params.append(self.over_to)
+        if self.phase:
+            # over_no is zero based. Hundred phases use legal-ball count,
+            # including all extras attached to the current legal ball.
+            phase = "CASE WHEN d.format = 'The Hundred' THEN CASE WHEN (d.over_no * 5 + greatest(coalesce(d.legal_ball_in_over, 1), 1)) <= 25 THEN 'powerplay' WHEN (d.over_no * 5 + greatest(coalesce(d.legal_ball_in_over, 1), 1)) <= 75 THEN 'middle' ELSE 'death' END WHEN d.format = 'ODI' THEN CASE WHEN d.over_no < 10 THEN 'powerplay' WHEN d.over_no < 40 THEN 'middle' ELSE 'death' END ELSE CASE WHEN d.over_no < 6 THEN 'powerplay' WHEN d.over_no < 15 THEN 'middle' ELSE 'death' END END"
+            clauses.append(f"({phase}) = ?")
+            params.append(self.phase)
         return (" AND ".join(clauses) or "TRUE"), params
 
 
@@ -64,21 +123,44 @@ def _clean(value: Any) -> Any:
     return None if isinstance(value, float) and math.isnan(value) else value
 
 
-def _rows(conn: duckdb.DuckDBPyConnection, sql: str, params: list[Any] | None = None) -> list[dict[str, Any]]:
+def _rows(
+    conn: duckdb.DuckDBPyConnection, sql: str, params: list[Any] | None = None
+) -> list[dict[str, Any]]:
     cursor = conn.execute(sql, params or [])
     names = [d[0] for d in cursor.description]
     return [{n: _clean(v) for n, v in zip(names, row)} for row in cursor.fetchall()]
 
 
+# A batter's dismissals include run-outs at the non-striker's end, which sit on
+# a ball someone else faced. _BAT_SOURCE adds those balls a second time keyed
+# to the run-out batter (faced = FALSE), so balls and runs come only from balls
+# faced and dismissals from every time the batter was out. Retired hurt and
+# retired not out are not dismissals.
+_BAT_SOURCE = """(
+  SELECT d.*, d.batter_id AS bat_key, TRUE AS faced FROM analytics.deliveries d
+  UNION ALL BY NAME
+  SELECT d.*, d.player_out_id AS bat_key, FALSE AS faced FROM analytics.deliveries d
+  WHERE d.is_wicket AND d.player_out_id IS NOT NULL AND d.player_out_id <> d.batter_id
+) d"""
+
 _BATTING_AGG = """
   count(DISTINCT d.match_id) AS matches,
-  count(*) FILTER (d.wides IS NULL) AS balls,
-  sum(d.runs_batter) AS runs,
-  count(*) FILTER (d.runs_batter = 4 AND NOT d.non_boundary) AS fours,
-  count(*) FILTER (d.runs_batter = 6) AS sixes,
-  count(*) FILTER (d.wides IS NULL AND d.runs_batter = 0) AS dot_balls,
-  count(*) FILTER (d.is_wicket AND d.player_out_id = d.batter_id) AS dismissals
+  count(*) FILTER (d.faced AND d.wides IS NULL) AS balls,
+  coalesce(sum(d.runs_batter) FILTER (d.faced), 0) AS runs,
+  count(*) FILTER (d.faced AND d.runs_batter = 4 AND NOT coalesce(d.non_boundary, FALSE)) AS fours,
+  count(*) FILTER (d.faced AND d.runs_batter = 6 AND NOT coalesce(d.non_boundary, FALSE)) AS sixes,
+  count(*) FILTER (d.faced AND d.wides IS NULL AND d.runs_batter = 0) AS dot_balls,
+  count(*) FILTER (d.is_wicket AND d.player_out_id = d.bat_key
+                   AND coalesce(d.wicket_kind, '') NOT IN ('retired hurt', 'retired not out', 'retired not out (hurt)', 'not out')) AS dismissals
 """
+
+# Per-ball breakdowns (line, length, matchups) describe the balls the batter
+# faced, so a non-striker run-out does not belong to any of them.
+_BALL_BATTING_AGG = (
+    _BATTING_AGG.replace("d.faced AND ", "")
+    .replace("FILTER (d.faced)", "")
+    .replace("d.bat_key", "d.batter_id")
+)
 
 _BOWLING_AGG = """
   count(DISTINCT d.match_id) AS matches,
@@ -86,30 +168,49 @@ _BOWLING_AGG = """
   sum(d.runs_batter + COALESCE(d.wides, 0) + COALESCE(d.noballs, 0)) AS runs_conceded,
   count(*) FILTER (d.is_bowler_wicket) AS wickets,
   count(*) FILTER (d.is_legal AND d.runs_total = 0) AS dot_balls,
-  count(*) FILTER (d.runs_batter IN (4, 6)) AS boundaries
+  count(*) FILTER (d.runs_batter IN (4, 6) AND NOT coalesce(d.non_boundary, FALSE)) AS boundaries
 """
 
 
+def _role_parts(role: str) -> tuple[str, str, str, Any]:
+    """(source, player key, aggregate SQL, rate function) for career-style totals."""
+    if role == "batting":
+        return _BAT_SOURCE, "bat_key", _BATTING_AGG, _batting_rates
+    return "analytics.deliveries d", "bowler_id", _BOWLING_AGG, _bowling_rates
+
+
 def _batting_rates(row: dict[str, Any]) -> dict[str, Any]:
-    balls, runs, outs = row.get("balls") or 0, row.get("runs") or 0, row.get("dismissals") or 0
+    balls, runs, outs = (
+        row.get("balls") or 0,
+        row.get("runs") or 0,
+        row.get("dismissals") or 0,
+    )
     row["strike_rate"] = round(100 * runs / balls, 2) if balls else None
     row["average"] = round(runs / outs, 2) if outs else None
-    row["dot_ball_pct"] = round(100 * (row.get("dot_balls") or 0) / balls, 1) if balls else None
+    row["dot_ball_pct"] = (
+        round(100 * (row.get("dot_balls") or 0) / balls, 1) if balls else None
+    )
     return row
 
 
 def _bowling_rates(row: dict[str, Any]) -> dict[str, Any]:
-    balls, runs, wkts = row.get("balls") or 0, row.get("runs_conceded") or 0, row.get("wickets") or 0
+    balls, runs, wkts = (
+        row.get("balls") or 0,
+        row.get("runs_conceded") or 0,
+        row.get("wickets") or 0,
+    )
     row["economy"] = round(6 * runs / balls, 2) if balls else None
     row["strike_rate"] = round(balls / wkts, 2) if wkts else None
     row["average"] = round(runs / wkts, 2) if wkts else None
-    row["dot_ball_pct"] = round(100 * (row.get("dot_balls") or 0) / balls, 1) if balls else None
+    row["dot_ball_pct"] = (
+        round(100 * (row.get("dot_balls") or 0) / balls, 1) if balls else None
+    )
     return row
 
 
 class MultiFormatService:
     def __init__(self, db_path: Path) -> None:
-        self.db_path = db_path
+        self.db_path = Path(db_path)
 
     def _connect(self) -> duckdb.DuckDBPyConnection:
         if not self.db_path.exists():
@@ -123,11 +224,16 @@ class MultiFormatService:
     def coverage(self) -> dict[str, Any]:
         with self._connect() as conn:
             build = _rows(conn, "SELECT * FROM analytics.build_info")[0]
-            summary = _rows(conn, "SELECT * FROM analytics.coverage_summary ORDER BY gender DESC, matches DESC")
+            summary = _rows(
+                conn,
+                "SELECT * FROM analytics.coverage_summary ORDER BY gender DESC, matches DESC",
+            )
             limitations = _rows(conn, "SELECT * FROM analytics.data_limitations")
         return {"build": build, "formats": summary, "limitations": limitations}
 
-    def competitions(self, format: str | None = None, gender: str | None = None) -> list[dict[str, Any]]:
+    def competitions(
+        self, format: str | None = None, gender: str | None = None
+    ) -> list[dict[str, Any]]:
         where, params = DeliveryFilter(format=format, gender=gender).sql()
         with self._connect() as conn:
             return _rows(
@@ -156,7 +262,9 @@ class MultiFormatService:
 
     def player(self, player_id: str) -> dict[str, Any] | None:
         with self._connect() as conn:
-            rows = _rows(conn, "SELECT * FROM analytics.players WHERE player_id = ?", [player_id])
+            rows = _rows(
+                conn, "SELECT * FROM analytics.players WHERE player_id = ?", [player_id]
+            )
         return rows[0] if rows else None
 
     def resolve_names(self, names: list[str]) -> dict[str, list[dict[str, Any]]]:
@@ -183,7 +291,9 @@ class MultiFormatService:
                 bucket.append(row)
         return out
 
-    def players_by_surname(self, surname: str, flt: "DeliveryFilter", limit: int = 5) -> list[dict[str, Any]]:
+    def players_by_surname(
+        self, surname: str, flt: "DeliveryFilter", limit: int = 5
+    ) -> list[dict[str, Any]]:
         """Players whose name ends in the surname, ranked by matches in the filter."""
         where, params = flt.sql()
         with self._connect() as conn:
@@ -213,16 +323,34 @@ class MultiFormatService:
                 params,
             )
 
-    def leaderboard(self, role: Role, metric: str, flt: "DeliveryFilter", min_balls: int = 60, limit: int = 10) -> list[dict[str, Any]]:
+    def leaderboard(
+        self,
+        role: Role,
+        metric: str,
+        flt: "DeliveryFilter",
+        min_balls: int = 60,
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
         """Ranking within the filter; rate metrics need ``min_balls`` (CONTEXT.md default 60)."""
         where, params = flt.sql()
+        source, key, agg, rates = _role_parts(role)
         if role == "batting":
-            key, agg, rates = "batter_id", _BATTING_AGG, _batting_rates
-            orders = {"runs": "runs DESC", "strike_rate": "strike_rate DESC", "average": "average DESC"}
+            orders = {
+                "runs": "runs DESC",
+                "strike_rate": "strike_rate DESC",
+                "average": "average DESC",
+                "sixes": "sixes DESC",
+                "fours": "fours DESC",
+                "dot_ball_pct": "dot_ball_pct ASC",
+            }
         else:
-            key, agg, rates = "bowler_id", _BOWLING_AGG, _bowling_rates
-            orders = {"wickets": "wickets DESC", "economy": "economy ASC", "strike_rate": "strike_rate ASC",
-                      "average": "average ASC"}
+            orders = {
+                "wickets": "wickets DESC",
+                "economy": "economy ASC",
+                "strike_rate": "strike_rate ASC",
+                "average": "average ASC",
+                "dot_ball_pct": "dot_ball_pct DESC",
+            }
         if metric not in orders:
             raise ValueError(f"Unsupported {role} ranking metric {metric!r}")
         with self._connect() as conn:
@@ -230,7 +358,7 @@ class MultiFormatService:
                 conn,
                 f"""
                 SELECT d.{key} AS player_id, any_value(p.name) AS name, {agg}
-                FROM analytics.deliveries d JOIN analytics.players p ON p.player_id = d.{key}
+                FROM {source} JOIN analytics.players p ON p.player_id = d.{key}
                 WHERE {where}
                 GROUP BY 1
                 """,
@@ -243,18 +371,18 @@ class MultiFormatService:
         return ranked[:limit]
 
     # ------------------------------------------------------------------ stats
-    def player_stats(self, player_id: str, role: Role, flt: DeliveryFilter) -> list[dict[str, Any]]:
+    def player_stats(
+        self, player_id: str, role: Role, flt: DeliveryFilter
+    ) -> list[dict[str, Any]]:
         """Career numbers per format and gender for the filter."""
         where, params = flt.sql()
-        key, agg, rates = (
-            ("batter_id", _BATTING_AGG, _batting_rates) if role == "batting" else ("bowler_id", _BOWLING_AGG, _bowling_rates)
-        )
+        source, key, agg, rates = _role_parts(role)
         with self._connect() as conn:
             rows = _rows(
                 conn,
                 f"""
                 SELECT d.format, d.gender, min(d.match_date) AS first_match, max(d.match_date) AS last_match, {agg}
-                FROM analytics.deliveries d
+                FROM {source}
                 WHERE d.{key} = ? AND {where}
                 GROUP BY ALL ORDER BY matches DESC
                 """,
@@ -262,7 +390,9 @@ class MultiFormatService:
             )
         return [rates(row) for row in rows]
 
-    def line_length(self, player_id: str, role: Role, dimension: Dimension, flt: DeliveryFilter) -> dict[str, Any]:
+    def line_length(
+        self, player_id: str, role: Role, dimension: Dimension, flt: DeliveryFilter
+    ) -> dict[str, Any]:
         """Breakdown by length or line, with the coverage it rests on.
 
         ``coverage`` reports how many of the selected deliveries carry the
@@ -272,7 +402,9 @@ class MultiFormatService:
         """
         where, params = flt.sql()
         key, agg, rates = (
-            ("batter_id", _BATTING_AGG, _batting_rates) if role == "batting" else ("bowler_id", _BOWLING_AGG, _bowling_rates)
+            ("batter_id", _BALL_BATTING_AGG, _batting_rates)
+            if role == "batting"
+            else ("bowler_id", _BOWLING_AGG, _bowling_rates)
         )
         with self._connect() as conn:
             coverage = _rows(
@@ -302,7 +434,8 @@ class MultiFormatService:
             )
             formats = sorted({(c["format"], c["gender"]) for c in coverage})
             limitations = [
-                r for r in _rows(conn, "SELECT * FROM analytics.data_limitations")
+                r
+                for r in _rows(conn, "SELECT * FROM analytics.data_limitations")
                 if (r["format"], r["gender"]) in formats
             ]
         total = sum(c["deliveries"] for c in coverage)
@@ -323,7 +456,9 @@ class MultiFormatService:
         }
 
     @staticmethod
-    def _coverage_note(dimension: str, total: int, covered: int, coverage: list[dict[str, Any]]) -> str:
+    def _coverage_note(
+        dimension: str, total: int, covered: int, coverage: list[dict[str, Any]]
+    ) -> str:
         if not total:
             return "No deliveries match this player and filter."
         if covered == 0:
@@ -335,7 +470,8 @@ class MultiFormatService:
             return f"{dimension.capitalize()} is recorded for all {total:,} deliveries."
         spans = "; ".join(
             f"{c['format']} {c['pct']}% ({c['first_with']:%b %Y} to {c['last_with']:%b %Y})"
-            for c in coverage if c[f"with_{dimension}"]
+            for c in coverage
+            if c[f"with_{dimension}"]
         )
         return (
             f"{dimension.capitalize()} is recorded for {covered:,} of {total:,} deliveries "
@@ -343,20 +479,22 @@ class MultiFormatService:
         )
 
     # ------------------------------------------------------------------ explorer views
-    def player_year_trend(self, player_id: str, role: Role, flt: DeliveryFilter) -> list[dict[str, Any]]:
+    def player_year_trend(
+        self, player_id: str, role: Role, flt: DeliveryFilter
+    ) -> list[dict[str, Any]]:
         where, params = flt.sql()
-        key, agg, rates = (
-            ("batter_id", _BATTING_AGG, _batting_rates) if role == "batting" else ("bowler_id", _BOWLING_AGG, _bowling_rates)
-        )
+        source, key, agg, rates = _role_parts(role)
         with self._connect() as conn:
             rows = _rows(
                 conn,
-                f"SELECT d.year, {agg} FROM analytics.deliveries d WHERE d.{key} = ? AND {where} GROUP BY ALL ORDER BY d.year",
+                f"SELECT d.year, {agg} FROM {source} WHERE d.{key} = ? AND {where} GROUP BY ALL ORDER BY d.year",
                 [player_id, *params],
             )
         return [rates(row) for row in rows]
 
-    def pitch_cells(self, player_id: str, role: Role, flt: DeliveryFilter) -> dict[str, Any]:
+    def pitch_cells(
+        self, player_id: str, role: Role, flt: DeliveryFilter
+    ) -> dict[str, Any]:
         """Line × length cells (deliveries with both coded) plus the coverage they rest on.
 
         Cells carry runs off the bat per ball faced and dismissals of the batter
@@ -366,7 +504,9 @@ class MultiFormatService:
         where, params = flt.sql()
         key = "batter_id" if role == "batting" else "bowler_id"
         dismissal = (
-            "d.is_wicket AND d.player_out_id = d.batter_id" if role == "batting" else "d.is_bowler_wicket"
+            "d.is_wicket AND d.player_out_id = d.batter_id"
+            if role == "batting"
+            else "d.is_bowler_wicket"
         )
         with self._connect() as conn:
             cells = _rows(
@@ -391,18 +531,24 @@ class MultiFormatService:
                 [player_id, *params],
             ).fetchone()
         for cell in cells:
-            cell["strike_rate"] = round(100 * cell["runs"] / cell["balls"], 2) if cell["balls"] else None
+            cell["strike_rate"] = (
+                round(100 * cell["runs"] / cell["balls"], 2) if cell["balls"] else None
+            )
         return {
             "cells": [c for c in cells if c["balls"]],
             "handedness": hand if role == "batting" else None,
             "coverage": {
                 "total_balls": total,
                 "covered_balls": covered,
-                "coverage_percentage": round(100 * covered / total, 2) if total else 0.0,
+                "coverage_percentage": (
+                    round(100 * covered / total, 2) if total else 0.0
+                ),
             },
         }
 
-    def matchup(self, batter_id: str, bowler_id: str, flt: DeliveryFilter) -> dict[str, Any]:
+    def matchup(
+        self, batter_id: str, bowler_id: str, flt: DeliveryFilter
+    ) -> dict[str, Any]:
         """Batter against bowler: totals by format and how the batter got out."""
         where, params = flt.sql()
         with self._connect() as conn:
@@ -410,7 +556,7 @@ class MultiFormatService:
                 conn,
                 f"""
                 SELECT d.format, d.gender, min(d.match_date) AS first_match, max(d.match_date) AS last_match,
-                       {_BATTING_AGG}, count(*) FILTER (d.is_bowler_wicket) AS bowler_wickets
+                       {_BALL_BATTING_AGG}, count(*) FILTER (d.is_bowler_wicket) AS bowler_wickets
                 FROM analytics.deliveries d
                 WHERE d.batter_id = ? AND d.bowler_id = ? AND {where}
                 GROUP BY ALL ORDER BY balls DESC
@@ -427,7 +573,10 @@ class MultiFormatService:
                 """,
                 [batter_id, bowler_id, *params],
             )
-        return {"by_format": [_batting_rates(r) for r in by_format], "dismissal_kinds": dismissals}
+        return {
+            "by_format": [_batting_rates(r) for r in by_format],
+            "dismissal_kinds": dismissals,
+        }
 
     def venues(self, flt: DeliveryFilter) -> list[dict[str, Any]]:
         where, params = flt.sql()
@@ -443,7 +592,13 @@ class MultiFormatService:
             )
 
     def venue_profile(
-        self, venue: str, role: Role, metric: str, flt: DeliveryFilter, min_balls: int = 60, limit: int = 15
+        self,
+        venue: str,
+        role: Role,
+        metric: str,
+        flt: DeliveryFilter,
+        min_balls: int = 60,
+        limit: int = 15,
     ) -> dict[str, Any]:
         """Ground summary (first-innings scoring, run rate) and the player leaderboard at it."""
         venue_flt = DeliveryFilter(**{**_filter_fields(flt), "venue": venue})
@@ -487,8 +642,16 @@ def _player_options_sql(key: str, where: str) -> str:
     """
 
 
-def player_options(service: MultiFormatService, role: Role, flt: DeliveryFilter) -> list[dict[str, Any]]:
+def player_options(
+    service: MultiFormatService, role: Role, flt: DeliveryFilter
+) -> list[dict[str, Any]]:
     """Players who batted (or bowled) inside the filter, most matches first."""
     where, params = flt.sql()
     with service._connect() as conn:
-        return _rows(conn, _player_options_sql("batter_id" if role == "batting" else "bowler_id", where), params)
+        return _rows(
+            conn,
+            _player_options_sql(
+                "batter_id" if role == "batting" else "bowler_id", where
+            ),
+            params,
+        )

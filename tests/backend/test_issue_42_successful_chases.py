@@ -526,11 +526,18 @@ def test_batting_average_in_wins_uses_the_result_without_an_innings_condition(re
     chat, _ = _chat(repository)
     response = chat.reply("Kohli's batting average in wins", history=[]).query_response
     assert _plan(response)["filters"] == {"batter": "Virat Kohli", "batting_result": "won"}
+    # Dismissals belong to the player who was out (p_out), wherever he stood:
+    # his own non-striker run-outs count, a partner's run-out or a retirement
+    # on a ball he faced does not (Kohli in wins: 140 striker flags - 8 + 3 = 135).
     runs, outs = db.execute(
         """
-        SELECT SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END),
-               SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND out = 'True' THEN 1 ELSE 0 END)
-        FROM analytics.deliveries_v1 WHERE bat = 'Virat Kohli' AND winner = team_bat
+        WITH kohli AS (SELECT DISTINCT p_bat FROM analytics.deliveries_v1 WHERE bat = 'Virat Kohli')
+        SELECT SUM(CASE WHEN bat = 'Virat Kohli' AND TRY_CAST(ballfaced AS INTEGER) = 1
+                        THEN TRY_CAST(batruns AS INTEGER) ELSE 0 END),
+               SUM(CASE WHEN out = 'True' AND p_out IN (SELECT p_bat FROM kohli)
+                         AND dismissal NOT IN ('retired not out (hurt)', 'retired hurt', 'retired not out', 'not out')
+                        THEN 1 ELSE 0 END)
+        FROM analytics.deliveries_v1 WHERE winner = team_bat
         """
     ).fetchone()
     row = _rows(response)[0]

@@ -21,3 +21,14 @@ Use the default Matt Pocock triage label vocabulary: `needs-triage`, `needs-info
 ### Domain docs
 
 This repo uses a single-context domain docs layout. See `docs/agents/domain.md`.
+
+### Plain-English explanations
+
+The user wants reports, Markdown files and chat explanations in simple, plain
+English. Explain the result first, then how it works, with concrete cricket
+examples where useful. Be concise without skipping the explanation needed to
+understand it. Define technical terms immediately or avoid them. Explain what
+every test score counts, distinguish new questions from questions used for
+fixes, and say which reader or Gemini model each result describes. Separate
+missing software from missing data. Do not assume the user understands words
+such as validator, plan, guardrail, adjudication or regression.

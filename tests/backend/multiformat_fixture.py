@@ -8,13 +8,15 @@ import pyarrow as pa
 
 
 def _ball(match, fmt, gender, competition, year, seq, batter, bowler, runs=0, wides=None,
-          wicket=False, bowler_wicket=False, length=None, line=None, ll_source=None):
+          wicket=False, bowler_wicket=False, length=None, line=None, ll_source=None, player_out=None, kind=None):
     return {
         "match_id": match, "format": fmt, "gender": gender, "competition": competition,
         "year": year, "match_date": date(year, 5, 1), "innings_no": 1, "innings_delivery_seq": seq,
         "batter_id": batter, "bowler_id": bowler, "runs_batter": runs, "runs_total": runs + (wides or 0),
         "wides": wides, "noballs": None, "non_boundary": False, "is_legal": wides is None,
-        "is_wicket": wicket, "is_bowler_wicket": bowler_wicket, "player_out_id": batter if wicket else None,
+        "is_wicket": wicket, "is_bowler_wicket": bowler_wicket,
+        "player_out_id": (player_out or batter) if wicket else None,
+        "wicket_kind": (kind or ("run out" if player_out else "bowled")) if wicket else None,
         "length": length, "line": line, "ll_source": ll_source,
     }
 
@@ -33,6 +35,9 @@ def build_fixture_db(tmp_path: Path) -> Path:
         _ball("m2", "T20 domestic", "male", "Indian Premier League", 2020, 2, "bat", "bowl", wicket=True,
               bowler_wicket=True, length="GOOD_LENGTH", line="ON_THE_STUMPS", ll_source="aucb"),
         _ball("m3", "T20I", "female", "World Cup", 2024, 1, "bat", "bowl", runs=1),
+        # "bat" run out at the non-striker's end off a ball "bat2" faced
+        _ball("m2", "T20 domestic", "male", "Indian Premier League", 2020, 3, "bat2", "bowl2", runs=1,
+              wicket=True, player_out="bat"),
     ]
     conn.register("b", pa.Table.from_pylist(balls))
     conn.execute("CREATE TABLE analytics.deliveries AS SELECT * FROM b")

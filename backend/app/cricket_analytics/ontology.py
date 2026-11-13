@@ -140,8 +140,8 @@ METRICS: dict[str, MetricDefinition] = {
     "dismissals": MetricDefinition(
         name="dismissals",
         owner="batter_or_bowler",
-        formula="SUM(out = true)",
-        required_columns=("out", "bat", "bowl"),
+        formula="COUNT(dismissed-player events, excluding retired hurt/not out; bowler-credit wickets for a bowling subject)",
+        required_columns=("out", "p_out", "p_bat", "dismissal", "bat", "bowl"),
         default_sort="desc",
         good_direction="desc",
         unit="dismissals",

@@ -57,16 +57,16 @@ DISMISSAL_TYPE_REGISTRY: dict[str, DismissalTypeDefinition] = {
 }
 
 # Values stored with ``out = True`` that are not dismissals of the batter.
-NON_DISMISSAL_OUT_VALUES = ("retired not out (hurt)", "not out")
+from backend.app.cricket_analytics.dismissal_sql import (
+    NON_DISMISSAL_TYPES,
+    batter_dismissal_sql,
+)
 
-DISMISSAL_TYPE_SQL_LIST = ", ".join(
-    f"'{stored}'" for stored in DISMISSAL_TYPE_REGISTRY
-)
+NON_DISMISSAL_OUT_VALUES = NON_DISMISSAL_TYPES
+
+DISMISSAL_TYPE_SQL_LIST = ", ".join(f"'{stored}'" for stored in DISMISSAL_TYPE_REGISTRY)
 DISMISSAL_TYPE_EXPRESSION = "LOWER(TRIM(CAST(dismissal AS VARCHAR)))"
-BATTER_DISMISSAL_PREDICATE = (
-    "LOWER(CAST(out AS VARCHAR)) = 'true' AND "
-    f"{DISMISSAL_TYPE_EXPRESSION} IN ({DISMISSAL_TYPE_SQL_LIST})"
-)
+BATTER_DISMISSAL_PREDICATE = batter_dismissal_sql(own=False)
 
 # Detail the source does not record. Asking for it is a data limitation.
 _UNRECORDED_DETAILS: tuple[tuple[str, str], ...] = (
@@ -191,9 +191,7 @@ def requested_dismissal_types(question: str) -> DismissalTypeRequest | None:
             unrecorded.append(label)
             stripped = re.sub(pattern, " ", stripped)
     mentions = _category_mentions(stripped)
-    categories = tuple(
-        dict.fromkeys(stored for _, stored in sorted(mentions))
-    )
+    categories = tuple(dict.fromkeys(stored for _, stored in sorted(mentions)))
     breakdown = bool(_AXIS.search(text))
     context = bool(
         _DISMISSAL_WORD.search(text)
@@ -218,7 +216,9 @@ def requested_dismissal_types(question: str) -> DismissalTypeRequest | None:
         unrecorded=tuple(dict.fromkeys(unrecorded)),
         other_metric=bool(_OTHER_METRICS.search(without_categories)),
         fielding_perspective=bool(_FIELDING.search(text)),
-        ratio=bool(re.search(r"\bratios?\b|\brelative to\b|\bper (?:caught|bowled)\b", text)),
+        ratio=bool(
+            re.search(r"\bratios?\b|\brelative to\b|\bper (?:caught|bowled)\b", text)
+        ),
         single_match=bool(_SINGLE_MATCH.search(text)),
     )
 
@@ -244,7 +244,10 @@ def is_dismissal_type_concept(concept: str) -> bool:
         return False
     return bool(
         re.search(r"\bdismiss", text)
-        or re.search(r"\b(?:how out|mode of (?:dismissal|getting out)|out type|wicket type)\b", text)
+        or re.search(
+            r"\b(?:how out|mode of (?:dismissal|getting out)|out type|wicket type)\b",
+            text,
+        )
     )
 
 
@@ -273,7 +276,9 @@ def dismissal_type_mentions(question: str) -> tuple[tuple[str, ...], tuple[str, 
         if re.search(pattern, text):
             unrecorded.append(label)
             text = re.sub(pattern, " ", text)
-    categories = tuple(dict.fromkeys(stored for _, stored in sorted(_category_mentions(text))))
+    categories = tuple(
+        dict.fromkeys(stored for _, stored in sorted(_category_mentions(text)))
+    )
     return categories, tuple(unrecorded)
 
 
@@ -306,5 +311,8 @@ def requests_dismissal_share(question: str) -> bool:
 
 def requests_dismissal_counts(question: str) -> bool:
     return bool(
-        re.search(r"\b(?:counts?|how many|number of|totals?|raw numbers?)\b", _normalized(question))
+        re.search(
+            r"\b(?:counts?|how many|number of|totals?|raw numbers?)\b",
+            _normalized(question),
+        )
     )

@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+from backend.app.cricket_analytics.dismissal_sql import OWN_DISMISSAL
+
 import re
 from dataclasses import dataclass, field
 from statistics import mean
 
-from backend.app.domain.venues import matching_venues, resolve_venue, venue_id_sql, venue_display_sql
+from backend.app.domain.venues import (
+    matching_venues,
+    resolve_venue,
+    venue_id_sql,
+    venue_display_sql,
+)
 from backend.app.db.repository import AnalyticsRepository
 from backend.app.domain.evidence_models import (
     ChartBlock,
@@ -39,7 +46,16 @@ from backend.app.cricket_analytics.cricket_definitions import (
     phase_filter_clause,
     public_label,
 )
-from backend.app.domain.intent_models import AnswerShape, ContextScope, CricketIntentPlan, CricketMetric, IntentSubject, MatchContext, QueryType, SubjectRole
+from backend.app.domain.intent_models import (
+    AnswerShape,
+    ContextScope,
+    CricketIntentPlan,
+    CricketMetric,
+    IntentSubject,
+    MatchContext,
+    QueryType,
+    SubjectRole,
+)
 from backend.app.domain.metric_models import QueryClass
 from backend.app.services.metric_catalog import MetricCatalog
 from backend.app.services.query_router import QueryRoute, QueryRouter
@@ -80,7 +96,11 @@ class AnalyticsService:
                 **route.filters,
                 "query_type": route.intent_plan.query_type.value,
                 "answer_shape": route.intent_plan.answer_shape.value,
-                **({"metric": route.intent_plan.metric.value} if route.intent_plan.metric else {}),
+                **(
+                    {"metric": route.intent_plan.metric.value}
+                    if route.intent_plan.metric
+                    else {}
+                ),
             }
         interpretation = QueryInterpretation(
             original_question=question,
@@ -105,7 +125,11 @@ class AnalyticsService:
             return None
         if route.filters.get("plan_type"):
             return None
-        if len(route.entities) != 1 or route.filters.get("rank_intent") or route.filters.get("group_by"):
+        if (
+            len(route.entities) != 1
+            or route.filters.get("rank_intent")
+            or route.filters.get("group_by")
+        ):
             return None
         metric = route.filters.get("metric")
         if not isinstance(metric, str):
@@ -127,13 +151,19 @@ class AnalyticsService:
             return None
         if route.filters.get("subject") not in {None, "batter"}:
             return None
-        phase = route.filters.get("phase") if isinstance(route.filters.get("phase"), str) else None
+        phase = (
+            route.filters.get("phase")
+            if isinstance(route.filters.get("phase"), str)
+            else None
+        )
         return CricketIntentPlan(
             query_type=QueryType.single_metric,
             answer_shape=AnswerShape.single_number,
             metric=cricket_metric,
             subjects=[IntentSubject(player=route.entities[0], role=SubjectRole.batter)],
-            context=MatchContext(scope=ContextScope.phase if phase else ContextScope.career, phase=phase),
+            context=MatchContext(
+                scope=ContextScope.phase if phase else ContextScope.career, phase=phase
+            ),
         )
 
     @staticmethod
@@ -141,7 +171,10 @@ class AnalyticsService:
         filters = dict(route.filters)
         lowered = question.lower()
         field_zone = AnalyticsService._requested_field_zone(lowered)
-        if field_zone and any(token in lowered for token in ("batter", "score", "scores", "scored", "runs", "run")):
+        if field_zone and any(
+            token in lowered
+            for token in ("batter", "score", "scores", "scored", "runs", "run")
+        ):
             filters.update(
                 {
                     "subject": "batter",
@@ -159,7 +192,15 @@ class AnalyticsService:
             )
         if AnalyticsService._asks_for_bowling_style_grouping(question):
             filters["group_by"] = "bowling_style"
-            if any(token in lowered for token in ("score fastest", "scores fastest", "strike rate", "score most")):
+            if any(
+                token in lowered
+                for token in (
+                    "score fastest",
+                    "scores fastest",
+                    "strike rate",
+                    "score most",
+                )
+            ):
                 filters["subject"] = "batter"
                 filters["metric"] = "batting_strike_rate"
                 filters["rank_intent"] = "best"
@@ -224,7 +265,8 @@ class AnalyticsService:
             plan
             and plan.query_type == QueryType.single_metric
             and plan.answer_shape == AnswerShape.single_number
-            and plan.metric in {
+            and plan.metric
+            in {
                 CricketMetric.balls_bowled,
                 CricketMetric.overs_bowled,
                 CricketMetric.balls_faced,
@@ -244,15 +286,21 @@ class AnalyticsService:
             }
         )
 
-    def _handle_single_metric_intent(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_single_metric_intent(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         plan = route.intent_plan
         if plan is None or plan.metric is None:
             return self._insufficient(
                 interpretation,
                 "The question did not preserve a specific metric to answer.",
-                ["Ask for one explicit metric, such as balls bowled, balls faced, wickets, or runs."],
+                [
+                    "Ask for one explicit metric, such as balls bowled, balls faced, wickets, or runs."
+                ],
             )
-        player = plan.primary_player() or (route.entities[0] if route.entities else None)
+        player = plan.primary_player() or (
+            route.entities[0] if route.entities else None
+        )
         if not player:
             return self._insufficient(
                 interpretation,
@@ -261,12 +309,17 @@ class AnalyticsService:
             )
 
         metric = plan.metric.value
-        if plan.context.scope == ContextScope.single_match or plan.context.stage or plan.context.match_id:
+        if (
+            plan.context.scope == ContextScope.single_match
+            or plan.context.stage
+            or plan.context.match_id
+        ):
             row = self.repository.get_player_match_metric(
                 player,
                 metric,
                 competition=plan.context.competition,
-                year=plan.context.year or (plan.context.years[0] if len(plan.context.years) == 1 else None),
+                year=plan.context.year
+                or (plan.context.years[0] if len(plan.context.years) == 1 else None),
                 stage=plan.context.stage,
                 teams=plan.context.teams,
                 match_id=plan.context.match_id,
@@ -275,7 +328,9 @@ class AnalyticsService:
                 return self._insufficient(
                     interpretation,
                     "No ODI match was found for the requested match context.",
-                    ["Try adding both teams, the year, or a known venue to identify the match."],
+                    [
+                        "Try adding both teams, the year, or a known venue to identify the match."
+                    ],
                 )
             return self._single_metric_match_response(interpretation, plan, row)
 
@@ -290,17 +345,26 @@ class AnalyticsService:
             route = QueryRoute(
                 query_class=route.query_class,
                 entities=(player,),
-                filters={**route.filters, "skill": "bowling", "subject": "bowler", "metric": metric},
+                filters={
+                    **route.filters,
+                    "skill": "bowling",
+                    "subject": "bowler",
+                    "metric": metric,
+                },
                 intent_plan=plan,
             )
             return self._handle_bowling_summary(interpretation, route)
 
-        summary = self.repository.get_player_batting_summary(player, phase=plan.context.phase)
+        summary = self.repository.get_player_batting_summary(
+            player, phase=plan.context.phase
+        )
         if summary is None:
             return self._insufficient(
                 interpretation,
                 f"No ODI batting data was found for {player}.",
-                ["Try another player or remove context filters to increase the sample."],
+                [
+                    "Try another player or remove context filters to increase the sample."
+                ],
             )
         value_key = {
             CricketMetric.balls_faced: "balls_faced",
@@ -314,22 +378,44 @@ class AnalyticsService:
         }.get(plan.metric)
         value = summary.get(value_key) if value_key else None
         value_text = self._fmt(value)
-        if plan.metric in {CricketMetric.dot_percentage, CricketMetric.boundary_percentage} and value is not None:
+        if (
+            plan.metric
+            in {CricketMetric.dot_percentage, CricketMetric.boundary_percentage}
+            and value is not None
+        ):
             value_text = f"{value_text}%"
         body = f"{player} has {value_text} {self._metric_unit_phrase(plan.metric)} in {self._phase_label(route.filters)}."
         table = TableBlock(
             title="Single player metric",
             columns=["Player", "Metric", "Value", "Context"],
-            rows=[[player, self._metric_label(plan.metric), value_text, self._phase_label(route.filters)]],
+            rows=[
+                [
+                    player,
+                    self._metric_label(plan.metric),
+                    value_text,
+                    self._phase_label(route.filters),
+                ]
+            ],
         )
         return QueryResponse(
             status=EvidenceStatus.supported,
             interpretation=interpretation,
-            summaries=[SummaryBlock(title=f"{player} {self._metric_label(plan.metric)}", body=body)],
+            summaries=[
+                SummaryBlock(
+                    title=f"{player} {self._metric_label(plan.metric)}", body=body
+                )
+            ],
             tables=[table],
             metric_references=self._metric_references_for([plan.metric.value]),
-            citations=[database_citation("ODI player metric", "analytics.deliveries_v1")],
-            evidence_notes=[EvidenceNote(title="Intent validation", detail="The answer is constrained to the exact metric requested by the intent plan.")],
+            citations=[
+                database_citation("ODI player metric", "analytics.deliveries_v1")
+            ],
+            evidence_notes=[
+                EvidenceNote(
+                    title="Intent validation",
+                    detail="The answer is constrained to the exact metric requested by the intent plan.",
+                )
+            ],
         )
 
     def _single_metric_match_response(
@@ -346,8 +432,14 @@ class AnalyticsService:
         context_label = self._match_context_label(plan, row)
         body = self._single_metric_sentence(player, metric, value, context_label)
         values = row.get("values") if isinstance(row.get("values"), dict) else {}
-        alternate_metric = plan.ambiguity.possible_alternate_metric if plan.ambiguity else None
-        if metric == CricketMetric.balls_bowled and int(value or 0) == 0 and int(values.get("balls_faced") or 0) > 0:
+        alternate_metric = (
+            plan.ambiguity.possible_alternate_metric if plan.ambiguity else None
+        )
+        if (
+            metric == CricketMetric.balls_bowled
+            and int(value or 0) == 0
+            and int(values.get("balls_faced") or 0) > 0
+        ):
             alternate_metric = CricketMetric.balls_faced
         if alternate_metric:
             alternate_value = values.get(alternate_metric.value)
@@ -381,17 +473,26 @@ class AnalyticsService:
                 "WITH selected_match AS (SELECT p_match FROM analytics.deliveries_v1 WHERE competition/year/team filters identify the match) "
                 "SELECT requested batter and bowler aggregates FROM analytics.deliveries_v1 WHERE p_match = selected_match.p_match"
             ),
-            parameters=[player, plan.context.competition, plan.context.year, plan.context.stage],
+            parameters=[
+                player,
+                plan.context.competition,
+                plan.context.year,
+                plan.context.stage,
+            ],
             table=table,
         )
         return QueryResponse(
             status=EvidenceStatus.supported,
             interpretation=interpretation,
-            summaries=[SummaryBlock(title=f"{player} {self._metric_label(metric)}", body=body)],
+            summaries=[
+                SummaryBlock(title=f"{player} {self._metric_label(metric)}", body=body)
+            ],
             tables=[table],
             metric_references=self._metric_references_for([metric.value]),
             evidence_queries=[evidence_query],
-            citations=[database_citation("ODI single-match metric", "analytics.deliveries_v1")],
+            citations=[
+                database_citation("ODI single-match metric", "analytics.deliveries_v1")
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Intent validation",
@@ -410,7 +511,14 @@ class AnalyticsService:
                 metric = self.metric_catalog.get(metric_id)
             except KeyError:
                 continue
-            references.append(MetricReference(metric_id=metric.metric_id, label=metric.label, formula=metric.formula, unit=metric.unit))
+            references.append(
+                MetricReference(
+                    metric_id=metric.metric_id,
+                    label=metric.label,
+                    formula=metric.formula,
+                    unit=metric.unit,
+                )
+            )
         return references
 
     @staticmethod
@@ -456,7 +564,9 @@ class AnalyticsService:
         }.get(metric, metric.value.replace("_", " "))
 
     @staticmethod
-    def _single_metric_sentence(player: str, metric: CricketMetric, value: object, context_label: str) -> str:
+    def _single_metric_sentence(
+        player: str, metric: CricketMetric, value: object, context_label: str
+    ) -> str:
         if metric == CricketMetric.balls_bowled:
             return f"{player} bowled {AnalyticsService._fmt(value)} legal balls in {context_label}."
         if metric == CricketMetric.overs_bowled:
@@ -484,7 +594,9 @@ class AnalyticsService:
             parts.append(str(row.get("competition") or "the selected ODI match"))
         return " ".join(parts)
 
-    def _insufficient(self, interpretation: QueryInterpretation, detail: str, suggestions: list[str]) -> QueryResponse:
+    def _insufficient(
+        self, interpretation: QueryInterpretation, detail: str, suggestions: list[str]
+    ) -> QueryResponse:
         return QueryResponse(
             status=EvidenceStatus.insufficient_evidence,
             interpretation=interpretation,
@@ -513,17 +625,30 @@ class AnalyticsService:
         benchmark_player: str | None = None,
         phase: str | None = None,
     ) -> RadarBlock | None:
-        subject_summary = self.repository.get_player_batting_summary(player_name, phase=phase)
+        subject_summary = self.repository.get_player_batting_summary(
+            player_name, phase=phase
+        )
         if subject_summary is None:
             return None
-        subject_split = self.repository.get_player_split_summary(player_name, phase=phase)
-        subject_dismissal_resistance = 100.0 - (
-            (subject_summary["dismissals"] / subject_summary["balls_faced"]) * 100.0
-        ) if subject_summary["balls_faced"] else None
+        subject_split = self.repository.get_player_split_summary(
+            player_name, phase=phase
+        )
+        subject_dismissal_resistance = (
+            100.0
+            - ((subject_summary["dismissals"] / subject_summary["balls_faced"]) * 100.0)
+            if subject_summary["balls_faced"]
+            else None
+        )
 
         if benchmark_player:
-            benchmark_summary = self.repository.get_player_batting_summary(benchmark_player, phase=phase)
-            benchmark_split = self.repository.get_player_split_summary(benchmark_player, phase=phase) if benchmark_summary else None
+            benchmark_summary = self.repository.get_player_batting_summary(
+                benchmark_player, phase=phase
+            )
+            benchmark_split = (
+                self.repository.get_player_split_summary(benchmark_player, phase=phase)
+                if benchmark_summary
+                else None
+            )
             benchmark_label = benchmark_player
         else:
             baseline = self.repository.get_global_batting_baseline(phase=phase)
@@ -536,12 +661,36 @@ class AnalyticsService:
 
         metrics: list[RadarMetric] = []
         candidates = [
-            ("Strike Rate", subject_summary.get("strike_rate"), benchmark_summary.get("strike_rate")),
-            ("Boundary %", subject_summary.get("boundary_percentage"), benchmark_summary.get("boundary_percentage")),
-            ("Control %", subject_summary.get("control_percentage"), benchmark_summary.get("control_percentage")),
-            ("Dismissal Resistance", subject_dismissal_resistance, benchmark_summary.get("dismissal_resistance")),
-            ("Vs Pace SR", subject_split.get("pace_strike_rate"), benchmark_split.get("pace_strike_rate") if benchmark_split else None),
-            ("Vs Spin SR", subject_split.get("spin_strike_rate"), benchmark_split.get("spin_strike_rate") if benchmark_split else None),
+            (
+                "Strike Rate",
+                subject_summary.get("strike_rate"),
+                benchmark_summary.get("strike_rate"),
+            ),
+            (
+                "Boundary %",
+                subject_summary.get("boundary_percentage"),
+                benchmark_summary.get("boundary_percentage"),
+            ),
+            (
+                "Control %",
+                subject_summary.get("control_percentage"),
+                benchmark_summary.get("control_percentage"),
+            ),
+            (
+                "Dismissal Resistance",
+                subject_dismissal_resistance,
+                benchmark_summary.get("dismissal_resistance"),
+            ),
+            (
+                "Vs Pace SR",
+                subject_split.get("pace_strike_rate"),
+                benchmark_split.get("pace_strike_rate") if benchmark_split else None,
+            ),
+            (
+                "Vs Spin SR",
+                subject_split.get("spin_strike_rate"),
+                benchmark_split.get("spin_strike_rate") if benchmark_split else None,
+            ),
         ]
         for label, subject_value, benchmark_value in candidates:
             if subject_value is None or benchmark_value is None:
@@ -570,8 +719,12 @@ class AnalyticsService:
     ) -> tuple[VisualPayload, list[EvidenceNote]]:
         pitch = self.repository.get_pitch_map(player_name, bowler_name, phase=phase)
         wagon = self.repository.get_wagon_wheel(player_name, bowler_name, phase=phase)
-        shot_profile = self.repository.get_shot_type_profile(player_name, bowler_name, phase=phase)
-        field_zones = self.repository.get_field_zone_profile(player_name, bowler_name, phase=phase)
+        shot_profile = self.repository.get_shot_type_profile(
+            player_name, bowler_name, phase=phase
+        )
+        field_zones = self.repository.get_field_zone_profile(
+            player_name, bowler_name, phase=phase
+        )
         visuals = VisualPayload(
             pitch_map=PitchMapBlock(
                 coverage=VisualCoverage(**pitch["coverage"]),
@@ -585,7 +738,10 @@ class AnalyticsService:
             ),
             shot_profile=ShotProfileBlock(
                 coverage=VisualCoverage(**shot_profile["coverage"]),
-                metrics=[ShotTypeMetric(**self._humanized_shot_metric(metric)) for metric in shot_profile["metrics"]],
+                metrics=[
+                    ShotTypeMetric(**self._humanized_shot_metric(metric))
+                    for metric in shot_profile["metrics"]
+                ],
             ),
             field_zones=FieldZoneBlock(
                 handedness=field_zones["handedness"],
@@ -615,7 +771,9 @@ class AnalyticsService:
             return "death overs"
         return "all phases"
 
-    def _handle_role_comparison(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_role_comparison(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         if route.entities and route.filters.get("plan_type") == "bowling_to_batter":
             return self._handle_bowling_plan_against_batter(interpretation, route)
         if route.entities and route.filters.get("group_by") in {"line", "length"}:
@@ -628,7 +786,9 @@ class AnalyticsService:
             )
         position_groups = self._position_groups(route.filters)
         if len(route.entities) == 1 and len(position_groups) >= 2:
-            return self._handle_batting_position_comparison(interpretation, route, position_groups)
+            return self._handle_batting_position_comparison(
+                interpretation, route, position_groups
+            )
         if len(route.entities) == 1 and route.filters.get("group_by") == "opponent":
             return self._handle_opponent_split(interpretation, route)
         if len(route.entities) == 1 and route.filters.get("group_by") == "venue":
@@ -670,13 +830,19 @@ class AnalyticsService:
                 )
             ]
         else:
-            strike_rate_leader = max(summaries, key=lambda item: item["strike_rate"] or 0)
-            control_leader = max(summaries, key=lambda item: item["control_percentage"] or 0)
+            strike_rate_leader = max(
+                summaries, key=lambda item: item["strike_rate"] or 0
+            )
+            control_leader = max(
+                summaries, key=lambda item: item["control_percentage"] or 0
+            )
             player_names = " vs ".join(summary["player_name"] for summary in summaries)
             summary_blocks = [
                 SummaryBlock(
                     title=f"{player_names} ODI comparison",
-                    body=self._player_comparison_summary(summaries, phase_label, strike_rate_leader, control_leader),
+                    body=self._player_comparison_summary(
+                        summaries, phase_label, strike_rate_leader, control_leader
+                    ),
                 )
             ]
         benchmark_player = summaries[1]["player_name"] if len(summaries) > 1 else None
@@ -689,14 +855,28 @@ class AnalyticsService:
         comparison_tables = [
             TableBlock(
                 title="Primary batting metrics",
-                columns=["Player", "Runs", "Balls", "Dismissals", "Average", "Strike Rate", "Boundary %", "Dot %", "Control %"],
+                columns=[
+                    "Player",
+                    "Runs",
+                    "Balls",
+                    "Dismissals",
+                    "Average",
+                    "Strike Rate",
+                    "Boundary %",
+                    "Dot %",
+                    "Control %",
+                ],
                 rows=[
                     [
                         summary["player_name"],
                         summary["runs_scored"],
                         summary["balls_faced"],
                         summary["dismissals"],
-                        round(summary["average"], 2) if summary["average"] is not None else None,
+                        (
+                            round(summary["average"], 2)
+                            if summary["average"] is not None
+                            else None
+                        ),
                         round(summary["strike_rate"] or 0, 2),
                         round(summary["boundary_percentage"] or 0, 2),
                         round(summary["dot_percentage"] or 0, 2),
@@ -716,37 +896,85 @@ class AnalyticsService:
                 ChartBlock(
                     title=f"Strike rate comparison ({phase_label})",
                     chart_type="bar",
-                    series=[{"label": summary["player_name"], "value": round(summary["strike_rate"] or 0, 2)} for summary in summaries],
+                    series=[
+                        {
+                            "label": summary["player_name"],
+                            "value": round(summary["strike_rate"] or 0, 2),
+                        }
+                        for summary in summaries
+                    ],
                 )
             ],
             visuals=visuals,
-            metric_references=[MetricReference(metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit) for m in metrics],
+            metric_references=[
+                MetricReference(
+                    metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit
+                )
+                for m in metrics
+            ],
             evidence_queries=evidence_queries,
-            citations=[database_citation("ODI batting summary", "analytics.deliveries_v1")],
+            citations=[
+                database_citation("ODI batting summary", "analytics.deliveries_v1")
+            ],
             evidence_notes=[
-                EvidenceNote(title="Interpretation basis", detail=f"This answer is derived entirely from the local ODI dataset for {phase_label}."),
+                EvidenceNote(
+                    title="Interpretation basis",
+                    detail=f"This answer is derived entirely from the local ODI dataset for {phase_label}.",
+                ),
                 *coverage_notes,
             ],
         )
 
     @staticmethod
-    def _summary_metric_row(summary: dict[str, object], label_key: str = "player_name") -> list[str | int | float | None]:
+    def _summary_metric_row(
+        summary: dict[str, object], label_key: str = "player_name"
+    ) -> list[str | int | float | None]:
         return [
             str(summary[label_key]),
-            int(summary["innings"]) if "innings" in summary and summary["innings"] is not None else None,
+            (
+                int(summary["innings"])
+                if "innings" in summary and summary["innings"] is not None
+                else None
+            ),
             int(summary["runs_scored"]),
             int(summary["balls_faced"]),
             int(summary["dismissals"]),
-            round(float(summary["average"]), 2) if summary.get("average") is not None else None,
-            round(float(summary["strike_rate"]), 2) if summary.get("strike_rate") is not None else None,
-            round(float(summary["runs_per_innings"]), 2) if summary.get("runs_per_innings") is not None else None,
-            round(float(summary["boundary_percentage"]), 2) if summary.get("boundary_percentage") is not None else None,
-            round(float(summary["dot_percentage"]), 2) if summary.get("dot_percentage") is not None else None,
-            round(float(summary["control_percentage"]), 2) if summary.get("control_percentage") is not None else None,
+            (
+                round(float(summary["average"]), 2)
+                if summary.get("average") is not None
+                else None
+            ),
+            (
+                round(float(summary["strike_rate"]), 2)
+                if summary.get("strike_rate") is not None
+                else None
+            ),
+            (
+                round(float(summary["runs_per_innings"]), 2)
+                if summary.get("runs_per_innings") is not None
+                else None
+            ),
+            (
+                round(float(summary["boundary_percentage"]), 2)
+                if summary.get("boundary_percentage") is not None
+                else None
+            ),
+            (
+                round(float(summary["dot_percentage"]), 2)
+                if summary.get("dot_percentage") is not None
+                else None
+            ),
+            (
+                round(float(summary["control_percentage"]), 2)
+                if summary.get("control_percentage") is not None
+                else None
+            ),
         ]
 
     @staticmethod
-    def _rate_table(title: str, first_column: str, rows: list[list[str | int | float | None]]) -> TableBlock:
+    def _rate_table(
+        title: str, first_column: str, rows: list[list[str | int | float | None]]
+    ) -> TableBlock:
         return TableBlock(
             title=title,
             columns=[
@@ -766,26 +994,58 @@ class AnalyticsService:
         )
 
     @staticmethod
-    def _bowling_metric_row(summary: dict[str, object]) -> list[str | int | float | None]:
+    def _bowling_metric_row(
+        summary: dict[str, object]
+    ) -> list[str | int | float | None]:
         return [
             str(summary["player_name"]),
             int(summary["innings"]),
             int(summary["balls_bowled"]),
-            round(float(summary["overs"]), 2) if summary.get("overs") is not None else None,
+            (
+                round(float(summary["overs"]), 2)
+                if summary.get("overs") is not None
+                else None
+            ),
             int(summary["runs_conceded"]),
             int(summary["wickets"]),
-            round(float(summary["economy_rate"]), 2) if summary.get("economy_rate") is not None else None,
-            round(float(summary["bowling_average"]), 2) if summary.get("bowling_average") is not None else None,
-            round(float(summary["balls_per_wicket"]), 2) if summary.get("balls_per_wicket") is not None else None,
-            round(float(summary["dot_percentage"]), 2) if summary.get("dot_percentage") is not None else None,
-            round(float(summary["boundary_percentage"]), 2) if summary.get("boundary_percentage") is not None else None,
-            round(float(summary["balls_per_boundary"]), 2) if summary.get("balls_per_boundary") is not None else None,
+            (
+                round(float(summary["economy_rate"]), 2)
+                if summary.get("economy_rate") is not None
+                else None
+            ),
+            (
+                round(float(summary["bowling_average"]), 2)
+                if summary.get("bowling_average") is not None
+                else None
+            ),
+            (
+                round(float(summary["balls_per_wicket"]), 2)
+                if summary.get("balls_per_wicket") is not None
+                else None
+            ),
+            (
+                round(float(summary["dot_percentage"]), 2)
+                if summary.get("dot_percentage") is not None
+                else None
+            ),
+            (
+                round(float(summary["boundary_percentage"]), 2)
+                if summary.get("boundary_percentage") is not None
+                else None
+            ),
+            (
+                round(float(summary["balls_per_boundary"]), 2)
+                if summary.get("balls_per_boundary") is not None
+                else None
+            ),
             int(summary["delivery_rows"]),
         ]
 
     @staticmethod
     def _phase_sql_predicate(phase: object) -> str:
-        clause, params = phase_filter_clause(str(phase) if phase else None, prefix="  AND ")
+        clause, params = phase_filter_clause(
+            str(phase) if phase else None, prefix="  AND "
+        )
         for param in params:
             clause = clause.replace("?", str(param), 1)
         return clause
@@ -803,7 +1063,9 @@ class AnalyticsService:
         return "Across " + ", ".join(str(year) for year in sorted(years))
 
     @staticmethod
-    def _context_filter_label(years: list[int], year_mode: str | None, competition: str | None = None) -> str:
+    def _context_filter_label(
+        years: list[int], year_mode: str | None, competition: str | None = None
+    ) -> str:
         time_label = AnalyticsService._year_filter_label(years, year_mode)
         if competition and years and year_mode not in {"after", "before"}:
             competition_lower = competition.lower()
@@ -828,7 +1090,9 @@ class AnalyticsService:
     def _competition_sql_predicate(competition: str | None) -> str:
         return "  AND competition = :competition" if competition else ""
 
-    def _bowling_evidence_query(self, summaries: list[dict[str, object]], phase: object) -> EvidenceQueryBlock:
+    def _bowling_evidence_query(
+        self, summaries: list[dict[str, object]], phase: object
+    ) -> EvidenceQueryBlock:
         player_names = [str(summary["player_name"]) for summary in summaries]
         legal_ball_predicate = LEGAL_BALL_PREDICATE
         bowler_wicket_predicate = BOWLER_WICKET_PREDICATE
@@ -922,8 +1186,14 @@ GROUP BY bowl
         rank_intent: str,
         min_legal_balls: int,
     ) -> EvidenceQueryBlock:
-        order_expression, order_direction = self._bowling_leaderboard_order(metric, rank_intent)
-        tiebreak_expression = "runs_conceded / NULLIF(wickets, 0) ASC, legal_balls ASC" if metric == "wickets_taken" else "legal_balls DESC"
+        order_expression, order_direction = self._bowling_leaderboard_order(
+            metric, rank_intent
+        )
+        tiebreak_expression = (
+            "runs_conceded / NULLIF(wickets, 0) ASC, legal_balls ASC"
+            if metric == "wickets_taken"
+            else "legal_balls DESC"
+        )
         metric_label = self._bowling_leaderboard_label(metric)
         legal_ball_predicate = (
             "COALESCE(TRY_CAST(wide AS INTEGER), 0) = 0 "
@@ -960,7 +1230,11 @@ LIMIT :limit
 """.strip()
         parameters: list[str | int | float | None] = [min_legal_balls, 10]
         if years:
-            parameters.append(min(years) if year_mode == "after" else max(years) if year_mode == "before" else None)
+            parameters.append(
+                min(years)
+                if year_mode == "after"
+                else max(years) if year_mode == "before" else None
+            )
         if competition:
             parameters.append(competition)
         return EvidenceQueryBlock(
@@ -992,13 +1266,33 @@ LIMIT :limit
                         row["matches"],
                         row["innings"],
                         row["balls_bowled"],
-                        round(float(row["overs"]), 2) if row.get("overs") is not None else None,
+                        (
+                            round(float(row["overs"]), 2)
+                            if row.get("overs") is not None
+                            else None
+                        ),
                         row["runs_conceded"],
                         row["wickets"],
-                        round(float(row["economy_rate"]), 2) if row.get("economy_rate") is not None else None,
-                        round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                        round(float(row["boundary_percentage"]), 2) if row.get("boundary_percentage") is not None else None,
-                        round(float(row["balls_per_boundary"]), 2) if row.get("balls_per_boundary") is not None else None,
+                        (
+                            round(float(row["economy_rate"]), 2)
+                            if row.get("economy_rate") is not None
+                            else None
+                        ),
+                        (
+                            round(float(row["dot_percentage"]), 2)
+                            if row.get("dot_percentage") is not None
+                            else None
+                        ),
+                        (
+                            round(float(row["boundary_percentage"]), 2)
+                            if row.get("boundary_percentage") is not None
+                            else None
+                        ),
+                        (
+                            round(float(row["balls_per_boundary"]), 2)
+                            if row.get("balls_per_boundary") is not None
+                            else None
+                        ),
                         row["delivery_rows"],
                     ]
                     for index, row in enumerate(leaderboard)
@@ -1006,7 +1300,9 @@ LIMIT :limit
             ),
         )
 
-    def _handle_bowling_summary(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_bowling_summary(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         if route.filters.get("metric") == "best_bowling_figures":
             return self._handle_best_bowling_figures(interpretation, route)
 
@@ -1021,7 +1317,9 @@ LIMIT :limit
             return self._insufficient(
                 interpretation,
                 f"No ODI bowling data was found for {route.entities[0]}.",
-                ["Try another bowler, or remove the phase filter to increase the sample."],
+                [
+                    "Try another bowler, or remove the phase filter to increase the sample."
+                ],
             )
 
         if len(summaries) == 1:
@@ -1035,7 +1333,9 @@ LIMIT :limit
             elif metric == "runs_conceded":
                 summary_body = f"In {phase_label}, {player} has conceded {summary['runs_conceded']} runs."
             elif metric == "wickets_taken":
-                summary_body = f"In {phase_label}, {player} has {summary['wickets']} wickets."
+                summary_body = (
+                    f"In {phase_label}, {player} has {summary['wickets']} wickets."
+                )
             elif metric == "balls_per_wicket":
                 summary_body = (
                     f"In {phase_label}, {player} takes a wicket every "
@@ -1053,9 +1353,18 @@ LIMIT :limit
                 )
             title = f"{player} ODI bowling snapshot"
         else:
-            economy_leader = min(summaries, key=lambda item: item["economy_rate"] if item.get("economy_rate") is not None else 999.0)
+            economy_leader = min(
+                summaries,
+                key=lambda item: (
+                    item["economy_rate"]
+                    if item.get("economy_rate") is not None
+                    else 999.0
+                ),
+            )
             wicket_leader = max(summaries, key=lambda item: item["wickets"])
-            player_names = " vs ".join(str(summary["player_name"]) for summary in summaries)
+            player_names = " vs ".join(
+                str(summary["player_name"]) for summary in summaries
+            )
             sample_text = "; ".join(
                 f"{summary['player_name']}: {summary['runs_conceded']} conceded from {summary['balls_bowled']} legal balls"
                 for summary in summaries
@@ -1089,14 +1398,24 @@ LIMIT :limit
                     title=f"Economy rate ({phase_label})",
                     chart_type="bar",
                     series=[
-                        {"label": str(summary["player_name"]), "value": round(float(summary["economy_rate"] or 0), 2)}
+                        {
+                            "label": str(summary["player_name"]),
+                            "value": round(float(summary["economy_rate"] or 0), 2),
+                        }
                         for summary in summaries
                     ],
                 )
             ],
-            metric_references=[MetricReference(metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit) for m in metrics],
+            metric_references=[
+                MetricReference(
+                    metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit
+                )
+                for m in metrics
+            ],
             evidence_queries=[evidence_query],
-            citations=[database_citation("ODI bowling summary", "analytics.deliveries_v1")],
+            citations=[
+                database_citation("ODI bowling summary", "analytics.deliveries_v1")
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Bowling interpretation basis",
@@ -1121,24 +1440,44 @@ LIMIT :limit
             return skill
         batting_summary = self.repository.get_player_batting_summary(player)
         bowling_summary = self.repository.get_player_bowling_summary(player)
-        batting_balls = int(batting_summary.get("balls_faced") or 0) if batting_summary else 0
-        bowling_balls = int(bowling_summary.get("balls_bowled") or 0) if bowling_summary else 0
+        batting_balls = (
+            int(batting_summary.get("balls_faced") or 0) if batting_summary else 0
+        )
+        bowling_balls = (
+            int(bowling_summary.get("balls_bowled") or 0) if bowling_summary else 0
+        )
         return "bowling" if bowling_balls > batting_balls else "batting"
 
-    def _handle_opponent_split(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_opponent_split(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         player = route.entities[0]
         skill = self._infer_player_skill(player, route.filters.get("skill"))
 
         if skill != "bowling":
             return self._insufficient(
-                interpretation.model_copy(update={"filters": {**interpretation.filters, "group_by": "opponent"}}),
+                interpretation.model_copy(
+                    update={
+                        "filters": {**interpretation.filters, "group_by": "opponent"}
+                    }
+                ),
                 "Opponent-wise batting splits are not wired yet for this response path.",
-                ["Ask the same question with bowling context, or add batting opponent splits next."],
+                [
+                    "Ask the same question with bowling context, or add batting opponent splits next."
+                ],
             )
 
         rows = self.repository.get_player_bowling_opponent_summary(player, limit=20)
         interpretation = interpretation.model_copy(
-            update={"filters": {**interpretation.filters, "group_by": "opponent", "skill": "bowling", "metric": "wickets_taken", "rank_intent": "best"}}
+            update={
+                "filters": {
+                    **interpretation.filters,
+                    "group_by": "opponent",
+                    "skill": "bowling",
+                    "metric": "wickets_taken",
+                    "rank_intent": "best",
+                }
+            }
         )
         if not rows:
             return self._insufficient(
@@ -1172,15 +1511,43 @@ LIMIT :limit
                     row["matches"],
                     row["innings"],
                     row["balls_bowled"],
-                    round(float(row["overs"]), 2) if row.get("overs") is not None else None,
+                    (
+                        round(float(row["overs"]), 2)
+                        if row.get("overs") is not None
+                        else None
+                    ),
                     row["runs_conceded"],
                     row["wickets"],
-                    round(float(row["economy_rate"]), 2) if row.get("economy_rate") is not None else None,
-                    round(float(row["bowling_average"]), 2) if row.get("bowling_average") is not None else None,
-                    round(float(row["balls_per_wicket"]), 2) if row.get("balls_per_wicket") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["boundary_percentage"]), 2) if row.get("boundary_percentage") is not None else None,
-                    round(float(row["balls_per_boundary"]), 2) if row.get("balls_per_boundary") is not None else None,
+                    (
+                        round(float(row["economy_rate"]), 2)
+                        if row.get("economy_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["bowling_average"]), 2)
+                        if row.get("bowling_average") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["balls_per_wicket"]), 2)
+                        if row.get("balls_per_wicket") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["boundary_percentage"]), 2)
+                        if row.get("boundary_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["balls_per_boundary"]), 2)
+                        if row.get("balls_per_boundary") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
@@ -1217,7 +1584,10 @@ LIMIT :limit
                 ChartBlock(
                     title=f"{player} wickets by opponent",
                     chart_type="bar",
-                    series=[{"label": str(row["opponent"]), "value": int(row["wickets"])} for row in rows[:8]],
+                    series=[
+                        {"label": str(row["opponent"]), "value": int(row["wickets"])}
+                        for row in rows[:8]
+                    ],
                 )
             ],
             evidence_queries=[
@@ -1229,7 +1599,11 @@ LIMIT :limit
                     table=table,
                 )
             ],
-            citations=[database_citation("Opponent-wise ODI bowling", "analytics.deliveries_v1 bowl/team_bat")],
+            citations=[
+                database_citation(
+                    "Opponent-wise ODI bowling", "analytics.deliveries_v1 bowl/team_bat"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Role inference",
@@ -1242,17 +1616,29 @@ LIMIT :limit
             ],
         )
 
-    def _handle_venue_split(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_venue_split(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         player = route.entities[0]
         skill = self._infer_player_skill(player, route.filters.get("skill"))
         if skill == "bowling":
             return self._handle_bowling_venue_split(interpretation, route, player)
         return self._handle_batting_venue_split(interpretation, route, player)
 
-    def _handle_batting_venue_split(self, interpretation: QueryInterpretation, route: QueryRoute, player: str) -> QueryResponse:
+    def _handle_batting_venue_split(
+        self, interpretation: QueryInterpretation, route: QueryRoute, player: str
+    ) -> QueryResponse:
         rows = self.repository.get_player_batting_venue_summary(player, limit=20)
         interpretation = interpretation.model_copy(
-            update={"filters": {**interpretation.filters, "group_by": "venue", "skill": "batting", "metric": "runs_scored", "rank_intent": "best"}}
+            update={
+                "filters": {
+                    **interpretation.filters,
+                    "group_by": "venue",
+                    "skill": "batting",
+                    "metric": "runs_scored",
+                    "rank_intent": "best",
+                }
+            }
         )
         if not rows:
             return self._insufficient(
@@ -1286,11 +1672,31 @@ LIMIT :limit
                     row["runs_scored"],
                     row["balls_faced"],
                     row["dismissals"],
-                    round(float(row["average"]), 2) if row.get("average") is not None else None,
-                    round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                    round(float(row["boundary_percentage"]), 2) if row.get("boundary_percentage") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["control_percentage"]), 2) if row.get("control_percentage") is not None else None,
+                    (
+                        round(float(row["average"]), 2)
+                        if row.get("average") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["strike_rate"]), 2)
+                        if row.get("strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["boundary_percentage"]), 2)
+                        if row.get("boundary_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["control_percentage"]), 2)
+                        if row.get("control_percentage") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
@@ -1300,10 +1706,10 @@ SELECT {venue_display_sql(venue_id_sql())} AS venue,
        COUNT(DISTINCT p_match) AS matches,
        COUNT(DISTINCT p_match || ':' || inns || ':' || team_bat) AS innings,
        SUM(batruns) AS runs,
-       COUNT(*) AS balls,
-       SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+       SUM(TRY_CAST(ballfaced AS INTEGER)) AS balls,
+       SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
        AVG(control) AS control
-FROM analytics.deliveries_v1
+FROM batting_events_v1
 WHERE bat = :player
 GROUP BY {venue_id_sql()}
 ORDER BY runs DESC, runs / NULLIF(dismissals, 0) DESC, balls DESC
@@ -1326,7 +1732,10 @@ LIMIT :limit
                 ChartBlock(
                     title=f"{player} runs by venue",
                     chart_type="bar",
-                    series=[{"label": str(row["venue"]), "value": int(row["runs_scored"])} for row in rows[:8]],
+                    series=[
+                        {"label": str(row["venue"]), "value": int(row["runs_scored"])}
+                        for row in rows[:8]
+                    ],
                 )
             ],
             evidence_queries=[
@@ -1338,7 +1747,11 @@ LIMIT :limit
                     table=table,
                 )
             ],
-            citations=[database_citation("Venue-wise ODI batting", "analytics.deliveries_v1 bat/ground")],
+            citations=[
+                database_citation(
+                    "Venue-wise ODI batting", "analytics.deliveries_v1 bat/ground"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Role inference",
@@ -1351,10 +1764,20 @@ LIMIT :limit
             ],
         )
 
-    def _handle_bowling_venue_split(self, interpretation: QueryInterpretation, route: QueryRoute, player: str) -> QueryResponse:
+    def _handle_bowling_venue_split(
+        self, interpretation: QueryInterpretation, route: QueryRoute, player: str
+    ) -> QueryResponse:
         rows = self.repository.get_player_bowling_venue_summary(player, limit=20)
         interpretation = interpretation.model_copy(
-            update={"filters": {**interpretation.filters, "group_by": "venue", "skill": "bowling", "metric": "wickets_taken", "rank_intent": "best"}}
+            update={
+                "filters": {
+                    **interpretation.filters,
+                    "group_by": "venue",
+                    "skill": "bowling",
+                    "metric": "wickets_taken",
+                    "rank_intent": "best",
+                }
+            }
         )
         if not rows:
             return self._insufficient(
@@ -1388,15 +1811,43 @@ LIMIT :limit
                     row["matches"],
                     row["innings"],
                     row["balls_bowled"],
-                    round(float(row["overs"]), 2) if row.get("overs") is not None else None,
+                    (
+                        round(float(row["overs"]), 2)
+                        if row.get("overs") is not None
+                        else None
+                    ),
                     row["runs_conceded"],
                     row["wickets"],
-                    round(float(row["economy_rate"]), 2) if row.get("economy_rate") is not None else None,
-                    round(float(row["bowling_average"]), 2) if row.get("bowling_average") is not None else None,
-                    round(float(row["balls_per_wicket"]), 2) if row.get("balls_per_wicket") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["boundary_percentage"]), 2) if row.get("boundary_percentage") is not None else None,
-                    round(float(row["balls_per_boundary"]), 2) if row.get("balls_per_boundary") is not None else None,
+                    (
+                        round(float(row["economy_rate"]), 2)
+                        if row.get("economy_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["bowling_average"]), 2)
+                        if row.get("bowling_average") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["balls_per_wicket"]), 2)
+                        if row.get("balls_per_wicket") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["boundary_percentage"]), 2)
+                        if row.get("boundary_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["balls_per_boundary"]), 2)
+                        if row.get("balls_per_boundary") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
@@ -1431,7 +1882,10 @@ LIMIT :limit
                 ChartBlock(
                     title=f"{player} wickets by venue",
                     chart_type="bar",
-                    series=[{"label": str(row["venue"]), "value": int(row["wickets"])} for row in rows[:8]],
+                    series=[
+                        {"label": str(row["venue"]), "value": int(row["wickets"])}
+                        for row in rows[:8]
+                    ],
                 )
             ],
             evidence_queries=[
@@ -1443,7 +1897,11 @@ LIMIT :limit
                     table=table,
                 )
             ],
-            citations=[database_citation("Venue-wise ODI bowling", "analytics.deliveries_v1 bowl/ground")],
+            citations=[
+                database_citation(
+                    "Venue-wise ODI bowling", "analytics.deliveries_v1 bowl/ground"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Role inference",
@@ -1456,12 +1914,16 @@ LIMIT :limit
             ],
         )
 
-    def _handle_best_bowling_figures(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_best_bowling_figures(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         if not route.entities:
             return self._insufficient(
                 interpretation,
                 "A bowler name is required to fetch best bowling figures.",
-                ["Ask with a full bowler name, for example: Tim Southee best bowling figures."],
+                [
+                    "Ask with a full bowler name, for example: Tim Southee best bowling figures."
+                ],
             )
         player = route.entities[0]
         figures = self.repository.get_player_best_bowling_figures(player, limit=5)
@@ -1474,9 +1936,14 @@ LIMIT :limit
 
         best = figures[0]
         figures_text = f"{best['wickets']}/{best['runs_conceded']}"
-        context_bits = [str(best.get("opposition") or "").strip(), str(best.get("date") or "").strip()]
+        context_bits = [
+            str(best.get("opposition") or "").strip(),
+            str(best.get("date") or "").strip(),
+        ]
         context = ", ".join(bit for bit in context_bits if bit)
-        summary_body = f"{player}'s best ODI bowling figures are {figures_text}" + (f" against {context}." if context else ".")
+        summary_body = f"{player}'s best ODI bowling figures are {figures_text}" + (
+            f" against {context}." if context else "."
+        )
         sql = """
 SELECT p_match,
        TRY_CAST(date AS DATE) AS match_date,
@@ -1495,14 +1962,28 @@ LIMIT 5
 """.strip()
         table = TableBlock(
             title="Best bowling figures",
-            columns=["Rank", "Figures", "Wickets", "Runs", "Overs", "Opposition", "Date", "Ground", "Competition"],
+            columns=[
+                "Rank",
+                "Figures",
+                "Wickets",
+                "Runs",
+                "Overs",
+                "Opposition",
+                "Date",
+                "Ground",
+                "Competition",
+            ],
             rows=[
                 [
                     index,
                     f"{row['wickets']}/{row['runs_conceded']}",
                     row["wickets"],
                     row["runs_conceded"],
-                    round(float(row["balls_bowled"]) / 6.0, 2) if row.get("balls_bowled") is not None else None,
+                    (
+                        round(float(row["balls_bowled"]) / 6.0, 2)
+                        if row.get("balls_bowled") is not None
+                        else None
+                    ),
                     row.get("opposition"),
                     row.get("date"),
                     row.get("ground"),
@@ -1514,9 +1995,18 @@ LIMIT 5
         return QueryResponse(
             status=EvidenceStatus.supported,
             interpretation=interpretation.model_copy(
-                update={"filters": {**interpretation.filters, "subject": "bowler", "skill": "bowling", "metric": "best_bowling_figures"}}
+                update={
+                    "filters": {
+                        **interpretation.filters,
+                        "subject": "bowler",
+                        "skill": "bowling",
+                        "metric": "best_bowling_figures",
+                    }
+                }
             ),
-            summaries=[SummaryBlock(title=f"{player} best bowling figures", body=summary_body)],
+            summaries=[
+                SummaryBlock(title=f"{player} best bowling figures", body=summary_body)
+            ],
             tables=[table],
             evidence_queries=[
                 EvidenceQueryBlock(
@@ -1527,7 +2017,9 @@ LIMIT 5
                     table=table,
                 )
             ],
-            citations=[database_citation("ODI bowling figures", "analytics.deliveries_v1")],
+            citations=[
+                database_citation("ODI bowling figures", "analytics.deliveries_v1")
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Wicket credit",
@@ -1536,7 +2028,9 @@ LIMIT 5
             ],
         )
 
-    def _player_comparison_evidence_queries(self, summaries: list[dict[str, object]]) -> list[EvidenceQueryBlock]:
+    def _player_comparison_evidence_queries(
+        self, summaries: list[dict[str, object]]
+    ) -> list[EvidenceQueryBlock]:
         player_names = [str(summary["player_name"]) for summary in summaries]
         phase_rows: list[list[str | int | float | None]] = []
         bowling_kind_rows: list[list[str | int | float | None]] = []
@@ -1545,12 +2039,12 @@ SELECT
   bat AS player,
   COUNT(DISTINCT CAST(p_match AS VARCHAR) || ':' || CAST(inns AS VARCHAR) || ':' || CAST(team_bat AS VARCHAR)) AS innings,
   SUM(TRY_CAST(batruns AS INTEGER)) AS runs,
-  COUNT(*) AS balls,
-  SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+  SUM(TRY_CAST(ballfaced AS INTEGER)) AS balls,
+  SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
   SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
-  SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
+  SUM(CASE WHEN TRY_CAST(ballfaced AS INTEGER) = 1 AND TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
   AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
-FROM analytics.deliveries_v1
+FROM batting_events_v1
 WHERE bat IN (:players)
 GROUP BY bat
 """.strip()
@@ -1565,9 +2059,10 @@ WITH phase_rows AS (
     END AS phase,
     CAST(p_match AS VARCHAR) || ':' || CAST(inns AS VARCHAR) || ':' || CAST(team_bat AS VARCHAR) AS innings_key,
     TRY_CAST(batruns AS INTEGER) AS batruns,
-    LOWER(CAST(out AS VARCHAR)) = 'true' AS is_out,
+    TRY_CAST(ballfaced AS INTEGER) AS ballfaced,
+    is_batter_dismissal AS is_out,
     TRY_CAST(control AS DOUBLE) AS control
-  FROM analytics.deliveries_v1
+  FROM batting_events_v1
   WHERE bat IN (:players)
     AND TRY_CAST(over AS DOUBLE) IS NOT NULL
 )
@@ -1576,16 +2071,16 @@ SELECT
   phase,
   COUNT(DISTINCT innings_key) AS innings,
   SUM(batruns) AS runs,
-  COUNT(*) AS balls,
+  SUM(TRY_CAST(ballfaced AS INTEGER)) AS balls,
   SUM(CASE WHEN is_out THEN 1 ELSE 0 END) AS dismissals,
   SUM(CASE WHEN batruns IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
-  SUM(CASE WHEN batruns = 0 THEN 1 ELSE 0 END) AS dot_balls,
+  SUM(CASE WHEN ballfaced = 1 AND batruns = 0 THEN 1 ELSE 0 END) AS dot_balls,
   AVG(control) AS avg_control
 FROM phase_rows
 WHERE phase IS NOT NULL
 GROUP BY player, phase
 """.strip()
-        bowling_kind_sql = """
+        bowling_kind_sql = f"""
 SELECT
   bat AS player,
   CASE
@@ -1595,7 +2090,7 @@ SELECT
   COUNT(DISTINCT CAST(p_match AS VARCHAR) || ':' || CAST(inns AS VARCHAR) || ':' || CAST(team_bat AS VARCHAR)) AS innings,
   SUM(TRY_CAST(batruns AS INTEGER)) AS runs,
   COUNT(*) AS balls,
-  SUM(CASE WHEN LOWER(CAST(out AS VARCHAR)) = 'true' THEN 1 ELSE 0 END) AS dismissals,
+  SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
   SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
   SUM(CASE WHEN TRY_CAST(batruns AS INTEGER) = 0 THEN 1 ELSE 0 END) AS dot_balls,
   AVG(TRY_CAST(control AS DOUBLE)) AS avg_control
@@ -1615,7 +2110,9 @@ GROUP BY bat, bowling_type
             bowling_kind_rows.extend(
                 [
                     [player_name, *self._summary_metric_row(summary, "split")]
-                    for summary in self.repository.get_player_bowling_kind_summary(player_name)
+                    for summary in self.repository.get_player_bowling_kind_summary(
+                        player_name
+                    )
                 ]
             )
 
@@ -1627,14 +2124,28 @@ GROUP BY bat, bowling_type
                 parameters=player_names,
                 table=TableBlock(
                     title="Fetched all-phase rows",
-                    columns=["Player", "Runs", "Balls", "Dismissals", "Average", "Strike Rate", "Boundary %", "Dot %", "Control %"],
+                    columns=[
+                        "Player",
+                        "Runs",
+                        "Balls",
+                        "Dismissals",
+                        "Average",
+                        "Strike Rate",
+                        "Boundary %",
+                        "Dot %",
+                        "Control %",
+                    ],
                     rows=[
                         [
                             summary["player_name"],
                             summary["runs_scored"],
                             summary["balls_faced"],
                             summary["dismissals"],
-                            round(summary["average"], 2) if summary.get("average") is not None else None,
+                            (
+                                round(summary["average"], 2)
+                                if summary.get("average") is not None
+                                else None
+                            ),
                             round(summary["strike_rate"] or 0, 2),
                             round(summary["boundary_percentage"] or 0, 2),
                             round(summary["dot_percentage"] or 0, 2),
@@ -1721,9 +2232,12 @@ GROUP BY bat, bowling_type
             normalized_positions = [
                 int(position)
                 for position in positions
-                if isinstance(position, int) or (isinstance(position, str) and position.isdigit())
+                if isinstance(position, int)
+                or (isinstance(position, str) and position.isdigit())
             ]
-            normalized_positions = [position for position in normalized_positions if 1 <= position <= 11]
+            normalized_positions = [
+                position for position in normalized_positions if 1 <= position <= 11
+            ]
             if normalized_positions:
                 groups.append({"label": label, "positions": normalized_positions})
         return groups
@@ -1852,12 +2366,16 @@ GROUP BY bat, bowling_type
             return self._insufficient(
                 interpretation,
                 f"The ODI dataset does not contain enough derived batting-order evidence for {player} across the requested roles.",
-                ["Try comparing roles with larger samples, for example: opening vs number 3."],
+                [
+                    "Try comparing roles with larger samples, for example: opening vs number 3."
+                ],
             )
 
         strike_rate_leader = max(summaries, key=lambda item: item["strike_rate"] or 0)
         average_leader = max(summaries, key=lambda item: item["average"] or 0)
-        control_leader = max(summaries, key=lambda item: item["control_percentage"] or 0)
+        control_leader = max(
+            summaries, key=lambda item: item["control_percentage"] or 0
+        )
         sample_text = "; ".join(
             f"{summary['role_label']}: {summary['innings']} innings, {summary['runs_scored']} runs/{summary['balls_faced']} balls"
             for summary in summaries
@@ -1902,17 +2420,43 @@ GROUP BY bat, bowling_type
                     rows=[
                         [
                             summary["role_label"],
-                            ", ".join(str(position) for position in summary["positions"]),
+                            ", ".join(
+                                str(position) for position in summary["positions"]
+                            ),
                             summary["innings"],
                             summary["runs_scored"],
                             summary["balls_faced"],
                             summary["dismissals"],
-                            round(summary["average"], 2) if summary["average"] is not None else None,
-                            round(summary["strike_rate"], 2) if summary["strike_rate"] is not None else None,
-                            round(summary["runs_per_innings"], 2) if summary["runs_per_innings"] is not None else None,
-                            round(summary["boundary_percentage"], 2) if summary["boundary_percentage"] is not None else None,
-                            round(summary["dot_percentage"], 2) if summary["dot_percentage"] is not None else None,
-                            round(summary["control_percentage"], 2) if summary["control_percentage"] is not None else None,
+                            (
+                                round(summary["average"], 2)
+                                if summary["average"] is not None
+                                else None
+                            ),
+                            (
+                                round(summary["strike_rate"], 2)
+                                if summary["strike_rate"] is not None
+                                else None
+                            ),
+                            (
+                                round(summary["runs_per_innings"], 2)
+                                if summary["runs_per_innings"] is not None
+                                else None
+                            ),
+                            (
+                                round(summary["boundary_percentage"], 2)
+                                if summary["boundary_percentage"] is not None
+                                else None
+                            ),
+                            (
+                                round(summary["dot_percentage"], 2)
+                                if summary["dot_percentage"] is not None
+                                else None
+                            ),
+                            (
+                                round(summary["control_percentage"], 2)
+                                if summary["control_percentage"] is not None
+                                else None
+                            ),
                         ]
                         for summary in summaries
                     ],
@@ -1923,7 +2467,10 @@ GROUP BY bat, bowling_type
                     title=f"Strike rate by batting role ({phase_label})",
                     chart_type="bar",
                     series=[
-                        {"label": summary["role_label"], "value": round(summary["strike_rate"] or 0, 2)}
+                        {
+                            "label": summary["role_label"],
+                            "value": round(summary["strike_rate"] or 0, 2),
+                        }
                         for summary in summaries
                     ],
                 )
@@ -1940,7 +2487,10 @@ GROUP BY bat, bowling_type
                         "SELECT bat, batting_position_group, innings, runs, balls, dismissals "
                         "FROM analytics.deliveries_v1 JOIN batting_order USING (p_match, inns, team_bat, bat)"
                     ),
-                    parameters=[player, *[str(group["positions"]) for group in position_groups]],
+                    parameters=[
+                        player,
+                        *[str(group["positions"]) for group in position_groups],
+                    ],
                     table=TableBlock(
                         title="Fetched batting-position rows",
                         columns=[
@@ -1960,17 +2510,43 @@ GROUP BY bat, bowling_type
                         rows=[
                             [
                                 summary["role_label"],
-                                ", ".join(str(position) for position in summary["positions"]),
+                                ", ".join(
+                                    str(position) for position in summary["positions"]
+                                ),
                                 summary["innings"],
                                 summary["runs_scored"],
                                 summary["balls_faced"],
                                 summary["dismissals"],
-                                round(summary["average"], 2) if summary["average"] is not None else None,
-                                round(summary["strike_rate"], 2) if summary["strike_rate"] is not None else None,
-                                round(summary["runs_per_innings"], 2) if summary["runs_per_innings"] is not None else None,
-                                round(summary["boundary_percentage"], 2) if summary["boundary_percentage"] is not None else None,
-                                round(summary["dot_percentage"], 2) if summary["dot_percentage"] is not None else None,
-                                round(summary["control_percentage"], 2) if summary["control_percentage"] is not None else None,
+                                (
+                                    round(summary["average"], 2)
+                                    if summary["average"] is not None
+                                    else None
+                                ),
+                                (
+                                    round(summary["strike_rate"], 2)
+                                    if summary["strike_rate"] is not None
+                                    else None
+                                ),
+                                (
+                                    round(summary["runs_per_innings"], 2)
+                                    if summary["runs_per_innings"] is not None
+                                    else None
+                                ),
+                                (
+                                    round(summary["boundary_percentage"], 2)
+                                    if summary["boundary_percentage"] is not None
+                                    else None
+                                ),
+                                (
+                                    round(summary["dot_percentage"], 2)
+                                    if summary["dot_percentage"] is not None
+                                    else None
+                                ),
+                                (
+                                    round(summary["control_percentage"], 2)
+                                    if summary["control_percentage"] is not None
+                                    else None
+                                ),
                             ]
                             for summary in summaries
                         ],
@@ -2021,14 +2597,18 @@ GROUP BY bat, bowling_type
             ],
         )
 
-    def _handle_strengths_weaknesses(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_strengths_weaknesses(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         if route.entities and route.filters.get("group_by") in {"line", "length"}:
             return self._handle_line_length_breakdown(interpretation, route)
         if not route.entities:
             return self._insufficient(
                 interpretation,
                 "A player name is required for strengths and weaknesses analysis.",
-                ["Ask with a full player name, for example: Where does Hardik Pandya score the most?"],
+                [
+                    "Ask with a full player name, for example: Where does Hardik Pandya score the most?"
+                ],
             )
         player = route.entities[0]
         phase = route.filters.get("phase")
@@ -2056,18 +2636,26 @@ GROUP BY bat, bowling_type
                 TableBlock(
                     title="Top scoring shots",
                     columns=["Shot", "Balls", "Runs"],
-                    rows=[[self._shot_label(item["shot"]), item["balls"], item["runs"]] for item in shot_breakdown],
+                    rows=[
+                        [self._shot_label(item["shot"]), item["balls"], item["runs"]]
+                        for item in shot_breakdown
+                    ],
                 )
             ],
             charts=[
                 ChartBlock(
                     title="Runs by shot",
                     chart_type="bar",
-                    series=[{"label": self._shot_label(item["shot"]), "value": item["runs"]} for item in shot_breakdown[:6]],
+                    series=[
+                        {"label": self._shot_label(item["shot"]), "value": item["runs"]}
+                        for item in shot_breakdown[:6]
+                    ],
                 )
             ],
             visuals=visuals,
-            citations=[database_citation("ODI shot breakdown", "analytics.deliveries_v1.shot")],
+            citations=[
+                database_citation("ODI shot breakdown", "analytics.deliveries_v1.shot")
+            ],
             metric_references=[
                 MetricReference(
                     metric_id="shot_share_percentage",
@@ -2079,7 +2667,9 @@ GROUP BY bat, bowling_type
             evidence_notes=coverage_notes,
         )
 
-    def _handle_matchup(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_matchup(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         if len(route.entities) < 2:
             return self._insufficient(
                 interpretation,
@@ -2089,14 +2679,18 @@ GROUP BY bat, bowling_type
         batter_name, bowler_name = route.entities[0], route.entities[1]
         phase = route.filters.get("phase")
         phase_label = self._phase_label(route.filters)
-        matchup = self.repository.get_matchup_summary(batter_name, bowler_name, phase=phase)
+        matchup = self.repository.get_matchup_summary(
+            batter_name, bowler_name, phase=phase
+        )
         if matchup is None:
             return self._insufficient(
                 interpretation,
                 f"No direct ODI matchup was found for {batter_name} against {bowler_name}.",
                 ["Try another ODI batter-versus-bowler pairing."],
             )
-        visuals, coverage_notes = self._build_batter_visuals(batter_name, bowler_name, phase=phase)
+        visuals, coverage_notes = self._build_batter_visuals(
+            batter_name, bowler_name, phase=phase
+        )
         return QueryResponse(
             status=EvidenceStatus.supported,
             interpretation=interpretation,
@@ -2112,43 +2706,74 @@ GROUP BY bat, bowling_type
             tables=[
                 TableBlock(
                     title="Matchup summary",
-                    columns=["Batter", "Bowler", "Balls", "Runs", "Dismissals", "Strike Rate", "Control %"],
-                    rows=[[
-                        matchup["batter_name"],
-                        matchup["bowler_name"],
-                        matchup["balls"],
-                        matchup["runs_scored"],
-                        matchup["dismissals"],
-                        round(matchup["strike_rate"] or 0, 2),
-                        round(matchup["control_percentage"] or 0, 2),
-                    ]],
+                    columns=[
+                        "Batter",
+                        "Bowler",
+                        "Balls",
+                        "Runs",
+                        "Dismissals",
+                        "Strike Rate",
+                        "Control %",
+                    ],
+                    rows=[
+                        [
+                            matchup["batter_name"],
+                            matchup["bowler_name"],
+                            matchup["balls"],
+                            matchup["runs_scored"],
+                            matchup["dismissals"],
+                            round(matchup["strike_rate"] or 0, 2),
+                            round(matchup["control_percentage"] or 0, 2),
+                        ]
+                    ],
                 )
             ],
             visuals=visuals,
-            citations=[database_citation("Direct ODI matchup", "analytics.deliveries_v1 bat/bowl pairing")],
+            citations=[
+                database_citation(
+                    "Direct ODI matchup", "analytics.deliveries_v1 bat/bowl pairing"
+                )
+            ],
             evidence_notes=coverage_notes,
         )
 
-    def _handle_venue_context(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_venue_context(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         if route.filters.get("external_fact") == "player_of_match":
             return self._handle_player_of_match_fact(interpretation, route)
         if route.entities and route.filters.get("group_by") in {"line", "length"}:
             return self._handle_line_length_breakdown(interpretation, route)
-        if route.filters.get("skill") == "fielding" and route.filters.get("metric") == "catches_taken":
+        if (
+            route.filters.get("skill") == "fielding"
+            and route.filters.get("metric") == "catches_taken"
+        ):
             return self._handle_fielding_catches_leaderboard(interpretation, route)
 
-        venue_name = route.filters.get("venue_name") if isinstance(route.filters.get("venue_name"), str) else None
+        venue_name = (
+            route.filters.get("venue_name")
+            if isinstance(route.filters.get("venue_name"), str)
+            else None
+        )
         if venue_name is not None and venue_name not in self.available_venues:
             venue_name = self._match_venue(venue_name.lower())
-        if venue_name is None and self._has_venue_intent(interpretation.original_question):
+        if venue_name is None and self._has_venue_intent(
+            interpretation.original_question
+        ):
             venue_name = self._match_venue(interpretation.original_question)
 
-        if route.filters.get("skill") == "bowling" and route.filters.get("metric") in {
-            "economy_rate",
-            "wickets_taken",
-            "balls_per_wicket",
-            "balls_per_boundary",
-        } and not route.entities and venue_name is None:
+        if (
+            route.filters.get("skill") == "bowling"
+            and route.filters.get("metric")
+            in {
+                "economy_rate",
+                "wickets_taken",
+                "balls_per_wicket",
+                "balls_per_boundary",
+            }
+            and not route.entities
+            and venue_name is None
+        ):
             return self._handle_bowling_metric_leaderboard(interpretation, route)
         if self._is_analyst_leaderboard(route) and venue_name is None:
             return self._handle_analyst_leaderboard(interpretation, route)
@@ -2162,12 +2787,18 @@ GROUP BY bat, bowling_type
         interpretation = interpretation.model_copy(
             update={"filters": {**interpretation.filters, "venue_name": venue_name}}
         )
-        excluded_teams = [
-            str(team)
-            for team in route.filters.get("excluded_teams", [])
-            if isinstance(team, str) and team.strip()
-        ] if isinstance(route.filters.get("excluded_teams"), list) else []
-        leaderboard = self.repository.get_venue_bowling_leaderboard(venue_name, excluded_teams=excluded_teams)
+        excluded_teams = (
+            [
+                str(team)
+                for team in route.filters.get("excluded_teams", [])
+                if isinstance(team, str) and team.strip()
+            ]
+            if isinstance(route.filters.get("excluded_teams"), list)
+            else []
+        )
+        leaderboard = self.repository.get_venue_bowling_leaderboard(
+            venue_name, excluded_teams=excluded_teams
+        )
         if not leaderboard:
             return self._insufficient(
                 interpretation,
@@ -2207,7 +2838,9 @@ GROUP BY bat, bowling_type
             ]
         )
         venue_sql = "\n".join(sql_lines)
-        exclusion_label = f" excluding {', '.join(excluded_teams)}" if excluded_teams else ""
+        exclusion_label = (
+            f" excluding {', '.join(excluded_teams)}" if excluded_teams else ""
+        )
         return QueryResponse(
             status=EvidenceStatus.supported,
             interpretation=interpretation,
@@ -2221,22 +2854,48 @@ GROUP BY bat, bowling_type
                 )
             ],
             tables=[venue_table],
-            charts=[ChartBlock(title="Wickets at venue", chart_type="bar", series=[{"label": row["player_name"], "value": row["wickets"]} for row in leaderboard[:5]])],
+            charts=[
+                ChartBlock(
+                    title="Wickets at venue",
+                    chart_type="bar",
+                    series=[
+                        {"label": row["player_name"], "value": row["wickets"]}
+                        for row in leaderboard[:5]
+                    ],
+                )
+            ],
             evidence_queries=[
                 EvidenceQueryBlock(
                     title="Venue bowling leaderboard source",
                     description="Filters deliveries to the resolved ODI venue and ranks bowlers by bowler-credit wickets.",
                     sql=venue_sql,
-                    parameters=[*resolve_venue(venue_name).aliases, *excluded_teams, 24, 10],
+                    parameters=[
+                        *resolve_venue(venue_name).aliases,
+                        *excluded_teams,
+                        24,
+                        10,
+                    ],
                     table=venue_table,
                 )
             ],
-            citations=[database_citation("Venue leaderboard", "analytics.deliveries_v1.ground")],
+            citations=[
+                database_citation("Venue leaderboard", "analytics.deliveries_v1.ground")
+            ],
         )
 
-    def _handle_player_of_match_fact(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
-        years = [int(year) for year in route.filters.get("years", [])] if isinstance(route.filters.get("years"), list) else []
-        competition = str(route.filters.get("competition")) if route.filters.get("competition") else ""
+    def _handle_player_of_match_fact(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
+        years = (
+            [int(year) for year in route.filters.get("years", [])]
+            if isinstance(route.filters.get("years"), list)
+            else []
+        )
+        competition = (
+            str(route.filters.get("competition"))
+            if route.filters.get("competition")
+            else ""
+        )
         stage = str(route.filters.get("stage")) if route.filters.get("stage") else ""
         is_2011_world_cup_final = (
             2011 in years
@@ -2247,20 +2906,31 @@ GROUP BY bat, bowling_type
             return self._insufficient(
                 interpretation,
                 "The local ODI ball-by-ball table does not include Player-of-the-Match award metadata for this request.",
-                ["Use a question answerable from deliveries, or add a complete match-awards source."],
+                [
+                    "Use a question answerable from deliveries, or add a complete match-awards source."
+                ],
             )
 
         fact_table = TableBlock(
             title="External match award",
-            columns=["Match", "Date", "Venue", "Winner", "Player of the Match", "Player of the Tournament"],
-            rows=[[
-                "India vs Sri Lanka",
-                "2011-04-02",
-                "Wankhede Stadium, Mumbai",
-                "India",
-                "MS Dhoni",
-                "Yuvraj Singh",
-            ]],
+            columns=[
+                "Match",
+                "Date",
+                "Venue",
+                "Winner",
+                "Player of the Match",
+                "Player of the Tournament",
+            ],
+            rows=[
+                [
+                    "India vs Sri Lanka",
+                    "2011-04-02",
+                    "Wankhede Stadium, Mumbai",
+                    "India",
+                    "MS Dhoni",
+                    "Yuvraj Singh",
+                ]
+            ],
         )
         return QueryResponse(
             status=EvidenceStatus.supported,
@@ -2298,11 +2968,31 @@ GROUP BY bat, bowling_type
             ],
         )
 
-    def _handle_fielding_catches_leaderboard(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
-        years = [int(year) for year in route.filters.get("years", [])] if isinstance(route.filters.get("years"), list) else []
-        competition = str(route.filters.get("competition")) if route.filters.get("competition") else None
-        context_label = self._context_filter_label(years, str(route.filters.get("year_mode")) if route.filters.get("year_mode") else None, competition)
-        coverage = self.repository.get_fielding_catches_coverage(competition=competition, years=years)
+    def _handle_fielding_catches_leaderboard(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
+        years = (
+            [int(year) for year in route.filters.get("years", [])]
+            if isinstance(route.filters.get("years"), list)
+            else []
+        )
+        competition = (
+            str(route.filters.get("competition"))
+            if route.filters.get("competition")
+            else None
+        )
+        context_label = self._context_filter_label(
+            years,
+            (
+                str(route.filters.get("year_mode"))
+                if route.filters.get("year_mode")
+                else None
+            ),
+            competition,
+        )
+        coverage = self.repository.get_fielding_catches_coverage(
+            competition=competition, years=years
+        )
 
         sql = """
 SELECT COUNT(*) AS caught_dismissals,
@@ -2316,12 +3006,25 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
         return QueryResponse(
             status=EvidenceStatus.insufficient_evidence,
             interpretation=interpretation.model_copy(
-                update={"filters": {**interpretation.filters, "subject": "fielder", "skill": "fielding", "metric": "catches_taken"}}
+                update={
+                    "filters": {
+                        **interpretation.filters,
+                        "subject": "fielder",
+                        "skill": "fielding",
+                        "metric": "catches_taken",
+                    }
+                }
             ),
             tables=[
                 TableBlock(
                     title="Fielding catches dataset check",
-                    columns=["Context", "Caught Dismissals", "Matches", "Dismissed Batters", "Catcher/Fielder Column Present"],
+                    columns=[
+                        "Context",
+                        "Caught Dismissals",
+                        "Matches",
+                        "Dismissed Batters",
+                        "Catcher/Fielder Column Present",
+                    ],
                     rows=[
                         [
                             context_label,
@@ -2341,19 +3044,31 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     parameters=[competition, *years],
                     table=TableBlock(
                         title="Caught dismissal coverage",
-                        columns=["Caught Dismissals", "Matches", "Dismissed Batters", "Available Dismissal Fields"],
+                        columns=[
+                            "Caught Dismissals",
+                            "Matches",
+                            "Dismissed Batters",
+                            "Available Dismissal Fields",
+                        ],
                         rows=[
                             [
                                 coverage["caught_dismissals"],
                                 coverage["matches"],
                                 coverage["dismissed_batters"],
-                                ", ".join(str(field) for field in coverage["available_dismissal_fields"]),
+                                ", ".join(
+                                    str(field)
+                                    for field in coverage["available_dismissal_fields"]
+                                ),
                             ]
                         ],
                     ),
                 )
             ],
-            citations=[database_citation("ODI dismissal coverage", "analytics.deliveries_v1 dismissal/p_out")],
+            citations=[
+                database_citation(
+                    "ODI dismissal coverage", "analytics.deliveries_v1 dismissal/p_out"
+                )
+            ],
             insufficiencies=[
                 InsufficientEvidenceBlock(
                     title="Catcher identity not available",
@@ -2417,20 +3132,35 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
         }
         return labels.get(metric, metric.replace("_", " "))
 
-    def _handle_analyst_leaderboard(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_analyst_leaderboard(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         filters = route.filters
-        subject = str(filters.get("subject") or ("bowler" if filters.get("skill") == "bowling" else "batter"))
-        metric = str(filters.get("metric") or ("wickets_taken" if subject == "bowler" else "batting_strike_rate"))
+        subject = str(
+            filters.get("subject")
+            or ("bowler" if filters.get("skill") == "bowling" else "batter")
+        )
+        metric = str(
+            filters.get("metric")
+            or ("wickets_taken" if subject == "bowler" else "batting_strike_rate")
+        )
         rank_intent = str(filters.get("rank_intent") or "best")
         if rank_intent not in {"best", "worst"}:
             rank_intent = "best"
         phase = filters.get("phase") if isinstance(filters.get("phase"), str) else None
-        over_range = filters.get("over_range") if isinstance(filters.get("over_range"), list) else None
+        over_range = (
+            filters.get("over_range")
+            if isinstance(filters.get("over_range"), list)
+            else None
+        )
         metric_label = self._analyst_metric_label(metric)
         phase_label = self._phase_label({"phase": phase})
         entities = list(route.entities)
 
-        if subject == "batter" and (metric == "strike_rate_improvement_after_20" or "split_after_balls" in filters):
+        if subject == "batter" and (
+            metric == "strike_rate_improvement_after_20"
+            or "split_after_balls" in filters
+        ):
             split_after_balls = int(filters.get("split_after_balls") or 20)
             metric = "strike_rate_improvement_after_20"
             metric_label = self._analyst_metric_label(metric)
@@ -2441,7 +3171,10 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 metric_label=metric_label,
             )
 
-        if subject == "batter" and (metric == "milestone_vulnerability_lift" or filters.get("context_tag") == "after_milestone"):
+        if subject == "batter" and (
+            metric == "milestone_vulnerability_lift"
+            or filters.get("context_tag") == "after_milestone"
+        ):
             post_milestone_balls = int(filters.get("post_milestone_balls") or 12)
             metric = "milestone_vulnerability_lift"
             metric_label = self._analyst_metric_label(metric)
@@ -2452,7 +3185,11 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 metric_label=metric_label,
             )
 
-        field_zone = filters.get("field_zone") if isinstance(filters.get("field_zone"), str) else None
+        field_zone = (
+            filters.get("field_zone")
+            if isinstance(filters.get("field_zone"), str)
+            else None
+        )
         if subject == "batter" and metric == "runs_scored" and field_zone:
             return self._handle_batting_field_zone_leaderboard(
                 interpretation,
@@ -2460,9 +3197,16 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 rank_intent=rank_intent,
             )
 
-        if entities and (filters.get("group_by") == "bowling_style" or self._asks_for_bowling_style_grouping(interpretation.original_question)):
+        if entities and (
+            filters.get("group_by") == "bowling_style"
+            or self._asks_for_bowling_style_grouping(interpretation.original_question)
+        ):
             if self._asks_for_bowling_style_grouping(interpretation.original_question):
-                metric = "batting_strike_rate" if "fastest" in interpretation.original_question.lower() else metric
+                metric = (
+                    "batting_strike_rate"
+                    if "fastest" in interpretation.original_question.lower()
+                    else metric
+                )
                 metric_label = self._analyst_metric_label(metric)
                 rank_intent = "best"
             return self._handle_matchup_bowling_style_leaderboard(
@@ -2475,9 +3219,21 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
             )
 
         if entities and subject == "bowler":
-            bowling_kind = filters.get("bowling_kind") if isinstance(filters.get("bowling_kind"), str) else None
-            bowling_style_group = filters.get("bowling_style_group") if isinstance(filters.get("bowling_style_group"), str) else None
-            length = filters.get("length") if isinstance(filters.get("length"), str) else None
+            bowling_kind = (
+                filters.get("bowling_kind")
+                if isinstance(filters.get("bowling_kind"), str)
+                else None
+            )
+            bowling_style_group = (
+                filters.get("bowling_style_group")
+                if isinstance(filters.get("bowling_style_group"), str)
+                else None
+            )
+            length = (
+                filters.get("length")
+                if isinstance(filters.get("length"), str)
+                else None
+            )
             rows = self.repository.get_matchup_leaderboard(
                 metric=metric,
                 batter_name=entities[0],
@@ -2503,12 +3259,28 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 )
             context_label = f" against {entities[0]}"
             table = self._matchup_leaderboard_table(rows, subject_label="Bowler")
-            style_table = self._matchup_bowling_style_table(
-                style_rows,
-                title=f"{'Spin type' if bowling_kind == 'spin bowler' else 'Bowling style'} matchup against {entities[0]}",
-            ) if style_rows else None
-            sql = self._matchup_leaderboard_sql(metric, subject="bowler", filters=filters, player=entities[0], rank_intent=rank_intent)
-            style_sql = self._matchup_bowling_style_sql(metric, filters, entities[0], rank_intent) if style_rows else None
+            style_table = (
+                self._matchup_bowling_style_table(
+                    style_rows,
+                    title=f"{'Spin type' if bowling_kind == 'spin bowler' else 'Bowling style'} matchup against {entities[0]}",
+                )
+                if style_rows
+                else None
+            )
+            sql = self._matchup_leaderboard_sql(
+                metric,
+                subject="bowler",
+                filters=filters,
+                player=entities[0],
+                rank_intent=rank_intent,
+            )
+            style_sql = (
+                self._matchup_bowling_style_sql(
+                    metric, filters, entities[0], rank_intent
+                )
+                if style_rows
+                else None
+            )
         elif subject == "bowler":
             style_table = None
             style_sql = None
@@ -2519,11 +3291,31 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 rank_intent=rank_intent,
                 limit=10,
                 min_legal_balls=60,
-                length=filters.get("length") if isinstance(filters.get("length"), str) else None,
-                line=filters.get("line") if isinstance(filters.get("line"), str) else None,
-                batting_hand=filters.get("bat_hand") if isinstance(filters.get("bat_hand"), str) else None,
-                bowling_kind=filters.get("bowling_kind") if isinstance(filters.get("bowling_kind"), str) else None,
-                bowling_style_group=filters.get("bowling_style_group") if isinstance(filters.get("bowling_style_group"), str) else None,
+                length=(
+                    filters.get("length")
+                    if isinstance(filters.get("length"), str)
+                    else None
+                ),
+                line=(
+                    filters.get("line")
+                    if isinstance(filters.get("line"), str)
+                    else None
+                ),
+                batting_hand=(
+                    filters.get("bat_hand")
+                    if isinstance(filters.get("bat_hand"), str)
+                    else None
+                ),
+                bowling_kind=(
+                    filters.get("bowling_kind")
+                    if isinstance(filters.get("bowling_kind"), str)
+                    else None
+                ),
+                bowling_style_group=(
+                    filters.get("bowling_style_group")
+                    if isinstance(filters.get("bowling_style_group"), str)
+                    else None
+                ),
             )
             context_label = f" in {phase_label}" if phase else ""
             table = self._bowling_analyst_table(rows, ranking_metric_label=metric_label)
@@ -2534,8 +3326,16 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
             if metric == "bowler_dot_balls":
                 metric = "dot_percentage"
                 metric_label = self._analyst_metric_label(metric)
-            min_balls = 100 if metric == "dot_percentage" and not phase and not over_range else 60
-            limit = 100 if metric == "dot_percentage" and not phase and not over_range else 10
+            min_balls = (
+                100
+                if metric == "dot_percentage" and not phase and not over_range
+                else 60
+            )
+            limit = (
+                100
+                if metric == "dot_percentage" and not phase and not over_range
+                else 10
+            )
             rows = self.repository.get_analyst_batting_leaderboard(
                 metric=metric,
                 phase=phase,
@@ -2543,9 +3343,21 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 rank_intent=rank_intent,
                 limit=limit,
                 min_balls=min_balls,
-                length=filters.get("length") if isinstance(filters.get("length"), str) else None,
-                bowling_kind=filters.get("bowling_kind") if isinstance(filters.get("bowling_kind"), str) else None,
-                bowling_style_group=filters.get("bowling_style_group") if isinstance(filters.get("bowling_style_group"), str) else None,
+                length=(
+                    filters.get("length")
+                    if isinstance(filters.get("length"), str)
+                    else None
+                ),
+                bowling_kind=(
+                    filters.get("bowling_kind")
+                    if isinstance(filters.get("bowling_kind"), str)
+                    else None
+                ),
+                bowling_style_group=(
+                    filters.get("bowling_style_group")
+                    if isinstance(filters.get("bowling_style_group"), str)
+                    else None
+                ),
             )
             filter_labels = []
             if phase:
@@ -2558,7 +3370,12 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
             table = self._batting_analyst_table(rows, ranking_metric_label=metric_label)
             sql = self._batting_analyst_sql(metric, filters, rank_intent)
 
-        updated_filters = {**interpretation.filters, "subject": subject, "metric": metric, "rank_intent": rank_intent}
+        updated_filters = {
+            **interpretation.filters,
+            "subject": subject,
+            "metric": metric,
+            "rank_intent": rank_intent,
+        }
         interpretation = interpretation.model_copy(update={"filters": updated_filters})
         if not rows:
             return self._insufficient(
@@ -2570,7 +3387,9 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
         leader = rows[0]
         player_name = leader["player_name"]
         value = leader.get("metric_value")
-        value_text = self._fmt(value) if isinstance(value, (int, float)) else "not available"
+        value_text = (
+            self._fmt(value) if isinstance(value, (int, float)) else "not available"
+        )
         if isinstance(value, (int, float)) and metric in {
             "yorker_percentage",
             "yorker_success_rate",
@@ -2631,22 +3450,34 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     title=f"{metric_label.title()} leaderboard",
                     chart_type="bar",
                     series=[
-                        {"label": str(row["player_name"]), "value": round(float(row.get("metric_value") or 0), 2)}
+                        {
+                            "label": str(row["player_name"]),
+                            "value": round(float(row.get("metric_value") or 0), 2),
+                        }
                         for row in rows[:8]
                     ],
                 )
             ],
             evidence_queries=evidence_queries,
-            citations=[database_citation(f"ODI {subject} analyst leaderboard", "analytics.deliveries_v1")],
+            citations=[
+                database_citation(
+                    f"ODI {subject} analyst leaderboard", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Sample threshold",
                     detail=(
-                        "Global leaderboards use minimum samples to avoid ranking tiny one-off samples as leaders. "
-                        "Global batter dot-avoidance leaderboards require at least 100 balls faced by default; use the table filter to raise the sample."
-                    )
-                    if subject == "batter" and metric == "dot_percentage" and not phase and not over_range
-                    else "Global leaderboards use minimum samples to avoid ranking tiny one-off samples as leaders.",
+                        (
+                            "Global leaderboards use minimum samples to avoid ranking tiny one-off samples as leaders. "
+                            "Global batter dot-avoidance leaderboards require at least 100 balls faced by default; use the table filter to raise the sample."
+                        )
+                        if subject == "batter"
+                        and metric == "dot_percentage"
+                        and not phase
+                        and not over_range
+                        else "Global leaderboards use minimum samples to avoid ranking tiny one-off samples as leaders."
+                    ),
                 ),
                 EvidenceNote(
                     title="Yorker success definition",
@@ -2669,7 +3500,13 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
             min_balls=20,
         )
         if rank_intent == "worst":
-            rows = sorted(rows, key=lambda row: (float(row.get("metric_value") or 0), -int(row.get("balls") or 0)))
+            rows = sorted(
+                rows,
+                key=lambda row: (
+                    float(row.get("metric_value") or 0),
+                    -int(row.get("balls") or 0),
+                ),
+            )
         updated_filters = {
             **interpretation.filters,
             "subject": "batter",
@@ -2708,7 +3545,10 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     title=f"Runs through {zone_label}",
                     chart_type="bar",
                     series=[
-                        {"label": str(row["player_name"]), "value": round(float(row.get("metric_value") or 0), 2)}
+                        {
+                            "label": str(row["player_name"]),
+                            "value": round(float(row.get("metric_value") or 0), 2),
+                        }
                         for row in rows[:8]
                     ],
                 )
@@ -2722,7 +3562,11 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     table=table,
                 )
             ],
-            citations=[database_citation("ODI batting field-zone leaderboard", "analytics.deliveries_v1")],
+            citations=[
+                database_citation(
+                    "ODI batting field-zone leaderboard", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Metric definition",
@@ -2797,7 +3641,10 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     title=f"Strike-rate change after {split_after_balls} balls",
                     chart_type="bar",
                     series=[
-                        {"label": str(row["player_name"]), "value": round(float(row.get("metric_value") or 0), 2)}
+                        {
+                            "label": str(row["player_name"]),
+                            "value": round(float(row.get("metric_value") or 0), 2),
+                        }
                         for row in rows[:8]
                     ],
                 )
@@ -2814,7 +3661,11 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     table=table,
                 )
             ],
-            citations=[database_citation("ODI batting strike-rate split", "analytics.deliveries_v1")],
+            citations=[
+                database_citation(
+                    "ODI batting strike-rate split", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Metric definition",
@@ -2868,7 +3719,9 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
         leader = rows[0]
         table = self._milestone_vulnerability_table(rows)
         value_text = self._fmt(leader.get("metric_value"))
-        ranking_verb = "is least vulnerable" if rank_intent == "worst" else "is most vulnerable"
+        ranking_verb = (
+            "is least vulnerable" if rank_intent == "worst" else "is most vulnerable"
+        )
         sql = self._milestone_vulnerability_sql(post_milestone_balls, rank_intent)
         return QueryResponse(
             status=EvidenceStatus.supported,
@@ -2890,7 +3743,10 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     title="Milestone vulnerability lift",
                     chart_type="bar",
                     series=[
-                        {"label": str(row["player_name"]), "value": round(float(row.get("metric_value") or 0), 2)}
+                        {
+                            "label": str(row["player_name"]),
+                            "value": round(float(row.get("metric_value") or 0), 2),
+                        }
                         for row in rows[:8]
                     ],
                 )
@@ -2907,7 +3763,11 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     table=table,
                 )
             ],
-            citations=[database_citation("ODI milestone vulnerability", "analytics.deliveries_v1")],
+            citations=[
+                database_citation(
+                    "ODI milestone vulnerability", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Metric definition",
@@ -2935,7 +3795,13 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
         lowered = question.lower()
         return any(
             token in lowered
-            for token in ("bowling type", "bowling types", "bowling style", "bowling styles", "type of bowling")
+            for token in (
+                "bowling type",
+                "bowling types",
+                "bowling style",
+                "bowling styles",
+                "type of bowling",
+            )
         )
 
     def _handle_matchup_bowling_style_leaderboard(
@@ -2949,9 +3815,19 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
         rank_intent: str,
     ) -> QueryResponse:
         filters = route.filters
-        bowling_kind = filters.get("bowling_kind") if isinstance(filters.get("bowling_kind"), str) else None
-        bowling_style_group = filters.get("bowling_style_group") if isinstance(filters.get("bowling_style_group"), str) else None
-        length = filters.get("length") if isinstance(filters.get("length"), str) else None
+        bowling_kind = (
+            filters.get("bowling_kind")
+            if isinstance(filters.get("bowling_kind"), str)
+            else None
+        )
+        bowling_style_group = (
+            filters.get("bowling_style_group")
+            if isinstance(filters.get("bowling_style_group"), str)
+            else None
+        )
+        length = (
+            filters.get("length") if isinstance(filters.get("length"), str) else None
+        )
         rows = self.repository.get_matchup_bowling_style_breakdown(
             metric=metric,
             batter_name=batter_name,
@@ -2962,7 +3838,13 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
             limit=10,
             min_balls=12,
         )
-        updated_filters = {**interpretation.filters, "group_by": "bowling_style", "subject": "batter", "metric": metric, "rank_intent": rank_intent}
+        updated_filters = {
+            **interpretation.filters,
+            "group_by": "bowling_style",
+            "subject": "batter",
+            "metric": metric,
+            "rank_intent": rank_intent,
+        }
         interpretation = interpretation.model_copy(update={"filters": updated_filters})
         if not rows:
             return self._insufficient(
@@ -2971,7 +3853,9 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 ["Ask for a broader bowling type/style sample or another batter."],
             )
 
-        table = self._matchup_bowling_style_table(rows, title=f"Bowling style matchup against {batter_name}")
+        table = self._matchup_bowling_style_table(
+            rows, title=f"Bowling style matchup against {batter_name}"
+        )
         leader = rows[0]
         style_name = self._bowling_style_label(leader.get("bowling_style"))
         value_text = self._fmt(leader.get("metric_value"))
@@ -2995,7 +3879,12 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     title=f"{metric_label.title()} by bowling style",
                     chart_type="bar",
                     series=[
-                        {"label": self._bowling_style_label(row.get("bowling_style")), "value": round(float(row.get("metric_value") or 0), 2)}
+                        {
+                            "label": self._bowling_style_label(
+                                row.get("bowling_style")
+                            ),
+                            "value": round(float(row.get("metric_value") or 0), 2),
+                        }
                         for row in rows[:8]
                     ],
                 )
@@ -3009,7 +3898,11 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     table=table,
                 )
             ],
-            citations=[database_citation(f"Bowling style matchup vs {batter_name}", "analytics.deliveries_v1")],
+            citations=[
+                database_citation(
+                    f"Bowling style matchup vs {batter_name}", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Grouping basis",
@@ -3019,7 +3912,9 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
         )
 
     @staticmethod
-    def _bowling_analyst_table(rows: list[dict[str, object]], ranking_metric_label: str = "metric") -> TableBlock:
+    def _bowling_analyst_table(
+        rows: list[dict[str, object]], ranking_metric_label: str = "metric"
+    ) -> TableBlock:
         return TableBlock(
             title="Analyst bowling leaderboard",
             columns=[
@@ -3048,25 +3943,55 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     row["matches"],
                     row["innings"],
                     row["balls"],
-                    round(float(row["overs"]), 2) if row.get("overs") is not None else None,
+                    (
+                        round(float(row["overs"]), 2)
+                        if row.get("overs") is not None
+                        else None
+                    ),
                     row["runs"],
                     row["wickets"],
-                    round(float(row["economy_rate"]), 2) if row.get("economy_rate") is not None else None,
+                    (
+                        round(float(row["economy_rate"]), 2)
+                        if row.get("economy_rate") is not None
+                        else None
+                    ),
                     row["dot_balls"],
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
                     row["boundary_balls"],
-                    round(float(row["boundaries_per_over"]), 2) if row.get("boundaries_per_over") is not None else None,
+                    (
+                        round(float(row["boundaries_per_over"]), 2)
+                        if row.get("boundaries_per_over") is not None
+                        else None
+                    ),
                     row["yorker_balls"],
-                    round(float(row["yorker_success_rate"]), 2) if row.get("yorker_success_rate") is not None else None,
-                    round(float(row["false_shot_percentage"]), 2) if row.get("false_shot_percentage") is not None else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
+                    (
+                        round(float(row["yorker_success_rate"]), 2)
+                        if row.get("yorker_success_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["false_shot_percentage"]), 2)
+                        if row.get("false_shot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
         )
 
     @staticmethod
-    def _batting_analyst_table(rows: list[dict[str, object]], ranking_metric_label: str = "metric") -> TableBlock:
+    def _batting_analyst_table(
+        rows: list[dict[str, object]], ranking_metric_label: str = "metric"
+    ) -> TableBlock:
         return TableBlock(
             title="Analyst batting leaderboard",
             columns=[
@@ -3095,21 +4020,55 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     row["balls"],
                     row["runs"],
                     row["dismissals"],
-                    round(float(row["average"]), 2) if row.get("average") is not None else None,
-                    round(float(row["balls_per_dismissal"]), 2) if row.get("balls_per_dismissal") is not None else None,
-                    round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                    round(float(row["boundary_percentage"]), 2) if row.get("boundary_percentage") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["strike_rotation_percentage"]), 2) if row.get("strike_rotation_percentage") is not None else None,
-                    round(float(row["false_shot_percentage"]), 2) if row.get("false_shot_percentage") is not None else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
+                    (
+                        round(float(row["average"]), 2)
+                        if row.get("average") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["balls_per_dismissal"]), 2)
+                        if row.get("balls_per_dismissal") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["strike_rate"]), 2)
+                        if row.get("strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["boundary_percentage"]), 2)
+                        if row.get("boundary_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["strike_rotation_percentage"]), 2)
+                        if row.get("strike_rotation_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["false_shot_percentage"]), 2)
+                        if row.get("false_shot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
         )
 
     @staticmethod
-    def _batting_field_zone_table(rows: list[dict[str, object]], zone_label: str) -> TableBlock:
+    def _batting_field_zone_table(
+        rows: list[dict[str, object]], zone_label: str
+    ) -> TableBlock:
         return TableBlock(
             title=f"Batter runs in {zone_label} area",
             columns=[
@@ -3133,18 +4092,40 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     row["innings"],
                     row["balls"],
                     row["runs"],
-                    round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                    round(float(row["boundary_percentage"]), 2) if row.get("boundary_percentage") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["false_shot_percentage"]), 2) if row.get("false_shot_percentage") is not None else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
+                    (
+                        round(float(row["strike_rate"]), 2)
+                        if row.get("strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["boundary_percentage"]), 2)
+                        if row.get("boundary_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["false_shot_percentage"]), 2)
+                        if row.get("false_shot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
         )
 
     @staticmethod
-    def _batting_strike_rate_split_table(rows: list[dict[str, object]], split_after_balls: int) -> TableBlock:
+    def _batting_strike_rate_split_table(
+        rows: list[dict[str, object]], split_after_balls: int
+    ) -> TableBlock:
         return TableBlock(
             title=f"Batter strike-rate change after {split_after_balls} balls",
             columns=[
@@ -3170,11 +4151,23 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     row["innings_past_split"],
                     row["first_balls"],
                     row["first_runs"],
-                    round(float(row["first_strike_rate"]), 2) if row.get("first_strike_rate") is not None else None,
+                    (
+                        round(float(row["first_strike_rate"]), 2)
+                        if row.get("first_strike_rate") is not None
+                        else None
+                    ),
                     row["after_balls"],
                     row["after_runs"],
-                    round(float(row["after_strike_rate"]), 2) if row.get("after_strike_rate") is not None else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
+                    (
+                        round(float(row["after_strike_rate"]), 2)
+                        if row.get("after_strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
@@ -3205,22 +4198,42 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     row["milestones"],
                     row["post_balls"],
                     row["post_dismissals"],
-                    round(float(row["post_dismissal_percentage"]), 2) if row.get("post_dismissal_percentage") is not None else None,
+                    (
+                        round(float(row["post_dismissal_percentage"]), 2)
+                        if row.get("post_dismissal_percentage") is not None
+                        else None
+                    ),
                     row["baseline_balls"],
                     row["baseline_dismissals"],
-                    round(float(row["baseline_dismissal_percentage"]), 2)
-                    if row.get("baseline_dismissal_percentage") is not None
-                    else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
-                    round(float(row["post_false_shot_percentage"]), 2) if row.get("post_false_shot_percentage") is not None else None,
-                    round(float(row["post_dot_percentage"]), 2) if row.get("post_dot_percentage") is not None else None,
+                    (
+                        round(float(row["baseline_dismissal_percentage"]), 2)
+                        if row.get("baseline_dismissal_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["post_false_shot_percentage"]), 2)
+                        if row.get("post_false_shot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["post_dot_percentage"]), 2)
+                        if row.get("post_dot_percentage") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
         )
 
     @staticmethod
-    def _matchup_leaderboard_table(rows: list[dict[str, object]], subject_label: str) -> TableBlock:
+    def _matchup_leaderboard_table(
+        rows: list[dict[str, object]], subject_label: str
+    ) -> TableBlock:
         return TableBlock(
             title=f"Analyst matchup {subject_label.lower()} leaderboard",
             columns=[
@@ -3241,23 +4254,49 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                 [
                     index + 1,
                     row["player_name"],
-                    AnalyticsService._bowling_style_label(row.get("bowling_style")) if row.get("bowling_style") else None,
+                    (
+                        AnalyticsService._bowling_style_label(row.get("bowling_style"))
+                        if row.get("bowling_style")
+                        else None
+                    ),
                     row["balls"],
                     row["legal_balls"],
                     row["runs"],
                     row["dismissals"],
-                    round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                    round(float(row["economy_rate"]), 2) if row.get("economy_rate") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["false_shot_percentage"]), 2) if row.get("false_shot_percentage") is not None else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
+                    (
+                        round(float(row["strike_rate"]), 2)
+                        if row.get("strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["economy_rate"]), 2)
+                        if row.get("economy_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["false_shot_percentage"]), 2)
+                        if row.get("false_shot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
         )
 
     @staticmethod
-    def _matchup_bowling_style_table(rows: list[dict[str, object]], title: str) -> TableBlock:
+    def _matchup_bowling_style_table(
+        rows: list[dict[str, object]], title: str
+    ) -> TableBlock:
         return TableBlock(
             title=title,
             columns=[
@@ -3285,18 +4324,40 @@ WHERE LOWER(CAST(dismissal AS VARCHAR)) = 'caught'
                     row["legal_balls"],
                     row["runs"],
                     row["dismissals"],
-                    round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                    round(float(row["economy_rate"]), 2) if row.get("economy_rate") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["false_shot_percentage"]), 2) if row.get("false_shot_percentage") is not None else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
+                    (
+                        round(float(row["strike_rate"]), 2)
+                        if row.get("strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["economy_rate"]), 2)
+                        if row.get("economy_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["false_shot_percentage"]), 2)
+                        if row.get("false_shot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
         )
 
     @staticmethod
-    def _bowling_analyst_sql(metric: str, filters: dict[str, object], rank_intent: str) -> str:
+    def _bowling_analyst_sql(
+        metric: str, filters: dict[str, object], rank_intent: str
+    ) -> str:
         direction = "DESC"
         if metric in {"economy_rate", "boundaries_per_over"} and rank_intent == "best":
             direction = "ASC"
@@ -3324,7 +4385,9 @@ LIMIT :limit
 """.strip()
 
     @staticmethod
-    def _batting_analyst_sql(metric: str, filters: dict[str, object], rank_intent: str) -> str:
+    def _batting_analyst_sql(
+        metric: str, filters: dict[str, object], rank_intent: str
+    ) -> str:
         lower_is_better = metric in {"dot_percentage"}
         direction = "DESC" if lower_is_better == (rank_intent == "worst") else "ASC"
         return f"""
@@ -3333,11 +4396,11 @@ WITH batter_rows AS (
     bat AS player,
     SUM(CASE WHEN ballfaced = 1 THEN 1 ELSE 0 END) AS balls,
     SUM(CASE WHEN ballfaced = 1 THEN batruns ELSE 0 END) AS runs,
-    SUM(CASE WHEN ballfaced = 1 AND out = true THEN 1 ELSE 0 END) AS dismissals,
+    SUM(CASE WHEN is_batter_dismissal THEN 1 ELSE 0 END) AS dismissals,
     SUM(CASE WHEN ballfaced = 1 AND batruns IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
     SUM(CASE WHEN ballfaced = 1 AND batruns = 0 THEN 1 ELSE 0 END) AS dot_balls,
     SUM(CASE WHEN ballfaced = 1 AND control = 0 THEN 1 ELSE 0 END) AS false_shots
-  FROM analytics.deliveries_v1
+  FROM batting_events_v1
   WHERE NULLIF(TRIM(CAST(bat AS VARCHAR)), '') IS NOT NULL
 )
 SELECT *
@@ -3417,7 +4480,9 @@ LIMIT :limit
 """.strip()
 
     @staticmethod
-    def _milestone_vulnerability_sql(post_milestone_balls: int, rank_intent: str) -> str:
+    def _milestone_vulnerability_sql(
+        post_milestone_balls: int, rank_intent: str
+    ) -> str:
         direction = "ASC" if rank_intent == "worst" else "DESC"
         return f"""
 WITH legal_batter_balls AS (
@@ -3427,7 +4492,7 @@ WITH legal_batter_balls AS (
     TRY_CAST(cur_bat_bf AS INTEGER) AS ball_number,
     TRY_CAST(cur_bat_runs AS INTEGER) AS current_runs,
     TRY_CAST(batruns AS INTEGER) AS runs_on_ball,
-    CASE WHEN out = true THEN 1 ELSE 0 END AS dismissal
+    CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END AS dismissal
   FROM analytics.deliveries_v1
   WHERE ballfaced = 1
 ),
@@ -3470,9 +4535,17 @@ LIMIT :limit
 """.strip()
 
     @staticmethod
-    def _matchup_leaderboard_sql(metric: str, subject: str, filters: dict[str, object], player: str, rank_intent: str) -> str:
+    def _matchup_leaderboard_sql(
+        metric: str,
+        subject: str,
+        filters: dict[str, object],
+        player: str,
+        rank_intent: str,
+    ) -> str:
         group_col = "bowl" if subject == "bowler" else "bat"
-        direction = "ASC" if metric == "economy_rate" and rank_intent == "best" else "DESC"
+        direction = (
+            "ASC" if metric == "economy_rate" and rank_intent == "best" else "DESC"
+        )
         return f"""
 WITH matchup_rows AS (
   SELECT
@@ -3492,8 +4565,12 @@ LIMIT :limit
 """.strip()
 
     @staticmethod
-    def _matchup_bowling_style_sql(metric: str, filters: dict[str, object], player: str, rank_intent: str) -> str:
-        direction = "ASC" if metric == "economy_rate" and rank_intent == "best" else "DESC"
+    def _matchup_bowling_style_sql(
+        metric: str, filters: dict[str, object], player: str, rank_intent: str
+    ) -> str:
+        direction = (
+            "ASC" if metric == "economy_rate" and rank_intent == "best" else "DESC"
+        )
         return f"""
 WITH style_rows AS (
   SELECT
@@ -3518,12 +4595,18 @@ ORDER BY :metric_expression_for_{metric} {direction}, balls DESC
 LIMIT :limit
 """.strip()
 
-    def _handle_line_length_breakdown(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_line_length_breakdown(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         player = route.entities[0]
         group_by = str(route.filters.get("group_by") or "length")
         metric = str(route.filters.get("metric") or "wickets_taken")
         rank_intent = str(route.filters.get("rank_intent") or "best")
-        phase = route.filters.get("phase") if isinstance(route.filters.get("phase"), str) else None
+        phase = (
+            route.filters.get("phase")
+            if isinstance(route.filters.get("phase"), str)
+            else None
+        )
         rows = self.repository.get_line_length_breakdown(
             batter_name=player,
             group_by=group_by,
@@ -3534,7 +4617,14 @@ LIMIT :limit
             min_balls=12,
         )
         interpretation = interpretation.model_copy(
-            update={"filters": {**interpretation.filters, "group_by": group_by, "metric": metric, "rank_intent": rank_intent}}
+            update={
+                "filters": {
+                    **interpretation.filters,
+                    "group_by": group_by,
+                    "metric": metric,
+                    "rank_intent": rank_intent,
+                }
+            }
         )
         if not rows:
             return self._insufficient(
@@ -3548,7 +4638,17 @@ LIMIT :limit
         ranking_verb = "ranks lowest" if rank_intent == "worst" else "leads"
         table = TableBlock(
             title=f"{player} {group_by} breakdown",
-            columns=["Rank", group_by.title(), "Balls", "Runs", "Dismissals", "Strike Rate", "Dot %", "False Shot %", "Metric"],
+            columns=[
+                "Rank",
+                group_by.title(),
+                "Balls",
+                "Runs",
+                "Dismissals",
+                "Strike Rate",
+                "Dot %",
+                "False Shot %",
+                "Metric",
+            ],
             rows=[
                 [
                     index + 1,
@@ -3556,16 +4656,32 @@ LIMIT :limit
                     row["balls"],
                     row["runs"],
                     row["dismissals"],
-                    round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["false_shot_percentage"]), 2) if row.get("false_shot_percentage") is not None else None,
-                    round(float(row["metric_value"]), 2) if row.get("metric_value") is not None else None,
+                    (
+                        round(float(row["strike_rate"]), 2)
+                        if row.get("strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["false_shot_percentage"]), 2)
+                        if row.get("false_shot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["metric_value"]), 2)
+                        if row.get("metric_value") is not None
+                        else None
+                    ),
                 ]
                 for index, row in enumerate(rows)
             ],
         )
         sql = f"""
-SELECT {group_by}, COUNT(*) AS balls, SUM(batruns) AS runs, SUM(out) AS dismissals
+SELECT {group_by}, COUNT(*) AS balls, SUM(batruns) AS runs, SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals
 FROM analytics.deliveries_v1
 WHERE bat = :player
 GROUP BY {group_by}
@@ -3591,12 +4707,22 @@ LIMIT :limit
                     table=table,
                 )
             ],
-            citations=[database_citation(f"{player} {group_by} breakdown", "analytics.deliveries_v1")],
+            citations=[
+                database_citation(
+                    f"{player} {group_by} breakdown", "analytics.deliveries_v1"
+                )
+            ],
         )
 
-    def _handle_bowling_plan_against_batter(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_bowling_plan_against_batter(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         player = route.entities[0]
-        phase = route.filters.get("phase") if isinstance(route.filters.get("phase"), str) else None
+        phase = (
+            route.filters.get("phase")
+            if isinstance(route.filters.get("phase"), str)
+            else None
+        )
         phase_label = self._phase_label({"phase": phase})
         pitch = self.repository.get_pitch_map(player, phase=phase)
         phase_rows = self.repository.get_player_phase_summary(player)
@@ -3619,7 +4745,9 @@ LIMIT :limit
                 return float(value) if value is not None else default
             return default
 
-        recommendation_cells = [cell for cell in cells if cell_value(cell, "balls") >= 24] or cells
+        recommendation_cells = [
+            cell for cell in cells if cell_value(cell, "balls") >= 24
+        ] or cells
         safest_cells = sorted(
             recommendation_cells,
             key=lambda cell: (
@@ -3628,11 +4756,20 @@ LIMIT :limit
                 -cell_value(cell, "dismissals"),
             ),
         )
-        wicket_cells = sorted(recommendation_cells, key=lambda cell: (-cell_value(cell, "dismissals"), cell_value(cell, "strike_rate", 999.0)))
+        wicket_cells = sorted(
+            recommendation_cells,
+            key=lambda cell: (
+                -cell_value(cell, "dismissals"),
+                cell_value(cell, "strike_rate", 999.0),
+            ),
+        )
         avoid_cells = sorted(
             recommendation_cells,
             key=lambda cell: (
-                -(cell_value(cell, "boundary_balls") / max(cell_value(cell, "balls"), 1.0)),
+                -(
+                    cell_value(cell, "boundary_balls")
+                    / max(cell_value(cell, "balls"), 1.0)
+                ),
                 -cell_value(cell, "strike_rate"),
             ),
         )
@@ -3647,8 +4784,17 @@ LIMIT :limit
                 int(recommended.get("balls", 0)),
                 recommended.get("runs"),
                 recommended.get("dismissals"),
-                round(float(recommended["strike_rate"]), 2) if recommended.get("strike_rate") is not None else None,
-                round(cell_value(recommended, "dot_balls") / max(cell_value(recommended, "balls"), 1.0) * 100.0, 2),
+                (
+                    round(float(recommended["strike_rate"]), 2)
+                    if recommended.get("strike_rate") is not None
+                    else None
+                ),
+                round(
+                    cell_value(recommended, "dot_balls")
+                    / max(cell_value(recommended, "balls"), 1.0)
+                    * 100.0,
+                    2,
+                ),
                 recommended.get("boundary_balls"),
             ],
             [
@@ -3657,8 +4803,17 @@ LIMIT :limit
                 int(wicket_option.get("balls", 0)),
                 wicket_option.get("runs"),
                 wicket_option.get("dismissals"),
-                round(float(wicket_option["strike_rate"]), 2) if wicket_option.get("strike_rate") is not None else None,
-                round(cell_value(wicket_option, "dot_balls") / max(cell_value(wicket_option, "balls"), 1.0) * 100.0, 2),
+                (
+                    round(float(wicket_option["strike_rate"]), 2)
+                    if wicket_option.get("strike_rate") is not None
+                    else None
+                ),
+                round(
+                    cell_value(wicket_option, "dot_balls")
+                    / max(cell_value(wicket_option, "balls"), 1.0)
+                    * 100.0,
+                    2,
+                ),
                 wicket_option.get("boundary_balls"),
             ],
             [
@@ -3667,29 +4822,75 @@ LIMIT :limit
                 int(avoid.get("balls", 0)),
                 avoid.get("runs"),
                 avoid.get("dismissals"),
-                round(float(avoid["strike_rate"]), 2) if avoid.get("strike_rate") is not None else None,
-                round(cell_value(avoid, "dot_balls") / max(cell_value(avoid, "balls"), 1.0) * 100.0, 2),
+                (
+                    round(float(avoid["strike_rate"]), 2)
+                    if avoid.get("strike_rate") is not None
+                    else None
+                ),
+                round(
+                    cell_value(avoid, "dot_balls")
+                    / max(cell_value(avoid, "balls"), 1.0)
+                    * 100.0,
+                    2,
+                ),
                 avoid.get("boundary_balls"),
             ],
         ]
         plan_table = TableBlock(
             title=f"Bowling plan against {player}",
-            columns=["Use", "Bowl Here", "Balls", "Runs", "Dismissals", "Strike Rate", "Dot %", "Boundary Balls"],
+            columns=[
+                "Use",
+                "Bowl Here",
+                "Balls",
+                "Runs",
+                "Dismissals",
+                "Strike Rate",
+                "Dot %",
+                "Boundary Balls",
+            ],
             rows=plan_rows,
         )
         phase_table = TableBlock(
             title="Phase batting evidence",
-            columns=["Phase", "Innings", "Runs", "Balls", "Dismissals", "Average", "Strike Rate", "Runs/Innings", "Boundary %", "Dot %", "Control %"],
+            columns=[
+                "Phase",
+                "Innings",
+                "Runs",
+                "Balls",
+                "Dismissals",
+                "Average",
+                "Strike Rate",
+                "Runs/Innings",
+                "Boundary %",
+                "Dot %",
+                "Control %",
+            ],
             rows=[self._summary_metric_row(row, "split") for row in phase_rows],
         )
         bowling_type_table = TableBlock(
             title="Pace/spin batting evidence",
-            columns=["Bowling Type", "Innings", "Runs", "Balls", "Dismissals", "Average", "Strike Rate", "Runs/Innings", "Boundary %", "Dot %", "Control %"],
+            columns=[
+                "Bowling Type",
+                "Innings",
+                "Runs",
+                "Balls",
+                "Dismissals",
+                "Average",
+                "Strike Rate",
+                "Runs/Innings",
+                "Boundary %",
+                "Dot %",
+                "Control %",
+            ],
             rows=[self._summary_metric_row(row, "split") for row in bowling_type_rows],
         )
         style_recommendation_rows = []
         if bowling_style_rows:
-            sampled_style_rows = [row for row in bowling_style_rows if int(row.get("balls_faced") or 0) >= 60] or bowling_style_rows
+            sampled_style_rows = [
+                row
+                for row in bowling_style_rows
+                if int(row.get("balls_faced") or 0) >= 60
+            ] or bowling_style_rows
             style_rows = sorted(
                 sampled_style_rows,
                 key=lambda row: (
@@ -3709,55 +4910,136 @@ LIMIT :limit
                         row["balls_faced"],
                         row["runs_scored"],
                         row["dismissals"],
-                        round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                        round(float(row["average"]), 2) if row.get("average") is not None else None,
-                        round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                        round(float(row["control_percentage"]), 2) if row.get("control_percentage") is not None else None,
+                        (
+                            round(float(row["strike_rate"]), 2)
+                            if row.get("strike_rate") is not None
+                            else None
+                        ),
+                        (
+                            round(float(row["average"]), 2)
+                            if row.get("average") is not None
+                            else None
+                        ),
+                        (
+                            round(float(row["dot_percentage"]), 2)
+                            if row.get("dot_percentage") is not None
+                            else None
+                        ),
+                        (
+                            round(float(row["control_percentage"]), 2)
+                            if row.get("control_percentage") is not None
+                            else None
+                        ),
                         "Prefer" if row is best_style else "Secondary",
                     ]
                 )
         style_plan_table = TableBlock(
             title=f"Bowling style plan against {player}",
-            columns=["Bowling Style", "Code", "Balls", "Runs", "Dismissals", "Strike Rate", "Average", "Dot %", "Control %", "Use"],
+            columns=[
+                "Bowling Style",
+                "Code",
+                "Balls",
+                "Runs",
+                "Dismissals",
+                "Strike Rate",
+                "Average",
+                "Dot %",
+                "Control %",
+                "Use",
+            ],
             rows=style_recommendation_rows,
         )
         bowling_style_table = TableBlock(
             title="Bowling style evidence",
-            columns=["Bowling Style", "Code", "Balls", "Runs", "Dismissals", "Average", "Strike Rate", "Dot %", "Control %"],
+            columns=[
+                "Bowling Style",
+                "Code",
+                "Balls",
+                "Runs",
+                "Dismissals",
+                "Average",
+                "Strike Rate",
+                "Dot %",
+                "Control %",
+            ],
             rows=[
                 [
-                    self._bowling_style_label(row.get("style_code") or row.get("split")),
+                    self._bowling_style_label(
+                        row.get("style_code") or row.get("split")
+                    ),
                     row.get("style_code") or row.get("split"),
                     row["balls_faced"],
                     row["runs_scored"],
                     row["dismissals"],
-                    round(float(row["average"]), 2) if row.get("average") is not None else None,
-                    round(float(row["strike_rate"]), 2) if row.get("strike_rate") is not None else None,
-                    round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                    round(float(row["control_percentage"]), 2) if row.get("control_percentage") is not None else None,
+                    (
+                        round(float(row["average"]), 2)
+                        if row.get("average") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["strike_rate"]), 2)
+                        if row.get("strike_rate") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["dot_percentage"]), 2)
+                        if row.get("dot_percentage") is not None
+                        else None
+                    ),
+                    (
+                        round(float(row["control_percentage"]), 2)
+                        if row.get("control_percentage") is not None
+                        else None
+                    ),
                 ]
                 for row in bowling_style_rows
             ],
         )
         shot_table = TableBlock(
             title="Shot-risk evidence",
-            columns=["Shot", "Balls", "Runs", "Control %", "False Shot %", "Dismissal Rate", "Boundary %"],
+            columns=[
+                "Shot",
+                "Balls",
+                "Runs",
+                "Control %",
+                "False Shot %",
+                "Dismissal Rate",
+                "Boundary %",
+            ],
             rows=[
                 [
-                    self._shot_label(item.shot if hasattr(item, "shot") else item.get("shot")),
+                    self._shot_label(
+                        item.shot if hasattr(item, "shot") else item.get("shot")
+                    ),
                     item.balls if hasattr(item, "balls") else item.get("balls"),
                     item.runs if hasattr(item, "runs") else item.get("runs"),
-                    item.control_percentage if hasattr(item, "control_percentage") else item.get("control_percentage"),
-                    item.false_shot_percentage if hasattr(item, "false_shot_percentage") else item.get("false_shot_percentage"),
-                    item.dismissal_rate if hasattr(item, "dismissal_rate") else item.get("dismissal_rate"),
-                    item.boundary_percentage if hasattr(item, "boundary_percentage") else item.get("boundary_percentage"),
+                    (
+                        item.control_percentage
+                        if hasattr(item, "control_percentage")
+                        else item.get("control_percentage")
+                    ),
+                    (
+                        item.false_shot_percentage
+                        if hasattr(item, "false_shot_percentage")
+                        else item.get("false_shot_percentage")
+                    ),
+                    (
+                        item.dismissal_rate
+                        if hasattr(item, "dismissal_rate")
+                        else item.get("dismissal_rate")
+                    ),
+                    (
+                        item.boundary_percentage
+                        if hasattr(item, "boundary_percentage")
+                        else item.get("boundary_percentage")
+                    ),
                 ]
                 for item in list(shot_profile.get("metrics", []))[:8]
             ],
         )
-        evidence_sql = """
+        evidence_sql = f"""
 SELECT line, length, COUNT(*) AS balls, SUM(batruns) AS runs,
-       SUM(CASE WHEN out = true THEN 1 ELSE 0 END) AS dismissals,
+       SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals,
        SUM(CASE WHEN batruns = 0 THEN 1 ELSE 0 END) AS dot_balls,
        SUM(CASE WHEN batruns IN (4, 6) THEN 1 ELSE 0 END) AS boundary_balls,
        AVG(control) AS control
@@ -3777,7 +5059,13 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
         return QueryResponse(
             status=EvidenceStatus.supported,
             interpretation=interpretation.model_copy(
-                update={"filters": {**interpretation.filters, "plan_type": "bowling_to_batter", "subject": "batter"}}
+                update={
+                    "filters": {
+                        **interpretation.filters,
+                        "plan_type": "bowling_to_batter",
+                        "subject": "batter",
+                    }
+                }
             ),
             summaries=[
                 SummaryBlock(
@@ -3817,7 +5105,7 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
                     description="Bowling-style rows for the target batter. The database has style codes, not ball-speed or swing-tracking data.",
                     sql=(
                         "SELECT bowl_style, bowl_kind, COUNT(*) AS balls, SUM(batruns) AS runs, "
-                        "SUM(CASE WHEN out = true THEN 1 ELSE 0 END) AS dismissals, AVG(control) AS control "
+                        f"SUM(CASE WHEN {OWN_DISMISSAL} THEN 1 ELSE 0 END) AS dismissals, AVG(control) AS control "
                         "FROM analytics.deliveries_v1 WHERE bat = :player GROUP BY bowl_style, bowl_kind"
                     ),
                     parameters=[player],
@@ -3844,7 +5132,12 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
                     table=shot_table,
                 ),
             ],
-            citations=[database_citation(f"Bowling plan vs {player}", "analytics.deliveries_v1 line/length/control")],
+            citations=[
+                database_citation(
+                    f"Bowling plan vs {player}",
+                    "analytics.deliveries_v1 line/length/control",
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Plan basis",
@@ -3854,20 +5147,45 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             ],
         )
 
-    def _handle_bowling_metric_leaderboard(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_bowling_metric_leaderboard(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         phase = route.filters.get("phase")
         phase_label = self._phase_label(route.filters)
-        years = [int(year) for year in route.filters.get("years", [])] if isinstance(route.filters.get("years"), list) else []
-        year_mode = str(route.filters.get("year_mode")) if route.filters.get("year_mode") else None
-        competition = str(route.filters.get("competition")) if route.filters.get("competition") else None
+        years = (
+            [int(year) for year in route.filters.get("years", [])]
+            if isinstance(route.filters.get("years"), list)
+            else []
+        )
+        year_mode = (
+            str(route.filters.get("year_mode"))
+            if route.filters.get("year_mode")
+            else None
+        )
+        competition = (
+            str(route.filters.get("competition"))
+            if route.filters.get("competition")
+            else None
+        )
         metric = str(route.filters.get("metric") or "economy_rate")
-        if metric not in {"economy_rate", "wickets_taken", "balls_per_wicket", "balls_per_boundary"}:
+        if metric not in {
+            "economy_rate",
+            "wickets_taken",
+            "balls_per_wicket",
+            "balls_per_boundary",
+        }:
             metric = "economy_rate"
         rank_intent = str(route.filters.get("rank_intent") or "best")
         if rank_intent not in {"best", "worst"}:
             rank_intent = "best"
         interpretation = interpretation.model_copy(
-            update={"filters": {**interpretation.filters, "metric": metric, "rank_intent": rank_intent}}
+            update={
+                "filters": {
+                    **interpretation.filters,
+                    "metric": metric,
+                    "rank_intent": rank_intent,
+                }
+            }
         )
         min_legal_balls = 60
         leaderboard = self.repository.get_bowling_metric_leaderboard(
@@ -3884,10 +5202,13 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             return self._insufficient(
                 interpretation,
                 f"No ODI bowling {self._bowling_leaderboard_label(metric)} leaderboard could be built for {phase_label} with the requested filters.",
-                ["Relax the year/phase filter or lower the minimum legal-ball threshold."],
+                [
+                    "Relax the year/phase filter or lower the minimum legal-ball threshold."
+                ],
             )
 
         leader = leaderboard[0]
+
         def rank_metric_value(row: dict[str, object]) -> float | int | None:
             if metric == "wickets_taken":
                 return int(row.get("wickets") or 0)
@@ -3900,7 +5221,9 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             return round(float(value), 6) if value is not None else None
 
         leader_value = rank_metric_value(leader)
-        tied_leaders = [row for row in leaderboard if rank_metric_value(row) == leader_value]
+        tied_leaders = [
+            row for row in leaderboard if rank_metric_value(row) == leader_value
+        ]
         time_label = self._context_filter_label(years, year_mode, competition)
         metric_label = self._bowling_leaderboard_label(metric)
         rank_phrase = self._bowling_rank_phrase(metric, rank_intent)
@@ -3926,16 +5249,24 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
         elif metric == "economy_rate":
             summary_value = f"{self._fmt(leader.get('economy_rate'))} economy"
         elif metric == "balls_per_wicket":
-            summary_value = f"{self._fmt(leader.get('balls_per_wicket'))} balls per wicket"
+            summary_value = (
+                f"{self._fmt(leader.get('balls_per_wicket'))} balls per wicket"
+            )
         else:
-            summary_value = f"{self._fmt(leader.get('balls_per_boundary'))} balls per boundary"
+            summary_value = (
+                f"{self._fmt(leader.get('balls_per_boundary'))} balls per boundary"
+            )
         if metric == "wickets_taken":
             summary_tail = f"{leader['runs_conceded']} runs conceded, and an economy of {self._fmt(leader.get('economy_rate'))}."
         else:
             summary_tail = f"{leader['runs_conceded']} runs conceded, and {leader['wickets']} wickets."
         if len(tied_leaders) > 1:
-            leader_names = " and ".join(str(row["player_name"]) for row in tied_leaders[:3])
-            leader_phrase = f"{leader_names} share the {rank_phrase} {phase_label} {metric_label}"
+            leader_names = " and ".join(
+                str(row["player_name"]) for row in tied_leaders[:3]
+            )
+            leader_phrase = (
+                f"{leader_names} share the {rank_phrase} {phase_label} {metric_label}"
+            )
         else:
             leader_phrase = f"{leader['player_name']} has the {rank_phrase} {phase_label} {metric_label}"
         return QueryResponse(
@@ -3975,13 +5306,33 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
                             row["matches"],
                             row["innings"],
                             row["balls_bowled"],
-                            round(float(row["overs"]), 2) if row.get("overs") is not None else None,
+                            (
+                                round(float(row["overs"]), 2)
+                                if row.get("overs") is not None
+                                else None
+                            ),
                             row["runs_conceded"],
                             row["wickets"],
-                            round(float(row["economy_rate"]), 2) if row.get("economy_rate") is not None else None,
-                            round(float(row["dot_percentage"]), 2) if row.get("dot_percentage") is not None else None,
-                            round(float(row["boundary_percentage"]), 2) if row.get("boundary_percentage") is not None else None,
-                            round(float(row["balls_per_boundary"]), 2) if row.get("balls_per_boundary") is not None else None,
+                            (
+                                round(float(row["economy_rate"]), 2)
+                                if row.get("economy_rate") is not None
+                                else None
+                            ),
+                            (
+                                round(float(row["dot_percentage"]), 2)
+                                if row.get("dot_percentage") is not None
+                                else None
+                            ),
+                            (
+                                round(float(row["boundary_percentage"]), 2)
+                                if row.get("boundary_percentage") is not None
+                                else None
+                            ),
+                            (
+                                round(float(row["balls_per_boundary"]), 2)
+                                if row.get("balls_per_boundary") is not None
+                                else None
+                            ),
                         ]
                         for index, row in enumerate(leaderboard)
                     ],
@@ -3992,14 +5343,36 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
                     title=f"{rank_phrase.title()} {metric_label} leaderboard ({phase_label})",
                     chart_type="bar",
                     series=[
-                        {"label": row["player_name"], "value": round(float((row.get(metric) if metric != "wickets_taken" else row.get("wickets")) or 0), 2)}
+                        {
+                            "label": row["player_name"],
+                            "value": round(
+                                float(
+                                    (
+                                        row.get(metric)
+                                        if metric != "wickets_taken"
+                                        else row.get("wickets")
+                                    )
+                                    or 0
+                                ),
+                                2,
+                            ),
+                        }
                         for row in leaderboard[:8]
                     ],
                 )
             ],
             evidence_queries=[evidence_query],
-            metric_references=[MetricReference(metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit) for m in metrics],
-            citations=[database_citation(f"ODI bowling {metric_label} leaderboard", "analytics.deliveries_v1")],
+            metric_references=[
+                MetricReference(
+                    metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit
+                )
+                for m in metrics
+            ],
+            citations=[
+                database_citation(
+                    f"ODI bowling {metric_label} leaderboard", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Leaderboard threshold",
@@ -4012,7 +5385,9 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             ],
         )
 
-    def _handle_trend(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_trend(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         if not route.entities:
             return self._insufficient(
                 interpretation,
@@ -4027,7 +5402,9 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
 
         trend = self.repository.get_player_year_trend(player)
         if not trend:
-            bowling_trend = self.repository.get_player_bowling_year_trend(player, phase=phase)
+            bowling_trend = self.repository.get_player_bowling_year_trend(
+                player, phase=phase
+            )
             if bowling_trend:
                 bowling_route = QueryRoute(
                     query_class=route.query_class,
@@ -4068,16 +5445,37 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
                 TableBlock(
                     title="Year trend",
                     columns=["Year", "Balls Faced", "Runs Scored", "Control %"],
-                    rows=[[item["year"], item["balls_faced"], item["runs_scored"], round(item["control_percentage"] or 0, 2)] for item in trend],
+                    rows=[
+                        [
+                            item["year"],
+                            item["balls_faced"],
+                            item["runs_scored"],
+                            round(item["control_percentage"] or 0, 2),
+                        ]
+                        for item in trend
+                    ],
                 )
             ],
-            charts=[ChartBlock(title="Runs scored by year", chart_type="line", series=[{"label": str(item["year"]), "value": item["runs_scored"]} for item in trend])],
+            charts=[
+                ChartBlock(
+                    title="Runs scored by year",
+                    chart_type="line",
+                    series=[
+                        {"label": str(item["year"]), "value": item["runs_scored"]}
+                        for item in trend
+                    ],
+                )
+            ],
             visuals=visuals,
-            citations=[database_citation("Player year trend", "analytics.player_year_batting")],
+            citations=[
+                database_citation("Player year trend", "analytics.player_year_batting")
+            ],
             evidence_notes=coverage_notes,
         )
 
-    def _handle_bowling_trend(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_bowling_trend(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         phase = route.filters.get("phase")
         phase_label = self._phase_label(route.filters)
         if len(route.entities) > 1:
@@ -4089,18 +5487,31 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             return self._insufficient(
                 interpretation,
                 f"No year-level ODI bowling trend data was found for {player} in {phase_label}.",
-                ["Relax the phase filter or ask for the player's full ODI bowling trend."],
+                [
+                    "Relax the phase filter or ask for the player's full ODI bowling trend."
+                ],
             )
         trend = self._apply_year_filter(trend, route.filters)
         if not trend:
             return self._insufficient(
                 interpretation,
                 f"The ODI dataset does not contain enough year-level bowling data for the requested time filter on {player}.",
-                ["Relax the year filter or ask for the player's full ODI bowling trend."],
+                [
+                    "Relax the year filter or ask for the player's full ODI bowling trend."
+                ],
             )
 
-        qualified = [item for item in trend if int(item["balls_bowled"]) >= 24 and item.get("economy_rate") is not None]
-        economy_reference = min(qualified or trend, key=lambda item: item["economy_rate"] if item.get("economy_rate") is not None else 999.0)
+        qualified = [
+            item
+            for item in trend
+            if int(item["balls_bowled"]) >= 24 and item.get("economy_rate") is not None
+        ]
+        economy_reference = min(
+            qualified or trend,
+            key=lambda item: (
+                item["economy_rate"] if item.get("economy_rate") is not None else 999.0
+            ),
+        )
         wicket_reference = max(trend, key=lambda item: int(item["wickets"]))
         evidence_query = self._bowling_year_trend_evidence_query(player, trend, phase)
         metrics = [
@@ -4130,14 +5541,26 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
                     title=f"Economy by year ({phase_label})",
                     chart_type="line",
                     series=[
-                        {"label": str(item["year"]), "value": round(float(item["economy_rate"] or 0), 2)}
+                        {
+                            "label": str(item["year"]),
+                            "value": round(float(item["economy_rate"] or 0), 2),
+                        }
                         for item in trend
                     ],
                 )
             ],
             evidence_queries=[evidence_query],
-            metric_references=[MetricReference(metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit) for m in metrics],
-            citations=[database_citation("Player bowling year trend", "analytics.deliveries_v1")],
+            metric_references=[
+                MetricReference(
+                    metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit
+                )
+                for m in metrics
+            ],
+            citations=[
+                database_citation(
+                    "Player bowling year trend", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Bowling interpretation basis",
@@ -4153,12 +5576,17 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             ],
         )
 
-    def _handle_bowling_trend_comparison(self, interpretation: QueryInterpretation, route: QueryRoute) -> QueryResponse:
+    def _handle_bowling_trend_comparison(
+        self, interpretation: QueryInterpretation, route: QueryRoute
+    ) -> QueryResponse:
         phase = route.filters.get("phase")
         phase_label = self._phase_label(route.filters)
         trends: dict[str, list[dict[str, object]]] = {}
         for player in route.entities[:2]:
-            trend = self._apply_year_filter(self.repository.get_player_bowling_year_trend(player, phase=phase), route.filters)
+            trend = self._apply_year_filter(
+                self.repository.get_player_bowling_year_trend(player, phase=phase),
+                route.filters,
+            )
             if trend:
                 trends[player] = trend
 
@@ -4167,14 +5595,40 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             return self._insufficient(
                 interpretation,
                 f"Not enough year-level ODI bowling trend data was found for {', '.join(missing) or 'the requested players'} in {phase_label}.",
-                ["Relax the phase filter or compare bowlers with larger ODI bowling samples."],
+                [
+                    "Relax the phase filter or compare bowlers with larger ODI bowling samples."
+                ],
             )
 
-        totals = {player: self._bowling_trend_totals(trend) for player, trend in trends.items()}
-        economy_leader = min(totals.values(), key=lambda item: item["economy_rate"] if item.get("economy_rate") is not None else 999.0)
-        dot_leader = max(totals.values(), key=lambda item: item["dot_percentage"] if item.get("dot_percentage") is not None else -1.0)
-        boundary_leader = min(totals.values(), key=lambda item: item["boundary_percentage"] if item.get("boundary_percentage") is not None else 999.0)
-        evidence_query = self._bowling_year_trend_comparison_evidence_query(trends, phase)
+        totals = {
+            player: self._bowling_trend_totals(trend)
+            for player, trend in trends.items()
+        }
+        economy_leader = min(
+            totals.values(),
+            key=lambda item: (
+                item["economy_rate"] if item.get("economy_rate") is not None else 999.0
+            ),
+        )
+        dot_leader = max(
+            totals.values(),
+            key=lambda item: (
+                item["dot_percentage"]
+                if item.get("dot_percentage") is not None
+                else -1.0
+            ),
+        )
+        boundary_leader = min(
+            totals.values(),
+            key=lambda item: (
+                item["boundary_percentage"]
+                if item.get("boundary_percentage") is not None
+                else 999.0
+            ),
+        )
+        evidence_query = self._bowling_year_trend_comparison_evidence_query(
+            trends, phase
+        )
         metrics = [
             self.metric_catalog.get("economy_rate"),
             self.metric_catalog.get("wickets_taken"),
@@ -4183,7 +5637,9 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
             self.metric_catalog.get("balls_per_boundary"),
         ]
         player_names = " vs ".join(trends.keys())
-        include_year_table = self._explicit_year_by_year_request(interpretation.original_question)
+        include_year_table = self._explicit_year_by_year_request(
+            interpretation.original_question
+        )
         response_tables = [self._bowling_trend_totals_matrix(totals)]
         if include_year_table:
             response_tables.append(evidence_query.table)
@@ -4219,8 +5675,17 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
                 )
             ],
             evidence_queries=[evidence_query],
-            metric_references=[MetricReference(metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit) for m in metrics],
-            citations=[database_citation("Player bowling year trend comparison", "analytics.deliveries_v1")],
+            metric_references=[
+                MetricReference(
+                    metric_id=m.metric_id, label=m.label, formula=m.formula, unit=m.unit
+                )
+                for m in metrics
+            ],
+            citations=[
+                database_citation(
+                    "Player bowling year trend comparison", "analytics.deliveries_v1"
+                )
+            ],
             evidence_notes=[
                 EvidenceNote(
                     title="Comparison basis",
@@ -4280,7 +5745,9 @@ ORDER BY dot_balls / NULLIF(balls, 0) DESC, dismissals DESC
         }
 
     @staticmethod
-    def _bowling_trend_totals_matrix(totals: dict[str, dict[str, object]]) -> TableBlock:
+    def _bowling_trend_totals_matrix(
+        totals: dict[str, dict[str, object]]
+    ) -> TableBlock:
         metric_rows: list[tuple[str, str, int]] = [
             ("Years", "years", 0),
             ("Matches", "matches", 0),
@@ -4371,15 +5838,43 @@ ORDER BY year
                         item["matches"],
                         item["innings"],
                         item["balls_bowled"],
-                        round(float(item["overs"]), 2) if item.get("overs") is not None else None,
+                        (
+                            round(float(item["overs"]), 2)
+                            if item.get("overs") is not None
+                            else None
+                        ),
                         item["runs_conceded"],
                         item["wickets"],
-                        round(float(item["economy_rate"]), 2) if item.get("economy_rate") is not None else None,
-                        round(float(item["bowling_average"]), 2) if item.get("bowling_average") is not None else None,
-                        round(float(item["balls_per_wicket"]), 2) if item.get("balls_per_wicket") is not None else None,
-                        round(float(item["dot_percentage"]), 2) if item.get("dot_percentage") is not None else None,
-                        round(float(item["boundary_percentage"]), 2) if item.get("boundary_percentage") is not None else None,
-                        round(float(item["balls_per_boundary"]), 2) if item.get("balls_per_boundary") is not None else None,
+                        (
+                            round(float(item["economy_rate"]), 2)
+                            if item.get("economy_rate") is not None
+                            else None
+                        ),
+                        (
+                            round(float(item["bowling_average"]), 2)
+                            if item.get("bowling_average") is not None
+                            else None
+                        ),
+                        (
+                            round(float(item["balls_per_wicket"]), 2)
+                            if item.get("balls_per_wicket") is not None
+                            else None
+                        ),
+                        (
+                            round(float(item["dot_percentage"]), 2)
+                            if item.get("dot_percentage") is not None
+                            else None
+                        ),
+                        (
+                            round(float(item["boundary_percentage"]), 2)
+                            if item.get("boundary_percentage") is not None
+                            else None
+                        ),
+                        (
+                            round(float(item["balls_per_boundary"]), 2)
+                            if item.get("balls_per_boundary") is not None
+                            else None
+                        ),
                         item["delivery_rows"],
                     ]
                     for item in trend
@@ -4393,18 +5888,31 @@ ORDER BY year
         phase: object,
     ) -> EvidenceQueryBlock:
         players = list(trends.keys())
-        single_player_query = self._bowling_year_trend_evidence_query(":players", [], phase)
+        single_player_query = self._bowling_year_trend_evidence_query(
+            ":players", [], phase
+        )
         sql = (
-            single_player_query.sql
-            .replace("SELECT\n  TRY_CAST(year AS INTEGER) AS year,", "SELECT\n  bowl AS player,\n  TRY_CAST(year AS INTEGER) AS year,")
+            single_player_query.sql.replace(
+                "SELECT\n  TRY_CAST(year AS INTEGER) AS year,",
+                "SELECT\n  bowl AS player,\n  TRY_CAST(year AS INTEGER) AS year,",
+            )
             .replace("WHERE bowl = :player", "WHERE bowl IN (:players)")
-            .replace("GROUP BY year\nORDER BY year", "GROUP BY bowl, year\nORDER BY bowl, year")
+            .replace(
+                "GROUP BY year\nORDER BY year",
+                "GROUP BY bowl, year\nORDER BY bowl, year",
+            )
         )
         trend_by_player_year = {
             player: {int(item["year"]): item for item in trend}
             for player, trend in trends.items()
         }
-        years = sorted({year for player_trend in trend_by_player_year.values() for year in player_trend})
+        years = sorted(
+            {
+                year
+                for player_trend in trend_by_player_year.values()
+                for year in player_trend
+            }
+        )
         columns = ["Year"]
         for player in players:
             columns.extend(
@@ -4432,9 +5940,21 @@ ORDER BY year
                         item["innings"],
                         item["balls_bowled"],
                         item["wickets"],
-                        round(float(item["economy_rate"]), 2) if item.get("economy_rate") is not None else None,
-                        round(float(item["dot_percentage"]), 2) if item.get("dot_percentage") is not None else None,
-                        round(float(item["boundary_percentage"]), 2) if item.get("boundary_percentage") is not None else None,
+                        (
+                            round(float(item["economy_rate"]), 2)
+                            if item.get("economy_rate") is not None
+                            else None
+                        ),
+                        (
+                            round(float(item["dot_percentage"]), 2)
+                            if item.get("dot_percentage") is not None
+                            else None
+                        ),
+                        (
+                            round(float(item["boundary_percentage"]), 2)
+                            if item.get("boundary_percentage") is not None
+                            else None
+                        ),
                     ]
                 )
             rows.append(row)
@@ -4501,12 +6021,17 @@ ORDER BY year
     @staticmethod
     def _has_venue_intent(question: str) -> bool:
         lowered = question.lower()
-        if any(token in lowered for token in (" venue", " ground", " stadium", " oval", "lord's", "lords")):
+        if any(
+            token in lowered
+            for token in (" venue", " ground", " stadium", " oval", "lord's", "lords")
+        ):
             return True
         return bool(re.search(r"\b(?:at|in)\s+[a-z0-9'][a-z0-9' .,-]{2,}$", lowered))
 
     @staticmethod
-    def _apply_year_filter(trend: list[dict[str, object]], filters: dict[str, object]) -> list[dict[str, object]]:
+    def _apply_year_filter(
+        trend: list[dict[str, object]], filters: dict[str, object]
+    ) -> list[dict[str, object]]:
         years = filters.get("years")
         if not years:
             return trend
@@ -4517,4 +6042,6 @@ ORDER BY year
             return [item for item in trend if int(item["year"]) >= pivot_year]
         if mode == "before":
             return [item for item in trend if int(item["year"]) <= pivot_year]
-        return [item for item in trend if int(item["year"]) in {int(year) for year in years}]
+        return [
+            item for item in trend if int(item["year"]) in {int(year) for year in years}
+        ]

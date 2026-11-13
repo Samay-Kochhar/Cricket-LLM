@@ -1,0 +1,4030 @@
+# Independently authored from cricket meaning. Locked 58 dev / 52 holdout.
+# Metrics name the requested statistic, including balls/stand/venue metrics; schema permits arbitrary strings.
+# ODI edge-04 is a semantic plan; routing must still bypass MultiFormatChat.
+- id: bat-01
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - V Kohli
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-02
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - RG Sharma
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-03
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - JE Root
+    role: batting
+    metrics:
+    - average
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-04
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - DA Warner
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-05
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - KA Pollard
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: CPL
+      format: null
+      formats: []
+      competition: Caribbean Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-06
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - AD Russell
+    role: batting
+    metrics:
+    - sixes
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-07
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - Babar Azam
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: PSL
+      format: null
+      formats: []
+      competition: Pakistan Super League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-08
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - SPD Smith
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: 2020
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-09
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - JC Buttler
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-10
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - KS Williamson
+    role: batting
+    metrics:
+    - average
+    - strike_rate
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-11
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - SA Yadav
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-12
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - JM Vince
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Blast
+      format: null
+      formats: []
+      competition: '%Blast%'
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-13
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - F du Plessis
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: SA20
+      format: null
+      formats: []
+      competition: SA20
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-14
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - Shubman Gill
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years:
+    - 2023
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bat-15
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - M Labuschagne
+    role: batting
+    metrics:
+    - dot_ball_pct
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-01
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - JJ Bumrah
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-02
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - Rashid Khan
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-03
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - JM Anderson
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-04
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - SP Narine
+    role: bowling
+    metrics:
+    - wickets
+    - economy
+    - strike_rate
+    scopes:
+    - label: CPL
+      format: null
+      formats: []
+      competition: Caribbean Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-05
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - YS Chahal
+    role: bowling
+    metrics:
+    - average
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-06
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - PJ Cummins
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: 2019
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-07
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - Shaheen Shah Afridi
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: PSL
+      format: null
+      formats: []
+      competition: Pakistan Super League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-08
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - A Zampa
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-09
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - NM Lyon
+    role: bowling
+    metrics:
+    - strike_rate
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-10
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - R Ashwin
+    role: bowling
+    metrics:
+    - wickets
+    - average
+    - economy
+    - strike_rate
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-11
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - TS Mills
+    role: bowling
+    metrics:
+    - wickets
+    - economy
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: bowl-12
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - TA Boult
+    role: bowling
+    metrics:
+    - dot_ball_pct
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-01
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-02
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-03
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 500
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-04
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: false
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-05
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: 2015
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-06
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: CPL
+      format: null
+      formats: []
+      competition: Caribbean Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-07
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - average
+    scopes:
+    - label: PSL
+      format: null
+      formats: []
+      competition: Pakistan Super League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-08
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-09
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - strike_rate
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: false
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-10
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: SA20
+      format: null
+      formats: []
+      competition: SA20
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: rank-12
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: County
+      format: null
+      formats: []
+      competition: '%County Championship%'
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-01
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - V Kohli
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-02
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - SPD Smith
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-03
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - JJ Bumrah
+    role: bowling
+    metrics:
+    - balls
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-04
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - JE Root
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths:
+    - SHORT
+    - SHORT_OF_A_GOOD_LENGTH
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-05
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - GJ Maxwell
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths:
+    - FULL
+    - YORKER
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-06
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - Rashid Khan
+    role: bowling
+    metrics:
+    - balls
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-07
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - PJ Cummins
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-08
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - JC Buttler
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-09
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - DA Warner
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    lengths: []
+    lines:
+    - OUTSIDE_OFFSTUMP
+    - WIDE_OUTSIDE_OFFSTUMP
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-10
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - N Pooran
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: CPL
+      format: null
+      formats: []
+      competition: Caribbean Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-11
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - MA Starc
+    role: bowling
+    metrics:
+    - balls
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths:
+    - YORKER
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ll-12
+  split: holdout
+  plan:
+    intent: ranking
+    players:
+    - SA Yadav
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: lim-01
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - V Kohli
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years:
+    - 2010
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: lim-02
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - S Mandhana
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: WBBL
+      format: null
+      formats: []
+      competition: Women's Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths:
+    - SHORT
+    - SHORT_OF_A_GOOD_LENGTH
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: lim-04
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - SR Tendulkar
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: lim-07
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - AN Cook
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: lim-09
+  split: dev
+  plan:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes:
+    - label: Blast
+      format: null
+      formats: []
+      competition: '%Blast%'
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: type-01
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - AB de Villiers
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: T20
+      format: null
+      formats:
+      - T20I
+      - T20 domestic
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - LB
+    - LBG
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: type-02
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - AB de Villiers
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - LB
+    - LBG
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: type-03
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - AB de Villiers
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: DomesticExceptIPL
+      format: T20 domestic
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions:
+      - Indian Premier League
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - LB
+    - LBG
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: type-04
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - KL Rahul
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - LF
+    - LFM
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: type-05
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - KL Rahul
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles:
+    - LM
+    - LMF
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: pp-01
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: powerplay
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: pp-03
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - JC Buttler
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: powerplay
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: pp-04
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: death
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: false
+    partnership_min_runs: null
+    unsupported: []
+- id: pp-05
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - Rashid Khan
+    role: bowling
+    metrics:
+    - wickets
+    - economy
+    - strike_rate
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: middle
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: pp-06
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - MS Dhoni
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: death
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: pp-07
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: powerplay
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: pp-02
+  split: dev
+  plan:
+    intent: partnership
+    players: []
+    role: batting
+    metrics:
+    - partnership_runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: part-02
+  split: holdout
+  plan:
+    intent: partnership
+    players: []
+    role: batting
+    metrics:
+    - best_stand
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: part-03
+  split: holdout
+  plan:
+    intent: partnership
+    players:
+    - V Kohli
+    - AB de Villiers
+    role: batting
+    metrics:
+    - partnership_runs
+    - stands
+    - best_stand
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: part-04
+  split: holdout
+  plan:
+    intent: partnership
+    players: []
+    role: batting
+    metrics:
+    - best_stand
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported:
+    - first-wicket partnership filter is not representable in this schema
+- id: part-05
+  split: dev
+  plan:
+    intent: partnership
+    players:
+    - Babar Azam
+    - Mohammad Rizwan
+    role: batting
+    metrics:
+    - partnership_runs
+    - stands
+    - best_stand
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: part-06
+  split: dev
+  plan:
+    intent: partnership
+    players:
+    - RG Sharma
+    - S Dhawan
+    role: batting
+    metrics:
+    - qualifying_stands
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: 100
+    unsupported: []
+- id: mu-01
+  split: dev
+  plan:
+    intent: matchup
+    players:
+    - V Kohli
+    - JJ Bumrah
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: mu-02
+  split: holdout
+  plan:
+    intent: matchup
+    players:
+    - SPD Smith
+    - JM Anderson
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: mu-03
+  split: dev
+  plan:
+    intent: matchup
+    players:
+    - MS Dhoni
+    - Rashid Khan
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: mu-04
+  split: holdout
+  plan:
+    intent: matchup
+    players:
+    - DA Warner
+    - SCJ Broad
+    role: batting
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: mu-05
+  split: dev
+  plan:
+    intent: matchup
+    players:
+    - PJ Cummins
+    - JE Root
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: mu-06
+  split: dev
+  plan:
+    intent: matchup
+    players:
+    - JC Buttler
+    - AU Rashid
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: Blast
+      format: null
+      formats: []
+      competition: '%Blast%'
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: mu-07
+  split: holdout
+  plan:
+    intent: matchup
+    players:
+    - RG Sharma
+    - TA Boult
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: mu-08
+  split: holdout
+  plan:
+    intent: matchup
+    players:
+    - KS Williamson
+    - R Ashwin
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ven-01
+  split: dev
+  plan:
+    intent: venue
+    players: []
+    role: batting
+    metrics:
+    - avg_first_innings_runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Wankhede
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ven-02
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Melbourne Cricket Ground
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ven-03
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Chinnaswamy
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ven-04
+  split: dev
+  plan:
+    intent: venue
+    players: []
+    role: batting
+    metrics:
+    - run_rate
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Lord's
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ven-05
+  split: holdout
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Galle
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ven-06
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - V Kohli
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: Chinnaswamy
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: ven-07
+  split: dev
+  plan:
+    intent: venue
+    players: []
+    role: batting
+    metrics:
+    - avg_first_innings_runs
+    scopes:
+    - label: BBL
+      format: null
+      formats: []
+      competition: Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-01
+  split: dev
+  plan:
+    intent: comparison
+    players:
+    - V Kohli
+    - RG Sharma
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-02
+  split: holdout
+  plan:
+    intent: comparison
+    players:
+    - JE Root
+    - SPD Smith
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-03
+  split: dev
+  plan:
+    intent: comparison
+    players:
+    - JJ Bumrah
+    - Rashid Khan
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-04
+  split: dev
+  plan:
+    intent: comparison
+    players:
+    - JM Anderson
+    - SCJ Broad
+    role: bowling
+    metrics:
+    - wickets
+    - average
+    - economy
+    - strike_rate
+    scopes:
+    - label: Test
+      format: Test
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-05
+  split: holdout
+  plan:
+    intent: comparison
+    players:
+    - Babar Azam
+    - Mohammad Rizwan
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: PSL
+      format: null
+      formats: []
+      competition: Pakistan Super League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-06
+  split: holdout
+  plan:
+    intent: comparison
+    players:
+    - AD Russell
+    - GJ Maxwell
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-07
+  split: dev
+  plan:
+    intent: comparison
+    players:
+    - MM Lanning
+    - S Mandhana
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cmp-08
+  split: holdout
+  plan:
+    intent: comparison
+    players:
+    - V Kohli
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cov-01
+  split: dev
+  plan:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes: []
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cov-02
+  split: dev
+  plan:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cov-04
+  split: holdout
+  plan:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes:
+    - label: CPL
+      format: null
+      formats: []
+      competition: Caribbean Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cov-05
+  split: holdout
+  plan:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: null
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: cov-06
+  split: dev
+  plan:
+    intent: coverage
+    players: []
+    role: batting
+    metrics: []
+    scopes: []
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions:
+    - line
+    - length
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: wom-01
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - MM Lanning
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: wom-02
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: WPL
+      format: null
+      formats: []
+      competition: Women's Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: wom-03
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - EA Perry
+    role: batting
+    metrics:
+    - runs
+    - strike_rate
+    - average
+    scopes:
+    - label: WBBL
+      format: null
+      formats: []
+      competition: Women's Big Bash League
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: wom-04
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - S Ecclestone
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: wom-05
+  split: dev
+  plan:
+    intent: ranking
+    players: []
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: Hundred
+      format: The Hundred
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: wom-06
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - H Kaur
+    role: batting
+    metrics:
+    - strike_rate
+    scopes:
+    - label: WPL
+      format: null
+      formats: []
+      competition: Women's Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: female
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: edge-01
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - V Kohli
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: edge-02
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - JJ Bumrah
+    role: bowling
+    metrics:
+    - wickets
+    scopes:
+    - label: IPL
+      format: null
+      formats: []
+      competition: Indian Premier League
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years:
+    - 2024
+    - 2025
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: edge-03
+  split: dev
+  plan:
+    intent: stats
+    players:
+    - JJ Bumrah
+    role: bowling
+    metrics:
+    - economy
+    scopes:
+    - label: T20I
+      format: T20I
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
+- id: edge-04
+  split: holdout
+  plan:
+    intent: stats
+    players:
+    - V Kohli
+    role: batting
+    metrics:
+    - runs
+    scopes:
+    - label: ODI
+      format: ODI
+      formats: []
+      competition: null
+      competitions: []
+      excluded_competitions: []
+      gender: male
+    years: []
+    year_from: null
+    year_to: null
+    phase: null
+    over_from: null
+    over_to: null
+    bowler_styles: []
+    bowler_arm: null
+    bowler_kind: null
+    dimensions: []
+    lengths: []
+    lines: []
+    venue: null
+    opponent: null
+    min_balls: 60
+    limit: 10
+    descending: null
+    partnership_min_runs: null
+    unsupported: []
