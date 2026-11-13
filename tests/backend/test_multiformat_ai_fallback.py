@@ -202,7 +202,8 @@ def test_every_number_must_come_from_a_query_result() -> None:
     assert unsupported_numbers("1,234 runs at a strike rate of 134.86", results) == []
     assert unsupported_numbers("45.2% of balls", results) == []
     assert unsupported_numbers("2019 runs", results) == ["2019"]
-    assert unsupported_numbers("5 runs", results, question="top 5 run scorers") == ["5"]
+    assert unsupported_numbers("5 runs", results) == ["5"]  # answer text: results only
+    assert unsupported_numbers("top 5", results, question="top 5 run scorers") == []  # restated filter
     assert unsupported_numbers("1,235 runs at 134.9 and 99 fifties", results) == ["1,235", "99"]
     assert unsupported_numbers("4521 runs", results) == ["4521"]
     assert unsupported_numbers("strike rate 134.9", results) == []  # rounding of 134.857
@@ -378,3 +379,111 @@ def test_known_words_in_an_unsupported_combination_still_hand_off(db, qualifier)
     answer = make_chat(db, model).answer("A Batter runs in IPL " + qualifier)
     assert model.requests
     assert path_note(answer).startswith("AI investigation")
+
+
+def test_spelled_out_numbers_are_checked_like_digits() -> None:
+    from backend.app.multiformat.investigation import digits_for_number_words
+
+    assert digits_for_number_words("overs forty-one to fifty, above eight") == "overs 41 to 50, above 8"
+    results = [QueryResult(sql="", purpose="", columns=["runs"], rows=[[185]])]
+    assert unsupported_numbers("conceded one hundred and eighty-five", results)  # refused, not waved through
+    assert unsupported_numbers("in overs forty-one to fifty", results) == ["41", "50"]
+    assert unsupported_numbers("Twenty20 cricket, someone conceded 185", results) == []
+
+
+def test_question_filters_may_be_restated_in_the_showing_line_only(db) -> None:
+    question = "A Batter runs in IPL run chases in overs 41-50"
+    model = ScriptedModel(
+        run_sql(),
+        submit("A Batter has 11 runs in overs 41-50.", showing="Showing: runs · overs 41-50"),  # answer text: refused
+        submit("A Batter has 11 runs.", showing="Showing: runs · overs 41-50"),  # showing line: allowed
+    )
+    answer = make_chat(db, model).answer(question)
+    rejection = json.dumps(model.requests[2]["contents"][-1])
+    assert "41" in rejection and "digits" in rejection
+    assert answer.message.startswith("Showing: runs · overs 41-50")
+
+
+def test_rate_limits_return_promptly_and_are_never_cached(tmp_path, monkeypatch) -> None:
+    import httpx
+
+    calls = []
+
+    def fake_post(*args, **kwargs):
+        calls.append(1)
+        return httpx.Response(429, request=httpx.Request("POST", "https://example.invalid"))
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    monkeypatch.setattr("backend.app.multiformat.investigation.time.sleep", lambda *_: None)
+    model = GeminiToolModel("key", "gemini-test", tmp_path)
+    payload = {"contents": []}
+    assert model.call(payload) == {"error": "http_429"}
+    assert len(calls) == 1  # no automatic waits/retries on a live question
+    assert not model.cache_path(payload).exists()  # a later call can try again
+
+
+def test_definitions_may_use_numbers_from_the_sql_that_ran(db) -> None:
+    sql = "SELECT count(*) AS ducks FROM analytics.deliveries WHERE runs_batter = 0 AND is_wicket"
+    model = ScriptedModel(
+        run_sql(sql, "ducks"),
+        ("submit_answer", {"outcome": "answered", "showing": "Showing: ducks", "answer": "There is 1 duck.",
+                           "definitions": "A duck is a dismissal for 0 runs.",
+                           "tables": [{"query": 1, "title": "Ducks"}]}),
+    )
+    answer = make_chat(db, model).answer("A Batter runs in IPL run chases")
+    assert answer.query_response.status.value == "supported", answer.message
+
+
+def test_unordered_results_come_back_in_a_fixed_order(db) -> None:
+    database = ReadOnlyDatabase(db)
+    sql = "SELECT batter_id, count(*) AS n FROM analytics.deliveries GROUP BY 1"
+    assert len({tuple(map(tuple, database.run(sql).rows)) for _ in range(5)}) == 1
+
+
+def test_prose_zero_and_one_are_not_treated_as_statistics() -> None:
+    results = [QueryResult(sql="", purpose="", columns=["ducks"], rows=[[10]])]
+    assert unsupported_numbers("dismissed for zero runs in 10 innings, at least one ball", results) == []
+
+
+@pytest.mark.parametrize('question', [
+    'How many IPL runs has Kohli scored?', 'Joe Root Test runs',
+    'Top women T20I batters', 'Best opening partnerships in the Big Bash League',
+])
+def test_missing_multiformat_data_gets_an_immediate_explanation(question, backlog):
+    from backend.app.multiformat.chat import UnavailableMultiFormatChat
+
+    answer = UnavailableMultiFormatChat(backlog).answer(question)
+    assert answer.query_response.status.value == 'unsupported'
+    assert 'not installed' in answer.message
+    assert 'ODI' in answer.message
+    assert len(saved(backlog)) == 1
+
+
+def test_missing_multiformat_data_leaves_odi_questions_to_odi_chat(backlog):
+    from backend.app.multiformat.chat import UnavailableMultiFormatChat
+
+    assert UnavailableMultiFormatChat(backlog).answer('Virat Kohli ODI runs') is None
+    assert saved(backlog) == []
+
+
+def test_rate_limited_live_request_does_not_wait_and_retry(tmp_path, monkeypatch):
+    import httpx
+    attempts = []
+
+    def limited(*args, **kwargs):
+        attempts.append(1)
+        return httpx.Response(429, request=httpx.Request('POST', 'https://example.invalid'))
+
+    monkeypatch.setattr(httpx, 'post', limited)
+    monkeypatch.setattr('backend.app.multiformat.investigation.time.sleep', lambda *_: None)
+    result = GeminiToolModel('fake', 'gemini-test', tmp_path).call({'contents': []})
+    assert result == {'error': 'http_429'}
+    assert len(attempts) == 1, 'Rate limits must not cause repeated requests and 15 seconds of waits'
+
+
+def test_investigation_has_a_total_time_budget(db, backlog):
+    model = ScriptedModel(run_sql())
+    result = Investigator(model, ReadOnlyDatabase(db), 'pack', backlog=backlog, max_seconds=0).investigate('q', 'r')
+    assert not model.requests
+    assert result.outcome == 'not_answered' and 'time limit' in result.failure
+    assert len(saved(backlog)) == 1

@@ -8,7 +8,7 @@ from backend.app.api.routes.multiformat import get_multiformat_service
 from backend.app.config import AppConfig
 from backend.app.db.repository import AnalyticsRepository
 from backend.app.domain.metric_models import QueryClass
-from backend.app.multiformat.chat import MultiFormatChat
+from backend.app.multiformat.chat import MultiFormatChat, UnavailableMultiFormatChat
 from backend.app.cricket_analytics.semantic_service import SemanticAnalyticsService
 from backend.app.services.analytics_service import AnalyticsService
 from backend.app.services.answer_composer import AnswerComposer
@@ -89,10 +89,10 @@ def get_services():
     multiformat_chat = (
         MultiFormatChat(multiformat_service)
         if multiformat_service.db_path.exists()
-        else None
+        else UnavailableMultiFormatChat()
     )
     reading_model = os.getenv("MULTIFORMAT_PLANNER_MODEL")
-    if multiformat_chat is not None and reading_model:
+    if isinstance(multiformat_chat, MultiFormatChat) and reading_model:
         from backend.app.multiformat.model_planner import GeminiPlanner
 
         multiformat_chat.reader = GeminiPlanner(
@@ -109,7 +109,7 @@ def get_services():
             Path(os.getenv("UNANSWERED_BACKLOG_PATH", str(multiformat_service.db_path.parent / "unanswered_questions.jsonl")))
         )
         investigation_model = os.getenv("MULTIFORMAT_INVESTIGATION_MODEL", "").strip()
-        if investigation_model and investigation_model.lower() not in {"off", "false", "none"}:
+        if isinstance(multiformat_chat, MultiFormatChat) and investigation_model and investigation_model.lower() not in {"off", "false", "none"}:
             from backend.app.multiformat.investigation import GeminiToolModel, Investigator, ReadOnlyDatabase
             from backend.app.multiformat.investigation_knowledge import build_knowledge_pack
 

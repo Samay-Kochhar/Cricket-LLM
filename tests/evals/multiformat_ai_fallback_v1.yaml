@@ -114,3 +114,29 @@
   question: What is the highest team total in women's T20Is?
   expect: 333 by Argentina v Chile (15 Oct 2023); then 318 Bahrain v Saudi Arabia (2022).
   key_numbers: [333]
+
+# Added 2026-11-13 at the user's request (gold computed with independent SQL before any AI run).
+# Both are men's ODI questions, so in the app they go to the ODI chat first, not the multi-format rules.
+
+- id: ai-11
+  set: B
+  route: odi
+  question: How expensive was Bumrah in overs 41–50 when the required run rate was above 8?
+  expect: >-
+    Men's ODI chases, overs 41-50, balls bowled when the required rate before the ball
+    (runs needed / balls left x 6) was above 8: 181 legal balls, 199 runs conceded (195 off the bat
+    + 4 wides), economy 6.60, 14 wickets, 13 matches. The all-formats database and the ODI database
+    agree exactly once a missing stored target (India v Afghanistan, 22 Jun 2019) is taken as the
+    first-innings total + 1. Filtering on the required rate AFTER each ball instead gives 184 runs /
+    6.10 (wrong: the ball's own result decides whether it counts).
+  key_numbers: [181, 199, 6.6]
+
+- id: ai-12
+  set: B
+  route: odi
+  question: Who scored the most runs in day versus night matches?
+  expect: >-
+    Day/night is recorded only in the ODI database (men's ODIs, Jan 2005 - Feb 2025); no other
+    format records it. Day matches: Paul Stirling 4,820. Day/night matches: Virat Kohli 10,800 (the
+    21 'night match' games do not change the leader). Graded on stating that limit correctly.
+  key_numbers: [4820, 10800]

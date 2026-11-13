@@ -146,6 +146,33 @@ class MultiFormatAnswer:
     reading_note: str | None = None
 
 
+class UnavailableMultiFormatChat:
+    """Explain missing deployment data before a non-ODI question reaches ODI AI."""
+
+    investigator = None
+
+    def __init__(self, backlog=None):
+        self.backlog = backlog
+
+    def answer(self, message: str) -> MultiFormatAnswer | None:
+        from backend.app.multiformat.understanding import COMPETITIONS
+        from backend.app.multiformat.investigation import render_unanswered
+
+        requested = any(re.search(pattern, message, re.I) for pattern, *_ in COMPETITIONS)
+        requested = requested or bool(re.search(
+            r"\b(?:tests?|t20s?|t20is?|twenty20|hundred|domestic|franchise|women|women's|womens|female)\b|"
+            r"all[ -]formats?|across formats|first[ -]class|list[ -]a", message, re.I,
+        ))
+        if not requested:
+            return None
+        reason = ("the all-formats data is not installed on this app. Only men's ODI data is available; "
+                  "it cannot answer this question about another format or competition")
+        if self.backlog is not None:
+            self.backlog.add(message, reason, [{"path": "data availability check"}], path="not answered")
+        text, response = render_unanswered(message, reason, ["the data availability check"])
+        return MultiFormatAnswer(text, [], query_response=response)
+
+
 class MultiFormatChat:
     """Database rules first; an AI investigation when the rules cannot account for the question.
 

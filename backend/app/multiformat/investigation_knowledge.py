@@ -14,7 +14,7 @@ import duckdb
 
 from backend.app.multiformat.investigation import HIDDEN_COLUMNS
 
-PACK_VERSION = "2026-11-13.2"
+PACK_VERSION = "2026-11-13.3"
 
 INSTRUCTIONS = """You are CricAtlas's database investigator. The fixed database rules could not fully
 answer the user's cricket question, so you get the WHOLE question and a read-only SQL tool.
@@ -68,6 +68,11 @@ Cricket definitions (use exactly these)
 - Chases: the second innings of a limited-overs match; target_runs on those deliveries is the target.
   analytics.matches.winner tells who won; a successful chase means winner = batting team of innings 2.
   Results with method 'D/L' or 'VJD' have revised targets (target_runs already reflects it).
+  target_runs/target_overs are missing for some chases: when NULL and no revision method is recorded,
+  use the first-innings total (sum of runs_total, innings_no = 1, no super overs) + 1 and the
+  scheduled overs (analytics.matches.scheduled_overs, else 50 for ODIs / 20 for T20s). Required run
+  rate at a ball is the state BEFORE that ball: 6 * (target - runs before it) / (balls left before it).
+- Always select explicit columns; SELECT * is refused.
 - "With the new ball" has no fixed definition: use the user's definition; if none, use the first
   10 overs of an innings (over_no 0-9) and say so in showing.
 - Bowling style codes (bowler_style_code): LF/LFM left-arm fast, LM/LMF left-arm medium, RF/RFM
@@ -163,14 +168,17 @@ def build_knowledge_pack(multiformat_db: Path, odi_db: Path | None = None) -> st
     if odi_db is not None and Path(odi_db).exists():
         lines += [
             "",
-            "Second database, attached as odi (men's ODIs 2005-2025, every column VARCHAR - cast with TRY_CAST):",
+            "Second database, attached as odi (men's ODIs Jan 2005 - Feb 2025 only, every column VARCHAR - cast with TRY_CAST):",
             "- odi.analytics.deliveries_v1: p_match (match id), inns, bat/p_bat (batter name/id), team_bat, "
             "bowl/p_bowl, team_bowl, over (1-based), ball_id, score (runs on the ball), out ('True'/'False'), "
             "dismissal, p_out, noball, wide, byes, legbyes, batruns, ballfaced, bowlruns, inns_runs, inns_wkts, "
             "inns_balls, target, date, year, ground, country, winner, toss, competition, bat_hand, bowl_style, "
             "bowl_kind, wagonX, wagonY, wagonZone, line, length, shot, control ('1' in control, '0' not), "
-            "predscore, wprob (pre-ball win probability, -1 unknown).",
-            "Use analytics.deliveries for ODI statistics; use odi only for control, wagon-wheel or "
-            "win-probability questions the main database cannot answer.",
+            "predscore, wprob (pre-ball win probability, -1 unknown), daynight ('day match', "
+            "'day/night match', 'night match'), rain, inns_runs_rem/inns_balls_rem (state AFTER the ball).",
+            "Use analytics.deliveries for ODI statistics; use odi only for what the main database does not "
+            "record: control, wagon wheel, win probability, day/night and rain. Day/night and rain are "
+            "recorded ONLY here, i.e. for men's ODIs Jan 2005 - Feb 2025; no other format, women's cricket "
+            "or later match records them - say so when you use them.",
         ]
     return "\n".join(lines)

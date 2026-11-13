@@ -31,9 +31,12 @@ statements, competition names) plus CricAtlas's fixed definitions.
 **Numbers are checked, not trusted.** Tables are copied directly from query
 results by query number. Every number in the interpretation line, answer,
 definitions and limitations must appear in a successful query result (allowing display
-rounding and fractions shown as percentages). A question number or SQL literal alone
-is insufficient. Table titles are checked too; malformed submissions and client
-exceptions become saved cases.
+rounding and fractions shown as percentages). Spelled-out numbers ("forty-one")
+are converted to digits and checked the same way. Only the interpretation line and
+definitions, which restate the user's own filters ("overs 41-50", "above 8") and
+how the executed SQL was built, may also use numbers from the question or that SQL; the answer, limitations and table titles may
+not. Table titles are checked too; malformed
+submissions and client exceptions become saved cases.
 A failing answer is sent back; after three failures the question is not
 answered. Source brands are scrubbed from model text.
 
@@ -45,7 +48,19 @@ reason and what was tried are appended to the local, gitignored
 
 **Configuration.** The AI investigation is off unless
 `MULTIFORMAT_INVESTIGATION_MODEL` names a model; tests force it off. Every model
-response is cached by request hash under `data/investigation_cache`, so a
+successful (or permanently failed) response is cached by request hash under
+`data/investigation_cache` (rate limits and server errors return immediately and are never cached), so a
 repeated question is not paid twice and evaluations replay offline
 (`MULTIFORMAT_INVESTIGATION_OFFLINE=true`). ODI-chat refusals are handed to the
 same investigation when it is enabled.
+
+
+Long-running Streamlit sessions refresh their service bundle when either database
+appears or changes (path, modification time and size), or investigation settings
+change. Matchup page navigation uses only the lightweight explorer bundle; the
+full analysis engine is deferred until submission. Failed/empty chat requests
+remain visible as an assistant message on later reruns. When the all-formats
+file is missing, explicit non-ODI questions get a direct data-availability reply
+instead of an ODI model request. The AI client makes one attempt per turn,
+with a 45-second request timeout and a 120-second investigation budget checked
+between turns/tools; it does not spend extra time retrying rate limits.

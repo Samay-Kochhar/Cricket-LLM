@@ -75,6 +75,26 @@ download the source CSV and build DuckDB. Later starts reuse the generated file
 when the platform retains it; the bootstrap safely repeats after a clean
 rebuild or storage reset.
 
+## All-format data on the hosted app
+
+The automatic source bootstrap above installs the ODI database only. The
+all-format database is not committed to Git. A hosted deployment must also have
+the prepared `data/cricket_all.duckdb` file, or set `MULTIFORMAT_DUCKDB_PATH` to
+its installed location. Provision that file through the deployment's data
+storage; changing the Git branch alone does not install it. Do not rebuild or
+overwrite an existing database to change the UI.
+
+When the file is absent, the explorer explicitly says only men's ODIs are
+installed, and chat explains that questions about other formats cannot be
+answered with the available data. When the file appears or is replaced, the
+Streamlit service cache refreshes from its path, modification time and size.
+
+The default chat uses database rules. `MULTIFORMAT_INVESTIGATION_MODEL` enables
+AI investigation for questions those rules cannot answer. AI requests use a
+45-second request timeout and a two-minute investigation budget; rate-limit
+errors return promptly instead of triggering repeated waits. Offline captures
+can be replayed with `MULTIFORMAT_INVESTIGATION_OFFLINE=true`.
+
 ## Secrets
 
 Never commit `.streamlit/secrets.toml`. Store the Gemini key only in

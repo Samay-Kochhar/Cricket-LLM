@@ -182,6 +182,10 @@ class ReadOnlyDatabase:
                     raise SqlRejected("source-identifying columns are not available; select explicit analytics columns")
                 result.columns = columns
                 result.rows = [[_cell(v) for v in row] for row in rows]
+                if not re.search(r"(?i)\border\s+by\b", _strip_literals(text)):
+                    # Unordered results come back in a different order each run (parallel
+                    # execution); a fixed order keeps the model's input, and its cache, stable.
+                    result.rows.sort(key=lambda row: [(v is None, str(type(v)), v if v is not None else 0) for v in row])
             except SqlRejected as exc:
                 result.error = f"rejected: {exc}"
             except duckdb.InterruptException:
@@ -217,21 +221,53 @@ def _result_numbers(results: list[QueryResult]) -> list[float]:
     return values
 
 
+# "zero" and "one" are left as words: they are mostly ordinary prose ("for zero runs",
+# "at least one ball"), while spelled-out filters and statistics use larger numbers.
+_UNITS = dict(zip(
+    "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen "
+    "sixteen seventeen eighteen nineteen".split(), range(20)))
+_STANDALONE = [w for w in _UNITS if w not in {"zero", "one"}]
+_TENS = dict(zip("twenty thirty forty fifty sixty seventy eighty ninety".split(), range(20, 100, 10)))
+_NUMBER_WORDS = re.compile(
+    r"\b(?:(" + "|".join(_TENS) + r")(?:[- ](" + "|".join(list(_UNITS)[1:10]) + r"))?|(" + "|".join(_STANDALONE)
+    + r"))(?:\s+(hundred|thousand))?\b",
+    re.I,
+)
+
+
+def digits_for_number_words(text: str) -> str:
+    """'forty-one' -> '41', 'eight' -> '8', 'two hundred' -> '200', so spelled-out numbers are checked too."""
+
+    def value(match: re.Match[str]) -> str:
+        tens, unit, single, scale = (g.lower() if g else None for g in match.groups())
+        number = (_TENS[tens] + (_UNITS[unit] if unit else 0)) if tens else _UNITS[single]
+        number *= {"hundred": 100, "thousand": 1000}.get(scale or "", 1)
+        return str(number)
+
+    return _NUMBER_WORDS.sub(value, text or "")
+
+
 def unsupported_numbers(text: str, results: list[QueryResult], question: str = "") -> list[str]:
     """Numbers in ``text`` that no successful query result supports.
 
     A number written with d decimals matches a result value that rounds to it
     (134.86 matches 134.857). Whole numbers match exactly or as a rounded rate.
-    Percentages may come from a result fraction (0.452 → 45.2%).
+    Percentages may come from a result fraction (0.452 → 45.2%). Spelled-out
+    numbers count as numbers. ``question`` numbers are allowed only when given
+    (the caller passes it for text that restates the user's own filters).
     """
     values = _result_numbers(results)
+    text = digits_for_number_words(text)
+    allowed = {float(n.replace(",", "")) for n in NUMBER.findall(digits_for_number_words(question))}
     missing: list[str] = []
     for match in NUMBER.finditer(text or ""):
         token = match.group()
         number = float(token.replace(",", ""))
         places = _decimals(token)
         percentage = (text[match.end():].lstrip()).startswith("%")
-        if any(round(v, places) == number or (percentage and round(100 * v, places) == number) for v in values):
+        if number in allowed or any(
+            round(v, places) == number or (percentage and round(100 * v, places) == number) for v in values
+        ):
             continue
         missing.append(token)
     return list(dict.fromkeys(missing))
@@ -266,11 +302,16 @@ class ToolModel(Protocol):
         """Return the raw generateContent JSON (or {"error": ...})."""
 
 
+def _transient(record: dict[str, Any]) -> bool:
+    error = str(record.get("error") or "")
+    return error in {"http_429", "http_500", "http_502", "http_503", "http_504"} or error.startswith("request_failed")
+
+
 class GeminiToolModel:
     """generateContent with function calling; every response is cached by request hash.
 
     The cache makes evaluation replayable offline and means a question is paid
-    for once. Failed calls are cached too after two retries.
+    for once. Permanent failures are cached; transient failures return promptly.
     """
 
     def __init__(
@@ -280,7 +321,7 @@ class GeminiToolModel:
         cache_dir: Path,
         *,
         offline: bool = False,
-        timeout_seconds: float = 180.0,
+        timeout_seconds: float = 45.0,
         api_base_url: str = "https://generativelanguage.googleapis.com/v1beta",
     ) -> None:
         self.api_key = api_key
@@ -295,40 +336,41 @@ class GeminiToolModel:
         key = sha256((self.model + "\n" + json.dumps(payload, sort_keys=True)).encode()).hexdigest()
         return self.cache_dir / self.model / f"{key}.json"
 
-    def call(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def call(self, payload: dict[str, Any], *, deadline: float | None = None) -> dict[str, Any]:
         path = self.cache_path(payload)
         if path.exists():
-            return json.loads(path.read_text())
+            cached = json.loads(path.read_text())
+            if self.offline or not _transient(cached):
+                return cached
         if self.offline:
             return {"error": "missing offline capture"}
         if not self.api_key:
             return {"error": "not_configured"}
         import httpx
 
-        record: dict[str, Any] = {}
-        for attempt in range(3):
-            try:
-                self.paid_calls += 1
-                response = httpx.post(
-                    f"{self.api_base_url}/models/{self.model}:generateContent",
-                    headers={"x-goog-api-key": self.api_key, "Content-Type": "application/json"},
-                    json=payload,
-                    timeout=self.timeout_seconds,
-                )
-                if response.status_code in {429, 500, 502, 503, 504} and attempt < 2:
-                    time.sleep(5 * (attempt + 1))
-                    continue
-                response.raise_for_status()
-                record = response.json()
-                break
-            except httpx.HTTPStatusError as exc:
-                record = {"error": f"http_{exc.response.status_code}"}
-                break
-            except (httpx.HTTPError, ValueError) as exc:
-                record = {"error": "request_failed: " + type(exc).__name__}
-                if attempt < 2:
-                    time.sleep(5)
-                    continue
+        timeout = self.timeout_seconds
+        if deadline is not None:
+            timeout = min(timeout, deadline - time.monotonic())
+            if timeout <= 0:
+                return {"error": "request_failed: time limit reached"}
+        try:
+            self.paid_calls += 1
+            response = httpx.post(
+                f"{self.api_base_url}/models/{self.model}:generateContent",
+                headers={"x-goog-api-key": self.api_key, "Content-Type": "application/json"},
+                json=payload,
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            record = response.json()
+        except httpx.HTTPStatusError as exc:
+            record = {"error": f"http_{exc.response.status_code}"}
+        except (httpx.HTTPError, ValueError) as exc:
+            record = {"error": "request_failed: " + type(exc).__name__}
+        if _transient(record):
+            # Rate limits, server errors and network failures are not answers: never cache
+            # them, so the same question can be retried later.
+            return record
         path.parent.mkdir(parents=True, exist_ok=True)
         temp = path.with_suffix(".tmp")
         temp.write_text(json.dumps(record))
@@ -429,6 +471,7 @@ class Investigator:
         *,
         max_queries: int = 10,
         max_turns: int = 14,
+        max_seconds: float = 120.0,
         thinking_level: str | None = "high",
         backlog: UnansweredBacklog | None = None,
     ) -> None:
@@ -437,6 +480,7 @@ class Investigator:
         self.knowledge = knowledge
         self.max_queries = max_queries
         self.max_turns = max_turns
+        self.max_seconds = max_seconds
         self.thinking_level = thinking_level
         self.backlog = backlog
 
@@ -463,10 +507,17 @@ class Investigator:
             )}],
         }]
         repairs = 0
+        deadline = time.monotonic() + self.max_seconds
         for _ in range(self.max_turns):
+            if time.monotonic() >= deadline:
+                result.failure = "the AI investigation reached its time limit"
+                break
             result.model_calls += 1
             try:
-                response = self.model.call(self._payload(contents))
+                if isinstance(self.model, GeminiToolModel):
+                    response = self.model.call(self._payload(contents), deadline=deadline)
+                else:
+                    response = self.model.call(self._payload(contents))
             except Exception as exc:
                 # Transport/client failures must still produce a saved case.
                 result.failure = "the AI model request failed (" + type(exc).__name__ + ")"
@@ -489,7 +540,11 @@ class Investigator:
             for call in calls:
                 name, args = call.get("name"), call.get("args") or {}
                 if name == "run_sql":
-                    if len(result.queries) >= self.max_queries:
+                    if time.monotonic() >= deadline:
+                        result.failure = "the AI investigation reached its time limit"
+                        finished = True
+                        reply = {"error": result.failure}
+                    elif len(result.queries) >= self.max_queries:
                         reply = {"error": f"query limit ({self.max_queries}) reached; call submit_answer now"}
                     else:
                         query = self.database.run(str(args.get("sql", "")), str(args.get("purpose", "")))
@@ -574,12 +629,20 @@ class Investigator:
         answer = _safe(str(args.get("answer") or "").strip())
         limitations = [_safe(str(x)) for x in args.get("limitations") or []]
         definitions = _safe(str(args.get("definitions") or ""))
-        text = "\n".join([showing, answer, definitions, *limitations, *(t.title for t in tables)])
-        missing = unsupported_numbers(text, result.queries, result.question)
+        # The interpretation line and definitions restate the user's own filters ("overs 41-50",
+        # "above 8") and how the SQL that ran was built ("= 0"), so numbers from the question or
+        # a successful query's SQL may appear there. The answer, limitations and
+        # table titles must come from query results only.
+        filters = "\n".join([result.question, *(q.sql for q in result.queries if not q.error)])
+        missing = unsupported_numbers("\n".join([showing, definitions]), result.queries, filters)
+        missing += unsupported_numbers(
+            "\n".join([answer, *limitations, *(t.title for t in tables)]), result.queries
+        )
+        missing = list(dict.fromkeys(missing))
         if missing:
             return (
                 "these numbers do not appear in any query result: " + ", ".join(missing)
-                + ". Run a query that returns them, or remove them."
+                + ". Write numbers as digits; run a query that returns them, or remove them."
             )
         result.outcome = "answered"
         result.showing = showing if showing.lower().startswith("showing:") else "Showing: " + showing

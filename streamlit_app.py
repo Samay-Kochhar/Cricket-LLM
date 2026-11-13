@@ -24,7 +24,7 @@ SECRET_KEYS = (
     "CRICATLAS_DATA_SHA256",
     "CRICATLAS_DATA_ARCHIVE_MEMBER",
 )
-SERVICE_BUNDLE_VERSION = 3
+SERVICE_BUNDLE_VERSION = 4
 PLAYER_EXPLORER_BUNDLE_VERSION = 1
 
 
@@ -44,9 +44,35 @@ def apply_cloud_secrets() -> None:
     os.environ.setdefault("SEMANTIC_V2_DEV_FALLBACK", "false")
 
 
-@st.cache_resource(show_spinner=False)
+def _database_signature(path: Path) -> tuple[str, int | None, int | None]:
+    """Cheap cache identity; never read or hash the database contents on reruns."""
+    path = path.resolve()
+    try:
+        stat = path.stat()
+        return str(path), stat.st_mtime_ns, stat.st_size
+    except FileNotFoundError:
+        return str(path), None, None
+
+
+def _service_signature() -> tuple:
+    multi = Path(os.getenv("MULTIFORMAT_DUCKDB_PATH") or ROOT / "data" / "cricket_all.duckdb")
+    return (
+        _database_signature(Path(os.getenv("DUCKDB_PATH") or DB_PATH)),
+        _database_signature(multi),
+        tuple(os.getenv(name, "") for name in (
+            "MULTIFORMAT_PLANNER_MODEL", "MULTIFORMAT_PLANNER_OFFLINE",
+            "MULTIFORMAT_INVESTIGATION_MODEL", "MULTIFORMAT_INVESTIGATION_OFFLINE",
+        )),
+    )
+
+
 def initialize_services(service_bundle_version: int = SERVICE_BUNDLE_VERSION) -> dict[str, Any]:
-    del service_bundle_version
+    return _initialize_services_cached(service_bundle_version, _service_signature())
+
+
+@st.cache_resource(show_spinner=False)
+def _initialize_services_cached(service_bundle_version: int, data_signature: tuple) -> dict[str, Any]:
+    del service_bundle_version, data_signature
     from scripts.bootstrap_data import ensure_database
 
     ensure_database(
@@ -59,16 +85,22 @@ def initialize_services(service_bundle_version: int = SERVICE_BUNDLE_VERSION) ->
     )
 
     from backend.app.bootstrap import get_services
+    from backend.app.api.routes.multiformat import get_multiformat_service
 
+    get_multiformat_service.cache_clear()
     get_services.cache_clear()
     return get_services()
 
 
-@st.cache_resource(show_spinner=False)
 def initialize_player_explorer_services(
     service_bundle_version: int = PLAYER_EXPLORER_BUNDLE_VERSION,
 ) -> dict[str, Any]:
-    del service_bundle_version
+    return _initialize_player_services_cached(service_bundle_version, _database_signature(DB_PATH))
+
+
+@st.cache_resource(show_spinner=False)
+def _initialize_player_services_cached(service_bundle_version: int, data_signature: tuple) -> dict[str, Any]:
+    del service_bundle_version, data_signature
     from scripts.bootstrap_data import ensure_database
 
     ensure_database(
@@ -87,6 +119,23 @@ def initialize_player_explorer_services(
         "repository": repository,
         "player_names": tuple(repository.list_player_names()),
     }
+
+
+# Preserve the cache reset hooks used by tests and local maintenance.
+initialize_services.clear = _initialize_services_cached.clear
+initialize_player_explorer_services.clear = _initialize_player_services_cached.clear
+
+
+def initialize_matchup_explorer_services() -> dict[str, Any]:
+    services = dict(initialize_player_explorer_services(PLAYER_EXPLORER_BUNDLE_VERSION))
+
+    def matchup_handler(**filters):
+        # Opening or filtering the page needs only player/venue choices. Defer
+        # the full analytical engine until the user submits a matchup.
+        return initialize_services(SERVICE_BUNDLE_VERSION)["matchup_handler"](**filters)
+
+    services["matchup_handler"] = matchup_handler
+    return services
 
 
 def render_chart(chart: Any) -> None:
@@ -403,7 +452,7 @@ def render_page() -> None:
                 services = (
                     initialize_player_explorer_services(PLAYER_EXPLORER_BUNDLE_VERSION)
                     if view in {"Player Explorer", "Compare", "Venue Explorer"}
-                    else initialize_services(SERVICE_BUNDLE_VERSION)
+                    else initialize_matchup_explorer_services()
                 )
             if view == "Player Explorer":
                 from streamlit_player_explorer import render_player_explorer
@@ -489,11 +538,21 @@ def render_page() -> None:
                 reply = chat_service.reply(question, history)
     except Exception:
         LOGGER.exception("CricAtlas Streamlit data service failed to initialize")
-        st.error(
-            "CricAtlas could not prepare its data service. Check the private app logs for details."
-        )
-        return
+        from backend.app.services.chat_service import ChatReply
 
+        reply = ChatReply(
+            mode="conversation",
+            message="I couldn't finish this answer. Please try again. Your question has been kept above.",
+        )
+
+    if not reply.message.strip() and reply.query_response is None:
+        from backend.app.services.chat_service import ChatReply
+
+        LOGGER.error("CricAtlas chat returned an empty reply")
+        reply = ChatReply(
+            mode="conversation",
+            message="I couldn't produce an answer to this question. Please try again or add the format and player name.",
+        )
     reply_data = reply.model_dump(mode="json")
     st.session_state.messages.append(
         {"role": "assistant", "content": reply.message, "reply": reply_data, "base_reply": reply_data}
