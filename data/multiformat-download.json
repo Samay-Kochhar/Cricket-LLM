@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/Samay-Kochhar/Cricket-LLM/releases/download/cricket-data-2026-11-13/cricket_all.duckdb.gz",
+  "sha256": "3570b82358c72230f28354ab01dcf869a851c26262b0b0b6b8568a60c898e76a",
+  "compressed_bytes": 121922200,
+  "database_bytes": 758394880,
+  "records_prepared": "2026-11-10"
+}

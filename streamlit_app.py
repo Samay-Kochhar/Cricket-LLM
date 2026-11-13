@@ -358,6 +358,20 @@ def render_page() -> None:
 
     apply_cloud_secrets()
 
+    # The hosted computer starts without large data files. Fetch our prepared
+    # records before either chat or an explorer creates its database services.
+    from scripts.bootstrap_multiformat import ensure_multiformat_database
+
+    multiformat_path = Path(os.getenv("MULTIFORMAT_DUCKDB_PATH") or DATA_DIR / "cricket_all.duckdb")
+    if not multiformat_path.is_file():
+        try:
+            with st.spinner("Downloading cricket records for all formats. This is needed only on the first start…"):
+                ensure_multiformat_database(multiformat_path)
+        except Exception:
+            LOGGER.exception("Could not download the all-format cricket records")
+            st.error("The website could not download the cricket records for all formats. Please reload to try again.")
+            st.stop()
+
     with st.sidebar:
         st.markdown("### CricAtlas")
         st.caption("All formats · evidence-first")

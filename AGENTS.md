@@ -32,3 +32,27 @@ every test score counts, distinguish new questions from questions used for
 fixes, and say which reader or Gemini model each result describes. Separate
 missing software from missing data. Do not assume the user understands words
 such as validator, plan, guardrail, adjudication or regression.
+
+
+### Required plain-language rule for this user
+
+Apply this to chat replies, progress updates, reports and issue descriptions.
+The user has explicitly said that unexplained technical language wastes their
+time and must not be used.
+
+- Start with what is wrong, why it happened, and the concrete solution.
+- Use ordinary words and short, connected explanations. Explain an unavoidable
+  technical term immediately; do not assume the user knows it.
+- Say "the website's computer does not have the cricket records file yet",
+  rather than "the all-format database is not installed/provisioned".
+- Say "when the rules cannot answer, Gemini searches the records and calculates
+  the answer", rather than "AI investigation keeps control after handoff".
+- Say "check the old and new records with the same questions before keeping one",
+  rather than "establish parity before retiring the legacy dependency".
+- Do not use terms such as handoff, parity, regression, guardrail, validator,
+  oracle, payload, schema or deployment as unexplained labels in user-facing text.
+- Explain the reason for each proposed step and whether it has actually been
+  completed. Do not use local timing measurements to claim the website is fast.
+- Do not replace a clear explanation with a large technical report or visual.
+  Keep implementation details in a separately explained section only when an
+  agent needs exact file paths or field names to carry out the work.

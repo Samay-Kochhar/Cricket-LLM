@@ -75,6 +75,23 @@ download the source CSV and build DuckDB. Later starts reuse the generated file
 when the platform retains it; the bootstrap safely repeats after a clean
 rebuild or storage reset.
 
+## All-format records on the website
+
+The website automatically downloads the prepared all-format records on its
+first start. It reuses the file on later page changes and starts. If Streamlit
+clears its stored files, the next start downloads them again. No manual file
+copy or data setting is needed for the normal website.
+
+The download is about 116 MiB compressed and becomes a 723 MiB DuckDB file.
+`data/multiformat-download.json` records its fixed address, checksum and expected
+file size. The app checks the download and opens it read-only before making
+it available to chat and all four explorers. An unsuccessful download shows
+a retry message instead of silently offering only ODIs.
+
+Existing files are never overwritten or rebuilt. `MULTIFORMAT_DUCKDB_PATH`
+can point to another prepared copy. The original ODI database remains in use
+for the approved men's ODI pages while the two versions are checked separately.
+
 ## Secrets
 
 Never commit `.streamlit/secrets.toml`. Store the Gemini key only in
