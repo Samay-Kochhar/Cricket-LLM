@@ -119,6 +119,7 @@ class ChatService:
         conversation_state: ConversationState | None = None,
     ) -> ChatReply:
         reply = self._reply(message, history, conversation_state)
+        reply = self._investigate_odi_refusal(message, reply)
         if reply.query_response is not None:
             from backend.app.domain.evidence_models import EvidenceNote
             from backend.app.multiformat.answers import AFGHAN_NOTE
@@ -126,6 +127,33 @@ class ChatService:
             notes[:] = [n for n in notes if n.title != "Afghanistan coverage"]
             notes.append(EvidenceNote(title="Afghanistan coverage", detail=AFGHAN_NOTE))
         return reply
+
+    def _investigate_odi_refusal(self, message: str, reply: ChatReply) -> ChatReply:
+        """When the ODI rules refuse a question, give it to the AI investigation if one is configured."""
+        investigator = getattr(self.multiformat, "investigator", None)
+        response = reply.query_response
+        if (
+            investigator is None
+            or response is None
+            or response.status.value != "unsupported"
+            or reply.clarification_options
+            or "Multi-format database" in reply.activity_trace
+        ):
+            return reply
+        answer = self.multiformat.investigate(
+            message.strip(), "the ODI database rules could not answer this question"
+        )
+        return ChatReply(
+            mode="clarification" if answer.clarification else "analysis",
+            message=answer.message,
+            query_response=answer.query_response,
+            clarification_options=[
+                ClarificationOption(label=option.rsplit("(", 1)[-1].rstrip(")"), message=option)
+                for option in answer.clarification or []
+            ],
+            conversation_state=reply.conversation_state,
+            activity_trace=[*reply.activity_trace, "AI investigation"],
+        )
 
     def _reply(
         self,

@@ -146,15 +146,106 @@ class MultiFormatAnswer:
     reading_note: str | None = None
 
 
+class UnavailableMultiFormatChat:
+    """Explain missing deployment data before a non-ODI question reaches ODI AI."""
+
+    investigator = None
+
+    def __init__(self, backlog=None):
+        self.backlog = backlog
+
+    def answer(self, message: str) -> MultiFormatAnswer | None:
+        from backend.app.multiformat.understanding import COMPETITIONS
+        from backend.app.multiformat.investigation import render_unanswered
+
+        requested = any(re.search(pattern, message, re.I) for pattern, *_ in COMPETITIONS)
+        requested = requested or bool(re.search(
+            r"\b(?:tests?|t20s?|t20is?|twenty20|hundred|domestic|franchise|women|women's|womens|female)\b|"
+            r"all[ -]formats?|across formats|first[ -]class|list[ -]a", message, re.I,
+        ))
+        if not requested:
+            return None
+        reason = ("the all-formats data is not installed on this app. Only men's ODI data is available; "
+                  "it cannot answer this question about another format or competition")
+        if self.backlog is not None:
+            self.backlog.add(message, reason, [{"path": "data availability check"}], path="not answered")
+        text, response = render_unanswered(message, reason, ["the data availability check"])
+        return MultiFormatAnswer(text, [], query_response=response)
+
+
 class MultiFormatChat:
-    def __init__(self, service: MultiFormatService, planner=None) -> None:
+    """Database rules first; an AI investigation when the rules cannot account for the question.
+
+    ``investigator`` (optional) receives the whole question when the rules refuse
+    or leave a word unaccounted for. ``backlog`` (optional) records questions that
+    end without a checked answer. With neither, behaviour is rules-only.
+    """
+
+    def __init__(self, service: MultiFormatService, planner=None, investigator=None, backlog=None) -> None:
         from backend.app.multiformat.understanding import DeterministicPlanner
 
         self.service = service
         self.planner = DeterministicPlanner(service)
         self.reader = planner or self.planner
+        self.investigator = investigator
+        self.backlog = backlog if backlog is not None else getattr(investigator, "backlog", None)
 
     def answer(self, message: str) -> MultiFormatAnswer | None:
+        from backend.app.multiformat.plans import UnderstandingPlan
+        from backend.app.multiformat.self_check import rules_hand_off
+
+        result = self._rules_answer(message)
+        if result is None:
+            return None
+        hand_off = rules_hand_off(
+            message, UnderstandingPlan.model_validate(result.plan), result.query_response, self.planner.names,
+            result.message,
+        )
+        if hand_off is None:
+            return _with_path(result, "rules")
+        if self.investigator is not None:
+            return self.investigate(message, hand_off.reason)
+        if result.query_response.status.value == "unsupported":
+            # Rules-only: keep the rules' own explanation of what they cannot answer.
+            self._save(message, hand_off.reason, "database rules refused")
+            return _with_path(result, "not_answered", hand_off.reason)
+        return self._not_answered(message, hand_off.reason, ["the database rules (they would have answered a simpler question)"])
+
+    def investigate(self, message: str, reason: str) -> MultiFormatAnswer:
+        """Give the whole question to the AI investigation; never returns None."""
+        from backend.app.multiformat.investigation import render_investigation, render_unanswered
+
+        if self.investigator is None:
+            return self._not_answered(message, reason, ["the database rules"])
+        result = self.investigator.investigate(message, reason)
+        if result.outcome == "answered":
+            text, response = render_investigation(result)
+            return MultiFormatAnswer(text, [], query_response=response, plan=None,
+                                     reading_note=f"AI investigation ({result.model})")
+        if result.outcome == "clarify":
+            options = result.clarification_options or []
+            return MultiFormatAnswer(
+                result.clarification_question,
+                [],
+                clarification=[f"{message} — {option} ({option})" for option in options],
+                reading_note=f"AI investigation ({result.model})",
+            )
+        tried = ["the database rules", f"an AI investigation with {len(result.queries)} database quer{'y' if len(result.queries) == 1 else 'ies'}"]
+        text, response = render_unanswered(message, result.failure, tried)
+        return MultiFormatAnswer(text, [], query_response=response)
+
+    def _not_answered(self, message: str, reason: str, tried: list[str]) -> MultiFormatAnswer:
+        from backend.app.multiformat.investigation import render_unanswered
+
+        self._save(message, reason, "; ".join(tried))
+        text, response = render_unanswered(message, reason, tried)
+        return MultiFormatAnswer(text, [], query_response=response)
+
+    def _save(self, message: str, reason: str, tried: str) -> None:
+        if self.backlog is not None:
+            self.backlog.add(message, reason, [{"path": tried}], path="database rules")
+
+    def _rules_answer(self, message: str) -> MultiFormatAnswer | None:
         from backend.app.multiformat.answers import answer_plan
         from backend.app.multiformat.plans import UnderstandingPlan
 
@@ -185,3 +276,18 @@ class MultiFormatChat:
             validation_changes=changes,
             reading_note=reading_note,
         )
+
+
+def _with_path(result: MultiFormatAnswer, path: str, reason: str = "") -> MultiFormatAnswer:
+    """Say in the evidence which path answered: database rules, or not answered."""
+    from backend.app.domain.evidence_models import EvidenceNote
+    from backend.app.multiformat.investigation import PATH_TITLE, RULES_PATH
+
+    detail = RULES_PATH if path == "rules" else (
+        f"Not answered — {reason}. No AI investigation is configured, so this question was saved as a case to improve."
+    )
+    result.query_response.evidence_notes.insert(0, EvidenceNote(title=PATH_TITLE, detail=detail))
+    head, marker, tail = result.message.partition("\n\nEvidence & limitations\n")
+    if marker:
+        result.message = head + marker + PATH_TITLE + ": " + detail + "\n" + tail
+    return result

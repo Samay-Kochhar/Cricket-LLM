@@ -92,6 +92,15 @@ Existing files are never overwritten or rebuilt. `MULTIFORMAT_DUCKDB_PATH`
 can point to another prepared copy. The original ODI database remains in use
 for the approved men's ODI pages while the two versions are checked separately.
 
+When a prepared file appears or changes, the app refreshes its saved services
+using the file location, modification time and size.
+
+The default chat uses database rules. `MULTIFORMAT_INVESTIGATION_MODEL` enables
+AI investigation for questions those rules cannot answer. AI requests use a
+45-second request timeout and a two-minute investigation budget; rate-limit
+errors return promptly instead of triggering repeated waits. Offline captures
+can be replayed with `MULTIFORMAT_INVESTIGATION_OFFLINE=true`.
+
 ## Secrets
 
 Never commit `.streamlit/secrets.toml`. Store the Gemini key only in

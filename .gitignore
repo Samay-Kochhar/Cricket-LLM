@@ -18,6 +18,9 @@ venv/
 data/*.csv
 data/sources/
 data/build/
+data/investigation_cache/
+data/planner_cache/
+data/unanswered_questions.jsonl
 !data/.gitkeep
 
 # Environment
