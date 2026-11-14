@@ -14,7 +14,7 @@ import duckdb
 
 from backend.app.multiformat.investigation import HIDDEN_COLUMNS
 
-PACK_VERSION = "2026-11-13.3"
+PACK_VERSION = "2026-11-13.4"
 
 INSTRUCTIONS = """You are CricAtlas's database investigator. The fixed database rules could not fully
 answer the user's cricket question, so you get the WHOLE question and a read-only SQL tool.
@@ -24,7 +24,7 @@ How to work
   in SQL and use LIMIT). You may run several queries: resolve player names first, check coverage,
   then compute. Up to 10 queries.
 - Every number you write (in showing, answer, definitions, limitations) must appear in one of your
-  query results; the system rejects answers with unsupported numbers. Tables are copied from your
+  query results; unmatched numbers are reported in the evidence for review. Tables are copied from your
   query results by number: pick the query and the columns to show. Round rates in SQL (round(x, 2)).
 - Finish with submit_answer:
   * outcome=answered: showing = one interpretation line starting "Showing: " that states the

@@ -5,8 +5,8 @@ leave part of the question unaccounted for, the whole question goes to a
 capable Gemini model that may run several read-only SQL queries over the
 multi-format database (and the ODI database, attached as ``odi``), guided by a
 knowledge pack of tables, coverage and cricket definitions. Its answer is
-accepted only if every number in its text appears in a query result; tables are
-copied straight from query results. If no checked answer is produced, the
+shown with a numerical cross-check in its evidence; tables are copied straight
+from query results. The cross-check does not veto the AI investigation. If no checked answer is produced, the
 question is saved as a specific case in a local backlog.
 
 Guardrails (all enforced in code, not only in the prompt):
@@ -447,6 +447,7 @@ class Investigation:
     prompt_tokens: int = 0
     output_tokens: int = 0
     trace: list[str] = field(default_factory=list)
+    unmatched_numbers: list[str] = field(default_factory=list)
 
     @property
     def cost_usd(self) -> float | None:
@@ -460,6 +461,31 @@ class Investigation:
             {"purpose": q.purpose, "sql": q.sql, "error": q.error, "rows": len(q.rows)}
             for q in self.queries
         ]
+
+
+def _table_selection(requested, available: list[str]) -> tuple[list[str], list[int]]:
+    """Presentation labels never require another AI turn or invent table cells."""
+    if not requested:
+        return list(available), list(range(len(available)))
+    normalized: dict[str, list[int]] = {}
+    for index, column in enumerate(available):
+        normalized.setdefault(re.sub(r"[\W_]+", "", column).casefold(), []).append(index)
+    positions = []
+    for label in requested:
+        if not isinstance(label, str):
+            return list(available), list(range(len(available)))
+        if label in available:
+            positions.append(available.index(label))
+            continue
+        candidates = normalized.get(re.sub(r"[\W_]+", "", label).casefold(), [])
+        if len(candidates) != 1:
+            # Unknown/ambiguous display labels: show the original complete
+            # result rather than guess a mapping or reject a useful answer.
+            return list(available), list(range(len(available)))
+        positions.append(candidates[0])
+    if len(set(requested)) != len(requested):
+        return list(available), list(range(len(available)))
+    return [_safe(label) for label in requested], positions
 
 
 class Investigator:
@@ -564,7 +590,7 @@ class Investigator:
                         result.trace.append("answer rejected: " + problem)
                         reply = {"rejected": problem}
                         if repairs > 2:
-                            result.failure = "the AI answer failed the number check: " + problem
+                            result.failure = "the AI submission did not identify usable query results: " + problem
                             finished = True
                 else:
                     reply = {"error": f"unknown tool {name}"}
@@ -611,11 +637,7 @@ class Investigator:
             if index not in good:
                 return f"table refers to query {index}, which has no successful rows"
             query = result.queries[index - 1]
-            columns = [c for c in (spec.get("columns") or query.columns)]
-            unknown = [c for c in columns if c not in query.columns]
-            if unknown:
-                return f"query {index} has no column(s) {unknown}"
-            positions = [query.columns.index(c) for c in columns]
+            columns, positions = _table_selection(spec.get("columns"), query.columns)
             limit = max(1, min(int(spec.get("max_rows") or 25), 50))
             tables.append(TableBlock(
                 title=_safe(str(spec.get("title") or f"Query {index}")),
@@ -639,11 +661,10 @@ class Investigator:
             "\n".join([answer, *limitations, *(t.title for t in tables)]), result.queries
         )
         missing = list(dict.fromkeys(missing))
-        if missing:
-            return (
-                "these numbers do not appear in any query result: " + ", ".join(missing)
-                + ". Write numbers as digits; run a query that returns them, or remove them."
-            )
+        # The rules have already handed over control. This is an evidence
+        # diagnostic, not a second planner or an answer veto. Tables remain
+        # exact query-result copies even when prose contains unmatched numbers.
+        result.unmatched_numbers = missing
         result.outcome = "answered"
         result.showing = showing if showing.lower().startswith("showing:") else "Showing: " + showing
         result.answer, result.tables, result.used_queries = answer, tables, used
@@ -679,18 +700,25 @@ def _text(headline: str, summary: str, tables: list[TableBlock], notes: list[Evi
 
 
 def render_investigation(result: Investigation) -> tuple[str, QueryResponse]:
-    """The checked AI answer in the same shape as a rules answer."""
+    """The query-backed AI answer, including non-blocking numerical diagnostics."""
     notes = [
         EvidenceNote(
             title=PATH_TITLE,
             detail=(
                 f"AI investigation — {result.reason}, so an AI model ({result.model}) investigated the whole "
                 f"question with {len(result.queries)} read-only database "
-                f"quer{'y' if len(result.queries) == 1 else 'ies'}. Every number in this answer was checked "
-                "against the query results; tables are copied directly from them."
+                f"quer{'y' if len(result.queries) == 1 else 'ies'}. Tables are copied directly from "
+                "the query results. Numerical cross-checks are evidence notes, not another model decision."
             ),
         )
     ]
+    if result.unmatched_numbers:
+        notes.append(EvidenceNote(
+            title="Numerical cross-check",
+            detail=("These numbers in the AI text were not automatically matched to the query results: "
+                    + ", ".join(result.unmatched_numbers)
+                    + ". The answer is shown for review; table values come directly from the SQL results."),
+        ))
     if result.definitions:
         notes.append(EvidenceNote(title="Definitions", detail=result.definitions))
     for limitation in result.limitations:

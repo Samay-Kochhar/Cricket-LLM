@@ -211,25 +211,22 @@ def test_every_number_must_come_from_a_query_result() -> None:
     assert unsupported_numbers("777 runs", failed) == ["777"]
 
 
-def test_fabricated_number_is_sent_back_and_a_corrected_answer_accepted(db) -> None:
-    model = ScriptedModel(run_sql(), submit("A Batter has 999 runs."), submit("A Batter has 11 runs."))
+def test_unmatched_number_is_flagged_without_a_model_repair(db) -> None:
+    model = ScriptedModel(run_sql(), submit("A Batter has 999 runs."))
     answer = make_chat(db, model).answer("A Batter runs in IPL run chases")
-    rejection = model.requests[2]["contents"][-1]["parts"][0]["functionResponse"]["response"]
-    assert "999" in rejection["rejected"]
-    assert "A Batter has 11 runs." in answer.message
-    table = answer.query_response.tables[0]
-    assert table.columns == ["name", "runs"] and table.rows[0] == ["A Batter", 11]
+    assert len(model.requests) == 2
+    assert "A Batter has 999 runs." in answer.message
+    assert any("999" in note.detail for note in answer.query_response.evidence_notes
+               if note.title == "Numerical cross-check")
+    assert answer.query_response.tables[0].rows[0] == ["A Batter", 11]
 
 
-def test_repeatedly_unsupported_numbers_end_as_a_saved_case(db, backlog) -> None:
-    bad = submit("A Batter has 999 runs.")
-    model = ScriptedModel(run_sql(), bad, bad, bad)
+def test_numerical_diagnostic_is_not_an_unanswered_case(db, backlog) -> None:
+    model = ScriptedModel(run_sql(), submit("A Batter has 999 runs."))
     answer = make_chat(db, model, backlog).answer("A Batter runs in IPL run chases")
-    assert answer.query_response.status.value == "unsupported"
-    assert "couldn't produce a checked answer" in answer.message and "999" in answer.message
-    [case] = saved(backlog)
-    assert case["path"] == "AI investigation" and case["tried"][0]["sql"] == RUNS_SQL
-    assert "chases" in case["handed_off_because"]
+    assert answer.query_response.status.value == "supported"
+    assert "999" in answer.message
+    assert saved(backlog) == []
 
 
 def test_tables_must_be_copied_from_successful_queries(db) -> None:
@@ -364,7 +361,7 @@ def test_model_exception_is_saved_without_exposing_error_details(db, backlog) ->
 def test_table_title_numbers_are_checked(db, backlog) -> None:
     bad = submit("11 runs", tables=[{"query": 1, "title": "999 runs"}])
     result = Investigator(ScriptedModel(run_sql(), bad, bad, bad), ReadOnlyDatabase(db), "pack", backlog=backlog).investigate("q", "r")
-    assert result.outcome == "not_answered" and "999" in result.failure
+    assert result.outcome == "answered" and "999" in result.unmatched_numbers
 
 
 def test_select_star_cannot_expose_hidden_source_columns(db) -> None:
@@ -391,16 +388,13 @@ def test_spelled_out_numbers_are_checked_like_digits() -> None:
     assert unsupported_numbers("Twenty20 cricket, someone conceded 185", results) == []
 
 
-def test_question_filters_may_be_restated_in_the_showing_line_only(db) -> None:
+def test_question_filters_do_not_trigger_another_model_turn(db) -> None:
     question = "A Batter runs in IPL run chases in overs 41-50"
-    model = ScriptedModel(
-        run_sql(),
-        submit("A Batter has 11 runs in overs 41-50.", showing="Showing: runs · overs 41-50"),  # answer text: refused
-        submit("A Batter has 11 runs.", showing="Showing: runs · overs 41-50"),  # showing line: allowed
-    )
+    model = ScriptedModel(run_sql(), submit("A Batter has 11 runs in overs 41-50.",
+                                           showing="Showing: runs · overs 41-50"))
     answer = make_chat(db, model).answer(question)
-    rejection = json.dumps(model.requests[2]["contents"][-1])
-    assert "41" in rejection and "digits" in rejection
+    assert len(model.requests) == 2
+    assert "A Batter has 11 runs in overs 41-50." in answer.message
     assert answer.message.startswith("Showing: runs · overs 41-50")
 
 
@@ -487,3 +481,39 @@ def test_investigation_has_a_total_time_budget(db, backlog):
     assert not model.requests
     assert result.outcome == 'not_answered' and 'time limit' in result.failure
     assert len(saved(backlog)) == 1
+
+
+def test_ai_display_labels_do_not_trigger_another_model_call(db):
+    model = ScriptedModel(
+        run_sql('SELECT 13 AS matches, 181 AS legal_balls, 199 AS runs_conceded'),
+        submit('199 runs from 181 legal balls.', tables=[{
+            'query': 1, 'title': 'Results', 'columns': ['Matches', 'Legal balls', 'Runs conceded'],
+        }]),
+    )
+    result = Investigator(model, ReadOnlyDatabase(db), 'pack').investigate('q', 'r')
+    assert result.outcome == 'answered'
+    assert result.model_calls == 2
+    assert result.tables[0].rows == [[13, 181, 199]]
+
+
+def test_unknown_ai_table_labels_fall_back_to_query_columns(db):
+    model = ScriptedModel(run_sql(), submit('11 runs', tables=[{
+        'query': 1, 'title': 'Runs', 'columns': ['My player label', 'My run label'],
+    }]))
+    result = Investigator(model, ReadOnlyDatabase(db), 'pack').investigate('q', 'r')
+    assert result.outcome == 'answered'
+    assert result.tables[0].columns == ['name', 'runs']
+    assert result.tables[0].rows[0] == ['A Batter', 11]
+    assert result.model_calls == 2
+
+
+def test_number_check_adds_evidence_without_vetoing_ai_answer(db):
+    from backend.app.multiformat.investigation import render_investigation
+    model = ScriptedModel(run_sql(), submit('The AI says 999 runs.'))
+    result = Investigator(model, ReadOnlyDatabase(db), 'pack').investigate('q', 'r')
+    assert result.outcome == 'answered' and result.model_calls == 2
+    text, response = render_investigation(result)
+    assert 'The AI says 999 runs.' in text
+    assert result.tables[0].rows[0] == ['A Batter', 11]
+    assert any('999' in n.detail for n in response.evidence_notes if n.title == 'Numerical cross-check')
+    assert 'Every number in this answer was checked' not in text

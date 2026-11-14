@@ -67,7 +67,7 @@ CricAtlas's fixed, tested question reader and SQL. They answer only when every p
 _Avoid_: Deterministic planner (in user-facing text)
 
 **AI investigation**:
-The fallback when the database rules refuse or leave part of a question unaccounted for: an AI model runs read-only database queries and every number it reports is checked against their results.
+The fallback when the database rules refuse or leave part of a question unaccounted for: an AI model runs read-only database queries. Tables copy query results; numerical cross-checks flag unmatched narrative numbers in the evidence without vetoing the answer.
 _Avoid_: AI answer, model reading
 
 **Saved case**:

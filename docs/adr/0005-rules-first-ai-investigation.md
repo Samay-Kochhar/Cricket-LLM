@@ -1,6 +1,6 @@
 # Rules first, AI investigation when the rules cannot account for a question
 
-Decision date: 2026-11-13. Branch: `feature/ai-fallback` (not merged).
+Decision date: 2026-11-13. Approved for main on 2026-11-14.
 
 Familiar questions get fast database answers; unfamiliar questions get a more
 capable AI investigation; unresolved questions become specific cases to improve.
@@ -28,20 +28,25 @@ source-identifying columns, external access disabled and settings locked,
 pack is built from the database (tables, coverage, stored limitation
 statements, competition names) plus CricAtlas's fixed definitions.
 
-**Numbers are checked, not trusted.** Tables are copied directly from query
-results by query number. Every number in the interpretation line, answer,
-definitions and limitations must appear in a successful query result (allowing display
-rounding and fractions shown as percentages). Spelled-out numbers ("forty-one")
-are converted to digits and checked the same way. Only the interpretation line and
-definitions, which restate the user's own filters ("overs 41-50", "above 8") and
-how the executed SQL was built, may also use numbers from the question or that SQL; the answer, limitations and table titles may
-not. Table titles are checked too; malformed
-submissions and client exceptions become saved cases.
-A failing answer is sent back; after three failures the question is not
-answered. Source brands are scrubbed from model text.
+**Evidence checks do not veto the investigator.** After the rules hand over,
+there is no second model or deterministic question schema judging what the AI
+may answer. Tables are copied directly from successful query results. Display
+labels differing only in case, spaces or underscores are resolved locally; for
+unknown or ambiguous labels the original complete query columns are shown.
+Neither case requires another model call or a refusal.
+
+Numbers in the narrative, definitions, limitations and titles are cross-checked
+against query results (and stated filters where relevant). Unmatched numbers
+produce a clearly named evidence note. The answer is still displayed, and the
+system does not claim all its numbers were verified. This accepts the risk of
+an incorrect narrative while preserving the exact query-result tables for
+review. SQL permissions, external access restrictions, result/time limits, and
+the requirement for successful query-backed tables remain enforced. This
+policy implements the user's 13 November direction that validation should not
+clash with an investigation after the rules have handed over.
 
 **Unresolved questions become saved cases.** When no checked answer exists
-(model refuses, fails the number check, hits limits, or no AI is configured),
+(model refuses, cannot identify usable query results, hits limits, or no AI is configured),
 the reply says plainly that it could not answer and why, and the question,
 reason and what was tried are appended to the local, gitignored
 `data/unanswered_questions.jsonl` (`UNANSWERED_BACKLOG_PATH` overrides).
